@@ -13,7 +13,7 @@ def resetValues():
 
 
 def opendoc(month):
-    OpenFile = open(f'activity_{month}21.txt', 'r')
+    OpenFile = open(f'text files/activity_{month}21.txt', 'r')
     for line in OpenFile:
         field = line.split(',')
         if len(field) > 1:
@@ -119,9 +119,9 @@ def totalize(month):
             totalized = True
         leaderboard.append([name, totHour])
     leaderboard = sorted(leaderboard, key= lambda x:(x[1]), reverse=True)
-    WriteFile = open(f'processed_{month}21.txt', 'w')
+    WriteFile = open(f'text files/processed_{month}21.txt', 'w')
     for item in leaderboard:
-        WriteFile.write(f"{item[0]} - {item[1]}h\n")
+        WriteFile.write(f"{item[0]} - **{item[1]}h**\n")
     # Finishes everything up and writes to a file, in a sorted form from most to least.
 
 
