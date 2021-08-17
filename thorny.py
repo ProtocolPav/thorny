@@ -3,9 +3,9 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity_v2 import opendoc, process, totalize, resetValues
+from activity import opendoc, process, totalize, resetValues
 
-TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.xynVwfbP8eYx57ykzoXJGOrXf-M"
+TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
 screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!', 'ROOOOoooOOOOAARRRRRRRRRR',
            '*screams*',
@@ -38,43 +38,66 @@ async def scream(ctx):
 
 
 @client.command()
+async def setprefix(ctx, prefix):
+    #client.command_prefix = prefix
+    await ctx.send(f"Prefix changed to `{prefix}`")
+
+
+@client.command(aliases= ['act'])
 async def activity(ctx, month):
     temp = ''''''
     print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
     opendoc(month[0:3])
     process()
     totalize(month[0:3])
-    file = open(f'processed_{month[0:3]}21.txt', 'r')
+    file = open(f'text files/processed_{month[0:3]}21.txt', 'r')
     for line in file:
         temp = f'''{temp}{line}'''
     resetValues()
-    await ctx.send(f'**ACTIVITY FOR {month.upper()}**\n`{temp}`')
+    embed = discord.Embed(title= f'**ACTIVITY FOR {month.upper()}**', color=0xB4C424)
+    embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
+    await ctx.send(embed=embed)
 
 
-@client.command(aliases=['link', 'c'])
+@client.command(aliases=['link'])
 async def connect(ctx):
     activity_channel = client.get_channel(867303669203206194)
     current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
-    await ctx.send(f'**CONNECT**, {current_time}, **{ctx.author}**,')
-    await ctx.send(f'''**BETA**\n\n> {ctx.author.mention}, thank you for marking down your activity! 
-> Use `!dc` to mark your leave time!''')
+    embed1 = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
+    embed1.add_field(name='Log in document:', value=f'**CONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
+    await activity_channel.send(embed=embed1)
 
-    #WriteFile = open(f'activity_{current_time[0:3].lower()}21.txt', 'a')
-    #WriteFile.write(f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id},\n')
+    embed = discord.Embed(title='[BETA] You Have Connected!', color=0x50C878)
+    embed.add_field(name=f'Connection marked', value=f'''
+{ctx.author.mention}, thank you for marking down your activity!
+Use **!dc** or **!disconnect** to mark down disconnect time!\n''')
+    embed.set_footer(text=f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
+    await ctx.send(embed=embed)
+
+    #WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
+    #WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
 
 
-@client.command(aliases=['unlink', 'dc'])
+@client.command(aliases=['unlink'])
 async def disconnect(ctx):
     activity_channel = client.get_channel(867303669203206194)
     current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
-    await ctx.send(f'**DISCONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
-    await ctx.send(f'''**BETA**\n\n> {ctx.author.mention}, thank you for marking down your activity! 
-> Use `!c` to mark your join time!''')
+    embed1 = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
+    embed1.add_field(name='Log in document:',
+                     value=f'**DISCONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
+    await activity_channel.send(embed=embed1)
 
-    #WriteFile = open(f'activity_{current_time[0:3].lower()}21.txt', 'a')
-    #WriteFile.write(f'DISCONNECT, {current_time}, {ctx.author}, {ctx.author.id},\n')
+    embed = discord.Embed(title='[BETA] You Have Disconnected!', color=0xE97451)
+    embed.add_field(name=f'Connection marked', value=f'''
+    {ctx.author.mention}, thank you for marking down your activity!
+    Use **!c** or **!connect** to mark down connect time!\n''')
+    embed.set_footer(text=f'DISCONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
+    await ctx.send(embed=embed)
+
+    #WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
+    #WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
 
 
 @client.event
