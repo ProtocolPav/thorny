@@ -1,0 +1,47 @@
+[
+  {
+    "id": "Asbahamael",
+    "slogan": ":star2:  **Asbahamael, The Kingdom of Prosperity**\n\n",
+    "king": "Queen Cake VII\n",
+    "capital": "Revival\n",
+    "towns": "2\n",
+    "areas": "2\n\n",
+    "description": "A kingdom once forged from ancient legends, full of surprises and mysteries. Its lands are divided between generations, and projects fit every scale and taste. This kingdom offers freedom, but in return demands loyalty and qualifications. Only the worthy will be allowed to join the ranks of its inhabitants."
+  },
+  {
+    "id": "Ambria",
+    "slogan": ":coin:  **Ambria, The Kingdom of Riches**\n\n",
+    "king": "King Thiccin IV\n",
+    "capital": "Codharber\n",
+    "towns": "3\n",
+    "areas": "1\n\n",
+    "description": "Ambria is a prosperous kingdom of great riches. The true economic powerhouse of the server. It uses these great riches to build massive mega builds and reward citizens!"
+  },
+  {
+    "id": "Dalvasha",
+    "slogan": ":japanese_castle: **Dalvasha, The Kingdom of Opportunities**\n\n",
+    "king": "King Bee III\n",
+    "capital": "Hokori\n",
+    "towns": "4\n",
+    "areas": "6\n\n",
+    "description": "Dalvasha holds the biggest government and towns of many styles. Anyone can thrive in the flexible and diverse ways of Dalvasha. With towns like no other we support variety. Here dreams can become reality meeting your needs as a player of the realm!"
+  },
+  {
+    "id": "Eireann",
+    "slogan": ":classical_building:  **Éireann, The Bastion of Democracy**\n\n",
+    "king": "3rd President Burak\n",
+    "capital": "Falias\n",
+    "towns": "3\n",
+    "areas": "2\n\n",
+    "description": "Founded as the Bastion of Democracy, formed to Republic of Éireann by 4th President Burak for a short period of time to maintain and reorder the shambling Kingdom. Founded by it's first ruler, President Valk the First, Éireann is a living, breathing kingdom with a project always ongoing and always something to do."
+  },
+  {
+    "id": "Stregabor",
+    "slogan": ":dove:  **Stregabor, The Empire of Hope**\n\n",
+    "king": "Emperor Sniper II\n",
+    "capital": "Varendor\n",
+    "towns": "2\n",
+    "areas": "10\n\n",
+    "description": "Stregabor is the heart of Medieval construction on the realm. With its endless supply of materials and expert builders, it gives the chance for anybody to improve their skills. Stregabor connects its towns by roads; something no other kingdom does. The four virtues of this kingdom are Peace, Hope, Strength and Love. Join Stregabor and take part in its many Building Projects, and surely your time on the realm will never be boring!"
+  }
+]
