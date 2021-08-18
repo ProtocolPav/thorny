@@ -48,7 +48,7 @@ class Activity(commands.Cog):
 
         embed1 = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         embed1.add_field(name='Log in document:',
-                         value=f'**CONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
+                         value=f'**CONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
         await ctx.send(embed=embed1)
 
         embed = discord.Embed(title='[BETA] You Have Connected!', color=0x50C878)
@@ -59,7 +59,7 @@ class Activity(commands.Cog):
         if random.randint(1, 3) == 3 and remindertime is None:
             embed.add_field(name='Tip:', value=f'''
     You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
-        embed.set_footer(text=f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
+        embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}')
         await ctx.send(embed=embed)
 
         if remindertime is not None:
@@ -84,7 +84,7 @@ class Activity(commands.Cog):
                     "time": f"{writetime[2]}"}
         file.append(tempdict)
         WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
-        json.dump(file, WriteFile)
+        WriteFile.write('[' + ',\n'.join(json.dumps(i) for i in file) + ']\n')
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
@@ -92,19 +92,28 @@ class Activity(commands.Cog):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
         embed1 = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
-        embed1.add_field(name='Log in document:',
-                         value=f'**DISCONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
+        embed1.add_field(name='Log:',
+                         value=f'**DISCONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
         await activity_channel.send(embed=embed1)
 
         embed = discord.Embed(title='[BETA] You Have Disconnected!', color=0xE97451)
         embed.add_field(name=f'Connection marked', value=f'''
         {ctx.author.mention}, thank you for marking down your activity!
         Use **!c** or **!connect** to mark down connect time!\n''')
-        embed.set_footer(text=f'DISCONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
+        embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}')
         await ctx.send(embed=embed)
 
-        # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        # WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
+        file = json.load(ReadFile)
+        writetime = current_time.split(',')
+        tempdict = {"status": "DISCONNECT",
+                    "user": f"{ctx.author}",
+                    "userid": f"{ctx.author.id}",
+                    "date": f"{writetime[0]}",
+                    "time": f"{writetime[2]}"}
+        file.append(tempdict)
+        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
+        WriteFile.write('[' + ',\n'.join(json.dumps(i) for i in file) + ']\n')
 
 
 class Gateway(commands.Cog):
