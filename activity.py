@@ -14,6 +14,13 @@ def reset_values():
     totalingActivity.clear()
 
 
+def matching(item1, item2):
+    if int(item2) == int(item1) or int(item2) - int(item1) == 1:
+        return True
+    else:
+        return False
+
+
 def opendoc(month):
     openfile = open(f'text files/activity_{month}21.txt', 'r')
     for line in openfile:
@@ -29,19 +36,6 @@ def opendoc(month):
         else:
             field.remove(line)
     # Opens the file, adds fields into the raw list for it to begin processing
-
-
-def opendoc_json(month):
-    openfile = open(f'text files/activity_{month}21.json', 'r+')
-    raw_activity_local = json.load(openfile)
-    return raw_activity_local
-
-
-def matching(item1, item2):
-    if int(item2) == int(item1) or int(item2) - int(item1) == 1:
-        return True
-    else:
-        return False
 
 
 def process():
@@ -101,7 +95,48 @@ def process():
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
 
 
-def process_json():
+def total(month):
+    leaderboard = []
+    totaled = False
+    name = ''
+    while not totaled:
+        totHour = 0
+        totMin = 0
+        for hour in individualHours:
+            if individualHours[0][0] == hour[0]:
+                totalingActivity.append(hour)
+        for hour in totalingActivity:
+            totHour += hour[1]
+            totMin += hour[2]
+            name = hour[0]
+        if totMin > 59:
+            totHour += round(totMin / 60)
+        if totHour < 1:
+            totHour = totMin / 100
+        # Follows the same route with listing as process(). Here, many calculations happen.
+
+        for item in totalingActivity:
+            individualHours.remove(item)
+        totalingActivity.clear()
+        if len(individualHours) == 0:
+            totaled = True
+        leaderboard.append([name, totHour])
+    leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
+    WriteFile = open(f'text files/processed_{month}21.txt', 'w')
+    for item in leaderboard:
+        WriteFile.write(f"{item[0]} - **{item[1]}h**\n")
+    # Finishes everything up and writes to a file, in a sorted form from most to least.
+
+
+def opendoc_json(month):
+    openfile = open(f'text files/activity_{month}21.json', 'r+')
+    raw_activity_local = json.load(openfile)
+    return raw_activity_local
+
+
+def process_json(month):
+    rawActivity = opendoc_json(month)
+
     list_processed = False
     sortedActivity = sorted(rawActivity, key=lambda x: (x['userid'], x['date'], x['time']))
     # Sorts the raw list. Sorts first by names, then by date and time.
@@ -165,39 +200,6 @@ def process_json():
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
 
 
-def total(month):
-    leaderboard = []
-    totaled = False
-    name = ''
-    while not totaled:
-        totHour = 0
-        totMin = 0
-        for hour in individualHours:
-            if individualHours[0][0] == hour[0]:
-                totalingActivity.append(hour)
-        for hour in totalingActivity:
-            totHour += hour[1]
-            totMin += hour[2]
-            name = hour[0]
-        if totMin > 59:
-            totHour += round(totMin / 60)
-        if totHour < 1:
-            totHour = totMin / 100
-        # Follows the same route with listing as process(). Here, many calculations happen.
-
-        for item in totalingActivity:
-            individualHours.remove(item)
-        totalingActivity.clear()
-        if len(individualHours) == 0:
-            totaled = True
-        leaderboard.append([name, totHour])
-    leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
-    WriteFile = open(f'text files/processed_{month}21.txt', 'w')
-    for item in leaderboard:
-        WriteFile.write(f"{item[0]} - **{item[1]}h**\n")
-    # Finishes everything up and writes to a file, in a sorted form from most to least.
-
-
 def total_json(month):
     leaderboard = []
     totaled = False
@@ -225,19 +227,19 @@ def total_json(month):
             totaled = True
         leaderboard.append([name, total_hours])
     leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
-    WriteFile = open(f'text files/processed_{month}21.txt', 'w')
+    WriteFile = open(f'text files/leaderboard_{month}21.txt', 'w')
     for item in leaderboard:
         WriteFile.write(f"{item[0]} - **{item[1]}h**\n")
     # Finishes everything up and writes to a file, in a sorted form from most to least.
 
 
-if __name__ != '__main__':
+if __name__ == 'b__main__':
     opendoc('aug')
     process()
     total('aug')
 
 if __name__ == '__main__':
-    rawActivity = opendoc_json('aug')
+    #rawActivity = opendoc_json('aug')
     # Don't forget to use return and assigning when you assign a value to a variable!!!!
     process_json()
     total_json('aug')
