@@ -1678,3 +1678,212 @@ DotBot
 BOT
  — Today at 6:40 PM
 DISCONNECT, Aug 17, 2021, 18:40:09, King_Trebil#2227,
+DISCONNECT, Aug 17, 2021, 18:54:31, Froppy_A'sWaifu#2420,
+DotBot
+BOT
+ — Yesterday at 7:28 PM
+DISCONNECT, Aug 17, 2021, 19:28:15, JAMIE#3047,
+DotBot
+BOT
+ — Yesterday at 7:40 PM
+CONNECT, Aug 17, 2021, 19:40:08, CyanLightz#9632,
+CONNECT, Aug 17, 2021, 19:40:13, ANOrdinaryDiscordUser#9126,
+CONNECT, Aug 17, 2021, 19:43:34, Froppy_A'sWaifu#2420,
+DISCONNECT, Aug 17, 2021, 19:43:39, Froppy_A'sWaifu#2420,
+Cappspawn — Yesterday at 7:46 PM
+sussy
+DotBot
+BOT
+ — Yesterday at 8:15 PM
+DISCONNECT, Aug 17, 2021, 20:15:59, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Yesterday at 8:28 PM
+DISCONNECT, Aug 17, 2021, 20:28:50, CyanLightz#9632,
+DotBot
+BOT
+ — Yesterday at 8:55 PM
+CONNECT, Aug 17, 2021, 20:55:08, Phil4000#3179,
+CONNECT, Aug 17, 2021, 20:55:21, Emxle#6542,
+DotBot
+BOT
+ — Yesterday at 9:09 PM
+CONNECT, Aug 17, 2021, 21:09:45, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Yesterday at 9:23 PM
+CONNECT, Aug 17, 2021, 21:23:30, ariari#9553,
+DotBot
+BOT
+ — Yesterday at 9:55 PM
+CONNECT, Aug 17, 2021, 21:55:06, :bee:Ⓑⓤⓢⓨⓑⓔⓔ :bee:#7328,
+DISCONNECT, Aug 17, 2021, 21:56:33, ariari#9553,
+DotBot
+BOT
+ — Yesterday at 10:21 PM
+CONNECT, Aug 17, 2021, 22:21:53, HiddenSniper1#3384,
+DotBot
+BOT
+ — Yesterday at 10:49 PM
+DISCONNECT, Aug 17, 2021, 22:49:44, Emxle#6542,
+DotBot
+BOT
+ — Yesterday at 10:56 PM
+DISCONNECT, Aug 17, 2021, 22:56:57, Phil4000#3179,
+CONNECT, Aug 17, 2021, 22:58:53, LilThiccin#3338,
+DotBot
+BOT
+ — Yesterday at 11:10 PM
+DISCONNECT, Aug 17, 2021, 23:10:08, :bee:Ⓑⓤⓢⓨⓑⓔⓔ :bee:#7328,
+DotBot
+BOT
+ — Yesterday at 11:26 PM
+DISCONNECT, Aug 17, 2021, 23:26:13, LilThiccin#3338,
+CONNECT, Aug 17, 2021, 23:29:09, EzioAetos#0625,
+CONNECT, Aug 17, 2021, 23:30:43, Phil4000#3179,
+DISCONNECT, Aug 18, 2021, 00:20:24, HiddenSniper1#3384,
+DotBot
+BOT
+ — Today at 12:37 AM
+DISCONNECT, Aug 18, 2021, 00:37:34, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Today at 12:49 AM
+DISCONNECT, Aug 18, 2021, 00:49:35, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 1:19 AM
+CONNECT, Aug 18, 2021, 01:19:20, ANOrdinaryDiscordUser#9126,
+CONNECT, Aug 18, 2021, 01:24:10, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 1:54 AM
+DISCONNECT, Aug 18, 2021, 01:54:32, Phil4000#3179,
+DotBot
+BOT
+ — Today at 2:29 AM
+DISCONNECT, Aug 18, 2021, 02:29:12, ANOrdinaryDiscordUser#9126,
+DISCONNECT, Aug 18, 2021, 02:29:14, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 2:38 AM
+CONNECT, Aug 18, 2021, 02:38:52, EzioAetos#0625,
+CONNECT, Aug 18, 2021, 02:40:46, Mars Of Soa#2450,
+DotBot
+BOT
+ — Today at 3:45 AM
+CONNECT, Aug 18, 2021, 03:45:41, ariari#9553,
+DISCONNECT, Aug 18, 2021, 03:45:58, EzioAetos#0625,
+CONNECT, Aug 18, 2021, 03:50:56, cloz#2420,
+CONNECT, Aug 18, 2021, 03:51:11, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 4:13 AM
+CONNECT, Aug 18, 2021, 04:13:35, NotToki#7481,
+DotBot
+BOT
+ — Today at 4:26 AM
+CONNECT, Aug 18, 2021, 04:26:48, JAMIE#3047,
+DotBot
+BOT
+ — Today at 5:11 AM
+CONNECT, Aug 18, 2021, 05:11:22, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Today at 5:21 AM
+DISCONNECT, Aug 18, 2021, 05:21:22, ariari#9553,
+DotBot
+BOT
+ — Today at 6:06 AM
+CONNECT, Aug 18, 2021, 06:06:42, ariari#9553,
+DotBot
+BOT
+ — Today at 6:14 AM
+DISCONNECT, Aug 18, 2021, 06:14:43, ANOrdinaryDiscordUser#9126,
+CONNECT, Aug 18, 2021, 06:16:55, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Today at 6:32 AM
+DISCONNECT, Aug 18, 2021, 06:32:04, NotToki#7481,
+DISCONNECT, Aug 18, 2021, 06:36:36, Mars Of Soa#2450,
+DotBot
+BOT
+ — Today at 6:54 AM
+CONNECT, Aug 18, 2021, 06:54:47, King_Trebil#2227,
+DotBot
+BOT
+ — Today at 7:11 AM
+DISCONNECT, Aug 18, 2021, 07:11:35, King_Trebil#2227,
+DotBot
+BOT
+ — Today at 7:25 AM
+DISCONNECT, Aug 18, 2021, 07:25:57, JAMIE#3047,
+DotBot
+BOT
+ — Today at 7:35 AM
+CONNECT, Aug 18, 2021, 07:35:58, nconiconi#1664,
+DISCONNECT, Aug 18, 2021, 07:39:46, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 7:50 AM
+DISCONNECT, Aug 18, 2021, 07:50:19, ariari#9553,
+DISCONNECT, Aug 18, 2021, 07:52:18, ANOrdinaryDiscordUser#9126,
+CONNECT, Aug 18, 2021, 07:55:54, King_Trebil#2227,
+DISCONNECT, Aug 18, 2021, 07:59:32, nconiconi#1664,
+CONNECT, Aug 18, 2021, 08:00:12, EzioAetos#0625,
+DISCONNECT, Aug 18, 2021, 08:00:53, EzioAetos#0625,
+CONNECT, Aug 18, 2021, 08:05:23, EzioAetos#0625,
+DotBot
+BOT
+ — Today at 8:41 AM
+CONNECT, Aug 18, 2021, 08:41:39, NotToki#7481,
+DotBot
+BOT
+ — Today at 8:53 AM
+CONNECT, Aug 18, 2021, 08:53:35, CyanLightz#9632,
+DotBot
+BOT
+ — Today at 9:03 AM
+CONNECT, Aug 18, 2021, 09:03:06, ariari#9553,
+DotBot
+BOT
+ — Today at 9:21 AM
+CONNECT, Aug 18, 2021, 09:21:10, ANOrdinaryDiscordUser#9126,
+DISCONNECT, Aug 18, 2021, 09:21:16, ANOrdinaryDiscordUser#9126,
+CONNECT, Aug 18, 2021, 09:25:05, ANOrdinaryDiscordUser#9126,
+DotBot
+BOT
+ — Today at 10:05 AM
+CONNECT, Aug 18, 2021, 10:05:55, JAMIE#3047,
+DotBot
+BOT
+ — Today at 10:17 AM
+DISCONNECT, Aug 18, 2021, 10:17:26, CyanLightz#9632,
+DotBot
+BOT
+ — Today at 10:24 AM
+DISCONNECT, Aug 18, 2021, 10:24:36, JAMIE#3047,
+DISCONNECT, Aug 18, 2021, 10:27:23, ariari#9553,
+DISCONNECT, Aug 18, 2021, 10:30:41, King_Trebil#2227,
+DotBot
+BOT
+ — Today at 10:42 AM
+DISCONNECT, Aug 18, 2021, 10:42:16, NotToki#7481,
+CONNECT, Aug 18, 2021, 10:42:19, NotToki#7481,
+CONNECT, Aug 18, 2021, 10:44:11, CyanLightz#9632,
+DotBot
+BOT
+ — Today at 11:00 AM
+DISCONNECT, Aug 18, 2021, 11:00:58, CyanLightz#9632,
+DotBot
+BOT
+ — Today at 12:03 PM
+CONNECT, Aug 18, 2021, 12:03:39, CyanLightz#9632,
+DotBot
+BOT
+ — Today at 12:43 PM
+DISCONNECT, Aug 18, 2021, 12:43:19, NotToki#7481,
+DotBot
+BOT
+ — Today at 12:52 PM
+CONNECT, Aug 18, 2021, 12:52:55, ariari#9553,
