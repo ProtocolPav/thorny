@@ -74,8 +74,17 @@ class Activity(commands.Cog):
             await ctx.send(f'''
     {ctx.author.mention}, you told me to remind you {remindertime} seconds ago to disconnect! Make sure you did it!''')
 
-        # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        # WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
+        file = json.load(ReadFile)
+        writetime = current_time.split(',')
+        tempdict = {"status": "CONNECT",
+                    "user": f"{ctx.author}",
+                    "userid": f"{ctx.author.id}",
+                    "date": f"{writetime[0]}",
+                    "time": f"{writetime[2]}"}
+        file.append(tempdict)
+        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
+        json.dump(tempdict, WriteFile)
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
