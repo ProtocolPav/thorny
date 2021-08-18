@@ -1,3 +1,5 @@
+import json
+
 OpenFile = 'abcd'
 rawActivity = []
 processingActivity = []
@@ -5,7 +7,7 @@ individualHours = []
 totalingActivity = []
 
 
-def resetValues():
+def reset_values():
     rawActivity.clear()
     processingActivity.clear()
     individualHours.clear()
@@ -26,6 +28,12 @@ def opendoc(month):
         else:
             field.remove(line)
     # Opens the file, adds fields into the raw list for it to begin processing
+
+
+def opendoc_json(month):
+    OpenFile = open(f'text files/activity_{month}21.json', 'r+')
+    rawActivity = json.load(OpenFile)
+    return rawActivity
 
 
 def matching(item1, item2):
@@ -92,6 +100,66 @@ def process():
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
 
 
+def process_json():
+    hoursPlayed = 0
+    minPlayed = 0
+    listprocessed = False
+    sortedActivity = sorted(rawActivity, key=lambda x: (x['userid'], x['date'], x['time']))
+    # Sorts the raw list. Sorts first by names, then by date and time.
+    while not listprocessed:
+        for log in sortedActivity:
+            if sortedActivity[0]['userid'] == log['userid']:
+                processingActivity.append(log)
+    # Adds all logs with the same userid into a separate dict for processing
+        print(f'[PROCESSING] {processingActivity}')
+        for log in processingActivity:
+            if processingActivity.index(log) == len(processingActivity)-1:
+                if log['status'] == 'CONNECT':
+                    hoursPlayed = 2
+                    minPlayed = 0
+                    individualHours.append({'user': processingActivity[0]['user'],
+                                            'userid': processingActivity[0]['userid'],
+                                            'hours': hoursPlayed,
+                                            'minutes': minPlayed})
+                    print(f"{processingActivity[0]['user']} - {hoursPlayed}h{minPlayed}m")
+                else:
+                    print("pass")
+                    pass
+    # Checks if the log is the last item in the list, if it is then it passes.
+    # If it's the last one and a CONNECT, it puts it as 2h
+            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log)+1]['status'] == 'DISCONNECT':
+                cHour = int(log['time'][0:2])
+                cMin = int(log['time'][3:5])
+                dcHour = int(processingActivity[processingActivity.index(log)+1]['time'][0:2])
+                dcMin = int(processingActivity[processingActivity.index(log)+1]['time'][3:5])
+
+                hoursPlayed = dcHour - cHour
+                minPlayed = dcMin - cMin
+                if hoursPlayed < 0:
+                    hoursPlayed += 24
+                if hoursPlayed >= 14:
+                    hoursPlayed = 2
+                if minPlayed < 0:
+                    minPlayed += 60
+                individualHours.append([processingActivity[0]['user'], hoursPlayed, minPlayed])
+                print(f"{processingActivity[0]['user']} - {hoursPlayed}h{minPlayed}m")
+    # Checks if the current log is CONNECT and if the log next to it is DISCONNECT, calculates time.
+            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log)+1]['status'] == 'CONNECT':
+                hoursPlayed = 2
+                minPlayed = 0
+                individualHours.append([processingActivity[0]['user'], hoursPlayed, minPlayed])
+                print(f"{processingActivity[0]['user']} - {hoursPlayed}h{minPlayed}m")
+            else:
+                pass
+    # If there is no C/DC pair, it sets it as 2h automatically, in case someone 'forgot' to disconnect.
+        for item in processingActivity:
+            sortedActivity.remove(item)
+        processingActivity.clear()
+        if len(sortedActivity) == 0:
+            listprocessed = True
+    # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
+
+
 def totalize(month):
     leaderboard = []
     totalized = False
@@ -125,7 +193,12 @@ def totalize(month):
     # Finishes everything up and writes to a file, in a sorted form from most to least.
 
 
-if __name__ == '__main__':
+if __name__ != '__main__':
     opendoc('aug')
     process()
     totalize('aug')
+
+if __name__ == '__main__':
+    rawActivity = opendoc_json('aug')
+    # Don't forget to use return and assigning when you assign a value to a variable!!!!
+    process_json()
