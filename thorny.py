@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 from activity import opendoc, process, totalize, resetValues
 import asyncio
+import json
 
 TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
@@ -24,7 +25,6 @@ async def on_ready():
 class Activity(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.last_member = None
 
     @commands.command(aliases=['act'])
     async def activity(self, ctx, month):
@@ -42,7 +42,7 @@ class Activity(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['link'])
-    async def connect(self, ctx, arg=None):
+    async def connect(self, ctx, remindertime=None):
         activity_channel = client.get_channel(867303669203206194)
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
@@ -56,23 +56,23 @@ class Activity(commands.Cog):
     {ctx.author.mention}, thank you for marking down your activity!
     Use **!dc** or **!disconnect** to mark down disconnect time!\n''')
 
-        if random.randint(1, 3) == 3 and arg is None:
+        if random.randint(1, 3) == 3 and remindertime is None:
             embed.add_field(name='Tip:', value=f'''
     You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
         embed.set_footer(text=f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
         await ctx.send(embed=embed)
 
-        if arg is not None:
-            await ctx.send(f'I will remind you in {arg} to disconnect!')
-            if 'h' in arg:
-                arg = int(arg[0:len(arg) - 1]) * 60 * 60
-            elif 'm' in arg:
-                arg = int(arg[0:len(arg) - 1]) * 60
-            elif 's' in arg:
-                arg = int(arg[0:len(arg) - 1])
-            await asyncio.sleep(int(arg))
+        if remindertime is not None:
+            await ctx.send(f'I will remind you in {remindertime} to disconnect!')
+            if 'h' in remindertime:
+                remindertime = int(remindertime[0:len(remindertime) - 1]) * 60 * 60
+            elif 'm' in remindertime:
+                remindertime = int(remindertime[0:len(remindertime) - 1]) * 60
+            elif 's' in remindertime:
+                remindertime = int(remindertime[0:len(remindertime) - 1])
+            await asyncio.sleep(int(remindertime))
             await ctx.send(f'''
-    {ctx.author.mention}, you told me to remind you {arg} seconds ago to disconnect! Make sure you did it!''')
+    {ctx.author.mention}, you told me to remind you {remindertime} seconds ago to disconnect! Make sure you did it!''')
 
         # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
         # WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
@@ -96,6 +96,28 @@ class Activity(commands.Cog):
 
         # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
         # WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+
+
+class Gateway(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command(aliases=['gate', 'g', 'ga'])
+    async def gateway(self, ctx, gatenum=None):
+        sendtext = ''
+        file = open('text files/gateway.json', 'r+')
+        gateText = json.load(file)
+        if gatenum is None:
+            sendtext = f'''{gateText[0]["title"]}\n{gateText[0]["subtitle"]}\n
+{gateText[0]["fields"]["command1"]}\n{gateText[0]["fields"]["command2"]}\n{gateText[0]["fields"]["command3"]}
+{gateText[0]["fields"]["command4"]}'''
+        elif gatenum == '1':
+            sendtext = f'''{gateText[1]["title"]}\n{gateText[1]["subtitle"]}\n
+{gateText[1]["fields"][f"point1"]}\n\n{gateText[1]["fields"]["point2"]}\n{gateText[1]["fields"]["king1"]}
+{gateText[1]["fields"]["king2"]}\n{gateText[1]["fields"]["king3"]}\n{gateText[1]["fields"]["king4"]}
+{gateText[1]["fields"]["king5"]}\n\n{gateText[1]["fields"]["point3"]}\n\n{gateText[1]["fields"]["point4"]}\n
+{gateText[1]["fields"]["point5"]}'''
+        await ctx.send(sendtext)
 
 
 @client.command()
@@ -140,5 +162,6 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
-client.add_cog(Activity(client))
+client.add_cog(Gateway(client))
+client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
 client.run(TOKEN)
