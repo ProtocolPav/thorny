@@ -84,7 +84,7 @@ class Activity(commands.Cog):
                     "time": f"{writetime[2]}"}
         file.append(tempdict)
         WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
-        json.dump(tempdict, WriteFile)
+        json.dump(file, WriteFile)
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
