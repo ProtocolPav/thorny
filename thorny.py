@@ -4,6 +4,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from activity import opendoc, process, totalize, resetValues
+import asyncio
 
 TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
@@ -13,10 +14,9 @@ screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh
 
 @client.event
 async def on_ready():
-    print(f"We have logged in as {client.user}")
+    print(f"Logged in as {client.user}")
     botactivity = discord.Activity(type=discord.ActivityType.playing,
-                                   name="Everthorn, of course!",
-                                   large_image_url='https://everthorn.fandom.com/wiki/Special:NewFiles?file=Site-logo.png')
+                                   name="on Everthorn. Mining away. I don't know, what to mine!")
     await client.change_presence(activity=botactivity)
 
 
@@ -39,11 +39,12 @@ async def scream(ctx):
 
 @client.command()
 async def setprefix(ctx, prefix):
-    #client.command_prefix = prefix
-    await ctx.send(f"Prefix changed to `{prefix}`")
+    if ctx.author.id == 266202793143042048:
+        client.command_prefix = prefix
+        await ctx.send(f"Prefix changed to `{prefix}`")
 
 
-@client.command(aliases= ['act'])
+@client.command(aliases=['act'])
 async def activity(ctx, month):
     temp = ''''''
     print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
@@ -60,20 +61,36 @@ async def activity(ctx, month):
 
 
 @client.command(aliases=['link'])
-async def connect(ctx):
+async def connect(ctx, arg=None):
     activity_channel = client.get_channel(867303669203206194)
     current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
     embed1 = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
     embed1.add_field(name='Log in document:', value=f'**CONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
-    await activity_channel.send(embed=embed1)
+    await ctx.send(embed=embed1)
 
     embed = discord.Embed(title='[BETA] You Have Connected!', color=0x50C878)
     embed.add_field(name=f'Connection marked', value=f'''
 {ctx.author.mention}, thank you for marking down your activity!
 Use **!dc** or **!disconnect** to mark down disconnect time!\n''')
+
+    if random.randint(1,3) == 3 and arg is None:
+        embed.add_field(name='Tip:', value=f'''
+You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
     embed.set_footer(text=f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
     await ctx.send(embed=embed)
+
+    if arg is not None:
+        await ctx.send(f'I will remind you in {arg} to disconnect!')
+        if 'h' in arg:
+            arg = int(arg[0:len(arg)-1]) * 60 * 60
+        elif 'm' in arg:
+            arg = int(arg[0:len(arg)-1]) * 60
+        elif 's' in arg:
+            arg = int(arg[0:len(arg)-1])
+        await asyncio.sleep(int(arg))
+        await ctx.send(f'''
+{ctx.author.mention}, you told me to remind you {arg} seconds ago to disconnect! Make sure you did it!''')
 
     #WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
     #WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
