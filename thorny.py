@@ -117,7 +117,27 @@ class Gateway(commands.Cog):
 {gateText[1]["fields"]["king2"]}\n{gateText[1]["fields"]["king3"]}\n{gateText[1]["fields"]["king4"]}
 {gateText[1]["fields"]["king5"]}\n\n{gateText[1]["fields"]["point3"]}\n\n{gateText[1]["fields"]["point4"]}\n
 {gateText[1]["fields"]["point5"]}'''
+        elif gatenum == '2':
+            sendtext = 'Coming Soon...'
+        elif gatenum == '3':
+            sendtext = 'Coming Soon...'
+        elif gatenum == '4':
+            sendtext = 'Coming Soon...'
         await ctx.send(sendtext)
+
+
+class Kingdom(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command(aliases=['asba', 'ash', 'asb'])
+    async def asbahamael(self, ctx):
+        file = open('text files/kingdoms.json', 'r')
+        sendtext = json.load(file)
+        sendtext = f'''{sendtext[0]["slogan"]}**King**:{sendtext[0]["king"]}**Towns**:{sendtext[0]["towns"]}**Areas**:{sendtext[0]["areas"]}**Description**:
+{sendtext[0]["description"]}'''
+        await ctx.send(sendtext)
+
 
 
 @client.command()
@@ -162,6 +182,7 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
+client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
 client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
 client.run(TOKEN)
