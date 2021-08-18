@@ -9,9 +9,6 @@ import json
 
 TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
-screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!', 'ROOOOoooOOOOAARRRRRRRRRR',
-           '*screams*',
-           'https://tenor.com/view/scream-yell-mad-angry-fury-gif-3864070']
 
 
 @client.event
@@ -157,7 +154,6 @@ class Kingdom(commands.Cog):
         await ctx.send(sendtext)
 
 
-
 @client.command()
 async def pong(ctx):
     channel = client.get_channel(620441027043524618)
@@ -169,6 +165,10 @@ async def pong(ctx):
 
 @client.command(aliases=['shout', 'aaa', 'scr'])
 async def scream(ctx):
+    screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!',
+               'ROOOOoooOOOOAARRRRRRRRRR',
+               '*screams*',
+               'https://tenor.com/view/scream-yell-mad-angry-fury-gif-3864070', 'GASPPPPPP AAAAAAAAAAAA']
     channel = client.get_channel(620441027043524618)
     if ctx.channel == channel:
         screamnumber = random.randint(0, 5)
