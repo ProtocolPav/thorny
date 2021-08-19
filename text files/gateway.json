@@ -1,5 +1,4 @@
-[
-  {
+[{
     "id": 0,
     "title": "> **The Gateway Command**",
     "subtitle": "> Here you can find all of the gates and their corresponding numbers!",
@@ -28,5 +27,4 @@
       "point4": ":person_raising_hand: Use **!gateway** to see more helpful guides for Everthorn!",
       "point5": ":heart: **Chat** with us more! We are so happy to have you here!"
     }
-  }
-]
+  }]
