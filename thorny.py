@@ -40,6 +40,18 @@ class Activity(commands.Cog):
     @commands.command(aliases=['link'])
     async def connect(self, ctx, reminder_time=None):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
+        file = open('text files/temp.json', 'r+')
+        file_list = json.load(file)
+        for item in file_list:
+            if str(ctx.author.id) in item['userid']:
+                del file_list[file_list.index(item)]
+                await ctx.send('ALREADY CONNECTED BEFORE!')
+                file = open('text files/temp.json', 'w')
+                json.dump(file_list, file, indent=0)
+            else:
+                file = open('text files/temp.json', 'w')
+                pass
+
         activity_channel = client.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
@@ -71,6 +83,12 @@ class Activity(commands.Cog):
     {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect! Make sure you did it!''')
 
         writetofile("CONNECT", current_time, ctx)
+        file_list.append({"status": "CONNECT",
+                          "user": f"{ctx.author}",
+                          "userid": f"{ctx.author.id}",
+                          "date": f"{current_time.split(',')[0]}",
+                          "time": f"{current_time.split(',')[2][1:9]}"})
+        json.dump(file_list, file, indent=0)
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
