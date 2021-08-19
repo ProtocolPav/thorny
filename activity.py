@@ -4,6 +4,7 @@ OpenFile = 'abcd'
 rawActivity = []
 processingActivity = []
 individualHours = []
+individualHours_copy = []
 totalingActivity = []
 
 
@@ -12,6 +13,21 @@ def reset_values():
     processingActivity.clear()
     individualHours.clear()
     totalingActivity.clear()
+
+
+def writetofile(status, current_time, ctx):
+    ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
+    file = json.load(ReadFile)
+    write_time = current_time.split(',')
+    tempdict = {"status": status,
+                "user": f"{ctx.author}",
+                "userid": f"{ctx.author.id}",
+                "date": f"{write_time[0]}",
+                "time": f"{write_time[2][1:9]}"}
+    file.append(tempdict)
+    WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
+    separated_list_of_event_objects = ',\n'.join(json.dumps(evt) for evt in file)
+    WriteFile.write(f'[{separated_list_of_event_objects}]\n')
 
 
 def matching(item1, item2):
@@ -161,7 +177,8 @@ def process_json(month):
                     pass
             # Checks if the log is the last item in the list, if it is then it passes.
             # If it's the last one and a CONNECT, it puts it as 2h
-            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log)+1]['status'] == 'DISCONNECT':
+            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][
+                'status'] == 'DISCONNECT':
                 cHour = int(log['time'][0:2])
                 cMin = int(log['time'][3:5])
                 dcHour = int(processingActivity[processingActivity.index(log) + 1]['time'][0:2])
@@ -181,7 +198,8 @@ def process_json(month):
                                         'minutes': min_played})
                 print(f"{processingActivity[0]['user']} - {hrs_played}h{min_played}m")
             # Checks if the current log is CONNECT and if the log next to it is DISCONNECT, calculates time.
-            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1]['status'] == 'CONNECT':
+            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][
+                'status'] == 'CONNECT':
                 hrs_played = 2
                 min_played = 0
                 individualHours.append({'user': processingActivity[0]['user'],
@@ -233,13 +251,14 @@ def total_json(month):
     # Finishes everything up and writes to a file, in a sorted form from most to least.
 
 
+def statistics_json():
+    pass
+
 if __name__ == 'b__main__':
     opendoc('aug')
     process()
     total('aug')
 
 if __name__ == '__main__':
-    #rawActivity = opendoc_json('aug')
-    # Don't forget to use return and assigning when you assign a value to a variable!!!!
-    process_json()
+    process_json('aug')
     total_json('aug')

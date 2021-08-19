@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import opendoc_json, process_json, total_json, reset_values
+from activity import writetofile, process_json, total_json, reset_values
 import asyncio
 import json
 
@@ -39,8 +39,8 @@ class Activity(commands.Cog):
 
     @commands.command(aliases=['link'])
     async def connect(self, ctx, reminder_time=None):
-        activity_channel = client.get_channel(867303669203206194)
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
+        activity_channel = client.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Log in document:',
@@ -70,18 +70,7 @@ class Activity(commands.Cog):
             await ctx.send(f'''
     {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect! Make sure you did it!''')
 
-        ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
-        file = json.load(ReadFile)
-        write_time = current_time.split(',')
-        tempdict = {"status": "CONNECT",
-                    "user": f"{ctx.author}",
-                    "userid": f"{ctx.author.id}",
-                    "date": f"{write_time[0]}",
-                    "time": f"{write_time[2][1:9]}"}
-        file.append(tempdict)
-        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
-        separated_list_of_event_objects = ',\n'.join(json.dumps(evt) for evt in file)
-        WriteFile.write(f'[{separated_list_of_event_objects}]\n')
+        writetofile("CONNECT", current_time, ctx)
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
@@ -100,18 +89,7 @@ class Activity(commands.Cog):
         response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}')
         await ctx.send(embed=response_embed)
 
-        ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
-        file = json.load(ReadFile)
-        write_time = current_time.split(',')
-        tempdict = {"status": "DISCONNECT",
-                    "user": f"{ctx.author}",
-                    "userid": f"{ctx.author.id}",
-                    "date": f"{write_time[0]}",
-                    "time": f"{write_time[2][1:9]}"}
-        file.append(tempdict)
-        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'w')
-        separated_list_of_event_objects = ',\n'.join(json.dumps(evt) for evt in file)
-        WriteFile.write(f'[{separated_list_of_event_objects}]\n')
+        writetofile("DISCONNECT", current_time, ctx)
 
 
 class Gateway(commands.Cog):
