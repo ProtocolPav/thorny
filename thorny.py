@@ -7,6 +7,7 @@ from activity import writetofile, process_json, total_json, reset_values
 import asyncio
 import json
 
+# v1.0
 TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
 
@@ -67,7 +68,7 @@ class Activity(commands.Cog):
         if random.randint(1, 3) == 3 and reminder_time is None:
             response_embed.add_field(name='Tip:', value=f'''
     You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
-        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}')
+        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
         await ctx.send(embed=response_embed)
 
         if reminder_time is not None:
@@ -92,22 +93,41 @@ class Activity(commands.Cog):
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
-        activity_channel = client.get_channel(867303669203206194)
-        current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
+        file = open('text files/temp.json', 'r+')
+        file_list = json.load(file)
+        disconnected = False
+        not_user = 0
+        for item in file_list:
+            if str(ctx.author.id) not in item['userid'] and not disconnected:
+                not_user += 1
+            elif str(ctx.author.id) in item['userid'] and not disconnected:
+                activity_channel = client.get_channel(867303669203206194)
+                current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
+                playtime_hour = int(current_time.split(',')[2][1:3]) - int(item['time'][0:2])
+                playtime_minute = int(current_time.split(',')[2][4:6]) - int(item['time'][3:5])
 
-        log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
-        log_embed.add_field(name='Log:',
-                            value=f'**DISCONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
-        await ctx.send(embed=log_embed)
+                log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
+                log_embed.add_field(name='Log:',
+                                    value=f'**DISCONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
+                await ctx.send(embed=log_embed)
 
-        response_embed = discord.Embed(title='[BETA] You Have Disconnected!', color=0xE97451)
-        response_embed.add_field(name=f'Connection marked', value=f'''
-        {ctx.author.mention}, thank you for marking down your activity!
-        Use **!c** or **!connect** to mark down connect time!\n''')
-        response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}')
-        await ctx.send(embed=response_embed)
+                response_embed = discord.Embed(title='[BETA] You Have Disconnected!', color=0xE97451)
+                response_embed.add_field(name=f'Connection marked', value=f'''
+                {ctx.author.mention}, thank you for marking down your activity!
+                Use **!c** or **!connect** to mark down connect time!\nYou played for **{playtime_hour}h{playtime_minute}m**''')
+                response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+                await ctx.send(embed=response_embed)
 
-        writetofile("DISCONNECT", current_time, ctx)
+                writetofile("DISCONNECT", current_time, ctx)
+                disconnected = True
+
+                del file_list[file_list.index(item)]
+                file = open('text files/temp.json', 'w')
+                json.dump(file_list, file, indent=0)
+            else:
+                pass
+        if not_user >= 1 and not disconnected:
+            await ctx.send("You haven't connected yet!")
 
 
 class Gateway(commands.Cog):
