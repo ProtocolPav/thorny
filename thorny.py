@@ -46,9 +46,7 @@ class Activity(commands.Cog):
         for item in file_list:
             if str(ctx.author.id) in item['userid']:
                 del file_list[file_list.index(item)]
-                await ctx.send('ALREADY CONNECTED BEFORE!')
-                file = open('text files/temp.json', 'w')
-                json.dump(file_list, file, indent=0)
+                await ctx.send('Hm... I think you already connected before?\nEh, whatever!')
             else:
                 file = open('text files/temp.json', 'w')
                 pass
@@ -68,11 +66,23 @@ class Activity(commands.Cog):
         if random.randint(1, 3) == 3 and reminder_time is None:
             response_embed.add_field(name='Tip:', value=f'''
     You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
-        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
-        await ctx.send(embed=response_embed)
+            response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+            await ctx.send(embed=response_embed)
+        elif reminder_time is not None:
+            response_embed.add_field(name='I will remind you to disconnect in:', value=f'{reminder_time}', inline=False)
+            response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+            await ctx.send(embed=response_embed)
+
+        writetofile("CONNECT", current_time, ctx)
+        file_list.append({"status": "CONNECT",
+                          "user": f"{ctx.author}",
+                          "userid": f"{ctx.author.id}",
+                          "date": f"{current_time.split(',')[0]}",
+                          "time": f"{current_time.split(',')[2][1:9]}"})
+        print(file_list)
+        json.dump(file_list, file, indent=0)
 
         if reminder_time is not None:
-            await ctx.send(f'I will remind you in {reminder_time} to disconnect!')
             if 'h' in reminder_time:
                 reminder_time = int(reminder_time[0:len(reminder_time) - 1]) * 60 * 60
             elif 'm' in reminder_time:
@@ -82,14 +92,6 @@ class Activity(commands.Cog):
             await asyncio.sleep(int(reminder_time))
             await ctx.send(f'''
     {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect! Make sure you did it!''')
-
-        writetofile("CONNECT", current_time, ctx)
-        file_list.append({"status": "CONNECT",
-                          "user": f"{ctx.author}",
-                          "userid": f"{ctx.author.id}",
-                          "date": f"{current_time.split(',')[0]}",
-                          "time": f"{current_time.split(',')[2][1:9]}"})
-        json.dump(file_list, file, indent=0)
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
@@ -128,6 +130,30 @@ class Activity(commands.Cog):
                 pass
         if not_user >= 1 and not disconnected:
             await ctx.send("You haven't connected yet!")
+
+
+class Leaderboards(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command(aliases=['lb'])
+    async def leaderboard(self, ctx, lb_type=None, month=datetime.now().strftime("%B")):
+        if lb_type == 'activity' or lb_type == 'act':
+            temp = ''''''
+            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
+            reset_values()
+            process_json(month[0:3])
+            total_json(month[0:3])
+            file = open(f'text files/leaderboard_{month[0:3]}21.txt', 'r')
+            for line in file:
+                temp = f'''{temp}{line}'''
+            embed = discord.Embed(title=f'**Leaderboard of activity for {month.upper()}**', color=0xB4C424)
+            embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
+            await ctx.send(embed=embed)
+        elif lb_type == 'money' or lb_type == 'nugs':
+            await ctx.send('Coming soon...')
+        else:
+            await ctx.send('> **Available Leaderboards**\n\n`activity`\n`money`')
 
 
 class Gateway(commands.Cog):
@@ -217,6 +243,7 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
+client.add_cog(Leaderboards(client))
 client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
 client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
