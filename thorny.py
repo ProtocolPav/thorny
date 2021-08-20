@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import profile_disconnect, writetofile, process_json, total_json, reset_values
+from activity import profile_disconnect, writetofile, process_json, total_json, reset_values, find
 import asyncio
 import json
 
@@ -195,6 +195,14 @@ class Kingdom(commands.Cog):
         sendtext = f'''{sendtext[0]["slogan"]}**King**:{sendtext[0]["king"]}**Towns**:{sendtext[0]["towns"]}**Areas**:{sendtext[0]["areas"]}**Description**:
 {sendtext[0]["description"]}'''
         await ctx.send(sendtext)
+
+
+@client.command()
+async def profile(ctx):
+    file = json.load(open('text files/profiles.json', 'r'))
+    index = find(file, 'userid', f"{ctx.author.id}")
+    await ctx.send(f'''> Recent Playtime For {ctx.author}
+{file[index]['activity']['latest_playtime']['hour']}h{file[index]['activity']['latest_playtime']['minute']}m''')
 
 
 @client.command()
