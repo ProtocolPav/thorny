@@ -30,6 +30,22 @@ def writetofile(status, current_time, ctx):
     WriteFile.write(f'[{separated_list_of_event_objects}]\n')
 
 
+def find(lst, key, value):
+    for index, dic in enumerate(lst):
+        if dic[key] == value:
+            return index
+
+
+def profile_disconnect(ctx, playtime_hour, playtime_minute):
+    file = open('text files/profiles.json', 'r+')
+    file_loaded = json.load(file)
+    userid_index = find(file_loaded, 'userid', f"{ctx.author.id}")
+    file_loaded[userid_index]['activity']['latest_playtime']['hour'] = playtime_hour
+    file_loaded[userid_index]['activity']['latest_playtime']['minute'] = playtime_minute
+    file.seek(0)
+    json.dump(file_loaded, file, indent=0)
+
+
 def matching(item1, item2):
     if int(item2) == int(item1) or int(item2) - int(item1) == 1:
         return True
@@ -215,6 +231,7 @@ def process_json(month):
         processingActivity.clear()
         if len(sortedActivity) == 0:
             list_processed = True
+            individualHours_copy.append(individualHours)
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
 
 
@@ -254,6 +271,7 @@ def total_json(month):
 def statistics_json():
     pass
 
+
 if __name__ == 'b__main__':
     opendoc('aug')
     process()
@@ -261,4 +279,5 @@ if __name__ == 'b__main__':
 
 if __name__ == '__main__':
     process_json('aug')
+    print(individualHours_copy)
     total_json('aug')

@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import writetofile, process_json, total_json, reset_values
+from activity import profile_disconnect, writetofile, process_json, total_json, reset_values
 import asyncio
 import json
 
@@ -16,7 +16,7 @@ client = commands.Bot(command_prefix='!')
 async def on_ready():
     print(f"Logged in as {client.user}")
     botactivity = discord.Activity(type=discord.ActivityType.playing,
-                                   name="on Everthorn. Mining away. I don't know, what to mine!")
+                                   name="Everthorn lol")
     await client.change_presence(activity=botactivity)
 
 
@@ -63,7 +63,7 @@ class Activity(commands.Cog):
     {ctx.author.mention}, thank you for marking down your activity!
     Use **!dc** or **!disconnect** to mark down disconnect time!\n''')
 
-        if random.randint(1, 3) == 3 and reminder_time is None:
+        if random.randint(1, 3) == 3 or reminder_time is None:
             response_embed.add_field(name='Tip:', value=f'''
     You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
             response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
@@ -79,7 +79,6 @@ class Activity(commands.Cog):
                           "userid": f"{ctx.author.id}",
                           "date": f"{current_time.split(',')[0]}",
                           "time": f"{current_time.split(',')[2][1:9]}"})
-        print(file_list)
         json.dump(file_list, file, indent=0)
 
         if reminder_time is not None:
@@ -126,6 +125,7 @@ class Activity(commands.Cog):
                 del file_list[file_list.index(item)]
                 file = open('text files/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
+                profile_disconnect(ctx, playtime_hour, playtime_minute)
             else:
                 pass
         if not_user >= 1 and not disconnected:
