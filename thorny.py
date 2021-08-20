@@ -49,7 +49,7 @@ class Activity(commands.Cog):
         embed1 = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         embed1.add_field(name='Log in document:',
                          value=f'**CONNECT**, {current_time}, **{ctx.author}**, ||{ctx.author.id}||')
-        await ctx.send(embed=embed1)
+        await activity_channel.send(embed=embed1)
 
         embed = discord.Embed(title='[BETA] You Have Connected!', color=0x50C878)
         embed.add_field(name=f'Connection marked', value=f'''
@@ -74,8 +74,8 @@ class Activity(commands.Cog):
             await ctx.send(f'''
     {ctx.author.mention}, you told me to remind you {remindertime} seconds ago to disconnect! Make sure you did it!''')
 
-        # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        # WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
+        WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
@@ -94,8 +94,8 @@ class Activity(commands.Cog):
         embed.set_footer(text=f'DISCONNECT, {current_time}, {ctx.author}, {ctx.author.id}')
         await ctx.send(embed=embed)
 
-        # WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        # WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
+        WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
 
 
 class Gateway(commands.Cog):
@@ -182,7 +182,5 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
-client.add_cog(Kingdom(client))
-client.add_cog(Gateway(client))
 client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
 client.run(TOKEN)
