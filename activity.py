@@ -1,21 +1,25 @@
 import json
 
-OpenFile = 'abcd'
-rawActivity = []
-processingActivity = []
-individualHours = []
-individualHours_copy = []
-totalingActivity = []
-
 
 def reset_values():
-    rawActivity.clear()
-    processingActivity.clear()
-    individualHours.clear()
-    totalingActivity.clear()
+    global openfile, raw_activity, processing_activity, individual_hours, individual_hours_copy, totaling_activity
+    openfile = 'abcd'
+    raw_activity = []
+    processing_activity = []
+    individual_hours = []
+    individual_hours_copy = []
+    totaling_activity = []
 
 
-def writetofile(status, current_time, ctx):
+def append_to_individual_hours(hrs_played, min_played):
+    individual_hours.append({'user': processing_activity[0]['user'],
+                             'userid': processing_activity[0]['userid'],
+                             'hours': hrs_played,
+                             'minutes': min_played})
+    print(f"{processing_activity[0]['user']} - {hrs_played}h{min_played}m")
+
+
+def write_log(status: str, current_time: str, ctx):
     ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
     file = json.load(ReadFile)
     write_time = current_time.split(',')
@@ -30,7 +34,7 @@ def writetofile(status, current_time, ctx):
     WriteFile.write(f'[{separated_list_of_event_objects}]\n')
 
 
-def find(lst, key, value):
+def find_user_index(lst, key, value):
     for index, dic in enumerate(lst):
         if dic[key] == value:
             return index
@@ -39,14 +43,14 @@ def find(lst, key, value):
 def profile_disconnect(ctx, playtime_hour, playtime_minute):
     file = open('text files/profiles.json', 'r+')
     file_loaded = json.load(file)
-    userid_index = find(file_loaded, 'userid', f"{ctx.author.id}")
+    userid_index = find_user_index(file_loaded, 'userid', f"{ctx.author.id}")
     file_loaded[userid_index]['activity']['latest_playtime']['hour'] = playtime_hour
     file_loaded[userid_index]['activity']['latest_playtime']['minute'] = playtime_minute
     file.seek(0)
     json.dump(file_loaded, file, indent=0)
 
 
-def matching(item1, item2):
+def match(item1, item2):
     if int(item2) == int(item1) or int(item2) - int(item1) == 1:
         return True
     else:
@@ -63,7 +67,7 @@ def opendoc(month):
             time = field[3]
             player = field[4]
             playerid = field[5]
-            rawActivity.append(
+            raw_activity.append(
                 [status, player[1:len(player)], date[1:len(date)], time[1:len(time)], playerid[1:len(playerid)]])
         else:
             field.remove(line)
@@ -74,31 +78,31 @@ def process():
     hoursPlayed = 0
     minPlayed = 0
     listprocessed = False
-    sortedActivity = sorted(rawActivity, key=lambda x: (x[1], x[2], x[3]))
+    sortedActivity = sorted(raw_activity, key=lambda x: (x[1], x[2], x[3]))
     # Sorts the raw list. Sorts first by names, then by date and time.
     while not listprocessed:
         for log in sortedActivity:
             if sortedActivity[0][1] == log[1]:
-                processingActivity.append(log)
+                processing_activity.append(log)
         # Adds all logs with the same name into a separate list for processing
-        print(f'[PROCESSING] {processingActivity}')
-        for log in processingActivity:
-            if processingActivity.index(log) == len(processingActivity) - 1:
+        print(f'[PROCESSING] {processing_activity}')
+        for log in processing_activity:
+            if processing_activity.index(log) == len(processing_activity) - 1:
                 if log[0] == 'CONNECT':
                     hoursPlayed = 2
                     minPlayed = 0
-                    individualHours.append([processingActivity[0][1], hoursPlayed, minPlayed])
-                    print(f"{processingActivity[0][1]} - {hoursPlayed}h{minPlayed}m")
+                    individual_hours.append([processing_activity[0][1], hoursPlayed, minPlayed])
+                    print(f"{processing_activity[0][1]} - {hoursPlayed}h{minPlayed}m")
                 else:
                     print("pass")
                     pass
             # Checks if the log is the last item in the list, if it is then it passes.
             # If it's the last one and a CONNECT, it puts it as 2h
-            elif log[0] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][0] == 'DISCONNECT':
+            elif log[0] == 'CONNECT' and processing_activity[processing_activity.index(log) + 1][0] == 'DISCONNECT':
                 cHour = int(log[3][0:2])
                 cMin = int(log[3][3:5])
-                dcHour = int(processingActivity[processingActivity.index(log) + 1][3][0:2])
-                dcMin = int(processingActivity[processingActivity.index(log) + 1][3][3:5])
+                dcHour = int(processing_activity[processing_activity.index(log) + 1][3][0:2])
+                dcMin = int(processing_activity[processing_activity.index(log) + 1][3][3:5])
 
                 hoursPlayed = dcHour - cHour
                 minPlayed = dcMin - cMin
@@ -108,20 +112,20 @@ def process():
                     hoursPlayed = 2
                 if minPlayed < 0:
                     minPlayed += 60
-                individualHours.append([processingActivity[0][1], hoursPlayed, minPlayed])
-                print(f"{processingActivity[0][1]} - {hoursPlayed}h{minPlayed}m")
+                individual_hours.append([processing_activity[0][1], hoursPlayed, minPlayed])
+                print(f"{processing_activity[0][1]} - {hoursPlayed}h{minPlayed}m")
             # Checks if the current log is CONNECT and if the log next to it is DISCONNECT, calculates time.
-            elif log[0] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][0] == 'CONNECT':
+            elif log[0] == 'CONNECT' and processing_activity[processing_activity.index(log) + 1][0] == 'CONNECT':
                 hoursPlayed = 2
                 minPlayed = 0
-                individualHours.append([processingActivity[0][1], hoursPlayed, minPlayed])
-                print(f"{processingActivity[0][1]} - {hoursPlayed}h{minPlayed}m")
+                individual_hours.append([processing_activity[0][1], hoursPlayed, minPlayed])
+                print(f"{processing_activity[0][1]} - {hoursPlayed}h{minPlayed}m")
             else:
                 pass
         # If there is no C/DC pair, it sets it as 2h automatically, in case someone 'forgot' to disconnect.
-        for item in processingActivity:
+        for item in processing_activity:
             sortedActivity.remove(item)
-        processingActivity.clear()
+        processing_activity.clear()
         if len(sortedActivity) == 0:
             listprocessed = True
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
@@ -134,10 +138,10 @@ def total(month):
     while not totaled:
         totHour = 0
         totMin = 0
-        for hour in individualHours:
-            if individualHours[0][0] == hour[0]:
-                totalingActivity.append(hour)
-        for hour in totalingActivity:
+        for hour in individual_hours:
+            if individual_hours[0][0] == hour[0]:
+                totaling_activity.append(hour)
+        for hour in totaling_activity:
             totHour += hour[1]
             totMin += hour[2]
             name = hour[0]
@@ -147,10 +151,10 @@ def total(month):
             totHour = totMin / 100
         # Follows the same route with listing as process(). Here, many calculations happen.
 
-        for item in totalingActivity:
-            individualHours.remove(item)
-        totalingActivity.clear()
-        if len(individualHours) == 0:
+        for item in totaling_activity:
+            individual_hours.remove(item)
+        totaling_activity.clear()
+        if len(individual_hours) == 0:
             totaled = True
         leaderboard.append([name, totHour])
     leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
@@ -167,72 +171,59 @@ def opendoc_json(month):
 
 
 def process_json(month):
-    rawActivity = opendoc_json(month)
-
+    global next_log
+    raw_activity = opendoc_json(month)
     list_processed = False
-    sortedActivity = sorted(rawActivity, key=lambda x: (x['userid'], x['date'], x['time']))
-    # Sorts the raw list. Sorts first by names, then by date and time.
+    sorted_activity = sorted(raw_activity, key=lambda x: (x['userid'], x['date'], x['time']))
+
     while not list_processed:
-        for log in sortedActivity:
-            if sortedActivity[0]['userid'] == log['userid']:
-                processingActivity.append(log)
-        # Adds all logs with the same userid into a separate dict for processing
-        print(f'[PROCESSING] {processingActivity}')
-        for log in processingActivity:
-            if processingActivity.index(log) == len(processingActivity) - 1:
+        for log in sorted_activity:
+            if sorted_activity[0]['userid'] == log['userid']:
+                processing_activity.append(log)
+        print(f'[PROCESSING] {processing_activity}')
+
+        for log in processing_activity:
+            if processing_activity.index(log) != len(processing_activity) - 1:
+                next_log = processing_activity[processing_activity.index(log) + 1]
+
+            # If it's the last log and a CONNECT, it puts it as 2h, as there is no DISCONNECT after
+            if processing_activity.index(log) == len(processing_activity) - 1:
                 if log['status'] == 'CONNECT':
                     hrs_played = 2
                     min_played = 0
-                    individualHours.append({'user': processingActivity[0]['user'],
-                                            'userid': processingActivity[0]['userid'],
-                                            'hours': hrs_played,
-                                            'minutes': min_played})
-                    print(f"{processingActivity[0]['user']} - {hrs_played}h{min_played}m")
+                    append_to_individual_hours(hrs_played, min_played)
                 else:
                     print("pass")
                     pass
-            # Checks if the log is the last item in the list, if it is then it passes.
-            # If it's the last one and a CONNECT, it puts it as 2h
-            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][
-                'status'] == 'DISCONNECT':
-                cHour = int(log['time'][0:2])
-                cMin = int(log['time'][3:5])
-                dcHour = int(processingActivity[processingActivity.index(log) + 1]['time'][0:2])
-                dcMin = int(processingActivity[processingActivity.index(log) + 1]['time'][3:5])
 
-                hrs_played = dcHour - cHour
-                min_played = dcMin - cMin
+            # If there is no C/DC pair, it sets it as 2h automatically, in case someone 'forgot' to disconnect.
+            elif log['status'] == 'CONNECT' and next_log['status'] == 'CONNECT':
+                hrs_played = 1
+                min_played = 5
+                append_to_individual_hours(hrs_played, min_played)
+
+            elif log['status'] == 'CONNECT' and next_log['status'] == 'DISCONNECT':
+                log_times = [int(log['time'][0:2]), int(next_log['time'][0:2]), int(log['time'][3:5]),
+                             int(next_log['time'][3:5])]
+
+                hrs_played = log_times[1] - log_times[0]
+                min_played = log_times[3] - log_times[2]
                 if hrs_played < 0:
                     hrs_played += 24
-                if hrs_played >= 14:
+                if hrs_played >= 12:
                     hrs_played = 2
                 if min_played < 0:
                     min_played += 60
-                individualHours.append({'user': processingActivity[0]['user'],
-                                        'userid': processingActivity[0]['userid'],
-                                        'hours': hrs_played,
-                                        'minutes': min_played})
-                print(f"{processingActivity[0]['user']} - {hrs_played}h{min_played}m")
-            # Checks if the current log is CONNECT and if the log next to it is DISCONNECT, calculates time.
-            elif log['status'] == 'CONNECT' and processingActivity[processingActivity.index(log) + 1][
-                'status'] == 'CONNECT':
-                hrs_played = 2
-                min_played = 0
-                individualHours.append({'user': processingActivity[0]['user'],
-                                        'userid': processingActivity[0]['userid'],
-                                        'hours': hrs_played,
-                                        'minutes': min_played})
-                print(f"{processingActivity[0]['user']} - {hrs_played}h{min_played}m")
+                append_to_individual_hours(hrs_played, min_played)
             else:
                 pass
-        # If there is no C/DC pair, it sets it as 2h automatically, in case someone 'forgot' to disconnect.
-        for item in processingActivity:
-            sortedActivity.remove(item)
-        processingActivity.clear()
-        if len(sortedActivity) == 0:
-            list_processed = True
-            individualHours_copy.append(individualHours)
-    # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
+
+        for item in processing_activity:
+            sorted_activity.remove(item)
+            if len(sorted_activity) == 0:
+                list_processed = True
+                individual_hours_copy.append(individual_hours)
+        processing_activity.clear()
 
 
 def total_json(month):
@@ -242,10 +233,12 @@ def total_json(month):
     while not totaled:
         total_hours = 0
         total_minutes = 0
-        for hour in individualHours:
-            if individualHours[0]['userid'] == hour['userid']:
-                totalingActivity.append(hour)
-        for hour in totalingActivity:
+        for hour in individual_hours:
+            if individual_hours[0]['userid'] == hour['userid']:
+                totaling_activity.append(hour)
+
+        # Totals all the individual hours
+        for hour in totaling_activity:
             total_hours += hour['hours']
             total_minutes += hour['minutes']
             name = hour['user']
@@ -253,19 +246,19 @@ def total_json(month):
             total_hours += round(total_minutes / 60)
         if total_hours < 1:
             total_hours = total_minutes / 100
-        # Follows the same route with listing as process(). Here, many calculations happen.
-
-        for item in totalingActivity:
-            individualHours.remove(item)
-        totalingActivity.clear()
-        if len(individualHours) == 0:
-            totaled = True
         leaderboard.append([name, total_hours])
+
+        for item in totaling_activity:
+            individual_hours.remove(item)
+            if len(individual_hours) == 0:
+                totaled = True
+        totaling_activity.clear()
+
+    # Sorts and writes the leaderboard into a file
     leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
-    WriteFile = open(f'text files/leaderboard_{month}21.txt', 'w')
+    lb_file = open(f'text files/leaderboard_{month}21.txt', 'w')
     for item in leaderboard:
-        WriteFile.write(f"{item[0]} - **{item[1]}h**\n")
-    # Finishes everything up and writes to a file, in a sorted form from most to least.
+        lb_file.write(f"{item[0]} - **{item[1]}h**\n")
 
 
 def statistics_json():
@@ -278,6 +271,6 @@ if __name__ == 'b__main__':
     total('aug')
 
 if __name__ == '__main__':
+    reset_values()
     process_json('aug')
-    print(individualHours_copy)
     total_json('aug')

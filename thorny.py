@@ -3,7 +3,7 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import profile_disconnect, writetofile, process_json, total_json, reset_values, find
+from activity import profile_disconnect, write_log, process_json, total_json, reset_values, find_user_index
 import asyncio
 import json
 
@@ -24,48 +24,35 @@ class Activity(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['act'])
-    async def activity(self, ctx, month):
-        temp = ''''''
-        print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
-        reset_values()
-        process_json(month)
-        total_json(month[0:3])
-        file = open(f'text files/leaderboard_{month[0:3]}21.txt', 'r')
-        for line in file:
-            temp = f'''{temp}{line}'''
-        embed = discord.Embed(title=f'**ACTIVITY FOR {month.upper()}**', color=0xB4C424)
-        embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
-        await ctx.send(embed=embed)
-
     @commands.command(aliases=['link'])
     async def connect(self, ctx, reminder_time=None):
+
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
-        file = open('text files/temp.json', 'r+')
-        file_list = json.load(file)
-        for item in file_list:
+        temp_file = open('text files/temp.json', 'r+')
+        list_of_dicts = json.load(temp_file)
+        for item in list_of_dicts:
             if str(ctx.author.id) in item['userid']:
-                del file_list[file_list.index(item)]
+                del list_of_dicts[list_of_dicts.index(item)]
                 await ctx.send('Hm... I think you already connected before?\nEh, whatever!')
             else:
-                file = open('text files/temp.json', 'w')
+                temp_file = open('text files/temp.json', 'w')
                 pass
 
         activity_channel = client.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Log in document:',
-                            value=f'**CONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
+                            value=f'**CONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
         await ctx.send(embed=log_embed)
 
-        response_embed = discord.Embed(title='[BETA] You Have Connected!', color=0x50C878)
-        response_embed.add_field(name=f'Connection marked', value=f'''
-    {ctx.author.mention}, thank you for marking down your activity!
-    Use **!dc** or **!disconnect** to mark down disconnect time!\n''')
+        response_embed = discord.Embed(title='You Have Connected!', color=0x50C878)
+        response_embed.add_field(name=f'Activity Logged', value=f'''
+{ctx.author.mention}, thanks for logging your activity!
+When you leave, use **!dc** or **!disconnect**, that way your leave time is also logged!\n''')
 
         if random.randint(1, 3) == 3 or reminder_time is None:
             response_embed.add_field(name='Tip:', value=f'''
-    You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
+You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
             response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
             await ctx.send(embed=response_embed)
         elif reminder_time is not None:
@@ -73,13 +60,13 @@ class Activity(commands.Cog):
             response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
             await ctx.send(embed=response_embed)
 
-        writetofile("CONNECT", current_time, ctx)
-        file_list.append({"status": "CONNECT",
-                          "user": f"{ctx.author}",
-                          "userid": f"{ctx.author.id}",
-                          "date": f"{current_time.split(',')[0]}",
-                          "time": f"{current_time.split(',')[2][1:9]}"})
-        json.dump(file_list, file, indent=0)
+        write_log("CONNECT", current_time, ctx)
+        list_of_dicts.append({"status": "CONNECT",
+                              "user": f"{ctx.author}",
+                              "userid": f"{ctx.author.id}",
+                              "date": f"{current_time.split(',')[0]}",
+                              "time": f"{current_time.split(',')[2][1:9]}"})
+        json.dump(list_of_dicts, temp_file, indent=0)
 
         if reminder_time is not None:
             if 'h' in reminder_time:
@@ -90,7 +77,7 @@ class Activity(commands.Cog):
                 reminder_time = int(reminder_time[0:len(reminder_time) - 1])
             await asyncio.sleep(int(reminder_time))
             await ctx.send(f'''
-    {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect! Make sure you did it!''')
+    {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect!''')
 
     @commands.command(aliases=['unlink'])
     async def disconnect(self, ctx):
@@ -112,14 +99,14 @@ class Activity(commands.Cog):
                                     value=f'**DISCONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
                 await ctx.send(embed=log_embed)
 
-                response_embed = discord.Embed(title='[BETA] You Have Disconnected!', color=0xE97451)
+                response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
                 response_embed.add_field(name=f'Connection marked', value=f'''
                 {ctx.author.mention}, thank you for marking down your activity!
                 Use **!c** or **!connect** to mark down connect time!\nYou played for **{playtime_hour}h{playtime_minute}m**''')
                 response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
                 await ctx.send(embed=response_embed)
 
-                writetofile("DISCONNECT", current_time, ctx)
+                write_log("DISCONNECT", current_time, ctx)
                 disconnected = True
 
                 del file_list[file_list.index(item)]
@@ -139,16 +126,16 @@ class Leaderboards(commands.Cog):
     @commands.command(aliases=['lb'])
     async def leaderboard(self, ctx, lb_type=None, month=datetime.now().strftime("%B")):
         if lb_type == 'activity' or lb_type == 'act':
-            temp = ''''''
+            lb_to_send = ''
             print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
             reset_values()
             process_json(month[0:3])
             total_json(month[0:3])
             file = open(f'text files/leaderboard_{month[0:3]}21.txt', 'r')
             for line in file:
-                temp = f'''{temp}{line}'''
+                lb_to_send = f'{lb_to_send}{line}'
             embed = discord.Embed(title=f'**Leaderboard of activity for {month.upper()}**', color=0xB4C424)
-            embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
+            embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{lb_to_send}")
             await ctx.send(embed=embed)
         elif lb_type == 'money' or lb_type == 'nugs':
             await ctx.send('Coming soon...')
@@ -200,7 +187,7 @@ class Kingdom(commands.Cog):
 @client.command()
 async def profile(ctx):
     file = json.load(open('text files/profiles.json', 'r'))
-    index = find(file, 'userid', f"{ctx.author.id}")
+    index = find_user_index(file, 'userid', f"{ctx.author.id}")
     await ctx.send(f'''> Recent Playtime For {ctx.author}
 {file[index]['activity']['latest_playtime']['hour']}h{file[index]['activity']['latest_playtime']['minute']}m''')
 
