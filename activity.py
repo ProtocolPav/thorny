@@ -22,7 +22,7 @@ def opendoc(month):
             time = field[3]
             player = field[4]
             playerid = field[5]
-            rawActivity.append([status, player[1:len(player)], date[1:len(date)], time[1:len(time)], playerid[1:len(playerid)]])
+            rawActivity.append([status, player[1:len(player)], date[1:len(date)], time[1:len(time)]])
         else:
             field.remove(line)
     # Opens the file, adds fields into the raw list for it to begin processing
