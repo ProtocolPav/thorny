@@ -41,7 +41,7 @@ class Activity(commands.Cog):
         embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['link'])
+    @commands.command(aliases=['link', 'c'])
     async def connect(self, ctx, remindertime=None):
         activity_channel = client.get_channel(867303669203206194)
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
@@ -75,9 +75,9 @@ class Activity(commands.Cog):
     {ctx.author.mention}, you told me to remind you {remindertime} seconds ago to disconnect! Make sure you did it!''')
 
         WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        WriteFile.write(f'CONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        WriteFile.write(f'CONNECT, {current_time}, {ctx.author}, {ctx.author.id},\n')
 
-    @commands.command(aliases=['unlink'])
+    @commands.command(aliases=['unlink', 'dc'])
     async def disconnect(self, ctx):
         activity_channel = client.get_channel(867303669203206194)
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
@@ -95,7 +95,7 @@ class Activity(commands.Cog):
         await ctx.send(embed=embed)
 
         WriteFile = open(f'text files/activity_{current_time[0:3].lower()}21.txt', 'a')
-        WriteFile.write(f'DISCONNECT, {ctx.author}, {current_time}, {ctx.author.id},\n')
+        WriteFile.write(f'DISCONNECT, {current_time}, {ctx.author}, {ctx.author.id},\n')
 
 
 class Gateway(commands.Cog):
