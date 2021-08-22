@@ -139,7 +139,6 @@ class Kingdom(commands.Cog):
         await ctx.send(sendtext)
 
 
-
 @client.command()
 async def pong(ctx):
     channel = client.get_channel(620441027043524618)
@@ -162,6 +161,11 @@ async def setprefix(ctx, prefix):
     if ctx.author.id == 266202793143042048:
         client.command_prefix = prefix
         await ctx.send(f"Prefix changed to `{prefix}`")
+
+
+@client.command()
+async def version(ctx):
+    await ctx.send(f"Bot Version 0.2")
 
 
 @client.event
