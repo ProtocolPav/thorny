@@ -38,16 +38,49 @@ def find_user_index(lst, key, value):
     for index, dic in enumerate(lst):
         if dic[key] == value:
             return index
+    return None
 
 
 def profile_disconnect(ctx, playtime_hour, playtime_minute):
     file = open('text files/profiles.json', 'r+')
     file_loaded = json.load(file)
-    userid_index = find_user_index(file_loaded, 'userid', f"{ctx.author.id}")
-    file_loaded[userid_index]['activity']['latest_playtime']['hour'] = playtime_hour
-    file_loaded[userid_index]['activity']['latest_playtime']['minute'] = playtime_minute
+    if str(ctx.author.id) not in file_loaded:
+        profile_create(ctx)
+    else:
+        file_loaded[f'{ctx.author.id}']['activity']['latest_playtime']['hour'] = playtime_hour
+        file_loaded[f'{ctx.author.id}']['activity']['latest_playtime']['minute'] = playtime_minute
+        file.seek(0)
+        json.dump(file_loaded, file, indent=3)
+
+
+def profile_create(ctx):
+    file = open('text files/profiles.json', 'r+')
+    file_loaded = json.load(file)
+    file_loaded[str(ctx.author.id)] = ({
+                        "user": f"{ctx.author}",
+                        "balance": 0,
+                        "activity": {
+                            "total": 0,
+                            "latest_playtime": {
+                                "hour": 0,
+                                "minute": 0
+                            },
+                            "daily_average": None,
+                            "current_month": 0,
+                            "1_month_ago": 0,
+                            "2_months_ago": 0
+                        },
+                        "inventory": {
+                            "slot1": None,
+                            "slot2": None,
+                            "slot3": None,
+                            "slot4": None,
+                            "slot5": None,
+                            "slot6": None}
+                        })
+    file.truncate(0)
     file.seek(0)
-    json.dump(file_loaded, file, indent=0)
+    json.dump(file_loaded, file, indent=3)
 
 
 def match(item1, item2):
@@ -77,10 +110,10 @@ def opendoc(month):
 def process():
     hoursPlayed = 0
     minPlayed = 0
-    listprocessed = False
+    list_processed = False
     sortedActivity = sorted(raw_activity, key=lambda x: (x[1], x[2], x[3]))
     # Sorts the raw list. Sorts first by names, then by date and time.
-    while not listprocessed:
+    while not list_processed:
         for log in sortedActivity:
             if sortedActivity[0][1] == log[1]:
                 processing_activity.append(log)
@@ -127,7 +160,7 @@ def process():
             sortedActivity.remove(item)
         processing_activity.clear()
         if len(sortedActivity) == 0:
-            listprocessed = True
+            list_processed = True
     # Removes the processed items from the processing list. If there's 0 items, then the flag is raised.
 
 

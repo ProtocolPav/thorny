@@ -3,12 +3,15 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import profile_disconnect, write_log, process_json, total_json, reset_values, find_user_index
+from activity import profile_disconnect, write_log, process_json, total_json, reset_values
+from activity import profile_create
 import asyncio
 import json
 
 # v1.0
-TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
+# This token is for the TEST bot
+TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
+TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
 
 
@@ -26,7 +29,6 @@ class Activity(commands.Cog):
 
     @commands.command(aliases=['link'])
     async def connect(self, ctx, reminder_time=None):
-
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
         temp_file = open('text files/temp.json', 'r+')
         list_of_dicts = json.load(temp_file)
@@ -184,12 +186,39 @@ class Kingdom(commands.Cog):
         await ctx.send(sendtext)
 
 
+class Bank(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command()
+    async def balance(self, ctx):
+        profile = json.load(open('text files/profiles.json', 'r'))
+        if str(ctx.author.id) not in profile:
+            profile_create(ctx)
+            await ctx.send('No profile found. Creating a Profile for you!')
+        else:
+            await ctx.send(f"Your balance is {profile[f'{ctx.author.id}']['balance']}")
+
+    @commands.command()
+    async def addmoney(self, ctx, amount):
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        if str(ctx.author.id) not in profile:
+            profile_create(ctx)
+            await ctx.send('No profile found. Creating a Profile for you!')
+        else:
+            profile[f'{ctx.author.id}']['balance'] += int(amount)
+            profile_file.truncate(0)
+            profile_file.seek(0)
+            json.dump(profile, profile_file, indent=3)
+            await ctx.send(f"Your balance is now {profile[f'{ctx.author.id}']['balance']}")
+
+
 @client.command()
 async def profile(ctx):
     file = json.load(open('text files/profiles.json', 'r'))
-    index = find_user_index(file, 'userid', f"{ctx.author.id}")
     await ctx.send(f'''> Recent Playtime For {ctx.author}
-{file[index]['activity']['latest_playtime']['hour']}h{file[index]['activity']['latest_playtime']['minute']}m''')
+{file[f'{ctx.author.id}']['activity']['latest_playtime']['hour']}h{file[f'{ctx.author.id}']['activity']['latest_playtime']['minute']}m''')
 
 
 @client.command()
@@ -238,6 +267,7 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
+client.add_cog(Bank(client))
 client.add_cog(Leaderboards(client))
 client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
