@@ -41,46 +41,36 @@ def find_user_index(lst, key, value):
     return None
 
 
-def profile_disconnect(ctx, playtime_hour, playtime_minute):
-    file = open('text files/profiles.json', 'r+')
-    file_loaded = json.load(file)
-    if str(ctx.author.id) not in file_loaded:
-        profile_create(ctx)
-    else:
-        file_loaded[f'{ctx.author.id}']['activity']['latest_playtime']['hour'] = playtime_hour
-        file_loaded[f'{ctx.author.id}']['activity']['latest_playtime']['minute'] = playtime_minute
-        file.seek(0)
-        json.dump(file_loaded, file, indent=3)
-
-
-def profile_create(ctx):
-    file = open('text files/profiles.json', 'r+')
-    file_loaded = json.load(file)
-    file_loaded[str(ctx.author.id)] = ({
-                        "user": f"{ctx.author}",
-                        "balance": 0,
-                        "activity": {
-                            "total": 0,
-                            "latest_playtime": {
-                                "hour": 0,
-                                "minute": 0
-                            },
-                            "daily_average": None,
-                            "current_month": 0,
-                            "1_month_ago": 0,
-                            "2_months_ago": 0
-                        },
-                        "inventory": {
-                            "slot1": None,
-                            "slot2": None,
-                            "slot3": None,
-                            "slot4": None,
-                            "slot5": None,
-                            "slot6": None}
-                        })
-    file.truncate(0)
-    file.seek(0)
-    json.dump(file_loaded, file, indent=3)
+def profile_update(ctx, value=None, key1=None, key2=None):
+    profile_file = open('text files/profiles.json', 'r+')
+    profile = json.load(profile_file)
+    if str(ctx.author.id) not in profile:
+        profile[str(ctx.author.id)] = ({"user": f"{ctx.author}",
+                                        "balance": 0,
+                                        "activity": {
+                                            "total": 0,
+                                            "latest_hour": 0,
+                                            "latest_minute": 0,
+                                            "daily_average": None,
+                                            "current_month": 0,
+                                            "1_month_ago": 0,
+                                            "2_months_ago": 0
+                                        },
+                                        "inventory": {
+                                            "slot1": None,
+                                            "slot2": None,
+                                            "slot3": None,
+                                            "slot4": None,
+                                            "slot5": None,
+                                            "slot6": None}
+                                        })
+    if key2 is None and value and key1 is not None:
+        profile[f"{ctx.author.id}"][key1] = value
+    elif value and key1 and key2 is not None:
+        profile[f"{ctx.author.id}"][key1][key2] = value
+    profile_file.truncate(0)
+    profile_file.seek(0)
+    json.dump(profile, profile_file, indent=3)
 
 
 def match(item1, item2):

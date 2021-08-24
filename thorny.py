@@ -3,8 +3,8 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
-from activity import profile_disconnect, write_log, process_json, total_json, reset_values
-from activity import profile_create
+from activity import write_log, process_json, total_json, reset_values
+from activity import profile_update
 import asyncio
 import json
 
@@ -27,7 +27,7 @@ class Activity(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['link'])
+    @commands.command(aliases=['link', 'c', 'C'])
     async def connect(self, ctx, reminder_time=None):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
         temp_file = open('text files/temp.json', 'r+')
@@ -52,9 +52,9 @@ class Activity(commands.Cog):
 {ctx.author.mention}, thanks for logging your activity!
 When you leave, use **!dc** or **!disconnect**, that way your leave time is also logged!\n''')
 
-        if random.randint(1, 3) == 3 or reminder_time is None:
+        if random.randint(1, 2) == 2 or reminder_time is None:
             response_embed.add_field(name='Tip:', value=f'''
-You can set the bot to remind you! simply type in **2h**, **20m**, or any other time you want!''', inline=False)
+You can set the bot to remind you! simply type in `!c 24m` or any other time you want!''', inline=False)
             response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
             await ctx.send(embed=response_embed)
         elif reminder_time is not None:
@@ -81,7 +81,7 @@ You can set the bot to remind you! simply type in **2h**, **20m**, or any other 
             await ctx.send(f'''
     {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect!''')
 
-    @commands.command(aliases=['unlink'])
+    @commands.command(aliases=['unlink', 'dc', 'Dc'])
     async def disconnect(self, ctx):
         file = open('text files/temp.json', 'r+')
         file_list = json.load(file)
@@ -114,7 +114,8 @@ You can set the bot to remind you! simply type in **2h**, **20m**, or any other 
                 del file_list[file_list.index(item)]
                 file = open('text files/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
-                profile_disconnect(ctx, playtime_hour, playtime_minute)
+                profile_update(ctx, playtime_hour, 'activity', 'latest_hour')
+                profile_update(ctx, playtime_minute, 'activity', 'latest_minute')
             else:
                 pass
         if not_user >= 1 and not disconnected:
@@ -192,33 +193,28 @@ class Bank(commands.Cog):
 
     @commands.command()
     async def balance(self, ctx):
-        profile = json.load(open('text files/profiles.json', 'r'))
-        if str(ctx.author.id) not in profile:
-            profile_create(ctx)
-            await ctx.send('No profile found. Creating a Profile for you!')
-        else:
-            await ctx.send(f"Your balance is {profile[f'{ctx.author.id}']['balance']}")
+        profile_update(ctx)
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        await ctx.send(f"Your balance is {profile[f'{ctx.author.id}']['balance']}")
 
     @commands.command()
     async def addmoney(self, ctx, amount):
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
-        if str(ctx.author.id) not in profile:
-            profile_create(ctx)
-            await ctx.send('No profile found. Creating a Profile for you!')
-        else:
-            profile[f'{ctx.author.id}']['balance'] += int(amount)
-            profile_file.truncate(0)
-            profile_file.seek(0)
-            json.dump(profile, profile_file, indent=3)
-            await ctx.send(f"Your balance is now {profile[f'{ctx.author.id}']['balance']}")
+        if str(ctx.author.id) in profile:
+            amount = profile[f'{ctx.author.id}']['balance'] + int(amount)
+        profile_update(ctx, int(amount), 'balance')
+        await ctx.send(f"Your balance is now {amount}")
 
 
 @client.command()
 async def profile(ctx):
-    file = json.load(open('text files/profiles.json', 'r'))
+    profile_update(ctx)
+    profile = json.load(open('text files/profiles.json', 'r'))
     await ctx.send(f'''> Recent Playtime For {ctx.author}
-{file[f'{ctx.author.id}']['activity']['latest_playtime']['hour']}h{file[f'{ctx.author.id}']['activity']['latest_playtime']['minute']}m''')
+{profile[f'{ctx.author.id}']['activity']['latest_hour']}h{
+profile[f'{ctx.author.id}']['activity']['latest_minute']}m''')
 
 
 @client.command()
@@ -234,8 +230,8 @@ async def pong(ctx):
 async def scream(ctx):
     screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!',
                'ROOOOoooOOOOAARRRRRRRRRR',
-               '*screams*',
-               'https://tenor.com/view/scream-yell-mad-angry-fury-gif-3864070', 'GASPPPPPP AAAAAAAAAAAA']
+               '*screams*', 'https://tenor.com/view/scream-yell-mad-angry-fury-gif-3864070',
+               'GASPPPPPP AAAAAAAAAAAA']
     channel = client.get_channel(620441027043524618)
     if ctx.channel == channel:
         screamnumber = random.randint(0, 5)
