@@ -230,8 +230,8 @@ def process_json(month):
                 append_to_individual_hours(hrs_played, min_played)
 
             elif log['status'] == 'CONNECT' and next_log['status'] == 'DISCONNECT':
-                log_times = [int(log['time'][0:2]), int(next_log['time'][0:2]), int(log['time'][3:5]),
-                             int(next_log['time'][3:5])]
+                log_times = [int(log['time'][0:2]), int(next_log['time'][0:2]),
+                             int(log['time'][3:5]), int(next_log['time'][3:5])]
 
                 hrs_played = log_times[1] - log_times[0]
                 min_played = log_times[3] - log_times[2]
@@ -242,6 +242,10 @@ def process_json(month):
                 if min_played < 0:
                     min_played += 60
                 append_to_individual_hours(hrs_played, min_played)
+
+            elif log['status'] == 'SET':
+                hrs_played = int(log['time'])
+                append_to_individual_hours(hrs_played, 0)
             else:
                 pass
 
