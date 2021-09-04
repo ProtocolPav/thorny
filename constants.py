@@ -16,8 +16,8 @@ gateway_1 = f'''
 :postal_horn: Join a **Kingdom** by messaging it's **Ruler!** To see more info, use their `!command`
 \t:coin: `!ambria` - **King Thiccin IV**
 \t:star2: `!asbahamael` - **Queen Cake VII**
-\t:japanese_castle: `!dalvasha` - **King Bee III**
-\t:classical_building: `!eireann` - **3rd President Burak**
+\t:japanese_castle: `!dalvasha` - **King Trebil IV**
+\t:classical_building: `!eireann` - **4th President Undertaker**
 \t:dove: `!stregabor` - **Emperor Sniper II**\n
 :incoming_envelope: To get the **Realm Code**, reach **Level 3** by talking here with us and **pick a kingdom**! Then, ask a CM!\n
 :person_raising_hand: Use **!gateway** to see more helpful guides for Everthorn!\n
