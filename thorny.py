@@ -7,6 +7,7 @@ from activity import write_log, process_json, total_json, reset_values
 from activity import profile_update
 import asyncio
 import json
+import constants
 
 # v1.0
 # This token is for the TEST bot
@@ -31,11 +32,13 @@ class Activity(commands.Cog):
     async def connect(self, ctx, reminder_time=None):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
         temp_file = open('text files/temp.json', 'r+')
-        list_of_dicts = json.load(temp_file)
-        for item in list_of_dicts:
+        temp_logs = json.load(temp_file)
+
+        for item in temp_logs:
             if str(ctx.author.id) in item['userid']:
-                del list_of_dicts[list_of_dicts.index(item)]
-                await ctx.send('Hm... I think you already connected before?\nEh, whatever!')
+                del temp_logs[temp_logs.index(item)]
+                await ctx.send("You already connected before, BUT it's Ay Okay! "
+                               "I marked down your previous connection as 1h5m. Always glad to help :))")
             else:
                 temp_file = open('text files/temp.json', 'w')
                 pass
@@ -48,27 +51,30 @@ class Activity(commands.Cog):
         await ctx.send(embed=log_embed)
 
         response_embed = discord.Embed(title='You Have Connected!', color=0x50C878)
-        response_embed.add_field(name=f'Activity Logged', value=f'''
-{ctx.author.mention}, thanks for logging your activity!
-When you leave, use **!dc** or **!disconnect**, that way your leave time is also logged!\n''')
+        response_embed.add_field(name=f'Activity Logged',
+                                 value=f'{ctx.author.mention}, thanks for logging your activity! '
+                                       f'When you leave, use **!dc** or **!disconnect**, '
+                                       f'that way your leave time is also logged!\n')
 
         if random.randint(1, 2) == 2 or reminder_time is None:
-            response_embed.add_field(name='Tip:', value=f'''
-You can set the bot to remind you! simply type in `!c 24m` or any other time you want!''', inline=False)
-            response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
-            await ctx.send(embed=response_embed)
+            response_embed.add_field(name='Tip:',
+                                     value=f'Thorny loves to be helpful! It can remind you to disconnect! '
+                                           f'Just add a time after `!c`. It can me in `m`, `h` or even `s`!',
+                                     inline=False)
         elif reminder_time is not None:
-            response_embed.add_field(name='I will remind you to disconnect in:', value=f'{reminder_time}', inline=False)
-            response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
-            await ctx.send(embed=response_embed)
+            response_embed.add_field(name='\u200b',
+                                     value=f'I will remind you to disconnect in {reminder_time}',
+                                     inline=False)
+        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+        await ctx.send(embed=response_embed)
 
         write_log("CONNECT", current_time, ctx)
-        list_of_dicts.append({"status": "CONNECT",
-                              "user": f"{ctx.author}",
-                              "userid": f"{ctx.author.id}",
-                              "date": f"{current_time.split(',')[0]}",
-                              "time": f"{current_time.split(',')[2][1:9]}"})
-        json.dump(list_of_dicts, temp_file, indent=0)
+        temp_logs.append({"status": "CONNECT",
+                          "user": f"{ctx.author}",
+                          "userid": f"{ctx.author.id}",
+                          "date": f"{current_time.split(',')[0]}",
+                          "time": f"{current_time.split(',')[2][1:9]}"})
+        json.dump(temp_logs, temp_file, indent=0)
 
         if reminder_time is not None:
             if 'h' in reminder_time:
@@ -78,8 +84,8 @@ You can set the bot to remind you! simply type in `!c 24m` or any other time you
             elif 's' in reminder_time:
                 reminder_time = int(reminder_time[0:len(reminder_time) - 1])
             await asyncio.sleep(int(reminder_time))
-            await ctx.send(f'''
-    {ctx.author.mention}, you told me to remind you {reminder_time} seconds ago to disconnect!''')
+            await ctx.send(f'{ctx.author.mention}, '
+                           f'you told me to remind you {reminder_time} seconds ago to disconnect!')
 
     @commands.command(aliases=['unlink', 'dc', 'Dc'])
     async def disconnect(self, ctx):
@@ -98,13 +104,14 @@ You can set the bot to remind you! simply type in `!c 24m` or any other time you
 
                 log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
                 log_embed.add_field(name='Log:',
-                                    value=f'**DISCONNECT**, **{ctx.author}**, ||{ctx.author.id}||, {current_time}')
+                                    value=f'**DISCONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
                 await ctx.send(embed=log_embed)
 
                 response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
-                response_embed.add_field(name=f'Connection marked', value=f'''
-                {ctx.author.mention}, thank you for marking down your activity!
-                Use **!c** or **!connect** to mark down connect time!\nYou played for **{playtime_hour}h{playtime_minute}m**''')
+                response_embed.add_field(name=f'Connection marked',
+                                         value=f'{ctx.author.mention}, thank you for marking down your activity! '
+                                               f'Use **!c** or **!connect** to mark down connect time!'
+                                               f'\nYou played for **{playtime_hour}h{playtime_minute}m**')
                 response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
                 await ctx.send(embed=response_embed)
 
@@ -114,8 +121,8 @@ You can set the bot to remind you! simply type in `!c 24m` or any other time you
                 del file_list[file_list.index(item)]
                 file = open('text files/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
-                profile_update(ctx, playtime_hour, 'activity', 'latest_hour')
-                profile_update(ctx, playtime_minute, 'activity', 'latest_minute')
+                profile_update(ctx.author, playtime_hour, 'activity', 'latest_hour')
+                profile_update(ctx.author, playtime_minute, 'activity', 'latest_minute')
             else:
                 pass
         if not_user >= 1 and not disconnected:
@@ -133,13 +140,18 @@ class Leaderboards(commands.Cog):
             print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
             reset_values()
             process_json(month[0:3])
-            total_json(month[0:3])
-            file = open(f'text files/leaderboard_{month[0:3]}21.txt', 'r')
-            for line in file:
-                lb_to_send = f'{lb_to_send}{line}'
-            embed = discord.Embed(title=f'**Leaderboard of activity for {month.upper()}**', color=0xB4C424)
-            embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{lb_to_send}")
-            await ctx.send(embed=embed)
+            total_json(month[0:3], ctx.author)
+            lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
+            lb_json = json.load(lb_file)
+            for rank in lb_json:
+                lb_to_send = f'{lb_to_send}\n' \
+                             f'**{lb_json.index(rank)+1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
+
+            lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'\u200b',
+                               value=f"{lb_to_send}")
+            await ctx.send(embed=lb_embed)
         elif lb_type == 'money' or lb_type == 'nugs':
             await ctx.send('Coming soon...')
         else:
@@ -152,26 +164,18 @@ class Gateway(commands.Cog):
 
     @commands.command(aliases=['gate', 'g', 'ga'])
     async def gateway(self, ctx, gatenum=None):
-        sendtext = ''
-        file = open('text files/gateway.json', 'r+')
-        gateText = json.load(file)
+        send_text = ''
         if gatenum is None:
-            sendtext = f'''{gateText[0]["title"]}\n{gateText[0]["subtitle"]}\n
-{gateText[0]["fields"]["command1"]}\n{gateText[0]["fields"]["command2"]}\n{gateText[0]["fields"]["command3"]}
-{gateText[0]["fields"]["command4"]}'''
+            send_text = constants.gateway_0
         elif gatenum == '1':
-            sendtext = f'''{gateText[1]["title"]}\n{gateText[1]["subtitle"]}\n
-{gateText[1]["fields"][f"point1"]}\n\n{gateText[1]["fields"]["point2"]}\n{gateText[1]["fields"]["king1"]}
-{gateText[1]["fields"]["king2"]}\n{gateText[1]["fields"]["king3"]}\n{gateText[1]["fields"]["king4"]}
-{gateText[1]["fields"]["king5"]}\n\n{gateText[1]["fields"]["point3"]}\n\n{gateText[1]["fields"]["point4"]}\n
-{gateText[1]["fields"]["point5"]}'''
+            send_text = constants.gateway_1
         elif gatenum == '2':
-            sendtext = 'Coming Soon...'
+            send_text = constants.gateway_2
         elif gatenum == '3':
-            sendtext = 'Coming Soon...'
+            send_text = constants.gateway_3
         elif gatenum == '4':
-            sendtext = 'Coming Soon...'
-        await ctx.send(sendtext)
+            send_text = constants.gateway_4
+        await ctx.send(send_text)
 
 
 class Kingdom(commands.Cog):
@@ -193,28 +197,49 @@ class Bank(commands.Cog):
 
     @commands.command()
     async def balance(self, ctx):
-        profile_update(ctx)
+        profile_update(ctx.author)
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
         await ctx.send(f"Your balance is {profile[f'{ctx.author.id}']['balance']}")
 
-    @commands.command()
+    @commands.command(aliases=['amoney'])
     async def addmoney(self, ctx, amount):
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
         if str(ctx.author.id) in profile:
             amount = profile[f'{ctx.author.id}']['balance'] + int(amount)
-        profile_update(ctx, int(amount), 'balance')
+        profile_update(ctx.author, int(amount), 'balance')
         await ctx.send(f"Your balance is now {amount}")
+
+    @commands.command(aliases=['rmoney'])
+    async def removemoney(self, ctx, amount):
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        if str(ctx.author.id) in profile:
+            amount = profile[f'{ctx.author.id}']['balance'] - int(amount)
+        profile_update(ctx.author, int(amount), 'balance')
+        await ctx.send(f"Your balance is now {amount}")
+
+    @commands.command()
+    async def pay(self, ctx, user: discord.User, amount, *reason):
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        if str(ctx.author.id) in profile:
+            if profile[f'{ctx.author.id}']['balance'] - int(amount) >= 0:
+                amount1 = profile[f'{ctx.author.id}']['balance'] - int(amount)
+                profile_update(ctx.author, amount1, 'balance')
+                amount2 = profile[f'{user.id}']['balance'] + int(amount)
+                profile_update(user, amount2, 'balance')
+                await ctx.send(f'{user} has received your {amount} nugs!')
 
 
 @client.command()
 async def profile(ctx):
-    profile_update(ctx)
+    profile_update(ctx.author)
     profile = json.load(open('text files/profiles.json', 'r'))
     await ctx.send(f'''> Recent Playtime For {ctx.author}
 {profile[f'{ctx.author.id}']['activity']['latest_hour']}h{
-profile[f'{ctx.author.id}']['activity']['latest_minute']}m''')
+    profile[f'{ctx.author.id}']['activity']['latest_minute']}m''')
 
 
 @client.command()
@@ -247,25 +272,19 @@ async def setprefix(ctx, prefix):
 
 @client.event
 async def on_message(message):
-    channel = client.get_channel(620441027043524618)
-    if message.channel == channel:
-        if message.content.lower() == 'hello':
-            await channel.send("Hi!")
-
-    channel2 = client.get_channel(611271483062485032)
-    user1 = 266202793143042048
-    if message.channel == channel2 and message.author.id != user1:
-        await message.delete()
-
-    if message.content.lower() == 'pav':
+    if message.content.lower() == 'hello':
+        await message.channel.send("Hi!")
+    elif message.content.lower() == 'pav':
         await message.channel.send('Yes. He is Pav.')
+    elif message.content.lower() == '<@!879249190801248276>':
+        await message.channel.send("To get help, use the `!gateway` command! It's all in there!")
 
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
-client.add_cog(Bank(client))
+# client.add_cog(Bank(client))
 client.add_cog(Leaderboards(client))
-client.add_cog(Kingdom(client))
+# client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
 client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
 client.run(TOKEN)

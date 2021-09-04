@@ -41,11 +41,11 @@ def find_user_index(lst, key, value):
     return None
 
 
-def profile_update(ctx, value=None, key1=None, key2=None):
+def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('text files/profiles.json', 'r+')
     profile = json.load(profile_file)
-    if str(ctx.author.id) not in profile:
-        profile[str(ctx.author.id)] = ({"user": f"{ctx.author}",
+    if str(ctx_author.id) not in profile:
+        profile[str(ctx_author.id)] = ({"user": f"{ctx_author}",
                                         "balance": 0,
                                         "activity": {
                                             "total": 0,
@@ -64,10 +64,10 @@ def profile_update(ctx, value=None, key1=None, key2=None):
                                             "slot5": None,
                                             "slot6": None}
                                         })
-    if key2 is None and value and key1 is not None:
-        profile[f"{ctx.author.id}"][key1] = value
+    if key2 is None and key1 is not None:
+        profile[f"{ctx_author.id}"][key1] = value
     elif value and key1 and key2 is not None:
-        profile[f"{ctx.author.id}"][key1][key2] = value
+        profile[f"{ctx_author.id}"][key1][key2] = value
     profile_file.truncate(0)
     profile_file.seek(0)
     json.dump(profile, profile_file, indent=3)
@@ -212,8 +212,8 @@ def process_json(month):
             # If it's the last log and a CONNECT, it puts it as 2h, as there is no DISCONNECT after
             if processing_activity.index(log) == len(processing_activity) - 1:
                 if log['status'] == 'CONNECT':
-                    hrs_played = 2
-                    min_played = 0
+                    hrs_played = 1
+                    min_played = 5
                     append_to_individual_hours(hrs_played, min_played)
                 else:
                     print("pass")
@@ -249,27 +249,27 @@ def process_json(month):
         processing_activity.clear()
 
 
-def total_json(month):
+def total_json(month, ctx_author):
     leaderboard = []
     totaled = False
     name = ''
     while not totaled:
-        total_hours = 0
-        total_minutes = 0
+        monthly_hours = 0
+        monthly_minutes = 0
         for hour in individual_hours:
             if individual_hours[0]['userid'] == hour['userid']:
                 totaling_activity.append(hour)
 
         # Totals all the individual hours
         for hour in totaling_activity:
-            total_hours += hour['hours']
-            total_minutes += hour['minutes']
-            name = hour['user']
-        if total_minutes > 59:
-            total_hours += round(total_minutes / 60)
-        if total_hours < 1:
-            total_hours = total_minutes / 100
-        leaderboard.append([name, total_hours])
+            monthly_hours += hour['hours']
+            monthly_minutes += hour['minutes']
+            name = hour['userid']
+        if monthly_minutes > 59:
+            monthly_hours += round(monthly_minutes / 60)
+        if monthly_hours < 1:
+            monthly_hours = monthly_minutes / 100
+        leaderboard.append({"name": name, "time_played": monthly_hours})
 
         for item in totaling_activity:
             individual_hours.remove(item)
@@ -278,10 +278,13 @@ def total_json(month):
         totaling_activity.clear()
 
     # Sorts and writes the leaderboard into a file
-    leaderboard = sorted(leaderboard, key=lambda x: (x[1]), reverse=True)
-    lb_file = open(f'text files/leaderboard_{month}21.txt', 'w')
-    for item in leaderboard:
-        lb_file.write(f"{item[0]} - **{item[1]}h**\n")
+    leaderboard = sorted(leaderboard, key=lambda x: (x['time_played']), reverse=True)
+    lb_file = open(f'text files/leaderboard_{month.lower()}21.json', 'r+')
+    lb = []
+    for rank in leaderboard:
+        lb.append(rank)
+    lb_file.seek(0)
+    json.dump(lb, lb_file, indent=1)
 
 
 def statistics_json():
