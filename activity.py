@@ -1,4 +1,5 @@
 import json
+import os
 
 
 def reset_values():
@@ -20,6 +21,9 @@ def append_to_individual_hours(hrs_played, min_played):
 
 
 def write_log(status: str, current_time: str, ctx):
+    ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'a')
+    if os.path.getsize(f'text files/activity_{current_time[0:3].lower()}21.json') == 0:
+        ReadFile.write('[]')
     ReadFile = open(f'text files/activity_{current_time[0:3].lower()}21.json', 'r+')
     file = json.load(ReadFile)
     write_time = current_time.split(',')
@@ -279,10 +283,11 @@ def total_json(month, ctx_author):
 
     # Sorts and writes the leaderboard into a file
     leaderboard = sorted(leaderboard, key=lambda x: (x['time_played']), reverse=True)
-    lb_file = open(f'text files/leaderboard_{month.lower()}21.json', 'r+')
+    lb_file = open(f'text files/leaderboard_{month.lower()}21.json', 'a')
     lb = []
     for rank in leaderboard:
         lb.append(rank)
+    lb_file.truncate(0)
     lb_file.seek(0)
     json.dump(lb, lb_file, indent=1)
 

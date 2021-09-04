@@ -48,7 +48,7 @@ class Activity(commands.Cog):
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Log in document:',
                             value=f'**CONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
-        await ctx.send(embed=log_embed)
+        await activity_channel.send(embed=log_embed)
 
         response_embed = discord.Embed(title='You Have Connected!', color=0x50C878)
         response_embed.add_field(name=f'Activity Logged',
@@ -105,7 +105,7 @@ class Activity(commands.Cog):
                 log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
                 log_embed.add_field(name='Log:',
                                     value=f'**DISCONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
-                await ctx.send(embed=log_embed)
+                await activity_channel.send(embed=log_embed)
 
                 response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
                 response_embed.add_field(name=f'Connection marked',
