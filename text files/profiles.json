@@ -1,0 +1,58 @@
+{
+   "0": {
+      "user": "Template",
+      "balance": 0,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": "slots 1-6"
+   },
+   "266202793143042048": {
+      "user": "ProtocolPav#0038",
+      "balance": 67,
+      "activity": {
+         "total": 1,
+         "latest_hour": 0,
+         "latest_minute": 1,
+         "daily_average": null,
+         "current_month": 1,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "412355414017966091": {
+      "user": "Burak",
+      "balance": 100,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   }
+}

@@ -1,9 +1,12 @@
 [
 {
+"userid": "DUMMY"
+},
+{
 "status": "CONNECT",
-"user": "test",
-"userid": "1",
-"date": "August 17",
-"time": "22:33:12"
+"user": "ProtocolPav#0038",
+"userid": "266202793143042048",
+"date": "September 04",
+"time": "15:10:11"
 }
 ]
