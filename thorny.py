@@ -354,4 +354,4 @@ client.add_cog(Leaderboards(client))
 # client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
 client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
-client.run(TOKEN)
+client.run(TOKEN_Thorny)
