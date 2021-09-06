@@ -9,8 +9,10 @@ import asyncio
 import json
 import constants
 
-# v1.0
-TOKEN = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
+v = 'v1.1'
+# This token is for the TEST bot
+TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
+TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
 client = commands.Bot(command_prefix='!')
 
 
@@ -54,7 +56,7 @@ class Activity(commands.Cog):
                                        f'When you leave, use **!dc** or **!disconnect**, '
                                        f'that way your leave time is also logged!\n')
 
-        if random.randint(1, 2) == 2 or reminder_time is None:
+        if random.randint(0, 2) == 2 or reminder_time is None:
             response_embed.add_field(name='Tip:',
                                      value=f'Thorny loves to be helpful! It can remind you to disconnect! '
                                            f'Just add a time after `!c`. It can me in `m`, `h` or even `s`!',
@@ -63,7 +65,7 @@ class Activity(commands.Cog):
             response_embed.add_field(name='\u200b',
                                      value=f'I will remind you to disconnect in {reminder_time}',
                                      inline=False)
-        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\n{v}')
         await ctx.send(embed=response_embed)
 
         write_log("CONNECT", current_time, ctx)
@@ -99,10 +101,17 @@ class Activity(commands.Cog):
                 current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
                 playtime_hour = int(current_time.split(',')[2][1:3]) - int(item['time'][0:2])
                 playtime_minute = int(current_time.split(',')[2][4:6]) - int(item['time'][3:5])
+                if playtime_hour < 0:
+                    playtime_hour += 24
+                if playtime_hour >= 12:
+                    playtime_hour = 2
+                if playtime_minute < 0:
+                    playtime_minute += 60
 
                 log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
                 log_embed.add_field(name='Log:',
-                                    value=f'**DISCONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
+                                    value=f'**DISCONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}\n'
+                                          f'Playtime: **{playtime_hour}h{playtime_minute}m**')
                 await activity_channel.send(embed=log_embed)
 
                 response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
@@ -110,7 +119,7 @@ class Activity(commands.Cog):
                                          value=f'{ctx.author.mention}, thank you for marking down your activity! '
                                                f'Use **!c** or **!connect** to mark down connect time!'
                                                f'\nYou played for **{playtime_hour}h{playtime_minute}m**')
-                response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\nv1.0')
+                response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\n{v}')
                 await ctx.send(embed=response_embed)
 
                 write_log("DISCONNECT", current_time, ctx)
@@ -119,41 +128,16 @@ class Activity(commands.Cog):
                 del file_list[file_list.index(item)]
                 file = open('text files/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
+                file = open('text files/profiles.json', 'r+')
+                file_loaded = json.load(file)
+                total = file_loaded[f'{ctx.author.id}']['activity']['total'] + playtime_hour
+                profile_update(ctx.author, total, 'activity', 'total')
                 profile_update(ctx.author, playtime_hour, 'activity', 'latest_hour')
                 profile_update(ctx.author, playtime_minute, 'activity', 'latest_minute')
             else:
                 pass
         if not_user >= 1 and not disconnected:
             await ctx.send("You haven't connected yet!")
-
-
-class Leaderboards(commands.Cog):
-    def __init__(self, client):
-        self.client = client
-
-    @commands.command(aliases=['lb'])
-    async def leaderboard(self, ctx, lb_type=None, month=datetime.now().strftime("%B")):
-        if lb_type == 'activity' or lb_type == 'act':
-            lb_to_send = ''
-            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
-            reset_values()
-            process_json(month[0:3])
-            total_json(month[0:3], ctx.author)
-            lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
-            lb_json = json.load(lb_file)
-            for rank in lb_json:
-                lb_to_send = f'{lb_to_send}\n' \
-                             f'**{lb_json.index(rank)+1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
-
-            lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
-                                     color=0x6495ED)
-            lb_embed.add_field(name=f'\u200b',
-                               value=f"{lb_to_send}")
-            await ctx.send(embed=lb_embed)
-        elif lb_type == 'money' or lb_type == 'nugs':
-            await ctx.send('Coming soon...')
-        else:
-            await ctx.send('> **Available Leaderboards**\n\n`activity`\n`money`')
 
 
 class Gateway(commands.Cog):
@@ -184,8 +168,11 @@ class Kingdom(commands.Cog):
     async def asbahamael(self, ctx):
         file = open('text files/kingdoms.json', 'r')
         sendtext = json.load(file)
-        sendtext = f'''{sendtext[0]["slogan"]}**King**:{sendtext[0]["king"]}**Towns**:{sendtext[0]["towns"]}**Areas**:{sendtext[0]["areas"]}**Description**:
-{sendtext[0]["description"]}'''
+        sendtext = f'{sendtext[0]["slogan"]}' \
+                   f'**King**:{sendtext[0]["king"]}' \
+                   f'**Towns**:{sendtext[0]["towns"]}' \
+                   f'**Areas**:{sendtext[0]["areas"]}' \
+                   f'**Description**: {sendtext[0]["description"]}'
         await ctx.send(sendtext)
 
 
@@ -193,42 +180,125 @@ class Bank(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command()
-    async def balance(self, ctx):
-        profile_update(ctx.author)
+    @commands.command(aliases=['bal'])
+    async def balance(self, ctx, user: discord.User = None):
+        if user is None:
+            profile_update(ctx.author)
+        else:
+            profile_update(user)
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
-        await ctx.send(f"Your balance is {profile[f'{ctx.author.id}']['balance']}")
+        if user is None:
+            await ctx.send(f"Your balance is <:Nug:884064610045558844>{profile[f'{ctx.author.id}']['balance']}")
+        else:
+            await ctx.send(
+                f"**{user.display_name}'s** balance is <:Nug:884064610045558844>{profile[f'{user.id}']['balance']}")
 
     @commands.command(aliases=['amoney'])
-    async def addmoney(self, ctx, amount):
+    @commands.has_permissions(administrator=True)
+    async def addmoney(self, ctx, user: discord.User, amount):
+        profile_update(user)
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
         if str(ctx.author.id) in profile:
-            amount = profile[f'{ctx.author.id}']['balance'] + int(amount)
-        profile_update(ctx.author, int(amount), 'balance')
-        await ctx.send(f"Your balance is now {amount}")
+            amount = profile[f'{user.id}']['balance'] + int(amount)
+        profile_update(user, int(amount), 'balance')
+        await ctx.send(f"{user}'s balance is now {amount}")
 
     @commands.command(aliases=['rmoney'])
-    async def removemoney(self, ctx, amount):
+    @commands.has_permissions(administrator=True)
+    async def removemoney(self, ctx, user: discord.User, amount):
+        profile_update(user)
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
         if str(ctx.author.id) in profile:
-            amount = profile[f'{ctx.author.id}']['balance'] - int(amount)
-        profile_update(ctx.author, int(amount), 'balance')
-        await ctx.send(f"Your balance is now {amount}")
+            amount = profile[f'{user.id}']['balance'] - int(amount)
+        profile_update(user, int(amount), 'balance')
+        await ctx.send(f"{user}'s balance is now {amount}")
 
     @commands.command()
-    async def pay(self, ctx, user: discord.User, amount, *reason):
+    async def pay(self, ctx, user: discord.User, amount=None, *reason):
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
-        if str(ctx.author.id) in profile:
-            if profile[f'{ctx.author.id}']['balance'] - int(amount) >= 0:
+        if user == ctx.author:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You can not pay yourself silly!')
+            await ctx.send(embed=error_embed)
+        elif amount is None:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You did not say an amount to pay!')
+            await ctx.send(embed=error_embed)
+        elif str(ctx.author.id) not in profile:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: This user is not registered in the database!')
+            await ctx.send(embed=error_embed)
+        elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You do not have enough nugs!')
+            await ctx.send(embed=error_embed)
+
+        elif str(ctx.author.id) in profile:
+            if profile[f'{ctx.author.id}']['balance'] - int(amount) >= 0 and user != ctx.author:
                 amount1 = profile[f'{ctx.author.id}']['balance'] - int(amount)
                 profile_update(ctx.author, amount1, 'balance')
                 amount2 = profile[f'{user.id}']['balance'] + int(amount)
                 profile_update(user, amount2, 'balance')
-                await ctx.send(f'{user} has received your {amount} nugs!')
+
+                pay_embed = discord.Embed(color=0xDAA520)
+                pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                pay_embed.add_field(name='<:Nug:884064610045558844> Payment Successful!',
+                                    value=f'Amount paid: **<:Nug:884064610045558844>{amount}**\n'
+                                          f'Paid to: **{user.mention}**\n'
+                                          f'\n**Reason: {" ".join(str(x) for x in reason)}**')
+                await ctx.send(embed=pay_embed)
+
+
+class Leaderboards(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command(aliases=['lb'])
+    async def leaderboard(self, ctx, lb_type=None, month=datetime.now().strftime("%B")):
+        lb_to_send = ''
+        if lb_type == 'activity' or lb_type == 'act':
+            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
+            reset_values()
+            process_json(month[0:3])
+            total_json(month[0:3], ctx.author)
+            lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
+            lb_json = json.load(lb_file)
+            for rank in lb_json:
+                lb_to_send = f'{lb_to_send}\n' \
+                             f'**{lb_json.index(rank) + 1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
+
+            lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'\u200b',
+                               value=f"{lb_to_send}")
+            await ctx.send(embed=lb_embed)
+        elif lb_type == 'money' or lb_type == 'nugs':
+            profile_file = open('text files/profiles.json', 'r')
+            profile_dict = json.load(profile_file)
+            profile_list = []
+            for dict in profile_dict:
+                profile_list.append({"user": dict, "balance": profile_dict[f"{dict}"]["balance"]})
+            profile_sorted = sorted(profile_list, key=lambda x: (x["balance"]), reverse=True)
+            for person in profile_sorted[:-1]:
+                lb_to_send = f'{lb_to_send}\n' \
+                             f'**{profile_sorted.index(person) + 1}.**  <@{person["user"]}> • ' \
+                             f'<:Nug:884064610045558844>**{person["balance"]}**'
+
+            lb_embed = discord.Embed(title=f'**Nugs Leaderboard**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'\u200b',
+                               value=f"{lb_to_send}")
+            await ctx.send(embed=lb_embed)
+        else:
+            await ctx.send('> **Available Leaderboards**\n\n`activity`\n`money`')
 
 
 @client.command()
@@ -274,7 +344,12 @@ async def on_message(message):
     await client.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
-# client.add_cog(Bank(client))
+@client.event
+async def on_member_join(member):
+    profile_update(member)
+
+
+client.add_cog(Bank(client))
 client.add_cog(Leaderboards(client))
 # client.add_cog(Kingdom(client))
 client.add_cog(Gateway(client))
