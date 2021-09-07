@@ -15,11 +15,11 @@
    },
    "266202793143042048": {
       "user": "ProtocolPav#0038",
-      "balance": 67,
+      "balance": 360,
       "activity": {
-         "total": 1,
-         "latest_hour": 0,
-         "latest_minute": 1,
+         "total": 5,
+         "latest_hour": 3,
+         "latest_minute": 24,
          "daily_average": null,
          "current_month": 1,
          "1_month_ago": 0,
@@ -36,7 +36,28 @@
    },
    "412355414017966091": {
       "user": "Burak",
-      "balance": 100,
+      "balance": 0,
+      "activity": {
+         "total": 0,
+         "latest_hour": 1,
+         "latest_minute": -39,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "725323787893080065": {
+      "user": "cakePhone#0001",
+      "balance": 0,
       "activity": {
          "total": 0,
          "latest_hour": 0,
@@ -54,5 +75,1181 @@
          "slot5": null,
          "slot6": null
       }
+   },
+   "605182874316177449": {
+      "user": "EzioAetos#0625",
+      "balance": 234,
+      "activity": {
+         "total": 6,
+         "latest_hour": 3,
+         "latest_minute": 43,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "244084765618077697": {
+      "user": "CyanLightz#9632",
+      "balance": 284,
+      "activity": {
+         "total": 6,
+         "latest_hour": 1,
+         "latest_minute": 11,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "299790274027323393": {
+      "user": "JAMIE#3047",
+      "balance": 0,
+      "activity": {
+         "total": 4,
+         "latest_hour": 1,
+         "latest_minute": 8,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "630217084172763158": {
+      "user": "\ud83d\udc1d\u24b7\u24e4\u24e2\u24e8\u24d1\u24d4\u24d4 \ud83d\udc1d#7328",
+      "balance": 213,
+      "activity": {
+         "total": 0,
+         "latest_hour": 1,
+         "latest_minute": 14,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "606508892901343275": {
+      "user": "DJ Doser#8279",
+      "balance": 87,
+      "activity": {
+         "total": 0,
+         "latest_hour": 2,
+         "latest_minute": 29,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "791833026019328081": {
+      "user": "cova#4184",
+      "balance": 196,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 23,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "527660054871277568": {
+      "user": "PenguTT44#0774",
+      "balance": 0,
+      "activity": {
+         "total": 0,
+         "latest_hour": 1,
+         "latest_minute": -22,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "687808070910345304": {
+      "user": "HiddenSniper1#3384",
+      "balance": 1,
+      "activity": {
+         "total": 6,
+         "latest_hour": 2,
+         "latest_minute": 27,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "552242390333915138": {
+      "user": "LilThiccin#3338",
+      "balance": 200,
+      "activity": {
+         "total": 1,
+         "latest_hour": 1,
+         "latest_minute": 33,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "690164355764846801": {
+      "user": "Jacko#9540",
+      "balance": 163,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "558225054002053130": {
+      "user": "King_Trebil#2227",
+      "balance": 21,
+      "activity": {
+         "total": 1,
+         "latest_hour": 1,
+         "latest_minute": 3,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "549256752441589761": {
+      "user": "Mars Of Soa#2450",
+      "balance": 190,
+      "activity": {
+         "total": 8,
+         "latest_hour": 8,
+         "latest_minute": 3,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "712933565427351602": {
+      "user": "Toki\u2661#7481",
+      "balance": 0,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 36,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "354944637770924038": {
+      "user": "nconiconi#1664",
+      "balance": 0,
+      "activity": {
+         "total": 2,
+         "latest_hour": 2,
+         "latest_minute": 29,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "704981248887488523": {
+      "user": "Sab#9266",
+      "balance": 34,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "806727941446434826": {
+      "user": "Frog_A'sWaifu#2420",
+      "balance": 52,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      }
+   },
+   "220336936403992576": {
+      "user": "Undertaker#2349",
+      "balance": 525,
+      "activity": {
+         "total": 2,
+         "latest_hour": 2,
+         "latest_minute": 26,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "629084773356404747": {
+      "user": "Rhi<3#4884",
+      "balance": 621,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "515591341460291628": {
+      "user": "Zak Larey#5042",
+      "balance": 532,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "630930797855113232": {
+      "user": "Leon the Protogen#8264",
+      "balance": 397,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "431979198056366090": {
+      "user": "cloz#5595",
+      "balance": 372,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "498401250170109962": {
+      "user": "Thunderz101#3609",
+      "balance": 311,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "255982474407051264": {
+      "user": "ANOrdinaryDiscordUser#9126",
+      "balance": 289,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "583502004429783094": {
+      "user": "CayenneKai#2794",
+      "balance": 263,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "457205557892349994": {
+      "user": "Aureus#0995",
+      "balance": 235,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "691927747102244864": {
+      "user": "\u2661 KawaiiKun \u2661#6861",
+      "balance": 178,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "785966729040887888": {
+      "user": "Laddoneye#6553",
+      "balance": 175,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "641726274343010315": {
+      "user": "EndedInfinity#6599",
+      "balance": 174,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "603981218807152644": {
+      "user": "ButterM8ie#9574",
+      "balance": 161,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "454696869189255170": {
+      "user": "Hanson185#6412",
+      "balance": 159,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "535991886347894785": {
+      "user": "KonoEV#1127",
+      "balance": 136,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "700480378523090995": {
+      "user": "JustGarth#1719",
+      "balance": 125,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "431597196153192469": {
+      "user": "MASKS#6871",
+      "balance": 148,
+      "activity": {
+         "total": 2,
+         "latest_hour": 2,
+         "latest_minute": 12,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "291610390788440074": {
+      "user": "The Red Chief#2620",
+      "balance": 115,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "666553339424800783": {
+      "user": "Blugo06#4012",
+      "balance": 110,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "426329647953739777": {
+      "user": "ooofers1#3233",
+      "balance": 105,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "294234625633550336": {
+      "user": "solvason#6887",
+      "balance": 97,
+      "activity": {
+         "total": 5,
+         "latest_hour": 2,
+         "latest_minute": 7,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "362573125818515457": {
+      "user": "TastySafety#0751",
+      "balance": 75,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "495300177200939018": {
+      "user": "plumsky#1025",
+      "balance": 75,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "701191147577540664": {
+      "user": "AceOf_spades\ud83c\udf39#5903",
+      "balance": 65,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "697232260507631656": {
+      "user": "Phil4000#3179",
+      "balance": 63,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "454489184736903168": {
+      "user": "Ren\u2764#5786",
+      "balance": 64,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 17,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "751971194059751534": {
+      "user": "Emxle#6542",
+      "balance": 53,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "747495512877564017": {
+      "user": "Brite#4180",
+      "balance": 50,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "423971152101113867": {
+      "user": "monsieur_nicholas#8343",
+      "balance": 49,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
+   },
+   "618257832113995776": {
+      "user": "Frien#0727",
+      "balance": 25,
+      "activity": {
+         "total": 0,
+         "latest_hour": 0,
+         "latest_minute": 0,
+         "daily_average": null,
+         "current_month": 0,
+         "1_month_ago": 0,
+         "2_months_ago": 0
+      },
+      "inventory": {
+         "slot1": null,
+         "slot2": null,
+         "slot3": null,
+         "slot4": null,
+         "slot5": null,
+         "slot6": null
+      },
+      "user_level": {
+         "level": 0,
+         "xp": 0,
+         "required_xp": 0,
+         "last_message": "0:0:0"
+      },
+      "date_joined": null
    }
 }
