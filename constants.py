@@ -16,8 +16,8 @@ gateway_1 = f'''
 :postal_horn: Join a **Kingdom** by messaging it's **Ruler!** To see more info, use their `!command`
 \t:coin: `!ambria` - **King Thiccin IV**
 \t:star2: `!asbahamael` - **Queen Cake VII**
-\t:japanese_castle: `!dalvasha` - **King Trebil IV**
-\t:classical_building: `!eireann` - **4th President Undertaker**
+\t:japanese_castle: `!dalvasha` - **King Bee III**
+\t:classical_building: `!eireann` - **3rd President Burak**
 \t:dove: `!stregabor` - **Emperor Sniper II**\n
 :incoming_envelope: To get the **Realm Code**, reach **Level 3** by talking here with us and **pick a kingdom**! Then, ask a CM!\n
 :person_raising_hand: Use **!gateway** to see more helpful guides for Everthorn!\n
@@ -34,17 +34,22 @@ gateway_2 = f'''
 <:ar_bl:862635275230511114>**!levels** - Sends the Server Level Leaderboard
 <:ar_bl:862635275230511114>**!afk** - Sets your AFK status!
 
-<:ar_pi:862635275695554560> **!connect [reminder]** - Logs your connect time. Alias: `!c`
-<:ar_pi:862635275695554560> **!disconnect** - Logs your disconnect time. Alias: `!dc`
-<:ar_pi:862635275695554560> **!leaderboard activity [month]** - Send the activity leaderboard!
+<:ar_pi:862635275695554560> **!connect [reminder]** - Logs your connect time. | `!c`
+<:ar_pi:862635275695554560> **!disconnect** - Logs your disconnect time. | `!dc`
 
-<:ar_or:862635275799887882>(In Bank) **!bal** - Checks your Nugs Balance
-<:ar_or:862635275799887882>(In Bank) **!pay [@player] [amount]** - Pays a player. Always write your reason for pay after!
-<:ar_or:862635275799887882>(In Bank) **!with all** - Withdraws your money so you can start using it
+<:ar_gr:862635275633033226> **!leaderboard** - See all the leaderboards available! | `!lb`
+<:ar_gr:862635275633033226> **!activity [month]** - Send the activity leaderboard! | `!act`
+<:ar_gr:862635275633033226> **!nugs [page]** - Send the nugs leaderboard! | `!money`
+<:ar_gr:862635275633033226> **!treasuries** - See the Kingdom Treasuries! | `!tries, !treasury search`
+
+<:ar_or:862635275799887882> **!bal** - Checks your Nugs Balance | `In Bank`
+<:ar_or:862635275799887882> **!pay [@player] [amount] [reason]** - Pays a player! | `In Bank`
+<:ar_or:862635275799887882> **!treasury store [amount]** - Donate to your Kingdom! | `!tres store`
+<:ar_or:862635275799887882> **!treasury take [amount]** - Take from Treasury | `Only Rulers`
 '''
 
 gateway_3 = f'''
-> **You Have Entered Gateway 4**
+> **Gateway 3 - Discord Channel Guide**
 > Here is a list of all our channels.
 
 **Everthorn News**

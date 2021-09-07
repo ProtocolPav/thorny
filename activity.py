@@ -201,11 +201,6 @@ def statistics_json():
     pass
 
 
-if __name__ == 'b__main__':
-    opendoc('aug')
-    process()
-    total('aug')
-
 if __name__ == '__main__':
     reset_values()
     process_json('aug')
