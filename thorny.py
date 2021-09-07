@@ -556,4 +556,4 @@ thorny.add_cog(Leaderboards(thorny))
 # thorny.add_cog(Kingdom(thorny))
 thorny.add_cog(Gateway(thorny))
 thorny.add_cog(Activity(thorny))  # Do this for every cog. This can also be changed through commands.
-thorny.run(TOKEN)
+thorny.run(TOKEN_Thorny)
