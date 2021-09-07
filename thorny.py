@@ -3,25 +3,26 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
+import DiscordUtils
 from activity import write_log, process_json, total_json, reset_values
 from activity import profile_update
 import asyncio
 import json
 import constants
 
-v = 'v1.1.1'
+v = 'v1.1.2'
 # This token is for the TEST bot
 TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
 TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
-client = commands.Bot(command_prefix='!')
+thorny = commands.Bot(command_prefix='!')
 
 
-@client.event
+@thorny.event
 async def on_ready():
-    print(f"Logged in as {client.user}")
-    botactivity = discord.Activity(type=discord.ActivityType.playing,
-                                   name="Everthorn lol")
-    await client.change_presence(activity=botactivity)
+    print(f"Logged in as {thorny.user}")
+    bot_activity = discord.Activity(type=discord.ActivityType.playing,
+                                   name=f"Just Guess... | {v}")
+    await thorny.change_presence(activity=bot_activity)
 
 
 class Activity(commands.Cog):
@@ -43,7 +44,7 @@ class Activity(commands.Cog):
                 temp_file = open('text files/temp.json', 'w')
                 pass
 
-        activity_channel = client.get_channel(867303669203206194)
+        activity_channel = thorny.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Log in document:',
@@ -97,7 +98,7 @@ class Activity(commands.Cog):
             if str(ctx.author.id) not in item['userid'] and not disconnected:
                 not_user += 1
             elif str(ctx.author.id) in item['userid'] and not disconnected:
-                activity_channel = client.get_channel(867303669203206194)
+                activity_channel = thorny.get_channel(867303669203206194)
                 current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
                 playtime_hour = int(current_time.split(',')[2][1:3]) - int(item['time'][0:2])
                 playtime_minute = int(current_time.split(',')[2][4:6]) - int(item['time'][3:5])
@@ -157,7 +158,7 @@ class Gateway(commands.Cog):
             send_text = constants.gateway_3
         elif gatenum == '4':
             send_text = constants.gateway_4
-        await ctx.send(send_text)
+        await ctx.send(f'{send_text}')
 
 
 class Kingdom(commands.Cog):
@@ -189,10 +190,10 @@ class Bank(commands.Cog):
         profile_file = open('text files/profiles.json', 'r+')
         profile = json.load(profile_file)
         if user is None:
-            await ctx.send(f"Your balance is <:Nug:884064610045558844>{profile[f'{ctx.author.id}']['balance']}")
+            await ctx.send(f"Your balance is <:Nug:884320353202081833>{profile[f'{ctx.author.id}']['balance']}")
         else:
             await ctx.send(
-                f"**{user.display_name}'s** balance is <:Nug:884064610045558844>{profile[f'{user.id}']['balance']}")
+                f"**{user.display_name}'s** balance is <:Nug:884320353202081833>{profile[f'{user.id}']['balance']}")
 
     @commands.command(aliases=['amoney'])
     @commands.has_permissions(administrator=True)
@@ -250,13 +251,13 @@ class Bank(commands.Cog):
 
                 pay_embed = discord.Embed(color=0xDAA520)
                 pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                pay_embed.add_field(name='<:Nug:884064610045558844> Payment Successful!',
-                                    value=f'Amount paid: **<:Nug:884064610045558844>{amount}**\n'
+                pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
+                                    value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
                                           f'Paid to: **{user.mention}**\n'
                                           f'\n**Reason: {" ".join(str(x) for x in reason)}**')
                 await ctx.send(embed=pay_embed)
 
-    @commands.command()
+    @commands.command(aliases=['tres'])
     async def treasury(self, ctx, function, amount=None):
         kingdom_file = open('text files/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
@@ -285,8 +286,8 @@ class Bank(commands.Cog):
 
                 pay_embed = discord.Embed(color=0xF88379)
                 pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                pay_embed.add_field(name='<:Nug:884064610045558844> Storage Successful!',
-                                    value=f'Amount stored: **<:Nug:884064610045558844>{amount}**\n'
+                pay_embed.add_field(name='<:Nug:884320353202081833> Storage Successful!',
+                                    value=f'Amount stored: **<:Nug:884320353202081833>{amount}**\n'
                                           f'Stored in: **{kingdom.upper()} TREASURY**\n')
                 await ctx.send(embed=pay_embed)
 
@@ -319,8 +320,8 @@ class Bank(commands.Cog):
 
                 pay_embed = discord.Embed(color=0xFF7F50)
                 pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                pay_embed.add_field(name='<:Nug:884064610045558844> Taking Successful!',
-                                    value=f'Amount taken: **<:Nug:884064610045558844>{amount}**\n'
+                pay_embed.add_field(name='<:Nug:884320353202081833> Taking Successful!',
+                                    value=f'Amount taken: **<:Nug:884320353202081833>{amount}**\n'
                                           f'Taken from: **{kingdom.upper()} TREASURY**\n')
                 await ctx.send(embed=pay_embed)
 
@@ -338,7 +339,67 @@ class Bank(commands.Cog):
             await ctx.send(embed=error_embed)
 
         elif function.lower() == 'search':
-            await Leaderboards.leaderboard(self, ctx, 'treasury')
+            await Leaderboards.treasuries(self, ctx)
+
+    @commands.command(aliases=['tpay', 'Tpay'])
+    @commands.has_role('Ruler')
+    async def treasury_pay(self, ctx, user: discord.User, amount=None, *reason):
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        kingdom_file = open('text files/kingdoms.json', 'r+')
+        kingdom_json = json.load(kingdom_file)
+        kingdom = ''
+
+        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
+            kingdom = 'stregabor'
+        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
+            kingdom = 'ambria'
+        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
+            kingdom = 'eireann'
+        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
+            kingdom = 'dalvasha'
+        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
+            kingdom = 'asbahamael'
+
+        if user == ctx.author:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You can not pay yourself silly!')
+            await ctx.send(embed=error_embed)
+        elif amount is None:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You did not say an amount to pay!')
+            await ctx.send(embed=error_embed)
+        elif str(ctx.author.id) not in profile:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: This user is not registered in the database!')
+            await ctx.send(embed=error_embed)
+        elif kingdom_json[kingdom] - int(amount) < 0:
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Payment Unsuccessful!',
+                                  value='Reason: You do not have enough nugs!')
+            await ctx.send(embed=error_embed)
+
+        elif str(ctx.author.id) in profile:
+            if kingdom_json[kingdom] - int(amount) >= 0 and user != ctx.author:
+                kingdom_json[kingdom] = kingdom_json[kingdom] - int(amount)
+                kingdom_file.truncate(0)
+                kingdom_file.seek(0)
+                json.dump(kingdom_json, kingdom_file, indent=3)
+
+                amount2 = profile[f'{user.id}']['balance'] + int(amount)
+                profile_update(user, amount2, 'balance')
+
+                pay_embed = discord.Embed(color=0xFF7F50)
+                pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
+                                    value=f'From the **{kingdom.upper()} TREASURY**\n'
+                                          f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
+                                          f'Paid to: **{user.mention}**\n'
+                                          f'\n**Reason: {" ".join(str(x) for x in reason)}**\n')
+                await ctx.send(embed=pay_embed)
 
 
 class Leaderboards(commands.Cog):
@@ -346,60 +407,88 @@ class Leaderboards(commands.Cog):
         self.client = client
 
     @commands.command(aliases=['lb'])
-    async def leaderboard(self, ctx, lb_type=None, month=datetime.now().strftime("%B")):
-        lb_to_send = ''
-        if lb_type == 'activity' or lb_type == 'act':
-            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
-            reset_values()
-            process_json(month[0:3])
-            total_json(month[0:3], ctx.author)
-            lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
-            lb_json = json.load(lb_file)
-            for rank in lb_json:
-                lb_to_send = f'{lb_to_send}\n' \
-                             f'**{lb_json.index(rank) + 1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
+    async def leaderboard(self, ctx):
+        await ctx.send('> **Available Leaderboards**\n'
+                       '\n**!activity [month] [page]** • Shows activity for all players | Also: !act'
+                       "\n**!nugs [page]** • Shows a leaderboard of people's nugs | Also: !money"
+                       '\n**!treasuries** • Shows the balance of all treasuries | Also: !tries'
+                       '\n\n*When writing commands, do not include [the brackets]*')
 
-            lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
-                                     color=0x6495ED)
-            lb_embed.add_field(name=f'\u200b',
-                               value=f"{lb_to_send}")
-            await ctx.send(embed=lb_embed)
-        elif lb_type == 'money' or lb_type == 'nugs':
-            profile_file = open('text files/profiles.json', 'r')
-            profile_dict = json.load(profile_file)
-            profile_list = []
-            for dict in profile_dict:
-                profile_list.append({"user": dict, "balance": profile_dict[f"{dict}"]["balance"]})
-            profile_sorted = sorted(profile_list, key=lambda x: (x["balance"]), reverse=True)
-            for entry in profile_sorted[:-1]:
+    @commands.command(aliases=['act'])
+    async def activity(self, ctx, month=datetime.now().strftime("%B")):
+        lb_to_send = ''
+        print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
+        reset_values()
+        process_json(month[0:3])
+        total_json(month[0:3], ctx.author)
+        lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
+        lb_json = json.load(lb_file)
+
+        for rank in lb_json:
+            lb_to_send = f'{lb_to_send}\n' \
+                         f'**{lb_json.index(rank) + 1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
+
+        lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
+                                 color=0x6495ED)
+        lb_embed.add_field(name=f'\u200b',
+                           value=f"{lb_to_send}")
+        lb_embed.set_footer(text=f'Page 1/1 | Use !leaderboard to see others')
+        await ctx.send(embed=lb_embed)
+
+    @commands.command(aliases=['money'])
+    async def nugs(self, ctx, page=1):
+        if page == 1:
+            start = 0
+            stop = 10
+        else:
+            start = (int(page)-1)*10
+            stop = start+10
+
+        lb_to_send = ''
+        profile_file = open('text files/profiles.json', 'r')
+        profile_dict = json.load(profile_file)
+        profile_list = []
+        for dict in profile_dict:
+            profile_list.append({"user": dict, "balance": profile_dict[f"{dict}"]["balance"]})
+        profile_sorted = sorted(profile_list, key=lambda x: (x["balance"]), reverse=True)[:-1]
+
+        if start > len(profile_sorted):
+            error_embed = discord.Embed(color=0x900C3F)
+            error_embed.add_field(name='Woah Woah There',
+                                  value='We do not have enough users to get to *that* page bro!')
+            await ctx.send(embed=error_embed)
+        else:
+            for entry in profile_sorted[start:stop]:
                 lb_to_send = f'{lb_to_send}\n' \
                              f'**{profile_sorted.index(entry) + 1}.**  <@{entry["user"]}> • ' \
-                             f'<:Nug:884064610045558844>**{entry["balance"]}**'
+                             f'<:Nug:884320353202081833>**{entry["balance"]}**'
 
             lb_embed = discord.Embed(title=f'**Nugs Leaderboard**',
                                      color=0x6495ED)
             lb_embed.add_field(name=f'\u200b',
                                value=f"{lb_to_send}")
+            lb_embed.set_footer(text=f'Page {page}/{round(len(profile_sorted)/10)} | Use !leaderboard to see others')
             await ctx.send(embed=lb_embed)
-        elif lb_type == 'treasury':
-            kingdom_file = open('text files/kingdoms.json', 'r')
-            kingdom_dict = json.load(kingdom_file)
-            lb_to_send = f'Ambria • **<:Nug:884064610045558844>{kingdom_dict["ambria"]}**\n'\
-                         f'Asbahamael • **<:Nug:884064610045558844>{kingdom_dict["asbahamael"]}**\n'\
-                         f'Eireann • **<:Nug:884064610045558844>{kingdom_dict["eireann"]}**\n'\
-                         f'Dalvasha • **<:Nug:884064610045558844>{kingdom_dict["dalvasha"]}**\n'\
-                         f'Stregabor • **<:Nug:884064610045558844>{kingdom_dict["stregabor"]}**\n'
 
-            lb_embed = discord.Embed(title=f'**Kingdom Treasuries**',
-                                     color=0x6495ED)
-            lb_embed.add_field(name=f'\u200b',
-                               value=f"{lb_to_send}")
-            await ctx.send(embed=lb_embed)
-        else:
-            await ctx.send('> **Available Leaderboards**\n\n`activity`\n`money`\n`treasury`')
+    @commands.command(aliases=['tries'])
+    async def treasuries(self, ctx):
+        kingdom_file = open('text files/kingdoms.json', 'r')
+        kingdom_dict = json.load(kingdom_file)
+        lb_to_send = f'Ambria • **<:Nug:884320353202081833>{kingdom_dict["ambria"]}**\n' \
+                     f'Asbahamael • **<:Nug:884320353202081833>{kingdom_dict["asbahamael"]}**\n' \
+                     f'Eireann • **<:Nug:884320353202081833>{kingdom_dict["eireann"]}**\n' \
+                     f'Dalvasha • **<:Nug:884320353202081833>{kingdom_dict["dalvasha"]}**\n' \
+                     f'Stregabor • **<:Nug:884320353202081833>{kingdom_dict["stregabor"]}**\n'
+
+        lb_embed = discord.Embed(title=f'**Kingdom Treasuries**',
+                                 color=0x6495ED)
+        lb_embed.add_field(name=f'\u200b',
+                           value=f"{lb_to_send}")
+        lb_embed.set_footer(text=f'Page 1/1 | Use !leaderboard to see others')
+        await ctx.send(embed=lb_embed)
 
 
-@client.command()
+@thorny.command()
 async def profile(ctx):
     profile_update(ctx.author)
     profile = json.load(open('text files/profiles.json', 'r'))
@@ -408,12 +497,12 @@ async def profile(ctx):
     profile[f'{ctx.author.id}']['activity']['latest_minute']}m''')
 
 
-@client.command()
+@thorny.command()
 async def pong(ctx):
     await ctx.send('ping!')
 
 
-@client.command(aliases=['shout', 'aaa', 'scr'])
+@thorny.command(aliases=['shout', 'aaa', 'scr'])
 async def scream(ctx):
     screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!',
                'ROOOOoooOOOOAARRRRRRRRRR',
@@ -423,33 +512,48 @@ async def scream(ctx):
     await ctx.send(f'{screams[screamnumber]}\n{ctx.author.mention}, you scared me!!!')
 
 
-@client.command()
+@thorny.command()
 async def setprefix(ctx, prefix):
     if ctx.author.id == 266202793143042048:
-        client.command_prefix = prefix
+        thorny.command_prefix = prefix
         await ctx.send(f"Prefix changed to `{prefix}`")
 
 
-@client.event
+@thorny.command()
+async def paginate(ctx):
+    embed1 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 1")
+    embed2 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 2")
+    embed3 = discord.Embed(color=ctx.author.color).add_field(name="Example", value="Page 3")
+    paginator = DiscordUtils.Pagination.CustomEmbedPaginator(ctx, remove_reactions=True)
+    paginator.add_reaction('⏮️', "first")
+    paginator.add_reaction('⏪', "back")
+    paginator.add_reaction('🔐', "lock")
+    paginator.add_reaction('⏩', "next")
+    paginator.add_reaction('⏭️', "last")
+    embeds = [embed1, embed2, embed3]
+    await paginator.run(embeds)
+
+
+@thorny.event
 async def on_message(message):
     if message.content.lower() == 'hello':
         await message.channel.send("Hi!")
     elif message.content.lower() == 'pav':
         await message.channel.send('Yes. He is Pav.')
     elif message.content.lower() == '<@!879249190801248276>':
-        await message.channel.send("To get help, use the `!gateway` command! It's all in there!")
+        await message.channel.send('Use !gateway for help!')
 
-    await client.process_commands(message)  # Not putting this on on_message breaks all .command()
+    await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
 
-@client.event
+@thorny.event
 async def on_member_join(member):
     profile_update(member)
 
 
-client.add_cog(Bank(client))
-client.add_cog(Leaderboards(client))
-# client.add_cog(Kingdom(client))
-client.add_cog(Gateway(client))
-client.add_cog(Activity(client))  # Do this for every cog. This can also be changed through commands.
-client.run(TOKEN_Thorny)
+thorny.add_cog(Bank(thorny))
+thorny.add_cog(Leaderboards(thorny))
+# thorny.add_cog(Kingdom(thorny))
+thorny.add_cog(Gateway(thorny))
+thorny.add_cog(Activity(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.run(TOKEN)
