@@ -48,34 +48,36 @@ def find_user_index(lst, key, value):
 def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('text files/profiles.json', 'r+')
     profile = json.load(profile_file)
-    if str(ctx_author.id) not in profile:
-        profile[str(ctx_author.id)] = ({"user": f"{ctx_author}",
-                                        "balance": 25,
-                                        "activity": {
-                                            "total": 0,
-                                            "latest_hour": 0,
-                                            "latest_minute": 0,
-                                            "daily_average": None,
-                                            "current_month": 0,
-                                            "1_month_ago": 0,
-                                            "2_months_ago": 0
-                                        },
-                                        "inventory": {
-                                            "slot1": None,
-                                            "slot2": None,
-                                            "slot3": None,
-                                            "slot4": None,
-                                            "slot5": None,
-                                            "slot6": None
-                                        },
-                                        "user_level": {
-                                            "level": 0,
-                                            "xp": 0,
-                                            "required_xp": 0,
-                                            "last_message": "0:0:0"
-                                        },
-                                        "date_joined": None
-                                        })
+    if profile.get(f'{ctx_author.id}') is None:  # User ID search
+        profile[str(ctx_author.id)] = ({"user": f"{ctx_author}"})
+
+    if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
+        profile[str(ctx_author.id)]['balance'] = 0
+
+    if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
+        profile[f'{ctx_author.id}']['activity'] = {"total": 0,
+                                                   "latest_hour": 0,
+                                                   "latest_minute": 0,
+                                                   "daily_average": None,
+                                                   "current_month": 0,
+                                                   "1_month_ago": 0,
+                                                   "2_months_ago": 0}
+
+    for slot_number in range(1, 7):  # Inventory Slots
+        if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}') is None:
+            profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = 'Empty'
+        if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}_amount') is None:
+            profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}_amount'] = 0
+
+    if profile[f'{ctx_author.id}'].get('user_level') is None:  # Level
+        profile[str(ctx_author.id)]['user_level'] = {"level": 0,
+                                                     "xp": 0,
+                                                     "required_xp": 0,
+                                                     "last_message": "0:0:0"}
+
+    if profile[f'{ctx_author.id}'].get('date_joined') is None:  # Date Joined
+        profile[f'{ctx_author.id}']['date_joined'] = ''
+
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
     elif value and key1 and key2 is not None:
