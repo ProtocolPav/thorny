@@ -3,7 +3,7 @@ gateway_0 = f'''
 > Here you can find all of the gates and their corresponding numbers!\n
 
 **!gate 1** - Welcome Message For Newbies
-**!gate 2** - Command Help Center
+**!gate 2** - Quick Command Help
 **!gate 3** - Discord Channels Guide
 **!gate 4** - Everthorn Donations
 '''
@@ -25,7 +25,7 @@ gateway_1 = f'''
 '''
 
 gateway_2 = f'''
-> **Gateway 2 - Command Help Center**
+> **Gateway 2 - Quick Command Help**
 > All of the most useful commands on Thorny!\n
 
 <:ar_bl:862635275230511114>**!remember-birthday [Y-M-D]** - Sets your birthday, to be announced in #players on that day!
