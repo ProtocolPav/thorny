@@ -49,7 +49,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('text files/profiles.json', 'r+')
     profile = json.load(profile_file)
     if profile.get(f'{ctx_author.id}') is None:  # User ID search
-        profile[str(ctx_author.id)] = ({"user": f"{ctx_author}"})
+        profile[str(ctx_author.id)] = {"user": f"{ctx_author}"}
 
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
         profile[str(ctx_author.id)]['balance'] = 0
@@ -62,6 +62,9 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
                                                    "current_month": 0,
                                                    "1_month_ago": 0,
                                                    "2_months_ago": 0}
+
+    if profile[f'{ctx_author.id}'].get('inventory') is None:  # Inventory
+        profile[f'{ctx_author.id}']['inventory'] = {}
 
     for slot_number in range(1, 7):  # Inventory Slots
         if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}') is None:
