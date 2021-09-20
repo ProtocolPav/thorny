@@ -6,11 +6,12 @@ from discord.ext import commands
 from activity import write_log, process_json, total_json, reset_values
 from activity import profile_update
 from lottery import create_ticket, winners
+import errors
 import asyncio
 import json
 import constants
 
-v = 'v1.2'
+v = 'v1.2.1'
 # This token is for the TEST bot
 TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
 TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
@@ -20,8 +21,8 @@ thorny = commands.Bot(command_prefix='!')
 @thorny.event
 async def on_ready():
     print(f"Logged in as {thorny.user}")
-    bot_activity = discord.Activity(type=discord.ActivityType.playing,
-                                    name=f"E.V.E.R.T.H.O.R.N | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.watching,
+                                    name=f"Everything. | {v}")
     await thorny.change_presence(activity=bot_activity)
 
 
@@ -140,6 +141,12 @@ class Activity(commands.Cog):
         if not_user >= 1 and not disconnected:
             await ctx.send("You haven't connected yet!")
 
+    @commands.command()
+    async def online(self, ctx):
+        file = open('text files/temp.json', 'r+')
+        file_list = json.load(file)
+        await ctx.send(file_list)
+
 
 class Gateway(commands.Cog):
     def __init__(self, client):
@@ -212,24 +219,27 @@ class Bank(commands.Cog):
         profile = json.load(profile_file)
         kingdom_file = open('text files/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
-        if user is None:
-            lb_embed = discord.Embed(color=0xDAA520)
-            lb_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-            lb_embed.add_field(name=f'**Nugs:**',
-                               value=f"<:Nug:884320353202081833>{profile[f'{ctx.author.id}']['balance']}")
-            lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
-                               value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
-                               inline=False)
-            await ctx.send(embed=lb_embed)
+        if kingdom == '':
+            await ctx.send(embed=errors.Pay.balance_error)
         else:
-            lb_embed = discord.Embed(color=0xDAA520)
-            lb_embed.set_author(name=f'{user}', icon_url=f'{user.avatar_url}')
-            lb_embed.add_field(name=f'**Nugs:**',
-                               value=f"<:Nug:884320353202081833>{profile[f'{user.id}']['balance']}")
-            lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
-                               value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
-                               inline=False)
-            await ctx.send(embed=lb_embed)
+            if user is None:
+                lb_embed = discord.Embed(color=0xDAA520)
+                lb_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                lb_embed.add_field(name=f'**Nugs:**',
+                                   value=f"<:Nug:884320353202081833>{profile[f'{ctx.author.id}']['balance']}")
+                lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
+                                   value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
+                                   inline=False)
+                await ctx.send(embed=lb_embed)
+            else:
+                lb_embed = discord.Embed(color=0xDAA520)
+                lb_embed.set_author(name=f'{user}', icon_url=f'{user.avatar_url}')
+                lb_embed.add_field(name=f'**Nugs:**',
+                                   value=f"<:Nug:884320353202081833>{profile[f'{user.id}']['balance']}")
+                lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
+                                   value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
+                                   inline=False)
+                await ctx.send(embed=lb_embed)
 
     @commands.command(aliases=['amoney'])
     @commands.has_permissions(administrator=True)
@@ -259,28 +269,16 @@ class Bank(commands.Cog):
             profile_file = open('text files/profiles.json', 'r+')
             profile = json.load(profile_file)
             if user == ctx.author:
-                error_embed = discord.Embed(color=0x900C3F)
-                error_embed.add_field(name='Payment Unsuccessful!',
-                                      value='Reason: You can not pay yourself silly!')
-                await ctx.send(embed=error_embed)
+                await ctx.send(embed=errors.Pay.self_error)
             elif amount is None:
-                error_embed = discord.Embed(color=0x900C3F)
-                error_embed.add_field(name='Payment Unsuccessful!',
-                                      value='Reason: You did not say an amount to pay!')
-                await ctx.send(embed=error_embed)
+                await ctx.send(embed=errors.Pay.amount_error)
             elif str(ctx.author.id) not in profile:
-                error_embed = discord.Embed(color=0x900C3F)
-                error_embed.add_field(name='Payment Unsuccessful!',
-                                      value='Reason: This user is not registered in the database!')
-                await ctx.send(embed=error_embed)
+                await ctx.send(embed=errors.Pay.self_register_error)
             elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
-                error_embed = discord.Embed(color=0x900C3F)
-                error_embed.add_field(name='Payment Unsuccessful!',
-                                      value='Reason: You do not have enough nugs!')
-                await ctx.send(embed=error_embed)
+                await ctx.send(embed=errors.Pay.lack_nugs_error)
 
             elif str(ctx.author.id) in profile:
-                if amount > 0:
+                if int(amount) > 0:
                     if profile[f'{ctx.author.id}']['balance'] - int(amount) >= 0 and user != ctx.author:
                         amount1 = profile[f'{ctx.author.id}']['balance'] - int(amount)
                         profile_update(ctx.author, amount1, 'balance')
@@ -295,15 +293,9 @@ class Bank(commands.Cog):
                                                   f'\n**Reason: {" ".join(str(x) for x in reason)}**')
                         await ctx.send(embed=pay_embed)
                 else:
-                    error_embed = discord.Embed(color=0x900C3F)
-                    error_embed.add_field(name='Payment Unsuccessful!',
-                                          value='Reason: You can not pay a negative amount!')
-                    await ctx.send(embed=error_embed)
+                    await ctx.send(embed=errors.Pay.negative_nugs_error)
         else:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Oopsies...',
-                                  value='Use this command in <#700293298652315648> please!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Pay.channel_error)
 
     @commands.group(aliases=['tres'], invoke_without_command=True)
     async def treasury(self, ctx):
@@ -343,10 +335,7 @@ class Bank(commands.Cog):
             await ctx.send(embed=pay_embed)
 
         elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name=f'Could not store in the {kingdom}Treasury!',
-                                  value='Reason: You do not have enough nugs!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Treasury.store_lack_nugs_error)
 
     @treasury.command()
     async def search(self, ctx):
@@ -371,7 +360,10 @@ class Bank(commands.Cog):
         elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
             kingdom = 'asbahamael'
 
-        if kingdom_json[kingdom] - int(amount) >= 0:
+        if int(amount) < 0:
+            await ctx.send(embed=errors.Treasury.negative_nugs_error)
+
+        elif kingdom_json[kingdom] - int(amount) >= 0:
             amount1 = profile[f'{ctx.author.id}']['balance'] + int(amount)
             profile_update(ctx.author, amount1, 'balance')
             kingdom_json[kingdom] = kingdom_json[kingdom] - int(amount)
@@ -387,18 +379,12 @@ class Bank(commands.Cog):
             await ctx.send(embed=pay_embed)
 
         elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name=f'Could not store in the {kingdom} Treasury!',
-                                  value='Reason: You do not have enough nugs!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Treasury.take_lack_nugs_error)
 
     @take.error
     async def take_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name=f'Could not take from the Treasury!',
-                                  value='Reason: You are not a Ruler!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Treasury.ruler_error)
 
     @treasury.command()
     @commands.has_role('Ruler')
@@ -421,25 +407,13 @@ class Bank(commands.Cog):
             kingdom = 'asbahamael'
 
         if user == ctx.author:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Payment Unsuccessful!',
-                                  value='Reason: You can not pay yourself silly!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Pay.self_error)
         elif amount is None:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Payment Unsuccessful!',
-                                  value='Reason: You did not say an amount to pay!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Pay.amount_error)
         elif str(ctx.author.id) not in profile:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Payment Unsuccessful!',
-                                  value='Reason: This user is not registered in the database!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Pay.self_register_error)
         elif kingdom_json[kingdom] - int(amount) < 0:
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Payment Unsuccessful!',
-                                  value='Reason: You do not have enough nugs!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Pay.lack_nugs_error)
 
         elif str(ctx.author.id) in profile:
             if kingdom_json[kingdom] - int(amount) >= 0 and user != ctx.author:
@@ -463,16 +437,13 @@ class Bank(commands.Cog):
     @spend.error
     async def spend_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name=f'Could not take from the Treasury!',
-                                  value='Reason: You are not a Ruler!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Treasury.ruler_error)
 
 
 class Store(commands.Cog):
     def __init__(self, client):
         self.client = client
-    available_items = ['Empty', 'Ticket', 'Custom Role']
+    available_items = ['Empty', 'Ticket', 'Custom Role 1m']
 
     @commands.group(aliases=['inv'], invoke_without_command=True)
     async def inventory(self, ctx, user: discord.Member = None):
@@ -498,25 +469,65 @@ class Store(commands.Cog):
         item_placed = False
         slot = 0
 
-        if item.lower() == 'role' or 'custom':
+        if item.lower() == 'role' or item.lower() == 'custom':
             while not item_placed:
                 slot += 1
                 if profile[f"{user.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
                    profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Custom Role 1m":
                     profile_update(user, 'Custom Role 1m', 'inventory', f'slot{slot}')
-                    amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + amnt
+                    amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + int(amnt)
                     profile_update(user, amnt, 'inventory', f'slot{slot}_amount')
                     item_placed = True
-                    print('bought', slot)
-                    await ctx.send('Added')
+                    await ctx.send(f'Added item {item} to slot {slot}')
                 else:
-                    print('pass', slot)
+                    pass
+        if item.lower() == 'ticket' or item.lower() == 'lottery':
+            while not item_placed:
+                slot += 1
+                if profile[f"{user.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
+                   profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Ticket":
+                    profile_update(user, 'Ticket', 'inventory', f'slot{slot}')
+                    amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + int(amnt)
+                    profile_update(user, amnt, 'inventory', f'slot{slot}_amount')
+                    item_placed = True
+                    await ctx.send(f'Added item {item} to slot {slot}')
+                else:
+                    pass
+
+    @inventory.command()
+    @commands.has_permissions(administrator=True)
+    async def remove(self, ctx, user:discord.User=None, item=None):
+        profile_file = open('text files/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        item_removed = False
+        slot = 0
+
+        if item.lower() == 'role' or item.lower() == 'custom':
+            while not item_removed:
+                slot += 1
+                if profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Custom Role 1m":
+                    profile_update(user, 'Empty', 'inventory', f'slot{slot}')
+                    profile_update(user, 0, 'inventory', f'slot{slot}_amount')
+                    item_removed = True
+                    await ctx.send(f'Removed item {item} from slot {slot}')
+                else:
+                    pass
+        if item.lower() == 'ticket' or item.lower() == 'lottery':
+            while not item_removed:
+                slot += 1
+                if profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Ticket":
+                    profile_update(user, 'Empty', 'inventory', f'slot{slot}')
+                    profile_update(user, 0, 'inventory', f'slot{slot}_amount')
+                    item_removed = True
+                    await ctx.send(f'Removed item {item} from slot {slot}')
+                else:
                     pass
 
     @commands.group(invoke_without_command=True)
     async def store(self, ctx):
         await ctx.send('Items in the Store:\n'
-                       'Lottery Ticket - 10n\n')
+                       'Lottery Ticket - 10n\n'
+                       'Use !store buy item to buy an item!')
 
     @store.command()
     async def buy(self, ctx, item):
@@ -525,22 +536,27 @@ class Store(commands.Cog):
         item_placed = False
         slot = 0
 
-        if item.lower() == 'ticket' or 'lottery':
-            profile[f"{ctx.author.id}"]['balance'] -= 10
-            while not item_placed:
-                slot += 1
-                if profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
-                   profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Ticket':
-                    amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + 1
-                    profile_update(ctx.author, 'Ticket', 'inventory', f'slot{slot}')
-                    profile_update(ctx.author, amnt, 'inventory', f'slot{slot}_amount')
-                    item_placed = True
-                    create_ticket(ctx.author, 1)
-                    await ctx.send('Bought a ticket!')
-                else:
-                    pass
+        if item.lower() == 'ticket' or item.lower() == 'lottery':
+            if 18 <= int(datetime.now().strftime("%d")) <= 25:
+                profile[f"{ctx.author.id}"]['balance'] -= 10
+                while not item_placed:
+                    slot += 1
+                    if profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
+                       profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Ticket':
+                        amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + 1
+                        profile_update(ctx.author, 'Ticket', 'inventory', f'slot{slot}')
+                        profile_update(ctx.author, amnt, 'inventory', f'slot{slot}_amount')
+                        item_placed = True
+                        ticket_number = create_ticket(ctx.author, 1)
+                        await ctx.send('Bought a ticket!')
+                        await ctx.author.send(f"Your ticket is {ticket_number}")
+                    else:
+                        pass
+            else:
+                await ctx.send(embed=errors.Shop.ticket_buy_error)
 
     @commands.command()
+    @commands.has_permissions(administrator=True)
     async def getwinners(self, ctx):
         winners_list = winners(thorny)
         await ctx.send(winners_list)
@@ -553,9 +569,9 @@ class Leaderboards(commands.Cog):
     @commands.group(aliases=['lb'], invoke_without_command=True)
     async def leaderboard(self, ctx):
         await ctx.send('> **Available Leaderboards**\n'
-                       '\n**!activity [month] [page]** • Shows activity for all players | Also: !act'
-                       "\n**!nugs [page]** • Shows a leaderboard of people's nugs | Also: !money"
-                       '\n**!treasuries** • Shows the balance of all treasuries | Also: !tries'
+                       '\n**!lb activity [month] [page]** • Shows activity for all players | Also: !act'
+                       "\n**!lb nugs [page]** • Shows a leaderboard of people's nugs | Also: !money"
+                       '\n**!lb treasuries** • Shows the balance of all treasuries | Also: !tries'
                        '\n\n*When writing commands, do not include [the brackets]*')
 
     @leaderboard.command(aliases=['act'])
@@ -592,7 +608,7 @@ class Leaderboards(commands.Cog):
                                      color=0x6495ED)
             lb_embed.add_field(name=f'\u200b',
                                value=f"{lb_to_send}")
-            lb_embed.set_footer(text=f'Page {page}/{round(len(lb_json)/10)} | Use !leaderboard to see others')
+            lb_embed.set_footer(text=f'Page {page}/{round(len(lb_json)/20)} | Use !leaderboard to see others')
             await ctx.send(embed=lb_embed)
         else:
             error_embed = discord.Embed(color=0x900C3F)
@@ -658,14 +674,38 @@ class Leaderboards(commands.Cog):
 async def profile(ctx):
     profile_update(ctx.author)
     profile = json.load(open('text files/profiles.json', 'r'))
-    await ctx.send(f'> Recent Playtime For {ctx.author}'
-                   f'{profile[f"{ctx.author.id}"]["activity"]["latest_hour"]}h'
-                   f'{profile[f"{ctx.author.id}"]["activity"]["latest_minute"]}m')
+    kingdom = ''
+
+    if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
+        kingdom = 'stregabor'
+    elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
+        kingdom = 'ambria'
+    elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
+        kingdom = 'eireann'
+    elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
+        kingdom = 'dalvasha'
+    elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
+        kingdom = 'asbahamael'
+
+    profile_embed = discord.Embed(title=f"Yes, he is Pav.", color=ctx.author.color)
+    profile_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+    profile_embed.set_thumbnail(url=ctx.author.avatar_url)
+    profile_embed.add_field(name=f'About {ctx.author.name}',
+                            value=f"Kingdom: **{kingdom}**\n"
+                                  f"Level: **{profile[f'{ctx.author.id}']['user_level']['level']}**")
+    await ctx.send(embed=profile_embed)
 
 
 @thorny.command()
-async def pong(ctx):
-    await ctx.send('ping!')
+async def update(ctx, user: discord.User, key1, *value):
+    print(user, key1, value)
+    profile_update(user, ','.join(value), key1)
+    await ctx.send(f"Updated {user}'s {key1} to be {value}")
+
+
+@thorny.command()
+async def version(ctx):
+    await ctx.send(f"Yeehaw! Howdy there boss. I am on version {v}. Isn't that coolio!")
 
 
 @thorny.command(aliases=['shout', 'aaa', 'scr'])
@@ -685,6 +725,21 @@ async def setprefix(ctx, prefix):
         await ctx.send(f"Prefix changed to `{prefix}`")
 
 
+@thorny.command()
+async def activity(ctx):
+    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) activity')
+
+
+@thorny.command()
+async def nugs(ctx):
+    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) nugs')
+
+
+@thorny.command()
+async def treasuries(ctx):
+    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) treasuries')
+
+
 @thorny.event
 async def on_message(message):
     if message.content.lower() == 'hello':
@@ -699,12 +754,12 @@ async def on_message(message):
 
 @thorny.event
 async def on_member_join(member):
-    profile_update(member)
+    profile_update(member, datetime.now().strftime("%B %d, %Y, %H:%M:%S"), 'date_joined')
 
 
 thorny.add_cog(Bank(thorny))
 thorny.add_cog(Leaderboards(thorny))
-# thorny.add_cog(Store(thorny))
+thorny.add_cog(Store(thorny))
 thorny.add_cog(Gateway(thorny))
 thorny.add_cog(Activity(thorny))  # Do this for every cog. This can also be changed through commands.
-thorny.run(TOKEN_Thorny)
+thorny.run(TOKEN)

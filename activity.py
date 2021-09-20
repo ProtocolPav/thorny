@@ -51,8 +51,10 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile.get(f'{ctx_author.id}') is None:  # User ID search
         profile[str(ctx_author.id)] = {"user": f"{ctx_author}"}
 
+    profile[str(ctx_author.id)]['user'] = f"{ctx_author}"  # Always updates name
+
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
-        profile[str(ctx_author.id)]['balance'] = 0
+        profile[str(ctx_author.id)]['balance'] = 25
 
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
         profile[f'{ctx_author.id}']['activity'] = {"total": 0,
@@ -83,7 +85,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
-    elif value and key1 and key2 is not None:
+    elif key1 and key2 is not None:
         profile[f"{ctx_author.id}"][key1][key2] = value
     profile_file.truncate(0)
     profile_file.seek(0)
