@@ -38,13 +38,6 @@ def write_log(status: str, current_time: str, ctx):
     WriteFile.write(f'[{separated_list_of_event_objects}]\n')
 
 
-def find_user_index(lst, key, value):
-    for index, dic in enumerate(lst):
-        if dic[key] == value:
-            return index
-    return None
-
-
 def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('text files/profiles.json', 'r+')
     profile = json.load(profile_file)
@@ -56,8 +49,8 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
         profile[str(ctx_author.id)]['balance'] = 25
 
-    if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
-        profile[f'{ctx_author.id}']['activity'] = {"total": 0,
+    if profile[f'{ctx_author.id}'].get('Thorny_Bot') is None:  # Activity
+        profile[f'{ctx_author.id}']['Thorny_Bot'] = {"total": 0,
                                                    "latest_hour": 0,
                                                    "latest_minute": 0,
                                                    "daily_average": None,
