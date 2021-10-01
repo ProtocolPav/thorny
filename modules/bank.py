@@ -4,9 +4,9 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 import json
-from Thorny_Bot.modules.leaderboard import Leaderboards
-from Thorny_Bot.activity import profile_update
-from Thorny_Bot import errors
+from thornyv1_3.modules.leaderboard import Leaderboards
+from thornyv1_3.activity import profile_update
+from thornyv1_3 import errors
 thorny = commands.Bot(command_prefix='!')
 
 
