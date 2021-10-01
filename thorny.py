@@ -10,9 +10,11 @@ from lottery import create_ticket, winners
 import errors
 import asyncio
 import json
-from Thorny_Bot.modules import gateway, playtime, bank, leaderboard
+from thornyv1_3.modules import gateway, playtime, bank, leaderboard, profile
 
-v = 'v1.2.2'
+config_file = open('config.json', 'r+')
+config = json.load(config_file)
+v = config["version"]
 # This token is for the TEST bot
 TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
 TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
@@ -23,10 +25,8 @@ thorny = commands.Bot(command_prefix='!')
 async def on_ready():
     print(f"[ONLINE] {thorny.user}\nRunning {v}\nDate is {datetime.now()}")
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
-                                    name=f"Everything. | {v}")
+                                    name=f"you | {v}")
     await thorny.change_presence(activity=bot_activity)
-    channel = thorny.get_channel(833298586971799622)
-    await channel.send('Hey! I am back online!')
 
 
 class Store(commands.Cog):
@@ -153,32 +153,6 @@ class Store(commands.Cog):
 
 
 @thorny.command()
-async def profile(ctx):
-    profile_update(ctx.author)
-    profile = json.load(open('text files/profiles.json', 'r'))
-    kingdom = ''
-
-    if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
-        kingdom = 'stregabor'
-    elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
-        kingdom = 'ambria'
-    elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
-        kingdom = 'eireann'
-    elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
-        kingdom = 'dalvasha'
-    elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
-        kingdom = 'asbahamael'
-
-    profile_embed = discord.Embed(title=f"Yes, he is Pav.", color=ctx.author.color)
-    profile_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-    profile_embed.set_thumbnail(url=ctx.author.avatar_url)
-    profile_embed.add_field(name=f'About {ctx.author.name}',
-                            value=f"Kingdom: **{kingdom}**\n"
-                                  f"Level: **{profile[f'{ctx.author.id}']['user_level']['level']}**")
-    await ctx.send(embed=profile_embed)
-
-
-@thorny.command()
 async def update(ctx, user: discord.User, key1, *value):
     print(user, key1, value)
     profile_update(user, ','.join(value), key1)
@@ -209,7 +183,7 @@ async def setprefix(ctx, prefix):
 
 @thorny.command()
 async def activity(ctx):
-    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) Thorny_Bot')
+    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) activity')
 
 
 @thorny.command()
@@ -243,5 +217,6 @@ thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboards(thorny))
 thorny.add_cog(Store(thorny))
 thorny.add_cog(gateway.Gateway(thorny))
+thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
