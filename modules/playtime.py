@@ -2,10 +2,15 @@ import discord
 import random
 from discord.ext import commands
 import asyncio
-from Thorny_Bot.activity import write_log, process_json, total_json, reset_values
-from Thorny_Bot.activity import profile_update
+from thornyv1_3.activity import write_log, process_json, total_json, reset_values
+from thornyv1_3.activity import profile_update
 from datetime import datetime
 import json
+thorny = commands.Bot(command_prefix='!')
+config_file = open('config.json', 'r+')
+config = json.load(config_file)
+v = config["version"]
+
 
 class Activity(commands.Cog):
     def __init__(self, client):
@@ -29,17 +34,19 @@ class Activity(commands.Cog):
         activity_channel = thorny.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
-        log_embed.add_field(name='Log in document:',
-                            value=f'**CONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}')
-        await activity_channel.send(embed=log_embed)
+        log_embed.add_field(name='Event Log:',
+                            value=f'**CONNECT**, **{ctx.author}**, '
+                                  f'{ctx.author.id}, '
+                                  f'{datetime.now().replace(microsecond=0)}')
+        await ctx.send(embed=log_embed)
 
         response_embed = discord.Embed(title='You Have Connected!', color=0x50C878)
         response_embed.add_field(name=f'Activity Logged',
-                                 value=f'{ctx.author.mention}, thanks for logging your Thorny_Bot! '
+                                 value=f'{ctx.author.mention}, thanks for logging your activity! '
                                        f'When you leave, use **!dc** or **!disconnect**, '
                                        f'that way your leave time is also logged!\n')
 
-        if random.randint(0, 2) == 2 or reminder_time is None:
+        if reminder_time is None:
             response_embed.add_field(name='Tip:',
                                      value=f'Thorny loves to be helpful! It can remind you to disconnect! '
                                            f'Just add a time after `!c`. It can me in `m`, `h` or even `s`!',
@@ -48,15 +55,15 @@ class Activity(commands.Cog):
             response_embed.add_field(name='\u200b',
                                      value=f'I will remind you to disconnect in {reminder_time}',
                                      inline=False)
-        response_embed.set_footer(text=f'CONNECT, {ctx.author}, {ctx.author.id}, {current_time}\n{v}')
+        response_embed.set_footer(text=f'CONNECT at '
+                                       f'{datetime.now().replace(microsecond=0)} | {v}')
         await ctx.send(embed=response_embed)
 
-        write_log("CONNECT", current_time, ctx)
+        write_log("CONNECT", datetime.now().replace(microsecond=0), ctx)
         temp_logs.append({"status": "CONNECT",
                           "user": f"{ctx.author}",
                           "userid": f"{ctx.author.id}",
-                          "date": f"{current_time.split(',')[0]}",
-                          "time": f"{current_time.split(',')[2][1:9]}"})
+                          "datetime": str(datetime.now().replace(microsecond=0))})
         json.dump(temp_logs, temp_file, indent=0)
 
         if reminder_time is not None:
@@ -81,31 +88,28 @@ class Activity(commands.Cog):
                 not_user += 1
             elif str(ctx.author.id) in item['userid'] and not disconnected:
                 activity_channel = thorny.get_channel(867303669203206194)
-                current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
-                playtime_hour = int(current_time.split(',')[2][1:3]) - int(item['time'][0:2])
-                playtime_minute = int(current_time.split(',')[2][4:6]) - int(item['time'][3:5])
-                if playtime_hour < 0:
-                    playtime_hour += 24
-                if playtime_hour >= 12:
-                    playtime_hour = 2
-                if playtime_minute < 0:
-                    playtime_minute += 60
+                playtime = datetime.now().replace(microsecond=0) - \
+                           datetime.strptime(item['datetime'], "%Y-%m-%d %H:%M:%S")
 
                 log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xE97451)
                 log_embed.add_field(name='Log:',
-                                    value=f'**DISCONNECT**, **{ctx.author}**, {ctx.author.id}, {current_time}\n'
-                                          f'Playtime: **{playtime_hour}h{playtime_minute}m**')
+                                    value=f'**DISCONNECT**, **{ctx.author}**, '
+                                          f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
+                                          f'Playtime: **{playtime}**')
                 await activity_channel.send(embed=log_embed)
 
                 response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
                 response_embed.add_field(name=f'Connection marked',
-                                         value=f'{ctx.author.mention}, thank you for marking down your Thorny_Bot! '
+                                         value=f'{ctx.author.mention}, thank you for marking down your activity! '
                                                f'Use **!c** or **!connect** to mark down connect time!'
-                                               f'\nYou played for **{playtime_hour}h{playtime_minute}m**')
-                response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, {ctx.author.id}, {current_time}\n{v}')
+                                               f'\nYou played for **{str(playtime).split(":")[0]}h'
+                                               f'{str(playtime).split(":")[1]}m**')
+                response_embed.set_footer(text=f'DISCONNECT, {ctx.author}, '
+                                               f'{ctx.author.id}, '
+                                               f'{datetime.now().replace(microsecond=0)}\n{v}')
                 await ctx.send(embed=response_embed)
 
-                write_log("DISCONNECT", current_time, ctx)
+                write_log("DISCONNECT", datetime.now().replace(microsecond=0), ctx)
                 disconnected = True
 
                 del file_list[file_list.index(item)]
@@ -113,10 +117,12 @@ class Activity(commands.Cog):
                 json.dump(file_list, file, indent=0)
                 file = open('text files/profiles.json', 'r+')
                 file_loaded = json.load(file)
-                total = file_loaded[f'{ctx.author.id}']['Thorny_Bot']['total'] + playtime_hour
-                profile_update(ctx.author, total, 'Thorny_Bot', 'total')
-                profile_update(ctx.author, playtime_hour, 'Thorny_Bot', 'latest_hour')
-                profile_update(ctx.author, playtime_minute, 'Thorny_Bot', 'latest_minute')
+                total = file_loaded[f'{ctx.author.id}']['activity']['total'] + int(str(playtime).split(':')[0])
+                profile_update(ctx.author, total, 'activity', 'total')
+                profile_update(ctx.author, None, 'activity', 'latest_hour')
+                profile_update(ctx.author, None, 'activity', 'latest_minute')
+                profile_update(ctx.author, f"{str(playtime).split(':')[0]}h{str(playtime).split(':')[1]}m",
+                               'activity', 'latest_playtime')
             else:
                 pass
         if not_user >= 1 and not disconnected:

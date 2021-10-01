@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 import json
 
-from Thorny_Bot.activity import write_log, process_json, total_json, reset_values
-from Thorny_Bot.activity import profile_update
+from thornyv1_3.activity import write_log, process_json, total_json, reset_values
+from thornyv1_3.activity import profile_update
 
 
 class Leaderboards(commands.Cog):
@@ -21,7 +21,9 @@ class Leaderboards(commands.Cog):
                        '\n\n*When writing commands, do not include [the brackets]*')
 
     @leaderboard.command(aliases=['act'])
-    async def activity(self, ctx, month=datetime.now().strftime("%B"), page=1):
+    async def activity(self, ctx, month=None, page=1):
+        if month is None:
+            month = datetime.now().strftime("%B")
         try:
             int(month)
         except ValueError:
@@ -33,10 +35,11 @@ class Leaderboards(commands.Cog):
                 stop = start + 20
 
             lb_to_send = ''
-            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
-            reset_values()
-            process_json(month[0:3])
-            total_json(month[0:3], ctx.author)
+            print(f'Activity gotten on {datetime.now()}')
+            if month.lower() in datetime.now().strftime("%B").lower():
+                reset_values()
+                process_json(month[0:3])
+                total_json(month[0:3], ctx.author)
             lb_file = open(f'text files/leaderboard_{month[0:3]}21.json', 'r+')
             lb_json = json.load(lb_file)
 
@@ -48,7 +51,8 @@ class Leaderboards(commands.Cog):
             else:
                 for rank in lb_json[start:stop]:
                     lb_to_send = f'{lb_to_send}\n' \
-                                 f'**{lb_json.index(rank) + 1}.** <@{rank["name"]}> • **{rank["time_played"]}h**'
+                                 f'**{lb_json.index(rank) + 1}.** <@{rank["name"]}> • ' \
+                                 f'**{rank["time_played"].split(":")[0]}h{rank["time_played"].split(":")[1]}m**'
 
             lb_embed = discord.Embed(title=f'**Activity Leaderboard {month}**',
                                      color=0x6495ED)
