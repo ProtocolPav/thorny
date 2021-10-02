@@ -4,20 +4,24 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from activity import write_log, process_json, total_json, reset_values
-from activity import profile_update
+from functions import profile_update
 from lottery import create_ticket, winners
 import errors
-import asyncio
 import json
-from thornyv1_3.modules import gateway, playtime, bank, leaderboard, profile
+from modules import leaderboard, gateway, bank, playtime, profile
 
-config_file = open('config.json', 'r+')
+config_file = open('../thorny_data/config.json', 'r+')
 config = json.load(config_file)
 v = config["version"]
-# This token is for the TEST bot
-TOKEN = "ODc5MjQ5MTkwODAxMjQ4Mjc2.YSM-ng.l_rYiSIvBFyuKxvgGmXefZqQR9k"
-TOKEN_Thorny = "ODY3ODE1Mzk4MjA0MTEyOTE3.YPmmEg.N28SIdOPgEIyLxojDp4nHKh9MvE"
+
+ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
+if ans == 't':
+    TOKEN = config["token"]
+elif ans == 'd':
+    TOKEN = config["dev_token"]
+else:
+    print('This is not a valid Token. Please run the program again.')
+
 thorny = commands.Bot(command_prefix='!')
 
 
@@ -25,7 +29,7 @@ thorny = commands.Bot(command_prefix='!')
 async def on_ready():
     print(f"[ONLINE] {thorny.user}\nRunning {v}\nDate is {datetime.now()}")
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
-                                    name=f"you | {v}")
+                                    name=f"Evercast #001 | {v}")
     await thorny.change_presence(activity=bot_activity)
 
 
@@ -38,7 +42,7 @@ class Store(commands.Cog):
     async def inventory(self, ctx, user: discord.Member = None):
         inventory_list = ''
         number = 0
-        profile_json = json.load(open('text files/profiles.json', 'r'))
+        profile_json = json.load(open('../thorny_data/profiles.json', 'r'))
         if user is None:
             person = ctx.author
         else:
@@ -53,7 +57,7 @@ class Store(commands.Cog):
     @inventory.command()
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.User=None, item=None, amnt=1):
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_placed = False
         slot = 0
@@ -86,7 +90,7 @@ class Store(commands.Cog):
     @inventory.command()
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user:discord.User=None, item=None):
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_removed = False
         slot = 0
@@ -120,7 +124,7 @@ class Store(commands.Cog):
 
     @store.command()
     async def buy(self, ctx, item):
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_placed = False
         slot = 0
@@ -181,21 +185,6 @@ async def setprefix(ctx, prefix):
         await ctx.send(f"Prefix changed to `{prefix}`")
 
 
-@thorny.command()
-async def activity(ctx):
-    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) activity')
-
-
-@thorny.command()
-async def nugs(ctx):
-    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) nugs')
-
-
-@thorny.command()
-async def treasuries(ctx):
-    await ctx.send('Hey! The command has changed! It is now !leaderboard (or !lb) treasuries')
-
-
 @thorny.event
 async def on_message(message):
     if message.content.lower() == 'hello':
@@ -210,7 +199,7 @@ async def on_message(message):
 
 @thorny.event
 async def on_member_join(member):
-    profile_update(member, datetime.now().strftime("%B %d, %Y, %H:%M:%S"), 'date_joined')
+    profile_update(member, datetime.now(), 'date_joined')
 
 
 thorny.add_cog(bank.Bank(thorny))
