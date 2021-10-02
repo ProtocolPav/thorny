@@ -1,13 +1,9 @@
-import random
-from datetime import datetime
-
 import discord
 from discord.ext import commands
 import json
-from thornyv1_3.modules.leaderboard import Leaderboards
-from thornyv1_3.activity import profile_update
-from thornyv1_3 import errors
-thorny = commands.Bot(command_prefix='!')
+from modules import leaderboard
+from functions import profile_update
+import errors
 
 
 class Bank(commands.Cog):
@@ -41,9 +37,9 @@ class Bank(commands.Cog):
                 kingdom = 'dalvasha'
             elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in user.roles:
                 kingdom = 'asbahamael'
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
-        kingdom_file = open('text files/kingdoms.json', 'r+')
+        kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
         if kingdom == '':
             await ctx.send(embed=errors.Pay.balance_error)
@@ -71,7 +67,7 @@ class Bank(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def addmoney(self, ctx, user: discord.User, amount):
         profile_update(user)
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         if str(ctx.author.id) in profile:
             amount = profile[f'{user.id}']['balance'] + int(amount)
@@ -82,7 +78,7 @@ class Bank(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def removemoney(self, ctx, user: discord.User, amount):
         profile_update(user)
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         if str(ctx.author.id) in profile:
             amount = profile[f'{user.id}']['balance'] - int(amount)
@@ -91,8 +87,8 @@ class Bank(commands.Cog):
 
     @commands.command()
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
-        if ctx.channel == thorny.get_channel(700293298652315648):
-            profile_file = open('text files/profiles.json', 'r+')
+        if ctx.channel == self.client.get_channel(700293298652315648):
+            profile_file = open('./../thorny_data/profiles.json', 'r+')
             profile = json.load(profile_file)
             if user == ctx.author:
                 await ctx.send(embed=errors.Pay.self_error)
@@ -129,9 +125,9 @@ class Bank(commands.Cog):
 
     @treasury.command()
     async def store(self, ctx, amount=None):
-        kingdom_file = open('text files/kingdoms.json', 'r+')
+        kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         kingdom = ''
         if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
@@ -170,9 +166,9 @@ class Bank(commands.Cog):
     @treasury.command()
     @commands.has_role('Ruler')
     async def take(self, ctx, amount=None):
-        kingdom_file = open('text files/kingdoms.json', 'r+')
+        kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         kingdom = ''
         if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
@@ -215,9 +211,9 @@ class Bank(commands.Cog):
     @treasury.command()
     @commands.has_role('Ruler')
     async def spend(self, ctx, user: discord.User, amount=None, *reason):
-        profile_file = open('text files/profiles.json', 'r+')
+        profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
-        kingdom_file = open('text files/kingdoms.json', 'r+')
+        kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
         kingdom = ''
 

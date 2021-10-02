@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 
-config_file = open('config.json', 'r+')
+config_file = open('./../thorny_data/config.json', 'r+')
 config = json.load(config_file)
 gateway_0 = f'''
 > **The Gateway Command**
@@ -112,9 +112,8 @@ class Gateway(commands.Cog):
 
     @commands.command(aliases=['gate', 'g', 'ga'])
     async def gateway(self, ctx, gatenum=None):
-        config_file = open('config.json', 'r+')
+        config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)
-        send_text = ''
         if gatenum is None:
             send_text = gateway_0
         elif gatenum == '1':
@@ -129,10 +128,10 @@ class Gateway(commands.Cog):
             send_text = gateway_4
         else:
             send_text = gateway_0
-        await ctx.send(f'{send_text}')
+        await ctx.send(send_text)
 
     @commands.command()
     @commands.has_permissions(administrator = True)
     async def newruler(self, ctx, kingdom, *ruler):
         config['gateways'][f'ruler_{kingdom.lower()}'] = f'{" ".join(ruler)}'
-        json.dump(config, open('config.json', 'w'), indent=3)
+        json.dump(config, open('./../thorny_data/config.json', 'w'), indent=3)
