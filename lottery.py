@@ -3,7 +3,7 @@ import discord
 
 
 def create_ticket(ctx_author, amount):
-    TicketFile = open('text files/ticket.txt', 'r')
+    TicketFile = open('../thorny_data/ticket.txt', 'r')
     List = []
     NumList = []
     number = 0
@@ -29,7 +29,7 @@ def create_ticket(ctx_author, amount):
 
 
 def winners(client):
-    TicketFile = open('text files/ticket.txt', 'r')
+    TicketFile = open('../thorny_data/ticket.txt', 'r')
     list = []
     List = []
     NumList = []
