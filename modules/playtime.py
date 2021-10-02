@@ -2,12 +2,11 @@ import discord
 import random
 from discord.ext import commands
 import asyncio
-from thornyv1_3.activity import write_log, process_json, total_json, reset_values
-from thornyv1_3.activity import profile_update
+from functions import write_log, process_json, total_json, reset_values
+from functions import profile_update
 from datetime import datetime
 import json
-thorny = commands.Bot(command_prefix='!')
-config_file = open('config.json', 'r+')
+config_file = open('./../thorny_data/config.json', 'r+')
 config = json.load(config_file)
 v = config["version"]
 
@@ -19,7 +18,7 @@ class Activity(commands.Cog):
     @commands.command(aliases=['link', 'c', 'C'])
     async def connect(self, ctx, reminder_time=None):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
-        temp_file = open('text files/temp.json', 'r+')
+        temp_file = open('./../thorny_data/temp.json', 'r+')
         temp_logs = json.load(temp_file)
 
         for item in temp_logs:
@@ -28,17 +27,17 @@ class Activity(commands.Cog):
                 await ctx.send("You already connected before, BUT it's Ay Okay! "
                                "I marked down your previous connection as 1h5m. Always glad to help :))")
             else:
-                temp_file = open('text files/temp.json', 'w')
+                temp_file = open('./../thorny_data/temp.json', 'w')
                 pass
 
-        activity_channel = thorny.get_channel(867303669203206194)
+        activity_channel = self.client.get_channel(833298586971799622)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Event Log:',
                             value=f'**CONNECT**, **{ctx.author}**, '
                                   f'{ctx.author.id}, '
                                   f'{datetime.now().replace(microsecond=0)}')
-        await ctx.send(embed=log_embed)
+        await activity_channel.send(embed=log_embed)
 
         response_embed = discord.Embed(title='You Have Connected!', color=0x50C878)
         response_embed.add_field(name=f'Activity Logged',
@@ -79,7 +78,7 @@ class Activity(commands.Cog):
 
     @commands.command(aliases=['unlink', 'dc', 'Dc'])
     async def disconnect(self, ctx):
-        file = open('text files/temp.json', 'r+')
+        file = open('./../thorny_data/temp.json', 'r+')
         file_list = json.load(file)
         disconnected = False
         not_user = 0
@@ -87,7 +86,8 @@ class Activity(commands.Cog):
             if str(ctx.author.id) not in item['userid'] and not disconnected:
                 not_user += 1
             elif str(ctx.author.id) in item['userid'] and not disconnected:
-                activity_channel = thorny.get_channel(867303669203206194)
+                activity_channel = self.client.get_channel(867303669203206194)
+
                 playtime = datetime.now().replace(microsecond=0) - \
                            datetime.strptime(item['datetime'], "%Y-%m-%d %H:%M:%S")
 
@@ -113,9 +113,9 @@ class Activity(commands.Cog):
                 disconnected = True
 
                 del file_list[file_list.index(item)]
-                file = open('text files/temp.json', 'w')
+                file = open('./../thorny_data/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
-                file = open('text files/profiles.json', 'r+')
+                file = open('./../thorny_data/profiles.json', 'r+')
                 file_loaded = json.load(file)
                 total = file_loaded[f'{ctx.author.id}']['activity']['total'] + int(str(playtime).split(':')[0])
                 profile_update(ctx.author, total, 'activity', 'total')
@@ -130,6 +130,7 @@ class Activity(commands.Cog):
 
     @commands.command()
     async def online(self, ctx):
-        file = open('text files/temp.json', 'r+')
-        file_list = json.load(file)
+        file = open('./../thorny_data/temp.json', 'r+')
+        for player in json.load(file):
+            file_list = f'\n{player}'
         await ctx.send(file_list)
