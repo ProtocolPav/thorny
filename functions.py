@@ -66,7 +66,7 @@ def process_json(month):
                 playtime = datetime.strptime(next_log['datetime'], '%Y-%m-%d %H:%M:%S') - \
                            datetime.strptime(log['datetime'], '%Y-%m-%d %H:%M:%S')
                 if playtime > timedelta(hours=12):
-                    playtime = timedelta(hours=12)
+                    playtime = timedelta(hours=1, minutes=5)
                 append_to_individual_hours(playtime)
 
             elif log['status'] == 'SET':
@@ -155,12 +155,19 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[str(ctx_author.id)]['balance'] = 25
 
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
-        profile[f'{ctx_author.id}']['activity'] = {"total": 0,
-                                                   "latest_playtime": '0h00m',
-                                                   "daily_average": None,
-                                                   "current_month": 0,
-                                                   "1_month_ago": 0,
-                                                   "2_months_ago": 0}
+        profile[f'{ctx_author.id}']['activity'] = {}
+    if profile[f'{ctx_author.id}']['activity'].get("total") is None:
+        profile[f'{ctx_author.id}']['activity']["total"] = "0h00m"
+    if profile[f'{ctx_author.id}']['activity'].get("latest_playtime") is None:
+        profile[f'{ctx_author.id}']['activity']["latest_playtime"] = "0h00m"
+    if profile[f'{ctx_author.id}']['activity'].get("daily_average") is None:
+        profile[f'{ctx_author.id}']['activity']["daily_average"] = "0h00m"
+    if profile[f'{ctx_author.id}']['activity'].get("current_month") is None:
+        profile[f'{ctx_author.id}']['activity']["current_month"] = "0h00m"
+    if profile[f'{ctx_author.id}']['activity'].get("1_month_ago") is None:
+        profile[f'{ctx_author.id}']['activity']["1_month_ago"] = "0h00m"
+    if profile[f'{ctx_author.id}']['activity'].get("2_months_ago") is None:
+        profile[f'{ctx_author.id}']['activity']["2_months_ago"] = "0h00m"
 
     if profile[f'{ctx_author.id}'].get('fields') is None:  # Profile Fields
         profile[f'{ctx_author.id}']['fields'] = {}
@@ -180,6 +187,19 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}']['fields'].get('town') is None:
         profile[f'{ctx_author.id}']['fields']['town'] = "Your Town"
 
+    if profile[f'{ctx_author.id}'].get('is_shown') is None:  # Profile Is_Shown
+        profile[f'{ctx_author.id}']['is_shown'] = {}
+    if profile[f'{ctx_author.id}']['is_shown'].get('information') is None:
+        profile[f'{ctx_author.id}']['is_shown']['information'] = True
+    if profile[f'{ctx_author.id}']['is_shown'].get('activity') is None:
+        profile[f'{ctx_author.id}']['is_shown']['activity'] = True
+    if profile[f'{ctx_author.id}']['is_shown'].get('aboutme') is None:
+        profile[f'{ctx_author.id}']['is_shown']['aboutme'] = True
+    if profile[f'{ctx_author.id}']['is_shown'].get('wiki') is None:
+        profile[f'{ctx_author.id}']['is_shown']['wiki'] = True
+    if profile[f'{ctx_author.id}']['is_shown'].get('character_story') is None:
+        profile[f'{ctx_author.id}']['is_shown']['character_story'] = True
+
     if profile[f'{ctx_author.id}'].get('inventory') is None:  # Inventory
         profile[f'{ctx_author.id}']['inventory'] = {}
         for slot_number in range(1, 7):  # Inventory Slots
@@ -198,7 +218,12 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['date_joined'] = ''
 
     if profile[f'{ctx_author.id}'].get('birthday') is None:  # Birthday
-        profile[f'{ctx_author.id}']['birthday'] = ''
+        profile[f'{ctx_author.id}']['birthday'] = None
+
+    if profile[f'{ctx_author.id}']['activity'].get('latest_hour') is not None:
+        del profile[f'{ctx_author.id}']['activity']['latest_hour']
+    if profile[f'{ctx_author.id}']['activity'].get('latest_minute') is not None:
+        del profile[f'{ctx_author.id}']['activity']['latest_minute']
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
