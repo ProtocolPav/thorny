@@ -8,11 +8,12 @@ from functions import profile_update
 from lottery import create_ticket, winners
 import errors
 import json
-from modules import leaderboard, gateway, bank, playtime, profile
+from modules import leaderboard, gateway, bank, playtime, profile, help
 
 config_file = open('../thorny_data/config.json', 'r+')
 config = json.load(config_file)
-v = config["version"]
+version_json = json.load(open('version.json', 'r'))
+v = version_json["version"]
 
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
@@ -23,6 +24,7 @@ else:
     print('This is not a valid Token. Please run the program again.')
 
 thorny = commands.Bot(command_prefix='!')
+thorny.remove_command('help')
 
 
 @thorny.event
@@ -203,9 +205,10 @@ async def on_member_join(member):
 
 
 thorny.add_cog(bank.Bank(thorny))
-thorny.add_cog(leaderboard.Leaderboards(thorny))
+thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(Store(thorny))
 thorny.add_cog(gateway.Gateway(thorny))
 thorny.add_cog(profile.Profile(thorny))
+thorny.add_cog(help.Help(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
