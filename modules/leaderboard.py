@@ -8,7 +8,7 @@ from functions import write_log, process_json, total_json, reset_values
 from functions import profile_update
 
 
-class Leaderboards(commands.Cog):
+class Leaderboard(commands.Cog):
     def __init__(self, client):
         self.client = client
 

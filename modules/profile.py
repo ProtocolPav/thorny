@@ -3,9 +3,8 @@ import discord
 from discord.ext import commands
 import json
 from functions import profile_update
-config_file = open('../thorny_data/config.json', 'r+')
-config = json.load(config_file)
-v = config["version"]
+version_json = json.load(open('./version.json', 'r'))
+v = version_json["version"]
 
 
 class Profile(commands.Cog):
@@ -13,64 +12,70 @@ class Profile(commands.Cog):
         self.client = client
 
     @commands.group(invoke_without_command=True)
-    async def profile(self, ctx):
-        profile_update(ctx.author)
+    async def profile(self, ctx, user: discord.User = None):
+        if user is None:
+            user = ctx.author
+        else:
+            pass
+        profile_update(user)
         profile = json.load(open('./../thorny_data/profiles.json', 'r'))
         kingdom = ''
 
-        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
+        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in user.roles:
             kingdom = 'stregabor'
-        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
+        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in user.roles:
             kingdom = 'ambria'
-        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
+        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in user.roles:
             kingdom = 'eireann'
-        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
+        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in user.roles:
             kingdom = 'dalvasha'
-        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
+        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in user.roles:
             kingdom = 'asbahamael'
 
-        if discord.utils.find(lambda r: r.name == 'Donator', ctx.message.guild.roles) in ctx.author.roles:
+        if discord.utils.find(lambda r: r.name == 'Donator', ctx.message.guild.roles) in user.roles:
             is_donator = '| I am a Donator!'
         else:
             is_donator = ''
 
-        profile_embed = discord.Embed(title=f"{profile[f'{ctx.author.id}']['fields']['slogan']} {is_donator}",
-                                      color=ctx.author.color)
-        profile_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        profile_embed.set_thumbnail(url=ctx.author.avatar_url)
-        if profile[f'{ctx.author.id}']['is_shown']['information']:
+        profile_embed = discord.Embed(title=f"{profile[f'{user.id}']['fields']['slogan']} {is_donator}",
+                                      color=user.color)
+        profile_embed.set_author(name=user, icon_url=user.avatar_url)
+        profile_embed.set_thumbnail(url=user.avatar_url)
+        if profile[f'{user.id}']['is_shown']['information']:
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"**Kingdom:** {kingdom.capitalize()}\n"
-                                          f"**Town:** {profile[f'{ctx.author.id}']['fields']['town']}\n"
-                                          f"**Role:** {profile[f'{ctx.author.id}']['fields']['role']}\n"
-                                          f"**Level:** {profile[f'{ctx.author.id}']['user_level']['level']}\n"
-                                          f"**Birthday:** {profile[f'{ctx.author.id}']['birthday']}\n"
-                                          f"**Joined on:** {profile[f'{ctx.author.id}']['date_joined']}")
-        if profile[f'{ctx.author.id}']['is_shown']['activity']:
+                                          f"**Town:** {profile[f'{user.id}']['fields']['town']}\n"
+                                          f"**Role:** {profile[f'{user.id}']['fields']['role']}\n"
+                                          f"**Level:** {profile[f'{user.id}']['user_level']['level']}\n"
+                                          f"**Balance:** <:Nug:884320353202081833>"
+                                          f"{profile[f'{user.id}']['balance']}\n"
+                                          f"**Birthday:** {profile[f'{user.id}']['birthday']}\n"
+                                          f"**Joined on:** {profile[f'{user.id}']['date_joined']}")
+        if profile[f'{user.id}']['is_shown']['activity']:
             profile_embed.add_field(name=f'**:clock8: My Activity**',
                                     value=f"**Latest Playtime:** "
-                                          f"{profile[f'{ctx.author.id}']['activity']['latest_playtime']}\n"
+                                          f"{profile[f'{user.id}']['activity']['latest_playtime']}\n"
                                           f"**{datetime.now().strftime('%B')}:** "
-                                          f"{profile[f'{ctx.author.id}']['activity']['current_month']}\n"
+                                          f"{profile[f'{user.id}']['activity']['current_month']}\n"
                                           f"**{(datetime.now()-timedelta(days=30)).strftime('%B')}:** "
-                                          f"{profile[f'{ctx.author.id}']['activity']['1_month_ago']}\n"
+                                          f"{profile[f'{user.id}']['activity']['1_month_ago']}\n"
                                           f"**{(datetime.now() - timedelta(days=60)).strftime('%B')}:** "
-                                          f"{profile[f'{ctx.author.id}']['activity']['2_months_ago']}\n"
+                                          f"{profile[f'{user.id}']['activity']['2_months_ago']}\n"
                                           f"**Total:** "
-                                          f"{profile[f'{ctx.author.id}']['activity']['total']}")
-        if profile[f'{ctx.author.id}']['is_shown']['wiki']:
+                                          f"{profile[f'{user.id}']['activity']['total']}")
+        if profile[f'{user.id}']['is_shown']['wiki']:
             profile_embed.add_field(name=f'**Featured Wiki Article**',
-                                    value=f"{profile[f'{ctx.author.id}']['fields']['wiki']}",
+                                    value=f"{profile[f'{user.id}']['fields']['wiki']}",
                                     inline=False)
-        if profile[f'{ctx.author.id}']['is_shown']['aboutme']:
+        if profile[f'{user.id}']['is_shown']['aboutme']:
             profile_embed.add_field(name=f'**:person_raising_hand: About Me**',
-                                    value=f'"{profile[f"{ctx.author.id}"]["fields"]["biography"]}"',
+                                    value=f'"{profile[f"{user.id}"]["fields"]["biography"]}"',
                                     inline=False)
-        if profile[f'{ctx.author.id}']['is_shown']['character_story']:
+        if profile[f'{user.id}']['is_shown']['character_story']:
             profile_embed.add_field(name=f"**:dart: My In-Game Character's Story**",
-                                    value=f'"{profile[f"{ctx.author.id}"]["fields"]["lore"]}"',
+                                    value=f'"{profile[f"{user.id}"]["fields"]["lore"]}"',
                                     inline=False)
-        profile_embed.set_footer(text=f"{v} | Use !profile edit & !profile hide/show")
+        profile_embed.set_footer(text=f"BETA | {v} | Use !profile edit & !profile hide/show")
         await ctx.send(embed=profile_embed)
 
     @profile.command()
@@ -205,8 +210,6 @@ class Profile(commands.Cog):
     @commands.command()
     async def birthday(self, ctx, day, month, year=None):
         profile_update(ctx.author)
-        pr_file = open('./../thorny_data/profiles.json', 'r+')
-        profile = json.load(pr_file)
 
         if year is not None:
             if int(year) > 1820:
@@ -218,8 +221,9 @@ class Profile(commands.Cog):
         else:
             date = f'{day}{month}1800'
             date = datetime.strptime(date, "%d%B%Y")
+        profile_update(ctx.author, f"{date}", 'birthday')
 
-        await ctx.send(date)
+        await ctx.send(f"**BETA**\nYour Birthday is set to: {date}")
 
 
 
