@@ -45,10 +45,10 @@ class Profile(commands.Cog):
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"**Kingdom:** {kingdom.capitalize()}\n"
                                           f"**Town:** {profile[f'{user.id}']['fields']['town']}\n"
-                                          f"**Role:** {profile[f'{user.id}']['fields']['role']}\n"
+                                          f"**Role:** {profile[f'{user.id}']['fields']['role']}\n\n"
                                           f"**Level:** {profile[f'{user.id}']['user_level']['level']}\n"
                                           f"**Balance:** <:Nug:884320353202081833>"
-                                          f"{profile[f'{user.id}']['balance']}\n"
+                                          f"{profile[f'{user.id}']['balance']}\n\n"
                                           f"**Birthday:** {profile[f'{user.id}']['birthday']}\n"
                                           f"**Joined on:** {profile[f'{user.id}']['date_joined']}")
         if profile[f'{user.id}']['is_shown']['activity']:
@@ -60,9 +60,9 @@ class Profile(commands.Cog):
                                           f"**{(datetime.now()-timedelta(days=30)).strftime('%B')}:** "
                                           f"{profile[f'{user.id}']['activity']['1_month_ago']}\n"
                                           f"**{(datetime.now() - timedelta(days=60)).strftime('%B')}:** "
-                                          f"{profile[f'{user.id}']['activity']['2_months_ago']}\n"
+                                          f"{profile[f'{user.id}']['activity']['2_months_ago']}\n\n"
                                           f"**Total:** "
-                                          f"{profile[f'{user.id}']['activity']['total']}")
+                                          f"{profile[f'{user.id}']['activity']['total']}h")
         if profile[f'{user.id}']['is_shown']['wiki']:
             profile_embed.add_field(name=f'**Featured Wiki Article**',
                                     value=f"{profile[f'{user.id}']['fields']['wiki']}",
