@@ -3,9 +3,10 @@ import random
 from discord.ext import commands
 import asyncio
 from functions import write_log, process_json, total_json, reset_values
-from functions import profile_update
+from functions import profile_update, activity_set
 from datetime import datetime, timedelta
 import json
+
 config_file = open('./../thorny_data/config.json', 'r+')
 config = json.load(config_file)
 v = config["version"]
@@ -30,7 +31,7 @@ class Activity(commands.Cog):
                 temp_file = open('./../thorny_data/temp.json', 'w')
                 pass
 
-        activity_channel = self.client.get_channel(833298586971799622)
+        activity_channel = self.client.get_channel(867303669203206194)
 
         log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x50C878)
         log_embed.add_field(name='Event Log:',
@@ -98,7 +99,7 @@ class Activity(commands.Cog):
                                     value=f'**DISCONNECT**, **{ctx.author}**, '
                                           f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
                                           f'Playtime: **{playtime}**')
-                await ctx.send(embed=log_embed)
+                await activity_channel.send(embed=log_embed)
 
                 response_embed = discord.Embed(title='You Have Disconnected!', color=0xE97451)
                 response_embed.add_field(name=f'Connection marked',
@@ -117,13 +118,11 @@ class Activity(commands.Cog):
                 del file_list[file_list.index(item)]
                 file = open('./../thorny_data/temp.json', 'w')
                 json.dump(file_list, file, indent=0)
-                file = open('./../thorny_data/profiles.json', 'r+')
-                file_loaded = json.load(file)
-                playtime = str(playtime)
-                total = datetime.strptime(file_loaded[f'{ctx.author.id}']['activity']['total'], "%Hh%Mm") \
-                        + timedelta(hours=int(playtime[0:2]), minutes=int(playtime[3:4]))
-                total = datetime.strftime(total, "%Hh%Mm")
-                profile_update(ctx.author, f'{total}', 'activity', 'total')
+                total = activity_set(ctx.author, 'total', str(playtime))
+                profile_update(ctx.author, f"{total}", 'activity', 'total')
+
+                month_total = activity_set(ctx.author, 'current_month', str(playtime))
+                profile_update(ctx.author, f"{month_total}", 'activity', 'current_month')
                 profile_update(ctx.author, f"{str(playtime).split(':')[0]}h{str(playtime).split(':')[1]}m",
                                'activity', 'latest_playtime')
             else:

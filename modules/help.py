@@ -25,4 +25,4 @@ class Help(commands.Cog):
         sendhelp = ''
         for cog in self.client.cogs:
             sendhelp = f"{sendhelp}\n**{cog} Commands:**\n{dict[f'{cog}']}\n"
-        await ctx.send(sendhelp)
+        await ctx.send(f"**BETA**\n\n{sendhelp}")
