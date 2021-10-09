@@ -1,6 +1,8 @@
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import asyncio
+
 
 # Playtime Functions
 
@@ -157,7 +159,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
         profile[f'{ctx_author.id}']['activity'] = {}
     if profile[f'{ctx_author.id}']['activity'].get("total") is None:
-        profile[f'{ctx_author.id}']['activity']["total"] = "0h00m"
+        profile[f'{ctx_author.id}']['activity']["total"] = 0
     if profile[f'{ctx_author.id}']['activity'].get("latest_playtime") is None:
         profile[f'{ctx_author.id}']['activity']["latest_playtime"] = "0h00m"
     if profile[f'{ctx_author.id}']['activity'].get("daily_average") is None:
@@ -233,3 +235,66 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file.seek(0)
     json.dump(profile, profile_file, indent=3)
 
+
+def activity_set(ctx_author, value, time_to_add):
+    file = open('../thorny_data/profiles.json', 'r+')
+    file_loaded = json.load(file)
+
+    #  Take information from the value's time and place into variables
+    if 'days' in file_loaded[f'{ctx_author.id}']['activity'][value]:
+        current_days = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(' days')[0])
+        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+    elif 'day' in file_loaded[f'{ctx_author.id}']['activity'][value]:
+        current_days = 1
+        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+    else:
+        current_days = 0
+        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split('h')[0])
+
+    current_minutes = int(file_loaded[f'{ctx_author.id}']['activity'][value].split('h')[1][:-1])
+    #  Take information from time_to_add and place into variables
+    hours_to_add = int(time_to_add.split(':')[0])
+    minutes_to_add = int(time_to_add.split(':')[1])
+
+    current_time = timedelta(days=current_days, hours=current_hours, minutes=current_minutes)
+    playtime_to_add = timedelta(hours=hours_to_add, minutes=minutes_to_add)
+
+    new_total = current_time + playtime_to_add
+    formatted_new_total = f"{str(new_total).split(':')[0]}h{str(new_total).split(':')[1]}m"
+    return formatted_new_total
+
+
+def month_change():
+    if date.today().day == 9:
+        profile_file = open('../thorny_data/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        for player in profile:
+            if profile[player]["user"] == "Template":
+                pass
+            else:
+                profile[player]["activity"]["2_months_ago"] = profile[player]["activity"]["1_month_ago"]
+                profile[player]["activity"]["1_month_ago"] = profile[player]["activity"]["current_month"]
+                profile[player]["activity"]["current_month"] = "0h00m"
+
+        profile_file.truncate(0)
+        profile_file.seek(0)
+        json.dump(profile, profile_file, indent=3)
+    else:
+        print(f"{date.today()} is not the 1st of the Month")
+
+
+def seconds_until_1st():
+    date = datetime.now() + timedelta(days=35)  # If 31 days, there could be an issue that it sets time to this month
+    date_1st = str(date).split(' ')[0][0:7] + "-01" + " " + str(date).split(' ')[1]
+    date_1st = datetime.strptime(date_1st, "%Y-%m-%d %H:%M:%S.%f")
+    time = date_1st - datetime.now()
+    time_seconds = time.total_seconds()
+    return time_seconds
+
+
+async def profile_change_months():
+    while True:
+        print(f"Month change in {seconds_until_1st()} (1st of Next Month)")
+        await asyncio.sleep(seconds_until_1st())
+        month_change()
+        await asyncio.sleep(60)
