@@ -1,10 +1,11 @@
+import asyncio
 import random
 from datetime import datetime
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
-from functions import profile_update
+from functions import profile_update, profile_change_months
 from lottery import create_ticket, winners
 import errors
 import json
@@ -30,14 +31,16 @@ thorny.remove_command('help')
 @thorny.event
 async def on_ready():
     print(f"[ONLINE] {thorny.user}\nRunning {v}\nDate is {datetime.now()}")
-    bot_activity = discord.Activity(type=discord.ActivityType.watching,
-                                    name=f"Evercast #001 | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.listening,
+                                    name=f"the Evercast! | {v}")
     await thorny.change_presence(activity=bot_activity)
+    await profile_change_months()
 
 
 class Store(commands.Cog):
     def __init__(self, client):
         self.client = client
+
     available_items = ['Empty', 'Ticket', 'Custom Role 1m']
 
     @commands.group(aliases=['inv'], invoke_without_command=True)
@@ -49,7 +52,7 @@ class Store(commands.Cog):
             person = ctx.author
         else:
             person = user
-        for slot in range(1,7):
+        for slot in range(1, 7):
             number += 1
             inventory_list = f'{inventory_list}:small_orange_diamond: ' \
                              f'{profile_json[f"{person.id}"]["inventory"][f"slot{number}"]} **|** ' \
@@ -58,7 +61,7 @@ class Store(commands.Cog):
 
     @inventory.command()
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, user: discord.User=None, item=None, amnt=1):
+    async def add(self, ctx, user: discord.User = None, item=None, amnt=1):
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_placed = False
@@ -68,7 +71,7 @@ class Store(commands.Cog):
             while not item_placed:
                 slot += 1
                 if profile[f"{user.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
-                   profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Custom Role 1m":
+                        profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Custom Role 1m":
                     profile_update(user, 'Custom Role 1m', 'inventory', f'slot{slot}')
                     amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + int(amnt)
                     profile_update(user, amnt, 'inventory', f'slot{slot}_amount')
@@ -80,7 +83,7 @@ class Store(commands.Cog):
             while not item_placed:
                 slot += 1
                 if profile[f"{user.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
-                   profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Ticket":
+                        profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == "Ticket":
                     profile_update(user, 'Ticket', 'inventory', f'slot{slot}')
                     amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + int(amnt)
                     profile_update(user, amnt, 'inventory', f'slot{slot}_amount')
@@ -91,7 +94,7 @@ class Store(commands.Cog):
 
     @inventory.command()
     @commands.has_permissions(administrator=True)
-    async def remove(self, ctx, user:discord.User=None, item=None):
+    async def remove(self, ctx, user: discord.User = None, item=None):
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_removed = False
@@ -138,7 +141,7 @@ class Store(commands.Cog):
                 while not item_placed:
                     slot += 1
                     if profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Empty' or \
-                       profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Ticket':
+                            profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}'] == 'Ticket':
                         amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}_amount'] + 1
                         profile_update(ctx.author, 'Ticket', 'inventory', f'slot{slot}')
                         profile_update(ctx.author, amnt, 'inventory', f'slot{slot}_amount')
@@ -181,10 +184,10 @@ async def scream(ctx):
 
 
 @thorny.command()
+@commands.has_permissions(administrator=True)
 async def setprefix(ctx, prefix):
-    if ctx.author.id == 266202793143042048:
-        thorny.command_prefix = prefix
-        await ctx.send(f"Prefix changed to `{prefix}`")
+    thorny.command_prefix = prefix
+    await ctx.send(f"Prefix changed to `{prefix}`")
 
 
 @thorny.event
