@@ -9,7 +9,7 @@ from functions import profile_update, profile_change_months
 from lottery import create_ticket, winners
 import errors
 import json
-from modules import leaderboard, gateway, bank, playtime, profile, help
+from modules import leaderboard, gateway, bank, playtime, profile, help, fun
 
 config_file = open('../thorny_data/config.json', 'r+')
 config = json.load(config_file)
@@ -173,16 +173,6 @@ async def version(ctx):
     await ctx.send(f"Yeehaw! Howdy there boss. I am on version {v}. Isn't that coolio!")
 
 
-@thorny.command(aliases=['shout', 'aaa', 'scr'])
-async def scream(ctx):
-    screams = ['AAAaaaAaaaAAaaaAAAAAaAAaAAAAAaaAA', 'ARGHHHHHHHHHHHHHHHHHHHHhhhhhhhh', 'GAH!',
-               'ROOOOoooOOOOAARRRRRRRRRR',
-               '*screams*', 'https://tenor.com/view/scream-yell-mad-angry-fury-gif-3864070',
-               'GASPPPPPP AAAAAAAAAAAA']
-    screamnumber = random.randint(0, 5)
-    await ctx.send(f'{screams[screamnumber]}\n{ctx.author.mention}, you scared me!!!')
-
-
 @thorny.command()
 @commands.has_permissions(administrator=True)
 async def setprefix(ctx, prefix):
@@ -213,5 +203,6 @@ thorny.add_cog(Store(thorny))
 thorny.add_cog(gateway.Gateway(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
+thorny.add_cog(fun.Fun(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
