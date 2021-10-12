@@ -159,7 +159,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
         profile[f'{ctx_author.id}']['activity'] = {}
     if profile[f'{ctx_author.id}']['activity'].get("total") is None:
-        profile[f'{ctx_author.id}']['activity']["total"] = 0
+        profile[f'{ctx_author.id}']['activity']["total"] = "0h00m"
     if profile[f'{ctx_author.id}']['activity'].get("latest_playtime") is None:
         profile[f'{ctx_author.id}']['activity']["latest_playtime"] = "0h00m"
     if profile[f'{ctx_author.id}']['activity'].get("daily_average") is None:

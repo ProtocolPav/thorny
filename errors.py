@@ -7,7 +7,7 @@ class Pay:
                          value='>You tried to pay yourself.\n>It did not work.\n>You feel stupid.')
 
     amount_error = discord.Embed(color=0x900C3F)
-    amount_error.add_field(name="There's... nothing there.",
+    amount_error.add_field(name="There's nothing there.",
                            value='You forgot to actually say *how* much to pay!')
 
     self_register_error = discord.Embed(color=0x900C3F)
@@ -47,6 +47,7 @@ class Treasury:
     ruler_error = discord.Embed(color=0x900C3F)
     ruler_error.add_field(name=f'Could not access the Treasury!',
                           value='Reason: You are not a Ruler!')
+
 
 class Shop:
     ticket_buy_error = discord.Embed(color=0x900C3F)
