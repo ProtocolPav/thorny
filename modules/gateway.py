@@ -4,8 +4,6 @@ import discord
 from discord.ext import commands
 
 
-config_file = open('./../thorny_data/config.json', 'r+')
-config = json.load(config_file)
 gateway_0 = f'''
 > **The Gateway Command**
 > Here you can find all of the gates and their corresponding numbers!\n
