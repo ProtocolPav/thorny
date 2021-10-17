@@ -5,7 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands, tasks
 
-from functions import profile_update, profile_change_months
+from functions import profile_update, profile_change_months, birthday_announce
 from lottery import create_ticket, winners
 import errors
 import json
@@ -203,6 +203,6 @@ thorny.add_cog(Store(thorny))
 thorny.add_cog(gateway.Gateway(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
-thorny.add_cog(fun.Fun(thorny))
+#thorny.add_cog(fun.Fun(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)

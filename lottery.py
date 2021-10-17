@@ -18,7 +18,7 @@ def create_ticket(ctx_author, amount):
     for i in range(0, amount):
         InList = True
         while InList:
-            num = random.randint(3000, 3200)
+            num = random.randint(4000, 4200)
             if num in NumList:
                 InList = True
             else:
