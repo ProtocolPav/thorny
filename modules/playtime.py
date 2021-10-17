@@ -31,7 +31,7 @@ class Activity(commands.Cog):
                                   f'{ctx.author.id}, '
                                   f'{datetime.now().replace(microsecond=0)}')
         log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=log_embed)
+        await activity_channel.send(embed=log_embed)
 
         response_embed = discord.Embed(title="<:_plus:897823907153838121> | Ooh! You're Playing!", color=0x009E60)
         response_embed.add_field(name=f"*Keep playing... And I'll do the rest!*",
@@ -95,7 +95,7 @@ class Activity(commands.Cog):
                                           f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
                                           f'Playtime: **{str(playtime).split(":")[0]}h{str(playtime).split(":")[1]}m**')
                 log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
-                await ctx.send(embed=log_embed)
+                await activity_channel.send(embed=log_embed)
 
                 response_embed = discord.Embed(title="<:_minus:897823907053203457> | Hope You Had Fun!",
                                                color=0xFA5F55)
