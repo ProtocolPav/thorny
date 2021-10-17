@@ -6,6 +6,7 @@ from functions import write_log, process_json, total_json, reset_values
 from functions import profile_update, activity_set
 from datetime import datetime, timedelta
 import json
+import errors
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
@@ -16,7 +17,7 @@ class Activity(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['link', 'c', 'C'])
+    @commands.command(aliases=['link', 'c'], help="Log your connect time")
     async def connect(self, ctx):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
         temp_file = open('./../thorny_data/temp.json', 'r+')
@@ -24,21 +25,21 @@ class Activity(commands.Cog):
 
         activity_channel = self.client.get_channel(867303669203206194)
 
-        log_embed = discord.Embed(title=f'{ctx.author} Has Connected', colour=0x009E60)
+        log_embed = discord.Embed(title=f'CONNECTION', colour=0x009E60)
         log_embed.add_field(name='Event Log:',
                             value=f'**CONNECT**, **{ctx.author}**, '
                                   f'{ctx.author.id}, '
                                   f'{datetime.now().replace(microsecond=0)}')
-        await ctx.send(embed=log_embed)
+        log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        await activity_channel.send(embed=log_embed)
 
-        response_embed = discord.Embed(title="<:_like:884062799775551578> | Ooh! You're Playing!", color=0x009E60)
+        response_embed = discord.Embed(title="<:_plus:897823907153838121> | Ooh! You're Playing!", color=0x009E60)
         response_embed.add_field(name=f"*Keep playing... And I'll do the rest!*",
                                  value=f'{ctx.author.mention}, I am adding every single second up!\n'
                                        f"When you stop playing, use **!dc**, so I'll know when to stop "
                                        f"counting!\n\n"
-                                       f"You can use **!lb act <month>** to check the *leaderboard* for any month!\n"
-                                       f"And for individual activity stats, just use **!profile**! Isn't "
-                                       f"that just great!")
+                                       f"You can use **!lb act [month]** to check the *leaderboard* for any month!\n"
+                                       f"And for individual activity stats, just use **!profile**!")
         response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
 
         for item in temp_json:
@@ -71,7 +72,7 @@ class Activity(commands.Cog):
         temp_file.seek(0)
         json.dump(temp_json, temp_file, indent=0)
 
-    @commands.command(aliases=['unlink', 'dc', 'Dc'])
+    @commands.command(aliases=['unlink', 'dc'], help="Log your disconnect time")
     async def disconnect(self, ctx):
         temp_file = open('./../thorny_data/temp.json', 'r+')
         temp_json = json.load(temp_file)
@@ -88,44 +89,64 @@ class Activity(commands.Cog):
                 if playtime > timedelta(hours=12):
                     playtime = timedelta(hours=1, minutes=5)
 
-                log_embed = discord.Embed(title=f'{ctx.author} Has Disconnected', colour=0xFA5F55)
-                log_embed.add_field(name='Log:',
+                log_embed = discord.Embed(title=f'DISCONNECTION', colour=0xFA5F55)
+                log_embed.add_field(name='Event Log:',
                                     value=f'**DISCONNECT**, **{ctx.author}**, '
                                           f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
-                                          f'Playtime: **{playtime}**')
-                await ctx.send(embed=log_embed)
+                                          f'Playtime: **{str(playtime).split(":")[0]}h{str(playtime).split(":")[1]}m**')
+                log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+                await activity_channel.send(embed=log_embed)
 
-                response_embed = discord.Embed(title='You Have Disconnected!', color=0xFA5F55)
-                response_embed.add_field(name=f'Connection marked',
-                                         value=f'{ctx.author.mention}, thank you for marking down your activity! '
-                                               f'Use **!c** or **!connect** to mark down connect time!'
-                                               f'\nYou played for **{str(playtime).split(":")[0]}h'
-                                               f'{str(playtime).split(":")[1]}m**')
-                
+                response_embed = discord.Embed(title="<:_minus:897823907053203457> | Hope You Had Fun!",
+                                               color=0xFA5F55)
+                response_embed.add_field(name=f"*You played, and here's your stats!*",
+                                         value=f'{ctx.author.mention}, you played for a total of '
+                                               f'**{str(playtime).split(":")[0]}h{str(playtime).split(":")[1]}m**!\n'
+                                               f"Once you feel like playing again, use **!c** to connect. You know the "
+                                               f"drill.\n\n"
+                                               f"You can use **!lb act [month]** to check the *leaderboard* "
+                                               f"for any month!\n"
+                                               f"And for individual activity stats, just use **!profile**!")
+                response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
                 response_embed.set_footer(text=f'DISCONNECT at {datetime.now().replace(microsecond=0)} | {v}')
                 await ctx.send(embed=response_embed)
 
                 write_log("DISCONNECT", datetime.now().replace(microsecond=0), ctx)
                 disconnected = True
-
                 del temp_json[temp_json.index(item)]
+
                 temp_file = open('./../thorny_data/temp.json', 'w')
+                temp_file.truncate(0)
+                temp_file.seek(0)
                 json.dump(temp_json, temp_file, indent=0)
+
                 total = activity_set(ctx.author, 'total', str(playtime))
                 profile_update(ctx.author, f"{total}", 'activity', 'total')
-
                 month_total = activity_set(ctx.author, 'current_month', str(playtime))
+
                 profile_update(ctx.author, f"{month_total}", 'activity', 'current_month')
                 profile_update(ctx.author, f"{str(playtime).split(':')[0]}h{str(playtime).split(':')[1]}m",
                                'activity', 'latest_playtime')
             else:
                 pass
         if not_user >= 1 and not disconnected:
-            await ctx.send("You haven't connected yet!")
+            await ctx.send(embed=errors.Activity.connect_error)
 
-    @commands.command()
+    @commands.command(help="See all players currently connected")
     async def online(self, ctx):
-        file = open('./../thorny_data/temp.json', 'r+')
-        for player in json.load(file):
-            file_list = f'\n{player}'
-        await ctx.send(file_list)
+        temp_file = open('./../thorny_data/temp.json', 'r+')
+        send_text = ''
+        for player in json.load(temp_file)[1:]:
+            time = datetime.now() - datetime.strptime(player['datetime'], '%Y-%m-%d %H:%M:%S')
+            send_text = f"{send_text}\n" \
+                        f"<@{player['userid']}> • connected {str(time).split(':')[0]}h{str(time).split(':')[1]}m ago"
+
+        online_embed = discord.Embed(color=0x6495ED)
+        if send_text == "":
+            online_embed.add_field(name="Empty!",
+                                   value="The Realm is Empty! Nobody is connected!")
+        else:
+            online_embed.add_field(name="Current Players Online",
+                                   value=send_text)
+
+        await ctx.send(embed=online_embed)
