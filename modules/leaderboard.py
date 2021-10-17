@@ -3,33 +3,38 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 import json
+import math
 
 from functions import write_log, process_json, total_json, reset_values
 from functions import profile_update
+import errors
 
 
 class Leaderboard(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(aliases=['lb'], invoke_without_command=True)
+    @commands.group(aliases=['lb'], invoke_without_command=True, help="See all available leaderboards")
     async def leaderboard(self, ctx):
-        await ctx.send('> **Available Leaderboards**\n'
-                       '\n**!lb activity [month] [page]** • Shows activity for all players | Also: !act'
-                       "\n**!lb nugs [page]** • Shows a leaderboard of people's nugs | Also: !money"
-                       '\n**!lb treasuries** • Shows the balance of all treasuries | Also: !tries'
-                       '\n\n*When writing commands, do not include [the brackets]*')
+        leaderboard_embed = discord.Embed(title="Leaderboard Help", color=0xCF9FFF)
+        leaderboard_embed.add_field(name="Available Leaderboards",
+                                    value="**!leaderboard activity/act [month] [page]**\n"
+                                          "**!leaderboard nugs [page]**\n"
+                                          "**!leaderboard treasuries/tries**\n\n"
+                                          "You can also use **!lb** instead of !leaderboard\n"
+                                          "Aliases are separated by a /")
+        await ctx.send(embed=leaderboard_embed)
 
-    @leaderboard.command(aliases=['act'])
-    async def activity(self, ctx, month=None, page=1):
+    @leaderboard.command(aliases=['act'], help="See the activity leaderboard")
+    async def activity(self, ctx, month=None, page=None):
         if month is None:
             month = datetime.now().strftime("%B").lower()
         if month.lower() in 'july' or month.lower() in 'august':
-            temp = ''''''
+            temp = ''
             print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
             file = open(f'./../thorny_data/processed_{month[0:3]}21.txt', 'r')
             for line in file:
-                temp = f'''{temp}{line}'''
+                temp = f'{temp}{line}'
             embed = discord.Embed(title=f'**ACTIVITY FOR {month.upper()}**', color=0xB4C424)
             embed.add_field(name=f'*Here is a list of the activity from {month} 1st*', value=f"{temp}")
             embed.set_footer(text="Fun Fact: This command is from Thorny v0.2")
@@ -38,7 +43,8 @@ class Leaderboard(commands.Cog):
             try:
                 int(month)
             except ValueError:
-                if page == 1:
+                if page is None:
+                    page = 1
                     start = 0
                     stop = 20
                 else:
@@ -55,10 +61,7 @@ class Leaderboard(commands.Cog):
                 lb_json = json.load(lb_file)
 
                 if start > len(lb_json):
-                    error_embed = discord.Embed(color=0x900C3F)
-                    error_embed.add_field(name='Woah Woah There',
-                                          value='We do not have enough users to get to *that* page bro!')
-                    await ctx.send(embed=error_embed)
+                    await ctx.send(embed=errors.Leaderboard.page_error)
                 else:
                     for rank in lb_json[start:stop]:
                         if month.lower() in 'september':
@@ -74,18 +77,15 @@ class Leaderboard(commands.Cog):
                                          color=0x6495ED)
                 lb_embed.add_field(name=f'\u200b',
                                    value=f"{lb_to_send}")
-                lb_embed.set_footer(text=f'Page {page}/{round(len(lb_json)/20)} | Use !leaderboard to see others')
+                lb_embed.set_footer(text=f'Page {page}/{math.ceil(len(lb_json)/20)} | Use !leaderboard to see others')
                 await ctx.send(embed=lb_embed)
             else:
-                error_embed = discord.Embed(color=0x900C3F)
-                error_embed.add_field(name='Ahhhhhh, I see the problem!',
-                                      value='To flip through pages, you gotta write the **month** and then the page!'
-                                            f'\nSo try this: !lb activity {datetime.now().strftime("%B")} {month}')
-                await ctx.send(embed=error_embed)
+                await ctx.send(embed=errors.Leaderboard.month_syntax_error)
 
-    @leaderboard.command(aliases=['money'])
-    async def nugs(self, ctx, page=1):
-        if page == 1:
+    @leaderboard.command(help="See the Nugs Leaderboard")
+    async def nugs(self, ctx, page=None):
+        if page is None:
+            page = 1
             start = 0
             stop = 10
         else:
@@ -101,24 +101,20 @@ class Leaderboard(commands.Cog):
         profile_sorted = sorted(profile_list, key=lambda x: (x["balance"]), reverse=True)[:-1]
 
         if start > len(profile_sorted):
-            error_embed = discord.Embed(color=0x900C3F)
-            error_embed.add_field(name='Woah Woah There',
-                                  value='We do not have enough users to get to *that* page bro!')
-            await ctx.send(embed=error_embed)
+            await ctx.send(embed=errors.Leaderboard.page_error)
         else:
             for entry in profile_sorted[start:stop]:
                 lb_to_send = f'{lb_to_send}\n' \
                              f'**{profile_sorted.index(entry) + 1}.**  <@{entry["user"]}> • ' \
                              f'<:Nug:884320353202081833>**{entry["balance"]}**'
 
-            lb_embed = discord.Embed(title=f'**Nugs Leaderboard**',
-                                     color=0x6495ED)
+            lb_embed = discord.Embed(title=f'**Nugs Leaderboard**', color=0x6495ED)
             lb_embed.add_field(name=f'\u200b',
                                value=f"{lb_to_send}")
-            lb_embed.set_footer(text=f'Page {page}/{round(len(profile_sorted)/10)} | Use !leaderboard to see others')
+            lb_embed.set_footer(text=f'Page {page}/{math.ceil(len(profile_sorted)/10)} | Use !leaderboard to see others')
             await ctx.send(embed=lb_embed)
 
-    @leaderboard.command(aliases=['tries'])
+    @leaderboard.command(aliases=['tries'], help="See the Treasury Leaderboard")
     async def treasuries(self, ctx):
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r')
         kingdom_dict = json.load(kingdom_file)
