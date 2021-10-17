@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime, timedelta, date
 import asyncio
+import discord
 
 
 # Playtime Functions
@@ -180,14 +181,14 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}']['fields'].get('role') is None:
         profile[f'{ctx_author.id}']['fields']['role'] = "Your Role in your kingdom " \
                                                         "(King, Citizen, PoorMan, Council Member, Etc.)"
-    if profile[f'{ctx_author.id}']['fields'].get('birthday') is None:
-        profile[f'{ctx_author.id}']['fields']['birthday'] = None
     if profile[f'{ctx_author.id}']['fields'].get('lore') is None:
         profile[f'{ctx_author.id}']['fields']['lore'] = "Lore about your in-game character here. Max. 30 Words"
     if profile[f'{ctx_author.id}']['fields'].get('wiki') is None:
         profile[f'{ctx_author.id}']['fields']['wiki'] = "https://everthorn.fandom.com/wiki/ Your Featured Page"
     if profile[f'{ctx_author.id}']['fields'].get('town') is None:
         profile[f'{ctx_author.id}']['fields']['town'] = "Your Town"
+    if profile[f'{ctx_author.id}']['fields'].get('gamertag') is None:
+        profile[f'{ctx_author.id}']['fields']['gamertag'] = "Your Minecraft Gamertag"
 
     if profile[f'{ctx_author.id}'].get('is_shown') is None:  # Profile Is_Shown
         profile[f'{ctx_author.id}']['is_shown'] = {}
@@ -220,7 +221,13 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['date_joined'] = ''
 
     if profile[f'{ctx_author.id}'].get('birthday') is None:  # Birthday
-        profile[f'{ctx_author.id}']['birthday'] = None
+        profile[f'{ctx_author.id}']['birthday'] = {}
+    if type(profile[f'{ctx_author.id}']['birthday']) == str:  # Birthday
+        profile[f'{ctx_author.id}']['birthday'] = {}
+    if profile[f'{ctx_author.id}']['birthday'].get('display') is None:
+        profile[f'{ctx_author.id}']['birthday']['display'] = None
+    if profile[f'{ctx_author.id}']['birthday'].get('system') is None:
+        profile[f'{ctx_author.id}']['birthday']['system'] = None
 
     if profile[f'{ctx_author.id}']['activity'].get('latest_hour') is not None:
         del profile[f'{ctx_author.id}']['activity']['latest_hour']
@@ -298,3 +305,18 @@ async def profile_change_months():
         await asyncio.sleep(seconds_until_1st())
         month_change()
         await asyncio.sleep(60)
+
+
+async def birthday_announce():
+    while True:
+        profile_file = open('../thorny_data/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        date = datetime.now().replace(hour=0, minute=0, second=0,  microsecond=0)
+        for person in profile:
+            birthdate = datetime.strptime(profile[person]['birthday']['system'], "%Y-%m-%d %H:%M:%S")
+            if str(date)[4:9] == str(birthdate)[4:9]:
+                if 1 in str(date)[:4] - str(birthdate)[:4]:
+                    await ctx.send(f"<@{person}> {str(date)[:4] - str(birthdate)[:4]}rd Birthday today!")
+            else:
+                pass
+        await asyncio.sleep(86400)  # Needs working on
