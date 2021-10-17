@@ -10,60 +10,36 @@ class Bank(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['bal'])
+    @commands.command(aliases=['bal'], help="Checks your or a user's balance")
     async def balance(self, ctx, user: discord.Member = None):
-        kingdom = ''
         if user is None:
-            profile_update(ctx.author)
-            if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
-                kingdom = 'stregabor'
-            elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
-                kingdom = 'ambria'
-            elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
-                kingdom = 'eireann'
-            elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
-                kingdom = 'dalvasha'
-            elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
-                kingdom = 'asbahamael'
-        else:
-            profile_update(user)
-            if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in user.roles:
-                kingdom = 'stregabor'
-            elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in user.roles:
-                kingdom = 'ambria'
-            elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in user.roles:
-                kingdom = 'eireann'
-            elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in user.roles:
-                kingdom = 'dalvasha'
-            elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in user.roles:
-                kingdom = 'asbahamael'
+            user = ctx.author
+
+        profile_update(user)
+        kingdom = 'None'
+        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+        for item in kingdoms_list:
+            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
+                kingdom = item.lower()
+
         profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
-        if kingdom == '':
+
+        if kingdom == 'None':
             await ctx.send(embed=errors.Pay.balance_error)
         else:
-            if user is None:
-                lb_embed = discord.Embed(color=0xDAA520)
-                lb_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                lb_embed.add_field(name=f'**Nugs:**',
-                                   value=f"<:Nug:884320353202081833>{profile[f'{ctx.author.id}']['balance']}")
-                lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
-                                   value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
-                                   inline=False)
-                await ctx.send(embed=lb_embed)
-            else:
-                lb_embed = discord.Embed(color=0xDAA520)
-                lb_embed.set_author(name=f'{user}', icon_url=f'{user.avatar_url}')
-                lb_embed.add_field(name=f'**Nugs:**',
-                                   value=f"<:Nug:884320353202081833>{profile[f'{user.id}']['balance']}")
-                lb_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
-                                   value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
-                                   inline=False)
-                await ctx.send(embed=lb_embed)
+            bal_embed = discord.Embed(color=0xF4C430)
+            bal_embed.set_author(name=user, icon_url=user.avatar_url)
+            bal_embed.add_field(name=f'**Nugs:**',
+                                value=f"<:Nug:884320353202081833>{profile[f'{user.id}']['balance']}")
+            bal_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
+                                value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
+                                inline=False)
+            await ctx.send(embed=bal_embed)
 
-    @commands.command(aliases=['amoney'])
+    @commands.command(aliases=['amoney'], help="CM Only | Add money to a player's balance")
     @commands.has_permissions(administrator=True)
     async def addmoney(self, ctx, user: discord.User, amount):
         profile_update(user)
@@ -74,7 +50,7 @@ class Bank(commands.Cog):
         profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now {amount}")
 
-    @commands.command(aliases=['rmoney'])
+    @commands.command(aliases=['rmoney'], help="CM Only | Remove money from a player's balance")
     @commands.has_permissions(administrator=True)
     async def removemoney(self, ctx, user: discord.User, amount):
         profile_update(user)
@@ -85,7 +61,7 @@ class Bank(commands.Cog):
         profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now {amount}")
 
-    @commands.command()
+    @commands.command(help="Pay a player using nugs")
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
         if ctx.channel == self.client.get_channel(700293298652315648):
             profile_file = open('./../thorny_data/profiles.json', 'r+')
@@ -107,7 +83,7 @@ class Bank(commands.Cog):
                         amount2 = profile[f'{user.id}']['balance'] + int(amount)
                         profile_update(user, amount2, 'balance')
 
-                        pay_embed = discord.Embed(color=0xDAA520)
+                        pay_embed = discord.Embed(color=0xF4C430)
                         pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
                         pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
                                             value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
@@ -119,27 +95,30 @@ class Bank(commands.Cog):
         else:
             await ctx.send(embed=errors.Pay.channel_error)
 
-    @commands.group(aliases=['tres'], invoke_without_command=True)
-    async def treasury(self, ctx):
-        await ctx.send('Use !help treasury to see all available sub-commands!')
+    @commands.group(aliases=['tres'], invoke_without_command=True, help="See all available actions for the Treasury")
+    async def treasury(self, ctx, action=None):
+        treasury_embed = discord.Embed(title="Treasury Help", color=0xCF9FFF)
+        treasury_embed.add_field(name="Here are all the treasury commands you can do!",
+                                 value="**!treasury store <amount>** • Store money in your kingdom's treasury!\n"
+                                       "**!treasury search** • Equivalent to **!lb treasuries**\n"
+                                       "**!treasury take <amount>** • Take money from the treasury (RULERS ONLY)\n"
+                                       "**!treasury spend <user> <amount> [reason]** • Pay someone using "
+                                       "treasury funds (RULERS ONLY)\n\n"
+                                       "You can also use **!tres** instead of !treasury!")
+        await ctx.send(embed=treasury_embed)
 
-    @treasury.command()
+    @treasury.command(help="Store money in your kingdom's treasury")
     async def store(self, ctx, amount=None):
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
         profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
-        kingdom = ''
-        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'stregabor'
-        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'ambria'
-        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'eireann'
-        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'dalvasha'
-        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'asbahamael'
+
+        kingdom = 'None'
+        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+        for item in kingdoms_list:
+            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
+                kingdom = item.lower()
 
         if profile[f'{ctx.author.id}']['balance'] - int(amount) >= 0:
             amount1 = profile[f'{ctx.author.id}']['balance'] - int(amount)
@@ -149,7 +128,7 @@ class Bank(commands.Cog):
             kingdom_file.seek(0)
             json.dump(kingdom_json, kingdom_file, indent=3)
 
-            pay_embed = discord.Embed(color=0xF88379)
+            pay_embed = discord.Embed(color=0xE49B0F)
             pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
             pay_embed.add_field(name='<:Nug:884320353202081833> Storage Successful!',
                                 value=f'Amount stored: **<:Nug:884320353202081833>{amount}**\n'
@@ -159,28 +138,23 @@ class Bank(commands.Cog):
         elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
             await ctx.send(embed=errors.Treasury.store_lack_nugs_error)
 
-    @treasury.command()
+    @treasury.command(help="Equivalent to !lb treasuries")
     async def search(self, ctx):
         await Leaderboards.treasuries(self, ctx)
 
-    @treasury.command()
+    @treasury.command(help="Ruler Only | Take money from the treasury")
     @commands.has_role('Ruler')
     async def take(self, ctx, amount=None):
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
         profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
-        kingdom = ''
-        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'stregabor'
-        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'ambria'
-        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'eireann'
-        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'dalvasha'
-        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'asbahamael'
+
+        kingdom = 'None'
+        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+        for item in kingdoms_list:
+            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
+                kingdom = item.lower()
 
         if int(amount) < 0:
             await ctx.send(embed=errors.Treasury.negative_nugs_error)
@@ -193,7 +167,7 @@ class Bank(commands.Cog):
             kingdom_file.seek(0)
             json.dump(kingdom_json, kingdom_file, indent=3)
 
-            pay_embed = discord.Embed(color=0xFF7F50)
+            pay_embed = discord.Embed(color=0xE49B0F)
             pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
             pay_embed.add_field(name='<:Nug:884320353202081833> Taking Successful!',
                                 value=f'Amount taken: **<:Nug:884320353202081833>{amount}**\n'
@@ -208,25 +182,19 @@ class Bank(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             await ctx.send(embed=errors.Treasury.ruler_error)
 
-    @treasury.command()
+    @treasury.command(help="Ruler Only | Pay someone using treasury funds")
     @commands.has_role('Ruler')
     async def spend(self, ctx, user: discord.User, amount=None, *reason):
         profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
         kingdom_json = json.load(kingdom_file)
-        kingdom = ''
 
-        if discord.utils.find(lambda r: r.name == 'Stregabor', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'stregabor'
-        elif discord.utils.find(lambda r: r.name == 'Ambria', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'ambria'
-        elif discord.utils.find(lambda r: r.name == 'Eireann', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'eireann'
-        elif discord.utils.find(lambda r: r.name == 'Dalvasha', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'dalvasha'
-        elif discord.utils.find(lambda r: r.name == 'Asbahamael', ctx.message.guild.roles) in ctx.author.roles:
-            kingdom = 'asbahamael'
+        kingdom = 'None'
+        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+        for item in kingdoms_list:
+            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
+                kingdom = item.lower()
 
         if user == ctx.author:
             await ctx.send(embed=errors.Pay.self_error)
@@ -247,7 +215,7 @@ class Bank(commands.Cog):
                 amount2 = profile[f'{user.id}']['balance'] + int(amount)
                 profile_update(user, amount2, 'balance')
 
-                pay_embed = discord.Embed(color=0xFF7F50)
+                pay_embed = discord.Embed(color=0xE49B0F)
                 pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
                 pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
                                     value=f'From the **{kingdom.upper()} TREASURY**\n'

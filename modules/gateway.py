@@ -4,8 +4,6 @@ import discord
 from discord.ext import commands
 
 
-config_file = open('./../thorny_data/config.json', 'r+')
-config = json.load(config_file)
 gateway_0 = f'''
 > **The Gateway Command**
 > Here you can find all of the gates and their corresponding numbers!\n
@@ -110,28 +108,28 @@ class Gateway(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['gate', 'g', 'ga'])
-    async def gateway(self, ctx, gatenum=None):
+    @commands.command(aliases=['gate', 'g', 'ga'], help="The Unified Information Command!")
+    async def gateway(self, ctx, number=None):
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)
-        if gatenum is None:
+        if number is None:
             send_text = gateway_0
-        elif gatenum == '1':
+        elif number == '1':
             send_text = gateway_1.format(config['gateways']['ruler_ambria'], config['gateways']['ruler_asbahamael'],
                                          config['gateways']['ruler_dalvasha'], config['gateways']['ruler_eireann'],
                                          config['gateways']['ruler_stregabor'])
-        elif gatenum == '2':
+        elif number == '2':
             send_text = gateway_2
-        elif gatenum == '3':
+        elif number == '3':
             send_text = gateway_3
-        elif gatenum == '4':
+        elif number == '4':
             send_text = gateway_4
         else:
             send_text = gateway_0
         await ctx.send(send_text)
 
-    @commands.command()
-    @commands.has_permissions(administrator = True)
+    @commands.command(help="CM Only | Change the ruler within the Gateway Command")
+    @commands.has_permissions(administrator=True)
     async def newruler(self, ctx, kingdom, *ruler):
         config['gateways'][f'ruler_{kingdom.lower()}'] = f'{" ".join(ruler)}'
         json.dump(config, open('./../thorny_data/config.json', 'w'), indent=3)
