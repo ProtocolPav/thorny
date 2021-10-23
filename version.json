@@ -1,12 +1,6 @@
 {
-  "version": "v1.4.1",
+  "version": "v1.4.2",
   "notable_changes": {
-    "1": "New **Fun** module added",
-    "2": "New fun.json file in thorny_data",
-    "3": "UI changes to embeds",
-    "4": "Removed reminder_time in !connect command",
-    "5": "!online command has been made functional",
-    "6": "Added descriptions to all commands",
-    "7": "Added gamertag field to the profile command"
+    "1": "Added new kingdom commands featuring a better, more informative design"
   }
 }
