@@ -133,3 +133,8 @@ class Gateway(commands.Cog):
     async def newruler(self, ctx, kingdom, *ruler):
         config['gateways'][f'ruler_{kingdom.lower()}'] = f'{" ".join(ruler)}'
         json.dump(config, open('./../thorny_data/config.json', 'w'), indent=3)
+
+    @commands.command(help="Shows the kingdom description for Asbahamael", aliases=['asba'])
+    async def asbahamael(self, ctx):
+        kingdom_embed = discord.Embed(color=0xFFFFFF)
+        kingdom_embed.add_field(name="**Asbahamael, the")
