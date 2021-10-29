@@ -81,28 +81,28 @@ class Profile(commands.Cog):
         wrong_field = False
 
         if field.lower() == "slogan":
-            if len(value) <= 5 and len(' '.join(value)) <= 30:
-                profile[str(ctx.author.id)]['fields']['slogan'] = ' '.join(value)
+            if len(value) <= 5 and len(" ".join(value)) <= 30:
+                profile[str(ctx.author.id)]['fields']['slogan'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That was more than 5 words!')
 
         elif field.lower() == "gamertag":
-            if len(' '.join(value)) <= 25:
-                profile[str(ctx.author.id)]['fields']['gamertag'] = ' '.join(value)
+            if len(" ".join(value)) <= 25:
+                profile[str(ctx.author.id)]['fields']['gamertag'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That seems like too much for a Gamertag!'
                                '\nLet Pav know if I made a mistake!')
 
         elif field.lower() == "town":
-            if len(' '.join(value)) <= 25:
-                profile[str(ctx.author.id)]['fields']['town'] = ' '.join(value)
+            if len(" ".join(value)) <= 25:
+                profile[str(ctx.author.id)]['fields']['town'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That seems like too much for a Town'
                                '\nLet Pav know if I made a mistake!')
 
         elif field.lower() == "role":
-            if len(value) <= 5 and len(' '.join(value)) <= 30:
-                profile[str(ctx.author.id)]['fields']['role'] = ' '.join(value)
+            if len(value) <= 5 and len(" ".join(value)) <= 30:
+                profile[str(ctx.author.id)]['fields']['role'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That seems like too much for a Role')
 
@@ -111,20 +111,20 @@ class Profile(commands.Cog):
                            "You should use `!birthday DD Month YYYY` to set it!")
 
         elif field.lower() == "wiki" or field.lower() == "article":
-            if 'https://everthorn.fandom.com/wiki/' in ' '.join(value):
-                profile[str(ctx.author.id)]['fields']['wiki'] = ' '.join(value)
+            if 'https://everthorn.fandom.com/wiki/' in " ".join(value):
+                profile[str(ctx.author.id)]['fields']['wiki'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! This doesnt look like no wiki link...')
 
         elif field.lower() == "bio" or field.lower() == "aboutme":
-            if len(' '.join(value)) <= 250:
-                profile[str(ctx.author.id)]['fields']['biography'] = ' '.join(value)
+            if len(" ".join(value)) <= 250:
+                profile[str(ctx.author.id)]['fields']['biography'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That was more than 30 words!')
 
         elif field.lower() == "lore" or field.lower() == "story":
-            if len(' '.join(value)) <= 250:
-                profile[str(ctx.author.id)]['fields']['lore'] = ' '.join(value)
+            if len(" ".join(value)) <= 250:
+                profile[str(ctx.author.id)]['fields']['lore'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! That was more than 30 words!')
 
