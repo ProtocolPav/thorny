@@ -3,13 +3,9 @@ from discord.ext import commands
 import json
 import errors
 import random
-import giphy_client
-from giphy_client.rest import ApiException
 
 config_file = open('./../thorny_data/config.json', 'r')
 config = json.load(config_file)
-token = config["giphy_token"]
-api_instance = giphy_client.DefaultApi()
 
 
 class Fun(commands.Cog):

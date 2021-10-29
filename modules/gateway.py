@@ -20,11 +20,11 @@ gateway_1 = '''
 
 :blue_book: Check out **<#789395875712860222>** for self-roles and the **guidelines!**\n
 :postal_horn: Join a **Kingdom** by messaging it's **Ruler!** To see more info, use their `!command`
-\t:coin: `!ambria` - **{}**
-\t:star2: `!asbahamael` - **{}**
-\t:japanese_castle: `!dalvasha` - **{}**
-\t:classical_building: `!eireann` - **{}**
-\t:dove: `!stregabor` - **{}**\n
+\t<:flag_ambria:902942850365394964> `!ambria` - **{}**
+\t<:flag_asbahamael:900025995929739284> `!asbahamael` - **{}**
+\t<:flag_dalvasha:900025995954905098> `!dalvasha` - **{}**
+\t<:flag_eireann:900025995912953946> `!eireann` - **{}**
+\t<:flag_stregabor:900025995749363733> `!stregabor` - **{}**\n
 :incoming_envelope: To get the **Realm Code**, reach **Level 3** by talking here with us and **pick a kingdom**! Then, ask a CM!\n
 :person_raising_hand: Use **!gateway** to see more helpful guides for Everthorn!\n
 :heart: **Chat** with us more! We are so happy to have you here!
@@ -115,9 +115,11 @@ class Gateway(commands.Cog):
         if number is None:
             send_text = gateway_0
         elif number == '1':
-            send_text = gateway_1.format(config['gateways']['ruler_ambria'], config['gateways']['ruler_asbahamael'],
-                                         config['gateways']['ruler_dalvasha'], config['gateways']['ruler_eireann'],
-                                         config['gateways']['ruler_stregabor'])
+            send_text = gateway_1.format(config['kingdoms']['ambria']['ruler'],
+                                         config['kingdoms']['asbahamael']['ruler'],
+                                         config['kingdoms']['dalvasha']['ruler'],
+                                         config['kingdoms']['eireann']['ruler'],
+                                         config['kingdoms']['stregabor']['ruler'])
         elif number == '2':
             send_text = gateway_2
         elif number == '3':
@@ -131,10 +133,33 @@ class Gateway(commands.Cog):
     @commands.command(help="CM Only | Change the ruler within the Gateway Command")
     @commands.has_permissions(administrator=True)
     async def newruler(self, ctx, kingdom, *ruler):
-        config['gateways'][f'ruler_{kingdom.lower()}'] = f'{" ".join(ruler)}'
+        config['kingdoms'][f'{kingdom.lower()}']['ruler'] = f'{" ".join(ruler)}'
         json.dump(config, open('./../thorny_data/config.json', 'w'), indent=3)
 
     @commands.command(help="Shows the kingdom description for Asbahamael", aliases=['asba'])
     async def asbahamael(self, ctx):
-        kingdom_embed = discord.Embed(color=0xFFFFFF)
-        kingdom_embed.add_field(name="**Asbahamael, the")
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+        kingdom_embed = discord.Embed(title=f"**Asbahamael, {config['kingdoms']['asbahamael']['slogan']}**",
+                                      color=0xFFFFFF)
+        kingdom_embed.add_field(name=f":city_sunset: **Information**",
+                                value=f"**Ruler:** {config['kingdoms']['asbahamael']['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms']['asbahamael']['capital']}\n"
+                                      f"**Towns:** {config['kingdoms']['asbahamael']['towns']}\n"
+                                      f"**Members:** {config['kingdoms']['asbahamael']['members']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms']['asbahamael']['borders']}\n"
+                                      f"**Government:** {config['kingdoms']['asbahamael']['government']}\n"
+                                      f"**Alliances:** {config['kingdoms']['asbahamael']['alliances']}\n\n"
+                                      f"**Started On:** {config['kingdoms']['asbahamael']['created_on']}")
+        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms']['asbahamael']['nugs_treasury']}\n"
+                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms']['asbahamael']['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms']['asbahamael']['playtime_total']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms']['asbahamael']['poll_ratings']}")
+        kingdom_embed.add_field(name=f"a",
+                                value=f"a",
+                                inline=False)
+
+        await ctx.send(embed=kingdom_embed)
