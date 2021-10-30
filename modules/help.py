@@ -89,5 +89,27 @@ class Help(commands.Cog):
                                    f"**Bio/Aboutme** - Your bio\n"
                                    f"**Story/Lore** - Your In-Game Character lore",
                              inline=False)
+        help_embed.set_footer(text=f"Use !help profile to access this!")
+        await ctx.send(embed=help_embed)
+
+    @help.command()
+    async def kingdoms(self, ctx):
+        help_embed = discord.Embed(colour=0xCF9FFF)
+        help_embed.add_field(name=":question: **Kingdom Help**",
+                             value=f"**!your_kingdom** - View a kingdom's command! (Asba, Ambria, Streg, Dal, Eir)\n"
+                                   f"**!your_kingdom edit <field> <value>** - Edit a certain field on the command!")
+        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
+                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
+                                   f"**Slogan** - The top part of the kingdom command | Max. 5 words\n"
+                                   f"**Ruler** - Your Kingdom's Ruler\n"
+                                   f"**Capital** - The Capital CIty | Max. 30 characters\n"
+                                   f"**Borders** - Open, Closed, Partially Open | Max. 30 characters\n"
+                                   f"**Government** - Kingdom's Government Type\n"
+                                   f"**Alliances** - Your kingdom's alliances | Max. 50 characters\n"
+                                   f"**Wiki** - Kingdom's Wiki Article | Send in the whole link!\n"
+                                   f"**Description** - Your Kingdom's Description | Max. 30 words\n"
+                                   f"**Lore** - Your Kingdom's Lore | Max. 30 words",
+                             inline=False)
+        help_embed.set_footer(text=f"Use !help kingdom to access this!")
         await ctx.send(embed=help_embed)
 
