@@ -1,7 +1,7 @@
 {
-  "version": "v1.4.2",
+  "version": "v1.4.3",
   "nickname": "Cere",
   "notable_changes": {
-    "1": "Added new kingdom commands featuring a better, more informative design"
+    "1": "Created a proper interface for the help command"
   }
 }
