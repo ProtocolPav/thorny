@@ -170,7 +170,8 @@ async def update(ctx, user: discord.User, key1, *value):
 
 @thorny.command()
 async def version(ctx):
-    await ctx.send(f"Yeehaw! Howdy there boss. I am on version {v}. Isn't that coolio!")
+    await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
+                   f"{version_json['nickname']}")
 
 
 @thorny.command()

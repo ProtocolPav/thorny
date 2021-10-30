@@ -120,6 +120,8 @@ class Activity(commands.Cog):
                 temp_file.seek(0)
                 json.dump(temp_json, temp_file, indent=0)
 
+                profile_update(ctx.author)
+
                 total = activity_set(ctx.author, 'total', str(playtime))
                 profile_update(ctx.author, f"{total}", 'activity', 'total')
                 month_total = activity_set(ctx.author, 'current_month', str(playtime))
