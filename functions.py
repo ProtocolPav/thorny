@@ -157,6 +157,9 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
         profile[str(ctx_author.id)]['balance'] = 25
 
+    if profile[f'{ctx_author.id}'].get('kingdom') is None:  # Kingdom
+        profile[str(ctx_author.id)]['kingdom'] = 'None'
+
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
         profile[f'{ctx_author.id}']['activity'] = {}
     if profile[f'{ctx_author.id}']['activity'].get("total") is None:
@@ -292,7 +295,7 @@ def month_change():
 
 def seconds_until_1st():
     date = datetime.now() + timedelta(days=31)
-    date_1st = str(date).split(' ')[0][0:7] + "-01" + " " + str(date).split(' ')[1]
+    date_1st = str(date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
     date_1st = datetime.strptime(date_1st, "%Y-%m-%d %H:%M:%S.%f")
     time = date_1st - datetime.now()
     time_seconds = time.total_seconds()
