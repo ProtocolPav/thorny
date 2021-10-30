@@ -157,6 +157,9 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
         profile[str(ctx_author.id)]['balance'] = 25
 
+    if profile[f'{ctx_author.id}'].get('kingdom') is None:  # Kingdom
+        profile[str(ctx_author.id)]['kingdom'] = 'None'
+
     if profile[f'{ctx_author.id}'].get('activity') is None:  # Activity
         profile[f'{ctx_author.id}']['activity'] = {}
     if profile[f'{ctx_author.id}']['activity'].get("total") is None:
@@ -245,20 +248,20 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
 
 def activity_set(ctx_author, value, time_to_add):
     file = open('../thorny_data/profiles.json', 'r+')
-    file_loaded = json.load(file)
+    profile_json = json.load(file)
 
     #  Take information from the value's time and place into variables
-    if 'days' in file_loaded[f'{ctx_author.id}']['activity'][value]:
-        current_days = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(' days')[0])
-        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
-    elif 'day' in file_loaded[f'{ctx_author.id}']['activity'][value]:
+    if 'days' in profile_json[f'{ctx_author.id}']['activity'][value]:
+        current_days = int(profile_json[f'{ctx_author.id}']['activity'][value].split(' days')[0])
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+    elif 'day' in profile_json[f'{ctx_author.id}']['activity'][value]:
         current_days = 1
-        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
     else:
         current_days = 0
-        current_hours = int(file_loaded[f'{ctx_author.id}']['activity'][value].split('h')[0])
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[0])
 
-    current_minutes = int(file_loaded[f'{ctx_author.id}']['activity'][value].split('h')[1][:-1])
+    current_minutes = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[1][:-1])
     #  Take information from time_to_add and place into variables
     hours_to_add = int(time_to_add.split(':')[0])
     minutes_to_add = int(time_to_add.split(':')[1])
@@ -272,7 +275,7 @@ def activity_set(ctx_author, value, time_to_add):
 
 
 def month_change():
-    if date.today().day == 9:
+    if date.today().day == 1:
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         for player in profile:
@@ -291,8 +294,8 @@ def month_change():
 
 
 def seconds_until_1st():
-    date = datetime.now() + timedelta(days=35)  # If 31 days, there could be an issue that it sets time to this month
-    date_1st = str(date).split(' ')[0][0:7] + "-01" + " " + str(date).split(' ')[1]
+    date = datetime.now() + timedelta(days=31)
+    date_1st = str(date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
     date_1st = datetime.strptime(date_1st, "%Y-%m-%d %H:%M:%S.%f")
     time = date_1st - datetime.now()
     time_seconds = time.total_seconds()
@@ -301,7 +304,8 @@ def seconds_until_1st():
 
 async def profile_change_months():
     while True:
-        print(f"Month change in {seconds_until_1st()} (1st of Next Month)")
+        print(f"Month change in {timedelta(seconds=seconds_until_1st())}"
+              f" ({datetime.now() + timedelta(seconds=seconds_until_1st())})")
         await asyncio.sleep(seconds_until_1st())
         month_change()
         await asyncio.sleep(60)
@@ -311,7 +315,7 @@ async def birthday_announce():
     while True:
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
-        date = datetime.now().replace(hour=0, minute=0, second=0,  microsecond=0)
+        date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         for person in profile:
             birthdate = datetime.strptime(profile[person]['birthday']['system'], "%Y-%m-%d %H:%M:%S")
             if str(date)[4:9] == str(birthdate)[4:9]:
