@@ -3,6 +3,7 @@ import json
 import discord
 from discord.ext import commands
 from modules import help
+import functions
 
 
 gateway_0 = f'''
@@ -325,7 +326,7 @@ class Gateway(commands.Cog):
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
                 kingdom = item.lower()
-                profile_update(user, kingdom, "kingdom")
+                functions.profile_update(user, kingdom, "kingdom")
 
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)

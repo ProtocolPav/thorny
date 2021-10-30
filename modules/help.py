@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 import errors
+import json
+
+v = json.load(open('version.json', 'r'))['version']
 
 
 class Help(commands.Cog):
@@ -10,55 +13,86 @@ class Help(commands.Cog):
 
     @commands.group(aliases=['hlp'], invoke_without_command=True, help="Helps You A Lot")
     async def help(self, ctx, cmd=None, subcmd=None):
-        if cmd is None:
-            commands_dict = {}
-            for cog in self.client.cogs:
-                commands_dict[f"{cog}"] = []
-                for command in self.client.get_cog(cog).get_commands():
-                    if isinstance(command, commands.Group):
-                        if command.signature == "":
-                            commands_dict[f"{cog}"].append([f"{command.name}", command.help])
-                        else:
-                            commands_dict[f"{cog}"].append([f"{command.name} {command.signature}", command.help])
-                        for subcommand in command.walk_commands():
-                            if subcommand.signature == "":
-                                commands_dict[f"{cog}"].append([f"{command.name} {subcommand.name}", command.help])
-                            else:
-                                commands_dict[f"{cog}"].append([f"{command.name} {subcommand.name} "
-                                                                f"{subcommand.signature}", command.help])
-                                print(command.signature)
+        commands_dict = {}
+        for cog in self.client.cogs:
+            commands_dict[f"{cog}"] = {}
+            cmd_num = 1
+            for command in self.client.get_cog(cog).get_commands():
+                if isinstance(command, commands.Group):
+                    if command.signature == "":
+                        commands_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
+                                                                 "usage": "",
+                                                                 "alias": command.aliases,
+                                                                 "desc": command.help}
                     else:
-                        if command.signature == "":
-                            commands_dict[f"{cog}"].append([f"{command.name}", command.help])
+                        commands_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
+                                                                 "usage": command.signature,
+                                                                 "alias": command.aliases,
+                                                                 "desc": command.help}
+                    for subcommand in command.walk_commands():
+                        cmd_num += 1
+                        if subcommand.signature == "":
+                            commands_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
+                                                                     "usage": "",
+                                                                     "alias": subcommand.aliases,
+                                                                     "desc": subcommand.help}
                         else:
-                            commands_dict[f"{cog}"].append([f"{command.name} {command.signature}", command.help])
-            sendhelp = ''
+                            commands_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
+                                                                     "usage": subcommand.signature,
+                                                                     "alias": subcommand.aliases,
+                                                                     "desc": subcommand.help}
+                else:
+                    if command.signature == "":
+                        commands_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
+                                                                 "usage": "",
+                                                                 "alias": command.aliases,
+                                                                 "desc": command.help}
+                    else:
+                        commands_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
+                                                                 "usage": command.signature,
+                                                                 "alias": command.aliases,
+                                                                 "desc": command.help}
+                cmd_num += 1
+
+        if cmd is None:
+            help_embed = discord.Embed(title="Thorny Help Center",
+                                       description="Use `!help [command] [subcommand]` to see specific commands\n"
+                                                   "Use `!help [Category]` to see specific categories! (Capitalize)",
+                                       color=0xCF9FFF)
+            help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
             for cog in self.client.cogs:
-                n = '\n'
-                sendhelp = f"{sendhelp}\n**{cog} Commands:**\n{n.join(map(str, commands_dict[f'{cog}']))}\n"
-            await ctx.send(f"**BETA**\n\n{sendhelp}")
+                if cog == "Help":
+                    pass
+                else:
+                    if len(commands_dict[f"{cog}"]) == 3:
+                        help_embed.add_field(name=f"**{cog} Commands**",
+                                             value=f"```!{commands_dict[f'{cog}']['1']['name']}, "
+                                                   f"!{commands_dict[f'{cog}']['2']['name']}, "
+                                                   f"!{commands_dict[f'{cog}']['3']['name']}```",
+                                             inline=False)
+                    else:
+                        help_embed.add_field(name=f"**{cog} Commands**",
+                                             value=f"```!{commands_dict[f'{cog}']['1']['name']}, "
+                                                   f"!{commands_dict[f'{cog}']['2']['name']}, "
+                                                   f"!{commands_dict[f'{cog}']['3']['name']}, "
+                                                   f"!{commands_dict[f'{cog}']['4']['name'][0:3]}...```",
+                                             inline=False)
+            await ctx.send(embed=help_embed)
         else:
             found = False
-            if subcmd is None:
-                for command in self.client.commands:
-                    if cmd == command.name:
-                        if command.signature == "":
-                            await ctx.send(f"{ctx.prefix}{command.name}- {command.help}")
-                        else:
-                            await ctx.send(f"{ctx.prefix}{command.name} {command.signature} - {command.help}")
-                        found = True
-            else:
-                for command in self.client.commands:
-                    if cmd == command.name:
-                        for subcommand in command.walk_commands():
-                            if subcmd == subcommand.name:
-                                if subcommand.signature == "":
-                                    await ctx.send(f"{ctx.prefix}{command.name} {subcommand.name}/{subcommand.aliases} "
-                                                   f"- {subcommand.help}")
-                                else:
-                                    await ctx.send(f"{ctx.prefix}{command.name} {subcommand.name}/{subcommand.aliases} "
-                                                   f"{subcommand.signature} - {subcommand.help}")
-                                found = True
+            if cmd in self.client.cogs:
+                found = True
+                help_embed = discord.Embed(title="Thorny Help Center",
+                                           description="Use `!help [command] [subcommand]` to see specific commands",
+                                           color=0xCF9FFF)
+                text = ''
+                for command in commands_dict[f'{cmd}']:
+                    command = commands_dict[f'{cmd}'][command]
+                    text = f"{text}**!{command['name']}/{command['alias']}{command['usage']}**\n```{command['desc']}```"
+                help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
+                help_embed.add_field(name=f"**{cmd} Commands**",
+                                     value=f"{text}")
+                await ctx.send(embed=help_embed)
             if not found:
                 await ctx.send(f"Hmm... Looks like you either used an alias for the command, or it doesn't exist!")
 
@@ -112,4 +146,3 @@ class Help(commands.Cog):
                              inline=False)
         help_embed.set_footer(text=f"Use !help kingdom to access this!")
         await ctx.send(embed=help_embed)
-
