@@ -2,6 +2,7 @@ import json
 
 import discord
 from discord.ext import commands
+from modules import help
 
 
 gateway_0 = f'''
@@ -138,28 +139,269 @@ class Gateway(commands.Cog):
 
     @commands.command(help="Shows the kingdom description for Asbahamael", aliases=['asba'])
     async def asbahamael(self, ctx):
+        kingdom = "asbahamael"
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)
-        kingdom_embed = discord.Embed(title=f"**Asbahamael, {config['kingdoms']['asbahamael']['slogan']}**",
-                                      color=0xFFFFFF)
+
+        kingdom_embed = discord.Embed(title=f"**{kingdom.capitalize()}, {config['kingdoms'][kingdom]['slogan']}**",
+                                      color=0xE1C16E)
         kingdom_embed.add_field(name=f":city_sunset: **Information**",
-                                value=f"**Ruler:** {config['kingdoms']['asbahamael']['ruler']}\n"
-                                      f"**Capital City:** {config['kingdoms']['asbahamael']['capital']}\n"
-                                      f"**Towns:** {config['kingdoms']['asbahamael']['towns']}\n"
-                                      f"**Members:** {config['kingdoms']['asbahamael']['members']}\n\n"
-                                      f"**Kingdom Borders:** {config['kingdoms']['asbahamael']['borders']}\n"
-                                      f"**Government:** {config['kingdoms']['asbahamael']['government']}\n"
-                                      f"**Alliances:** {config['kingdoms']['asbahamael']['alliances']}\n\n"
-                                      f"**Started On:** {config['kingdoms']['asbahamael']['created_on']}")
+                                value=f"**Ruler:** {config['kingdoms'][kingdom]['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms'][kingdom]['capital']}\n"
+                                      f"**Towns:** {config['kingdoms'][kingdom]['towns']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
+                                      f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
+                                      f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
         kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
                                 value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms']['asbahamael']['nugs_treasury']}\n"
+                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
                                       f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms']['asbahamael']['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms']['asbahamael']['playtime_total']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms']['asbahamael']['poll_ratings']}")
-        kingdom_embed.add_field(name=f"a",
-                                value=f"a",
+                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
+                                value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":scroll: **Description**",
+                                value=f"{config['kingdoms'][kingdom]['description']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
+                                value=f"{config['kingdoms'][kingdom]['lore']}",
                                 inline=False)
 
         await ctx.send(embed=kingdom_embed)
+
+    @commands.command(help="Shows the kingdom description for Ambria")
+    async def ambria(self, ctx):
+        kingdom = "ambria"
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+
+        kingdom_embed = discord.Embed(title=f"**{kingdom.capitalize()}, {config['kingdoms'][kingdom]['slogan']}**",
+                                      color=0xFFD700)
+        kingdom_embed.add_field(name=f":city_sunset: **Information**",
+                                value=f"**Ruler:** {config['kingdoms'][kingdom]['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms'][kingdom]['capital']}\n"
+                                      f"**Towns:** {config['kingdoms'][kingdom]['towns']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
+                                      f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
+                                      f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
+        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
+                                value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":scroll: **Description**",
+                                value=f"{config['kingdoms'][kingdom]['description']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
+                                value=f"{config['kingdoms'][kingdom]['lore']}",
+                                inline=False)
+
+        await ctx.send(embed=kingdom_embed)
+
+    @commands.command(help="Shows the kingdom description for Dalvasha", aliases=['dal'])
+    async def dalvasha(self, ctx):
+        kingdom = "dalvasha"
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+
+        kingdom_embed = discord.Embed(title=f"**{kingdom.capitalize()}, {config['kingdoms'][kingdom]['slogan']}**",
+                                      color=0xC70039)
+        kingdom_embed.add_field(name=f":city_sunset: **Information**",
+                                value=f"**Ruler:** {config['kingdoms'][kingdom]['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms'][kingdom]['capital']}\n"
+                                      f"**Towns:** {config['kingdoms'][kingdom]['towns']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
+                                      f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
+                                      f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
+        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
+                                value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":scroll: **Description**",
+                                value=f"{config['kingdoms'][kingdom]['description']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
+                                value=f"{config['kingdoms'][kingdom]['lore']}",
+                                inline=False)
+
+        await ctx.send(embed=kingdom_embed)
+
+    @commands.command(help="Shows the kingdom description for Eireann", aliases=['eir'])
+    async def eireann(self, ctx):
+        kingdom = "eireann"
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+
+        kingdom_embed = discord.Embed(title=f"**{kingdom.capitalize()}, {config['kingdoms'][kingdom]['slogan']}**",
+                                      color=0x4169E1)
+        kingdom_embed.add_field(name=f":city_sunset: **Information**",
+                                value=f"**Ruler:** {config['kingdoms'][kingdom]['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms'][kingdom]['capital']}\n"
+                                      f"**Towns:** {config['kingdoms'][kingdom]['towns']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
+                                      f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
+                                      f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
+        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
+                                value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":scroll: **Description**",
+                                value=f"{config['kingdoms'][kingdom]['description']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
+                                value=f"{config['kingdoms'][kingdom]['lore']}",
+                                inline=False)
+
+        await ctx.send(embed=kingdom_embed)
+
+    @commands.command(help="Shows the kingdom description for Stregabor", aliases=['streg'])
+    async def stregabor(self, ctx):
+        kingdom = "stregabor"
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+
+        kingdom_embed = discord.Embed(title=f"**{kingdom.capitalize()}, {config['kingdoms'][kingdom]['slogan']}**",
+                                      color=0x89CFF0)
+        kingdom_embed.add_field(name=f":city_sunset: **Information**",
+                                value=f"**Ruler:** {config['kingdoms'][kingdom]['ruler']}\n"
+                                      f"**Capital City:** {config['kingdoms'][kingdom]['capital']}\n"
+                                      f"**Towns:** {config['kingdoms'][kingdom]['towns']}\n\n"
+                                      f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
+                                      f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
+                                      f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
+        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
+                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
+                                value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":scroll: **Description**",
+                                value=f"{config['kingdoms'][kingdom]['description']}",
+                                inline=False)
+        kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
+                                value=f"{config['kingdoms'][kingdom]['lore']}",
+                                inline=False)
+
+        await ctx.send(embed=kingdom_embed)
+
+    @commands.command()
+    @commands.has_role('Ruler')
+    async def kedit(self, ctx, field=None, *value):
+        kingdom = 'None'
+        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+        for item in kingdoms_list:
+            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
+                kingdom = item.lower()
+                profile_update(user, kingdom, "kingdom")
+
+        config_file = open('./../thorny_data/config.json', 'r+')
+        config = json.load(config_file)
+        wrong_field = False
+
+        if field.lower() == "ruler":
+            if len(" ".join(value)) <= 35:
+                config['kingdoms'][kingdom]['ruler'] = " ".join(value)
+            else:
+                await ctx.send('Hmmmm... Seems like this was more than 35 characters')
+                wrong_field = True
+
+        elif field.lower() == "slogan":
+            if len(" ".join(value)) <= 25:
+                config['kingdoms'][kingdom]['slogan'] = " ".join(value)
+            else:
+                await ctx.send("That's over 25 characters!")
+                wrong_field = True
+
+        elif field.lower() == "capital":
+            if len(" ".join(value)) <= 30:
+                config['kingdoms'][kingdom]['capital'] = " ".join(value)
+            else:
+                await ctx.send('Seems like one long name for a town! (over 30 characters)'
+                               '\nLet Pav know if I made a mistake!')
+                wrong_field = True
+
+        elif field.lower() == "borders":
+            if len(" ".join(value)) <= 30:
+                config['kingdoms'][kingdom]['borders'] = " ".join(value)
+            else:
+                await ctx.send("That's over 30 characters!")
+                wrong_field = True
+
+        elif field.lower() == "government":
+            if len(value) <= 5 and len(" ".join(value)) <= 30:
+                config['kingdoms'][kingdom]['government'] = " ".join(value)
+            else:
+                await ctx.send('That seems like over 30 characters!')
+                wrong_field = True
+
+        elif field.lower() == "alliances" or field.lower() == "alliance":
+            if len(" ".join(value)) <= 50:
+                config['kingdoms'][kingdom]['alliances'] = " ".join(value)
+            else:
+                await ctx.send('This looks like it is more than 50 characters!')
+                wrong_field = True
+
+        elif field.lower() == "wiki" or field.lower() == "article":
+            if 'https://everthorn.fandom.com/wiki/' in " ".join(value):
+                config['kingdoms'][kingdom]['wiki.gov'] = " ".join(value)
+            else:
+                await ctx.send('Woah there buckaroo! This doesnt look like no wiki link...')
+                wrong_field = True
+
+        elif field.lower() == "description":
+            if len(" ".join(value)) <= 250:
+                config['kingdoms'][kingdom]['description'] = " ".join(value)
+            else:
+                await ctx.send('This looks like it is more than 30 words! (over 250 characters)')
+                wrong_field = True
+
+        elif field.lower() == "lore" or field.lower() == "story":
+            if len(" ".join(value)) <= 250:
+                config['kingdoms'][kingdom]['lore'] = " ".join(value)
+            else:
+                await ctx.send('This looks like it is more than 30 words! (over 250 characters)')
+                wrong_field = True
+
+        else:
+            await help.Help.kingdoms(self, ctx)
+            wrong_field = True
+
+        if not wrong_field:
+            config_file.truncate(0)
+            config_file.seek(0)
+            json.dump(config, config_file, indent=3)
+            config_file.close()
+            await ctx.send(f"Done! Now the **{field}** of **{kingdom.capitalize()}** is '*{' '.join(value)}*'")

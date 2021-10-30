@@ -25,6 +25,7 @@ class Profile(commands.Cog):
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
                 kingdom = item.lower()
+                profile_update(user, kingdom, "kingdom")
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.message.guild.roles) in user.roles:
             is_donator = '| I am a Donator!'
@@ -38,7 +39,7 @@ class Profile(commands.Cog):
         if profile[f'{user.id}']['is_shown']['information']:
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"**Gamertag:** {profile[f'{user.id}']['fields']['gamertag']}\n"
-                                          f"**Kingdom:** {kingdom.capitalize()}\n"
+                                          f"**Kingdom:** {profile[f'{user.id}']['kingdom'].capitalize()}\n"
                                           f"**Town:** {profile[f'{user.id}']['fields']['town']}\n"
                                           f"**Role:** {profile[f'{user.id}']['fields']['role']}\n\n"
                                           f"**Level:** {profile[f'{user.id}']['user_level']['level']}\n"
@@ -81,52 +82,60 @@ class Profile(commands.Cog):
         wrong_field = False
 
         if field.lower() == "slogan":
-            if len(value) <= 5 and len(" ".join(value)) <= 30:
+            if len(value) <= 5 and len(" ".join(value)) <= 35:
                 profile[str(ctx.author.id)]['fields']['slogan'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That was more than 5 words!')
+                await ctx.send('Hmmmm... Seems like this was more than 5 words (35 characters)')
+                wrong_field = True
 
         elif field.lower() == "gamertag":
-            if len(" ".join(value)) <= 25:
+            if len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['gamertag'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That seems like too much for a Gamertag!'
+                await ctx.send('This looks like one loooong Gamertag! (over 30 characters)'
                                '\nLet Pav know if I made a mistake!')
+                wrong_field = True
 
         elif field.lower() == "town":
-            if len(" ".join(value)) <= 25:
+            if len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['town'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That seems like too much for a Town'
+                await ctx.send('Seems like one long name for a town! (over 30 characters)'
                                '\nLet Pav know if I made a mistake!')
+                wrong_field = True
 
         elif field.lower() == "role":
             if len(value) <= 5 and len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['role'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That seems like too much for a Role')
+                await ctx.send('That seems like a lot for a role! (over 30 characters)')
+                wrong_field = True
 
         elif field.lower() == "birthday":
             await ctx.send("Ah! I actually can't change your birthday using this command just yet!\n"
                            "You should use `!birthday DD Month YYYY` to set it!")
+            wrong_field = True
 
         elif field.lower() == "wiki" or field.lower() == "article":
             if 'https://everthorn.fandom.com/wiki/' in " ".join(value):
                 profile[str(ctx.author.id)]['fields']['wiki'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! This doesnt look like no wiki link...')
+                wrong_field = True
 
         elif field.lower() == "bio" or field.lower() == "aboutme":
             if len(" ".join(value)) <= 250:
                 profile[str(ctx.author.id)]['fields']['biography'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That was more than 30 words!')
+                await ctx.send('This looks like it is more than 30 words! (over 250 characters)')
+                wrong_field = True
 
         elif field.lower() == "lore" or field.lower() == "story":
             if len(" ".join(value)) <= 250:
                 profile[str(ctx.author.id)]['fields']['lore'] = " ".join(value)
             else:
-                await ctx.send('Woah there buckaroo! That was more than 30 words!')
+                await ctx.send('This looks like it is more than 30 words! (over 250 characters)')
+                wrong_field = True
 
         else:
             await help.Help.profile(self, ctx)
