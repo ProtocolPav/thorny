@@ -208,11 +208,24 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
 
     if profile[f'{ctx_author.id}'].get('inventory') is None:  # Inventory
         profile[f'{ctx_author.id}']['inventory'] = {}
-        for slot_number in range(1, 7):  # Inventory Slots
+        for slot_number in range(1, 10):  # Inventory Slots
             if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}') is None:
-                profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = 'Empty'
-            if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}_amount') is None:
-                profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}_amount'] = 0
+                profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = {"item_id": "empty_00",
+                                                                                  "amount": 0}
+    elif profile[f'{ctx_author.id}']['inventory'].get(f'slot1_amount') is not None:
+        old_inventory = profile[f'{ctx_author.id}']['inventory']
+        print(old_inventory)
+        profile[f'{ctx_author.id}']['inventory'] = {}
+        for slot_number in range(1, 7):
+            if old_inventory[f'slot{slot_number}'] == "Custom Role 1m":
+                profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = \
+                    {"item_id": "role_01", "amount": old_inventory[f'slot{slot_number}_amount']}
+            else:
+                profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = {"item_id": "empty_00",
+                                                                                  "amount": 0}
+        for slot_number in range(7, 10):
+            profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = {"item_id": "empty_00",
+                                                                              "amount": 0}
 
     if profile[f'{ctx_author.id}'].get('user_level') is None:  # Level
         profile[str(ctx_author.id)]['user_level'] = {"level": 0,
@@ -231,11 +244,6 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['birthday']['display'] = None
     if profile[f'{ctx_author.id}']['birthday'].get('system') is None:
         profile[f'{ctx_author.id}']['birthday']['system'] = None
-
-    if profile[f'{ctx_author.id}']['activity'].get('latest_hour') is not None:
-        del profile[f'{ctx_author.id}']['activity']['latest_hour']
-    if profile[f'{ctx_author.id}']['activity'].get('latest_minute') is not None:
-        del profile[f'{ctx_author.id}']['activity']['latest_minute']
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
