@@ -1,7 +1,10 @@
 {
-  "version": "v1.4.2",
+  "version": "v1.4.3",
   "nickname": "Cere",
   "notable_changes": {
-    "1": "Added new kingdom commands featuring a better, more informative design"
+    "1": "Created a proper interface for the help command, making it even more helpful than before!",
+    "2": "inventory.py now exists",
+    "3": "Some Inventory and store features from Issue #17 added",
+    "4": "New tips.json, and new tips posted every 3 days"
   }
 }

@@ -18,14 +18,15 @@ class Profile(commands.Cog):
             user = ctx.author
         else:
             pass
-        profile_update(user)
-        profile = json.load(open('./../thorny_data/profiles.json', 'r'))
-        kingdom = 'None'
         kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
                 kingdom = item.lower()
                 profile_update(user, kingdom, "kingdom")
+            else:
+                profile_update(user, "None", "kingdom")
+
+        profile = json.load(open('./../thorny_data/profiles.json', 'r'))
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.message.guild.roles) in user.roles:
             is_donator = '| I am a Donator!'
@@ -74,21 +75,23 @@ class Profile(commands.Cog):
         profile_embed.set_footer(text=f"{v} | Use !help profile for help on editing your profile!")
         await ctx.send(embed=profile_embed)
 
-    @profile.command(help="Edit what a certain field says on your profile")
-    async def edit(self, ctx, field=None, *value):
+    @profile.command(help="Edit what a section says on your profile. The section can be: Slogan, Gamertag, Town, Role,"
+                          " Birthday, Wiki, Aboutme or Lore.",
+                     usage="<section> [text...]")
+    async def edit(self, ctx, section=None, *value):
         profile_update(ctx.author)
         pr_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(pr_file)
         wrong_field = False
 
-        if field.lower() == "slogan":
+        if section.lower() == "slogan":
             if len(value) <= 5 and len(" ".join(value)) <= 35:
                 profile[str(ctx.author.id)]['fields']['slogan'] = " ".join(value)
             else:
                 await ctx.send('Hmmmm... Seems like this was more than 5 words (35 characters)')
                 wrong_field = True
 
-        elif field.lower() == "gamertag":
+        elif section.lower() == "gamertag":
             if len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['gamertag'] = " ".join(value)
             else:
@@ -96,7 +99,7 @@ class Profile(commands.Cog):
                                '\nLet Pav know if I made a mistake!')
                 wrong_field = True
 
-        elif field.lower() == "town":
+        elif section.lower() == "town":
             if len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['town'] = " ".join(value)
             else:
@@ -104,33 +107,33 @@ class Profile(commands.Cog):
                                '\nLet Pav know if I made a mistake!')
                 wrong_field = True
 
-        elif field.lower() == "role":
+        elif section.lower() == "role":
             if len(value) <= 5 and len(" ".join(value)) <= 30:
                 profile[str(ctx.author.id)]['fields']['role'] = " ".join(value)
             else:
                 await ctx.send('That seems like a lot for a role! (over 30 characters)')
                 wrong_field = True
 
-        elif field.lower() == "birthday":
+        elif section.lower() == "birthday":
             await ctx.send("Ah! I actually can't change your birthday using this command just yet!\n"
                            "You should use `!birthday DD Month YYYY` to set it!")
             wrong_field = True
 
-        elif field.lower() == "wiki" or field.lower() == "article":
+        elif section.lower() == "wiki":
             if 'https://everthorn.fandom.com/wiki/' in " ".join(value):
                 profile[str(ctx.author.id)]['fields']['wiki'] = " ".join(value)
             else:
                 await ctx.send('Woah there buckaroo! This doesnt look like no wiki link...')
                 wrong_field = True
 
-        elif field.lower() == "bio" or field.lower() == "aboutme":
+        elif section.lower() == "aboutme":
             if len(" ".join(value)) <= 250:
                 profile[str(ctx.author.id)]['fields']['biography'] = " ".join(value)
             else:
                 await ctx.send('This looks like it is more than 30 words! (over 250 characters)')
                 wrong_field = True
 
-        elif field.lower() == "lore" or field.lower() == "story":
+        elif section.lower() == "lore":
             if len(" ".join(value)) <= 250:
                 profile[str(ctx.author.id)]['fields']['lore'] = " ".join(value)
             else:
@@ -138,7 +141,7 @@ class Profile(commands.Cog):
                 wrong_field = True
 
         else:
-            await help.Help.profile(self, ctx)
+            await help.Help.help(self, ctx, 'profile')
             wrong_field = True
 
         if not wrong_field:
@@ -148,7 +151,8 @@ class Profile(commands.Cog):
             pr_file.close()
             await Profile.profile(self, ctx)
 
-    @profile.command(help="Show a category on your profile")
+    @profile.command(help="Show a category on your profile. The section can be: Aboutme, Activity, Information, Wiki or"
+                          " Lore", usage="<category>")
     async def show(self, ctx, category=None):
         profile_update(ctx.author)
         pr_file = open('./../thorny_data/profiles.json', 'r+')
@@ -158,7 +162,7 @@ class Profile(commands.Cog):
         if category.lower() == "aboutme":
             profile[str(ctx.author.id)]['is_shown']['aboutme'] = True
 
-        elif category.lower() == "bio" or category.lower() == "activity":
+        elif category.lower() == "activity":
             profile[str(ctx.author.id)]['is_shown']['activity'] = True
 
         elif category.lower() == "information" or category.lower() == "info":
@@ -167,11 +171,11 @@ class Profile(commands.Cog):
         elif category.lower() == "wiki":
             profile[str(ctx.author.id)]['is_shown']['wiki'] = True
 
-        elif category.lower() == "lore" or category.lower() == "story":
+        elif category.lower() == "lore":
             profile[str(ctx.author.id)]['is_shown']['character_story'] = True
 
         else:
-            await help.Help.profile(self, ctx)
+            await help.Help.help(self, ctx, 'profile')
             wrong_field = True
 
         if not wrong_field:
@@ -181,7 +185,8 @@ class Profile(commands.Cog):
             pr_file.close()
             await Profile.profile(self, ctx)
 
-    @profile.command(help="Hide a category on your profile")
+    @profile.command(help="Hide a category on your profile. The section can be: Aboutme, Activity, Information, Wiki or"
+                          " Lore", usage="<category>")
     async def hide(self, ctx, category=None):
         profile_update(ctx.author)
         pr_file = open('./../thorny_data/profiles.json', 'r+')
@@ -191,7 +196,7 @@ class Profile(commands.Cog):
         if category.lower() == "aboutme":
             profile[str(ctx.author.id)]['is_shown']['aboutme'] = False
 
-        elif category.lower() == "bio" or category.lower() == "activity":
+        elif category.lower() == "activity":
             profile[str(ctx.author.id)]['is_shown']['activity'] = False
 
         elif category.lower() == "information" or category.lower() == "info":
@@ -200,11 +205,11 @@ class Profile(commands.Cog):
         elif category.lower() == "wiki":
             profile[str(ctx.author.id)]['is_shown']['wiki'] = False
 
-        elif category.lower() == "lore" or category.lower() == "story":
+        elif category.lower() == "story":
             profile[str(ctx.author.id)]['is_shown']['character_story'] = False
 
         else:
-            await help.Help.profile(self, ctx)
+            await help.Help.help(self, ctx, 'profile')
             wrong_field = True
 
         if not wrong_field:
@@ -213,6 +218,36 @@ class Profile(commands.Cog):
             json.dump(profile, pr_file, indent=3)
             pr_file.close()
             await Profile.profile(self, ctx)
+
+    @profile.command(help="See all of the sections in the profile, and how to edit them!")
+    async def sections(self, ctx):
+        help_embed = discord.Embed(colour=0xCF9FFF)
+        help_embed.add_field(name=":question: **Profile Help**",
+                             value=f"**!profile [@player]** - View your or a player's profile\n"
+                                   f"**!profile edit <field> <value>** - Edit what a certain field says on your profile"
+                                   f"\n**!profile show <category>** - Show a category on your profile\n"
+                                   f"**!profile hide <category>** - Hide a category on your profile")
+        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
+                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
+                                   f"**Slogan** - The top part of the profile | Max. 5 words\n"
+                                   f"**Gamertag** - Your Minecraft Gamertag\n"
+                                   f"**Town** - The town you live in | Max. 25 characters\n"
+                                   f"**Role** - Your role in your kingdom | Max. 5 words\n"
+                                   f"**Birthday** - Your Birthday | Format: DD Month YYYY\n"
+                                   f"**Wiki** - Featured Wiki Article | Send in the whole link!\n"
+                                   f"**Aboutme** - Your Bio | Max. 30 words\n"
+                                   f"**Lore** - Your In-Game Character Lore | Max. 30 words",
+                             inline=False)
+        help_embed.add_field(name=":lock_with_ink_pen: **Categories to Show/Hide**",
+                             value=f"You can choose to show/hide the following categories:\n\n"
+                                   f"**Information/Info** - General info about you\n"
+                                   f"**Activity** - Your activity statistics\n"
+                                   f"**Wiki** - Your featured wiki article\n"
+                                   f"**Aboutme** - Your bio\n"
+                                   f"**Lore** - Your In-Game Character lore",
+                             inline=False)
+        help_embed.set_footer(text=f"Use !help profile to see more help")
+        await ctx.send(embed=help_embed)
 
     @commands.command(help="Set your birthday | Format: DD Month YYYY")
     async def birthday(self, ctx, day, month, year=None):

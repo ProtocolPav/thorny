@@ -3,6 +3,7 @@ import json
 import discord
 from discord.ext import commands
 from modules import help
+import functions
 
 
 gateway_0 = f'''
@@ -109,7 +110,7 @@ class Gateway(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['gate', 'g', 'ga'], help="The Unified Information Command!")
+    @commands.command(aliases=['gate', 'g'], help="The Unified Information Command!")
     async def gateway(self, ctx, number=None):
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)
@@ -131,7 +132,7 @@ class Gateway(commands.Cog):
             send_text = gateway_0
         await ctx.send(send_text)
 
-    @commands.command(help="CM Only | Change the ruler within the Gateway Command")
+    @commands.command(help="CM Only | Change the ruler within the Gateway Command", hidden=True)
     @commands.has_permissions(administrator=True)
     async def newruler(self, ctx, kingdom, *ruler):
         config['kingdoms'][f'{kingdom.lower()}']['ruler'] = f'{" ".join(ruler)}'
@@ -317,7 +318,7 @@ class Gateway(commands.Cog):
 
         await ctx.send(embed=kingdom_embed)
 
-    @commands.command()
+    @commands.command(help="Ruler Only | Edit what your Kingdom Command says", aliases=['kingdom'])
     @commands.has_role('Ruler')
     async def kedit(self, ctx, field=None, *value):
         kingdom = 'None'
@@ -325,7 +326,7 @@ class Gateway(commands.Cog):
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
                 kingdom = item.lower()
-                profile_update(user, kingdom, "kingdom")
+                functions.profile_update(user, kingdom, "kingdom")
 
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)
