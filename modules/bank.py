@@ -38,9 +38,10 @@ class Bank(commands.Cog):
             bal_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
                                 value=f"**<:Nug:884320353202081833>{kingdom_json[kingdom]}**",
                                 inline=False)
+            bal_embed.set_footer(text="You can use !inventory or !inv too")
             await ctx.send(embed=bal_embed)
 
-    @commands.command(aliases=['amoney'], help="CM Only | Add money to a player's balance")
+    @commands.command(aliases=['amoney'], help="CM Only | Add money to a player's balance", hidden=True)
     @commands.has_permissions(administrator=True)
     async def addmoney(self, ctx, user: discord.User, amount):
         profile_update(user)
@@ -51,7 +52,7 @@ class Bank(commands.Cog):
         profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now {amount}")
 
-    @commands.command(aliases=['rmoney'], help="CM Only | Remove money from a player's balance")
+    @commands.command(aliases=['rmoney'], help="CM Only | Remove money from a player's balance", hidden=True)
     @commands.has_permissions(administrator=True)
     async def removemoney(self, ctx, user: discord.User, amount):
         profile_update(user)
@@ -62,7 +63,7 @@ class Bank(commands.Cog):
         profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now {amount}")
 
-    @commands.command(help="Pay a player using nugs")
+    @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]")
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
         if ctx.channel == self.client.get_channel(700293298652315648):
             profile_file = open('./../thorny_data/profiles.json', 'r+')
@@ -139,11 +140,7 @@ class Bank(commands.Cog):
         elif profile[f'{ctx.author.id}']['balance'] - int(amount) < 0:
             await ctx.send(embed=errors.Treasury.store_lack_nugs_error)
 
-    @treasury.command(help="Equivalent to !lb treasuries")
-    async def search(self, ctx):
-        await Leaderboards.treasuries(self, ctx)
-
-    @treasury.command(help="Ruler Only | Take money from the treasury")
+    @treasury.command(help="Ruler Only | Take money from the treasury", usage="<amount>")
     @commands.has_role('Ruler')
     async def take(self, ctx, amount=None):
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r+')
@@ -183,7 +180,7 @@ class Bank(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             await ctx.send(embed=errors.Treasury.ruler_error)
 
-    @treasury.command(help="Ruler Only | Pay someone using treasury funds")
+    @treasury.command(help="Ruler Only | Pay someone using treasury funds", usage="<user> <amount> [reason...]")
     @commands.has_role('Ruler')
     async def spend(self, ctx, user: discord.User, amount=None, *reason):
         profile_file = open('./../thorny_data/profiles.json', 'r+')
