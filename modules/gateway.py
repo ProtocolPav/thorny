@@ -153,15 +153,15 @@ class Gateway(commands.Cog):
                                       f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
                                       f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
                                       f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
-        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
-                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
-                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
-                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
-                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        # kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+        #                         value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+        #                               f"**Citizen Balances:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+        #                               f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+        #                               f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+        #                               f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+        #                               f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
         kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
                                 value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
                                 inline=False)
@@ -189,15 +189,15 @@ class Gateway(commands.Cog):
                                       f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
                                       f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
                                       f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
-        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
-                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
-                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
-                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
-                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        # kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+        #                         value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+        #                               f"**Citizen Balances:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+        #                               f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+        #                               f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+        #                               f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+        #                               f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
         kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
                                 value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
                                 inline=False)
@@ -225,15 +225,15 @@ class Gateway(commands.Cog):
                                       f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
                                       f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
                                       f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
-        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
-                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
-                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
-                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
-                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        # kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+        #                         value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+        #                               f"**Citizen Balances:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+        #                               f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+        #                               f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+        #                               f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+        #                               f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
         kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
                                 value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
                                 inline=False)
@@ -261,15 +261,15 @@ class Gateway(commands.Cog):
                                       f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
                                       f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
                                       f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
-        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
-                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
-                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
-                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
-                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        # kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+        #                         value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+        #                               f"**Citizen Balances:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+        #                               f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+        #                               f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+        #                               f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+        #                               f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
         kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
                                 value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
                                 inline=False)
@@ -297,15 +297,15 @@ class Gateway(commands.Cog):
                                       f"**Kingdom Borders:** {config['kingdoms'][kingdom]['borders']}\n"
                                       f"**Government:** {config['kingdoms'][kingdom]['government']}\n"
                                       f"**Alliances:** {config['kingdoms'][kingdom]['alliances']}")
-        kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
-                                value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
-                                      f"**Citizen Balances:** <:Nug:884320353202081833>"
-                                      f"{config['kingdoms'][kingdom]['nugs_total']}\n"
-                                      f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
-                                      f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
-                                      f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
-                                      f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
+        # kingdom_embed.add_field(name=f":bar_chart: **Statistics**",
+        #                         value=f"**Kingdom Treasury:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_treasury']}\n"
+        #                               f"**Citizen Balances:** <:Nug:884320353202081833>"
+        #                               f"{config['kingdoms'][kingdom]['nugs_total']}\n"
+        #                               f"**Kingdom Activity:** {config['kingdoms'][kingdom]['playtime_total']}\n"
+        #                               f"**Members:** {config['kingdoms'][kingdom]['members']}\n"
+        #                               f"**Popularity Poll Rating:** {config['kingdoms'][kingdom]['poll_ratings']}\n"
+        #                               f"**Started On:** {config['kingdoms'][kingdom]['created_on']}")
         kingdom_embed.add_field(name=f"**Kingdom Wiki Page**",
                                 value=f"{config['kingdoms'][kingdom]['wiki.gov']}",
                                 inline=False)
