@@ -5,7 +5,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands, tasks
 
-from functions import profile_update, profile_change_months, birthday_announce, tip_send
+from functions import profile_update, profile_change_months, birthday_announce
 import errors
 import json
 from modules import leaderboard, gateway, bank, playtime, profile, help, fun, inventory
@@ -23,7 +23,8 @@ elif ans == 'd':
 else:
     print('This is not a valid Token. Please run the program again.')
 
-thorny = commands.Bot(command_prefix='!', case_insensitive=True)
+intents = discord.Intents.all()
+thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
 thorny.remove_command('help')
 
 
@@ -37,23 +38,9 @@ async def on_ready():
 
 
 @thorny.command()
-async def update(ctx, user: discord.User, key1, *value):
-    print(user, key1, value)
-    profile_update(user, ','.join(value), key1)
-    await ctx.send(f"Updated {user}'s {key1} to be {value}")
-
-
-@thorny.command()
 async def version(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
                    f"{version_json['nickname']}")
-
-
-@thorny.command()
-@commands.has_permissions(administrator=True)
-async def setprefix(ctx, prefix):
-    thorny.command_prefix = prefix
-    await ctx.send(f"Prefix changed to `{prefix}`")
 
 
 @thorny.event
@@ -70,7 +57,11 @@ async def on_message(message):
 
 @thorny.event
 async def on_member_join(member):
-    profile_update(member, datetime.now(), 'date_joined')
+    profile_update(member, datetime.now().replace(microsecond=0), 'date_joined')
+
+@thorny.event()
+async def on_guild_join():
+    pass
 
 
 thorny.add_cog(bank.Bank(thorny))

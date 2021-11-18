@@ -1,10 +1,11 @@
 {
-  "version": "v1.4.3",
-  "nickname": "Cere",
+  "version": "v1.5",
+  "nickname": "Coldharber",
   "notable_changes": {
-    "1": "Created a proper interface for the help command, making it even more helpful than before!",
-    "2": "inventory.py now exists",
-    "3": "Some Inventory and store features from Issue #17 added",
-    "4": "New tips.json, and new tips posted every 3 days"
+    "1": "Added a new UI for inventories",
+    "2": "Added a new lottery system",
+    "3": "Fixed some bugs with !help and !inventory",
+    "4": "Temporarily removed the Statistics section from Kingdom Commands",
+    "5": "Added a primitive joined_on function. Simply creates and updates their profile"
   }
 }
