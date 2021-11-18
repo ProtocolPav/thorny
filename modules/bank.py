@@ -21,7 +21,7 @@ class Bank(commands.Cog):
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
                 kingdom = item.lower()
-                profile_update(user, kingdom, "kingdom")
+            profile_update(user, kingdom, "kingdom")
 
         profile_file = open('./../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)

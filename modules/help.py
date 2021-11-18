@@ -15,10 +15,10 @@ class Help(commands.Cog):
     @commands.group(aliases=['hlp', 'ask'], invoke_without_command=True, help="Access the Thorny Help Center")
     async def help(self, ctx, cmd=None):
         help_dict = {"CM": {}}
+        hidden_num = 1
         for cog in self.client.cogs:
             help_dict[f"{cog}"] = {}
             cmd_num = 1
-            hidden_num = 1
             for command in self.client.get_cog(cog).get_commands():
                 if isinstance(command, commands.Group):
                     if command.signature == "" and not command.hidden:
@@ -40,22 +40,22 @@ class Help(commands.Cog):
                         hidden_num += 1
                     for subcommand in command.walk_commands():
                         cmd_num += 1
-                        if subcommand.signature == "" and not command.hidden:
+                        if subcommand.signature == "" and not subcommand.hidden:
                             help_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
                                                                  "usage": "",
                                                                  "alias": subcommand.aliases,
                                                                  "desc": subcommand.help}
-                        elif not command.hidden:
+                        elif not subcommand.hidden:
                             help_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
                                                                  "usage": subcommand.signature,
                                                                  "alias": subcommand.aliases,
                                                                  "desc": subcommand.help}
                         else:
                             cmd_num -= 1
-                            help_dict["CM"][str(hidden_num)] = {"name": command.name,
-                                                                "usage": command.signature,
-                                                                "alias": command.aliases,
-                                                                "desc": command.help}
+                            help_dict["CM"][str(hidden_num)] = {"name": f"{command.name} {subcommand.name}",
+                                                                "usage": subcommand.signature,
+                                                                "alias": subcommand.aliases,
+                                                                "desc": subcommand.help}
                             hidden_num += 1
                 else:
                     if command.signature == "" and not command.hidden:
@@ -84,7 +84,7 @@ class Help(commands.Cog):
                                        color=0xCF9FFF)
             help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
             for cog in self.client.cogs:
-                if cog == "CM":
+                if cog in ["CM", "Setup"]:
                     pass
                 else:
                     if len(help_dict[f"{cog}"]) == 3:
@@ -172,7 +172,7 @@ class Help(commands.Cog):
         else:
             await ctx.send(f"Hmm... Looks like this command doesn't exist, or you didn't Capitalize the Category!")
 
-    @help.command()
+    @help.command(help="Get help on editing the Kingdom Command")
     async def kingdoms(self, ctx):
         help_embed = discord.Embed(colour=0xCF9FFF)
         help_embed.add_field(name=":question: **Kingdom Help**",
@@ -193,14 +193,19 @@ class Help(commands.Cog):
         help_embed.set_footer(text=f"Use !help kingdoms to access this!")
         await ctx.send(embed=help_embed)
 
-    @commands.command()
+    @commands.command(help="Get a random tip!")
     async def tip(self, ctx, number=None):
         tip = json.load(open('./../thorny_data/tips.json', 'r'))
         tip_embed = discord.Embed(color=0xCF9FFF)
         if number is None:
-            number = str(random.randint(1,len(tip['tips'])))
+            number = str(random.randint(1, len(tip['tips'])))
         tip_embed.add_field(name=f"Pro Tip!",
                             value=tip['tips'][number])
         tip_embed.set_footer(text=f"Tip {number}/{len(tip['tips'])} | Use !tip [number] to get a tip!")
         await ctx.send(embed=tip_embed)
 
+    @commands.command(aliases=["form"], help="Get a link to the EverForms")
+    async def everforms(self, ctx):
+        await ctx.send(f"**Here's a link!**\n"
+                       f"EverForms is the unified way to submit different forms!\n"
+                       f"https://forms.gle/kTaB7NN2gkpzWmcs7")
