@@ -255,6 +255,16 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     json.dump(profile, profile_file, indent=3)
 
 
+def get_user_kingdom(ctx, user):
+    kingdom = 'None'
+    kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+    for item in kingdoms_list:
+        if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
+            kingdom = item.lower()
+    profile_update(user, kingdom, "kingdom")
+    return kingdom
+
+
 def activity_set(ctx_author, value, time_to_add):
     file = open('../thorny_data/profiles.json', 'r+')
     profile_json = json.load(file)
