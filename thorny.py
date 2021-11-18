@@ -1,27 +1,23 @@
 import asyncio
-import random
 from datetime import datetime
 
 import discord
 from discord.ext import commands, tasks
 
-from functions import profile_update, profile_change_months, birthday_announce
+import functions as func
 import errors
 import json
-from modules import leaderboard, gateway, bank, playtime, profile, help, fun, inventory
+from modules import bank, fun, gateway, help, inventory, leaderboard, playtime, profile, setup
 
-config_file = open('../thorny_data/config.json', 'r+')
-config = json.load(config_file)
-version_json = json.load(open('version.json', 'r'))
-v = version_json["version"]
+config = json.load(open('../thorny_data/config.json', 'r+'))
+vers = json.load(open('version.json', 'r'))
+v = vers["version"]
 
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
     TOKEN = config["token"]
 elif ans == 'd':
     TOKEN = config["dev_token"]
-else:
-    print('This is not a valid Token. Please run the program again.')
 
 intents = discord.Intents.all()
 thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
@@ -32,15 +28,15 @@ thorny.remove_command('help')
 async def on_ready():
     print(f"[ONLINE] {thorny.user}\nRunning {v}\nDate is {datetime.now()}")
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
-                                    name=f"for !help | {v}")
+                                    name=f"you... | {v}")
     await thorny.change_presence(activity=bot_activity)
-    await profile_change_months()
+    await func.profile_change_months()
 
 
 @thorny.command()
 async def version(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                   f"{version_json['nickname']}")
+                   f"{vers['nickname']}")
 
 
 @thorny.event
@@ -57,9 +53,10 @@ async def on_message(message):
 
 @thorny.event
 async def on_member_join(member):
-    profile_update(member, datetime.now().replace(microsecond=0), 'date_joined')
+    func.profile_update(member, datetime.now().replace(microsecond=0), 'date_joined')
 
-@thorny.event()
+
+@thorny.event
 async def on_guild_join():
     pass
 
