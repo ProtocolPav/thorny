@@ -56,9 +56,17 @@ class Treasury:
 
 
 class Shop:
-    ticket_buy_error = discord.Embed(color=0xD70040)
-    ticket_buy_error.add_field(name=f'Not today buddy...',
-                               value="I'm really sorry, but tickets can only be bought from the 19th till the 25th!")
+    item_error = discord.Embed(color=0xD70040)
+    item_error.add_field(name=f'Hey...',
+                         value="This item doesn't exist! To see what items DO exist, use `!store`")
+
+    faulty_ticket_error = discord.Embed(color=0xD70040)
+    faulty_ticket_error.add_field(name="Oh No!",
+                                  value="You try to scratch the ticket, and realise they sold you a fake!")
+
+    empty_inventory_error = discord.Embed(color=0xD70040)
+    empty_inventory_error.add_field(name="Cheeky.",
+                                    value="You tried redeeming something that you don't even own!")
 
 
 class Leaderboard:

@@ -155,7 +155,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile[str(ctx_author.id)]['user'] = f"{ctx_author}"  # Always updates name
 
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
-        profile[str(ctx_author.id)]['balance'] = 25
+        profile[str(ctx_author.id)]['balance'] = 30
 
     if profile[f'{ctx_author.id}'].get('kingdom') is None:  # Kingdom
         profile[str(ctx_author.id)]['kingdom'] = 'None'
@@ -178,20 +178,21 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('fields') is None:  # Profile Fields
         profile[f'{ctx_author.id}']['fields'] = {}
     if profile[f'{ctx_author.id}']['fields'].get('slogan') is None:
-        profile[f'{ctx_author.id}']['fields']['slogan'] = "Here Goes 5 Word Slogan"
+        profile[f'{ctx_author.id}']['fields']['slogan'] = "A 5 Word Slogan About You"
     if profile[f'{ctx_author.id}']['fields'].get('biography') is None:
-        profile[f'{ctx_author.id}']['fields']['biography'] = "Here Goes Your Max. 30 Word Bio"
+        profile[f'{ctx_author.id}']['fields']['biography'] = "About you! Write something fun and interesting! " \
+                                                             "Max. 30 words!"
     if profile[f'{ctx_author.id}']['fields'].get('role') is None:
         profile[f'{ctx_author.id}']['fields']['role'] = "Your Role in your kingdom " \
                                                         "(King, Citizen, PoorMan, Council Member, Etc.)"
     if profile[f'{ctx_author.id}']['fields'].get('lore') is None:
-        profile[f'{ctx_author.id}']['fields']['lore'] = "Lore about your in-game character here. Max. 30 Words"
+        profile[f'{ctx_author.id}']['fields']['lore'] = "What's your in game character like? Max. 30 words!"
     if profile[f'{ctx_author.id}']['fields'].get('wiki') is None:
         profile[f'{ctx_author.id}']['fields']['wiki'] = "https://everthorn.fandom.com/wiki/ Your Featured Page"
     if profile[f'{ctx_author.id}']['fields'].get('town') is None:
-        profile[f'{ctx_author.id}']['fields']['town'] = "Your Town"
+        profile[f'{ctx_author.id}']['fields']['town'] = "WHat town you live in?"
     if profile[f'{ctx_author.id}']['fields'].get('gamertag') is None:
-        profile[f'{ctx_author.id}']['fields']['gamertag'] = "Your Minecraft Gamertag"
+        profile[f'{ctx_author.id}']['fields']['gamertag'] = "What's your MC Gamertag?"
 
     if profile[f'{ctx_author.id}'].get('is_shown') is None:  # Profile Is_Shown
         profile[f'{ctx_author.id}']['is_shown'] = {}
@@ -317,6 +318,25 @@ async def profile_change_months():
         await asyncio.sleep(seconds_until_1st())
         month_change()
         await asyncio.sleep(60)
+
+
+def calculate_prizes(prize_list, prizes):
+    nugs_reward = 0
+    for item in prize_list:
+        nugs_reward += item[1]
+    if prizes == prize_list:
+        nugs_reward = nugs_reward*2
+    elif [prizes[0]]*5 == prize_list:
+        nugs_reward = nugs_reward*3
+    elif [prizes[1]]*5 == prize_list:
+        nugs_reward = nugs_reward*3
+    elif [prizes[2]]*5 == prize_list:
+        nugs_reward = nugs_reward*3
+    elif [prizes[3]]*5 == prize_list:
+        nugs_reward = nugs_reward*3
+    elif [prizes[4]]*5 == prize_list:
+        nugs_reward = nugs_reward*3
+    return nugs_reward
 
 
 async def birthday_announce():
