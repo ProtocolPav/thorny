@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 import json
 from functions import profile_update, calculate_prizes
+import functions as func
 import errors
 import random
 from datetime import datetime, timedelta
-from lottery import create_ticket, winners
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -17,32 +17,30 @@ class Inventory(commands.Cog):
     @commands.group(aliases=['inv'], invoke_without_command=True, help="See your or a person's Inventory")
     async def inventory(self, ctx, user: discord.Member = None):
         if user is None:
-            person = ctx.author
-        else:
-            person = user
+            user = ctx.author
 
-        profile_update(person)
-        kingdom = 'None'
-        kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
-        for item in kingdoms_list:
-            if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in person.roles:
-                kingdom = item.lower()
-            profile_update(person, kingdom, "kingdom")
+        func.profile_update(user)
+        kingdom = func.get_user_kingdom(ctx, user)
 
         profile_json = json.load(open('./../thorny_data/profiles.json', 'r'))
         kingdom_json = json.load(open('./../thorny_data/kingdoms.json', 'r+'))
         inventory_list = ''
         for slot in range(1, 10):
-            inv_slot = profile_json[f"{person.id}"]["inventory"][f"slot{slot}"]
+            inv_slot = profile_json[f"{user.id}"]["inventory"][f"slot{slot}"]
             inventory_list = f'{inventory_list}<:ar_ye:862635275837243402> ' \
                              f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
         inventory_embed = discord.Embed(colour=0xF5DF4D)
-        inventory_embed.set_author(name=person, icon_url=person.avatar_url)
-        inventory_embed.add_field(name="**Financials**",
-                                  value=f"**Personal Balance:** "
-                                        f"<:Nug:884320353202081833>{profile_json[f'{person.id}']['balance']}\n"
-                                        f"**{profile_json[f'{person.id}']['kingdom'].capitalize()} Treasury:** "
-                                        f"<:Nug:884320353202081833>{kingdom_json[profile_json[f'{person.id}']['kingdom']]}")
+        inventory_embed.set_author(name=user, icon_url=user.avatar_url)
+        if kingdom == "None":
+            inventory_embed.add_field(name="**Financials**",
+                                      value=f"**Personal Balance:** "
+                                            f"<:Nug:884320353202081833>{profile_json[f'{user.id}']['balance']}\n")
+        else:
+            inventory_embed.add_field(name="**Financials**",
+                                      value=f"**Personal Balance:** "
+                                            f"<:Nug:884320353202081833>{profile_json[f'{user.id}']['balance']}\n"
+                                            f"**{kingdom.capitalize()} Treasury:** "
+                                            f"<:Nug:884320353202081833>{kingdom_json[kingdom]}")
         inventory_embed.add_field(name=f"**Inventory**", value=inventory_list, inline=False)
         inventory_embed.set_footer(text="Use !redeem <item> to redeem Roles & Tickets!")
         await ctx.send(embed=inventory_embed)
@@ -225,8 +223,8 @@ class Inventory(commands.Cog):
                                    ":tangerine: - 5 nugs, <:grassyE:840170557508026368> - 7 nugs,"
                                    " <:goldenE:857714717153689610> - 14 nugs\n\n"
                                    "**Jackpot**\n"
-                                   "When you get 1 of every icon, you get double the prize!\n\n"
+                                   "When you get 1 of every icon, you get 3x the prize!\n\n"
                                    "**Exquisite**\n"
-                                   "When you get 5 of the same icon, you get 3x the prize!\n\n"
+                                   "When you get 5 of the same icon, you get 4x the prize!\n\n"
                                    "Nugs are added automatically!", inline=False)
         await ctx.send(embed=help_embed)

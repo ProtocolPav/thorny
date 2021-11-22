@@ -25,7 +25,7 @@ class Leaderboard(commands.Cog):
                                           "Aliases are separated by a /")
         await ctx.send(embed=leaderboard_embed)
 
-    @leaderboard.command(aliases=['act'], help="See the activity leaderboard")
+    @leaderboard.command(aliases=['act'], help="See the Activity leaderboard")
     async def activity(self, ctx, month=None, page=None):
         if month is None:
             month = datetime.now().strftime("%B").lower()
@@ -82,8 +82,8 @@ class Leaderboard(commands.Cog):
             else:
                 await ctx.send(embed=errors.Leaderboard.month_syntax_error)
 
-    @leaderboard.command(aliases=['tries'], help="See the Treasury Leaderboard")
-    async def treasuries(self, ctx):
+    @leaderboard.command(aliases=['tres'], help="See the Treasury Leaderboard")
+    async def treasury(self, ctx):
         kingdom_file = open('./../thorny_data/kingdoms.json', 'r')
         kingdom_dict = json.load(kingdom_file)
         lb_to_send = f'Ambria • **<:Nug:884320353202081833>{kingdom_dict["ambria"]}**\n' \
