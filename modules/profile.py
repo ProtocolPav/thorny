@@ -38,8 +38,10 @@ class Profile(commands.Cog):
         profile_embed.set_author(name=user, icon_url=user.avatar_url)
         profile_embed.set_thumbnail(url=user.avatar_url)
         if profile[f'{user.id}']['is_shown']['information']:
-            date_joined = datetime.strptime(profile[f'{user.id}']['date_joined'], "%Y-%m-%d %H:%M:%S")
-            date_joined = datetime.strftime(date_joined, "%B %d %Y")
+            date_joined = "DM Pav to set up!"
+            if profile[f'{user.id}']['date_joined'] != "":
+                date_joined = datetime.strptime(profile[f'{user.id}']['date_joined'], "%Y-%m-%d %H:%M:%S")
+                date_joined = datetime.strftime(date_joined, "%B %d %Y")
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"**Gamertag:** {profile[f'{user.id}']['fields']['gamertag']}\n"
                                           f"**Kingdom:** {profile[f'{user.id}']['kingdom'].capitalize()}\n"
@@ -270,6 +272,12 @@ class Profile(commands.Cog):
         profile_update(ctx.author, f"{date}", 'birthday', 'display')
         profile_update(ctx.author, f"{date_system}", 'birthday', 'system')
         await ctx.send(f"Your Birthday is set to: **{date}**")
+
+    @profile.command(help="CM Only | Update some sections of people's profiles", hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def set(self, ctx, user: discord.Member, key, *value):
+        profile_update(user, " ".join(value), f"{key}")
+        await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
 
 
 
