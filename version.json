@@ -6,6 +6,8 @@
     "2": "Added a new lottery system",
     "3": "Fixed some bugs with !help and !inventory",
     "4": "Temporarily removed the Statistics section from Kingdom Commands",
-    "5": "Added a primitive joined_on function. Simply creates and updates their profile"
+    "5": "Added joined_on function. Simply creates and updates their profile",
+    "6": "Began phasing out Gateway",
+    "7": "Made !bal and !inventory not require kingdom roles"
   }
 }
