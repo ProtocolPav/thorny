@@ -149,6 +149,9 @@ def write_log(status: str, datetime, ctx):
 def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('../thorny_data/profiles.json', 'r+')
     profile = json.load(profile_file)
+    id = f'{ctx_author.id}'
+    guild = f'{ctx_author.guild.id}'
+
     if profile.get(f'{ctx_author.id}') is None:  # User ID search
         profile[str(ctx_author.id)] = {"user": f"{ctx_author}"}
 
@@ -293,14 +296,12 @@ def activity_set(ctx_author, value, time_to_add):
     return formatted_new_total
 
 
-def month_change():
+def month_switcher():
     if date.today().day == 1:
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         for player in profile:
-            if profile[player]["user"] == "Template":
-                pass
-            else:
+            if profile[player]["user"] != "Template":
                 profile[player]["activity"]["2_months_ago"] = profile[player]["activity"]["1_month_ago"]
                 profile[player]["activity"]["1_month_ago"] = profile[player]["activity"]["current_month"]
                 profile[player]["activity"]["current_month"] = "0h00m"
@@ -308,25 +309,25 @@ def month_change():
         profile_file.truncate(0)
         profile_file.seek(0)
         json.dump(profile, profile_file, indent=3)
+        print(f"[ACTION] Months successfully switched in all user profiles")
     else:
-        print(f"{date.today()} is not the 1st of the Month")
+        print(f"[ERROR] {date.today()} is not the 1st of the Month")
 
 
-def seconds_until_1st():
-    date = datetime.now() + timedelta(days=31)
-    date_1st = str(date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
-    date_1st = datetime.strptime(date_1st, "%Y-%m-%d %H:%M:%S.%f")
-    time = date_1st - datetime.now()
-    time_seconds = time.total_seconds()
-    return time_seconds
+async def month_checker():
+    def seconds_until_next_month():
+        current_date = datetime.now() + timedelta(days=31)
+        next_months_date = str(current_date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
+        next_months_date = datetime.strptime(next_months_date, "%Y-%m-%d %H:%M:%S.%f")
+        time_until_next_month = next_months_date - datetime.now()
+        time_in_seconds = time_until_next_month.total_seconds()
+        return time_in_seconds
 
-
-async def profile_change_months():
     while True:
-        print(f"Month change in {timedelta(seconds=seconds_until_1st())}"
-              f" ({datetime.now() + timedelta(seconds=seconds_until_1st())})")
-        await asyncio.sleep(seconds_until_1st())
-        month_change()
+        print(f"[SERVER] Next month switch is in {timedelta(seconds=seconds_until_next_month())}"
+              f" (Date: {datetime.now() + timedelta(seconds=seconds_until_next_month())})")
+        await asyncio.sleep(seconds_until_next_month())
+        month_switcher()
         await asyncio.sleep(60)
 
 
@@ -335,17 +336,17 @@ def calculate_prizes(prize_list, prizes):
     for item in prize_list:
         nugs_reward += item[1]
     if prizes == prize_list:
-        nugs_reward = nugs_reward*2
-    elif [prizes[0]]*5 == prize_list:
-        nugs_reward = nugs_reward*3
-    elif [prizes[1]]*5 == prize_list:
-        nugs_reward = nugs_reward*3
-    elif [prizes[2]]*5 == prize_list:
-        nugs_reward = nugs_reward*3
-    elif [prizes[3]]*5 == prize_list:
-        nugs_reward = nugs_reward*3
-    elif [prizes[4]]*5 == prize_list:
-        nugs_reward = nugs_reward*3
+        nugs_reward = nugs_reward * 3
+    elif [prizes[0]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[1]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[2]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[3]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[4]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
     return nugs_reward
 
 

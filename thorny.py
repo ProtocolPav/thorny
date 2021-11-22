@@ -26,11 +26,11 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    print(f"[ONLINE] {thorny.user}\nRunning {v}\nDate is {datetime.now()}")
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"you... | {v}")
+    print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
-    await func.profile_change_months()
+    await func.month_checker()
 
 
 @thorny.command()
@@ -53,18 +53,20 @@ async def on_message(message):
 
 @thorny.event
 async def on_member_join(member):
-    func.profile_update(member, datetime.now().replace(microsecond=0), 'date_joined')
+    func.profile_update(member, f'{datetime.now().replace(microsecond=0)}', 'date_joined')
+    print(f"{member} joined")
+    await gateway.Information.new(thorny, member)
 
 
 @thorny.event
-async def on_guild_join():
-    pass
+async def on_guild_join(guild):
+    print("I joined" + guild)
 
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
-thorny.add_cog(gateway.Gateway(thorny))
+thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
 #thorny.add_cog(fun.Fun(thorny))
