@@ -25,7 +25,7 @@ class Leaderboard(commands.Cog):
                                           "Aliases are separated by a /")
         await ctx.send(embed=leaderboard_embed)
 
-    @leaderboard.command(aliases=['act'], help="See the activity leaderboard")
+    @leaderboard.command(aliases=['act'], help="See the Activity leaderboard")
     async def activity(self, ctx, month=None, page=None):
         if month is None:
             month = datetime.now().strftime("%B").lower()
@@ -82,6 +82,23 @@ class Leaderboard(commands.Cog):
             else:
                 await ctx.send(embed=errors.Leaderboard.month_syntax_error)
 
+    @leaderboard.command(aliases=['tres'], help="See the Treasury Leaderboard")
+    async def treasury(self, ctx):
+        kingdom_file = open('./../thorny_data/kingdoms.json', 'r')
+        kingdom_dict = json.load(kingdom_file)
+        lb_to_send = f'Ambria • **<:Nug:884320353202081833>{kingdom_dict["ambria"]}**\n' \
+                     f'Asbahamael • **<:Nug:884320353202081833>{kingdom_dict["asbahamael"]}**\n' \
+                     f'Eireann • **<:Nug:884320353202081833>{kingdom_dict["eireann"]}**\n' \
+                     f'Dalvasha • **<:Nug:884320353202081833>{kingdom_dict["dalvasha"]}**\n' \
+                     f'Stregabor • **<:Nug:884320353202081833>{kingdom_dict["stregabor"]}**\n'
+
+        lb_embed = discord.Embed(title=f'**Kingdom Treasuries**',
+                                 color=0x6495ED)
+        lb_embed.add_field(name=f'\u200b',
+                           value=f"{lb_to_send}")
+        lb_embed.set_footer(text=f'Page 1/1 | Use !leaderboard to see others')
+        await ctx.send(embed=lb_embed)
+
     @leaderboard.command(help="See the Nugs Leaderboard")
     async def nugs(self, ctx, page=None):
         if page is None:
@@ -113,20 +130,3 @@ class Leaderboard(commands.Cog):
                                value=f"{lb_to_send}")
             lb_embed.set_footer(text=f'Page {page}/{math.ceil(len(profile_sorted)/10)} | Use !leaderboard to see others')
             await ctx.send(embed=lb_embed)
-
-    @leaderboard.command(aliases=['tries'], help="See the Treasury Leaderboard")
-    async def treasuries(self, ctx):
-        kingdom_file = open('./../thorny_data/kingdoms.json', 'r')
-        kingdom_dict = json.load(kingdom_file)
-        lb_to_send = f'Ambria • **<:Nug:884320353202081833>{kingdom_dict["ambria"]}**\n' \
-                     f'Asbahamael • **<:Nug:884320353202081833>{kingdom_dict["asbahamael"]}**\n' \
-                     f'Eireann • **<:Nug:884320353202081833>{kingdom_dict["eireann"]}**\n' \
-                     f'Dalvasha • **<:Nug:884320353202081833>{kingdom_dict["dalvasha"]}**\n' \
-                     f'Stregabor • **<:Nug:884320353202081833>{kingdom_dict["stregabor"]}**\n'
-
-        lb_embed = discord.Embed(title=f'**Kingdom Treasuries**',
-                                 color=0x6495ED)
-        lb_embed.add_field(name=f'\u200b',
-                           value=f"{lb_to_send}")
-        lb_embed.set_footer(text=f'Page 1/1 | Use !leaderboard to see others')
-        await ctx.send(embed=lb_embed)
