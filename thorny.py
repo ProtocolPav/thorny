@@ -36,7 +36,7 @@ async def on_ready():
 @thorny.command()
 async def version(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                   f"{vers['nickname']}")
+                   f"{vers['nickname']}\nCurrent Changelog:\n\n{vers['changelogs'][v]}")
 
 
 @thorny.event
