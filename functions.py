@@ -149,13 +149,16 @@ def write_log(status: str, datetime, ctx):
 def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('../thorny_data/profiles.json', 'r+')
     profile = json.load(profile_file)
+    id = f'{ctx_author.id}'
+    guild = f'{ctx_author.guild.id}'
+
     if profile.get(f'{ctx_author.id}') is None:  # User ID search
         profile[str(ctx_author.id)] = {"user": f"{ctx_author}"}
 
     profile[str(ctx_author.id)]['user'] = f"{ctx_author}"  # Always updates name
 
     if profile[f'{ctx_author.id}'].get('balance') is None:  # Balance
-        profile[str(ctx_author.id)]['balance'] = 25
+        profile[str(ctx_author.id)]['balance'] = 30
 
     if profile[f'{ctx_author.id}'].get('kingdom') is None:  # Kingdom
         profile[str(ctx_author.id)]['kingdom'] = 'None'
@@ -178,20 +181,21 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('fields') is None:  # Profile Fields
         profile[f'{ctx_author.id}']['fields'] = {}
     if profile[f'{ctx_author.id}']['fields'].get('slogan') is None:
-        profile[f'{ctx_author.id}']['fields']['slogan'] = "Here Goes 5 Word Slogan"
+        profile[f'{ctx_author.id}']['fields']['slogan'] = "A 5 Word Slogan About You"
     if profile[f'{ctx_author.id}']['fields'].get('biography') is None:
-        profile[f'{ctx_author.id}']['fields']['biography'] = "Here Goes Your Max. 30 Word Bio"
+        profile[f'{ctx_author.id}']['fields']['biography'] = "About you! Write something fun and interesting! " \
+                                                             "Max. 30 words!"
     if profile[f'{ctx_author.id}']['fields'].get('role') is None:
         profile[f'{ctx_author.id}']['fields']['role'] = "Your Role in your kingdom " \
                                                         "(King, Citizen, PoorMan, Council Member, Etc.)"
     if profile[f'{ctx_author.id}']['fields'].get('lore') is None:
-        profile[f'{ctx_author.id}']['fields']['lore'] = "Lore about your in-game character here. Max. 30 Words"
+        profile[f'{ctx_author.id}']['fields']['lore'] = "What's your in game character like? Max. 30 words!"
     if profile[f'{ctx_author.id}']['fields'].get('wiki') is None:
         profile[f'{ctx_author.id}']['fields']['wiki'] = "https://everthorn.fandom.com/wiki/ Your Featured Page"
     if profile[f'{ctx_author.id}']['fields'].get('town') is None:
-        profile[f'{ctx_author.id}']['fields']['town'] = "Your Town"
+        profile[f'{ctx_author.id}']['fields']['town'] = "WHat town you live in?"
     if profile[f'{ctx_author.id}']['fields'].get('gamertag') is None:
-        profile[f'{ctx_author.id}']['fields']['gamertag'] = "Your Minecraft Gamertag"
+        profile[f'{ctx_author.id}']['fields']['gamertag'] = "What's your MC Gamertag?"
 
     if profile[f'{ctx_author.id}'].get('is_shown') is None:  # Profile Is_Shown
         profile[f'{ctx_author.id}']['is_shown'] = {}
@@ -254,6 +258,16 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     json.dump(profile, profile_file, indent=3)
 
 
+def get_user_kingdom(ctx, user):
+    kingdom = 'None'
+    kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+    for item in kingdoms_list:
+        if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
+            kingdom = item.lower()
+    profile_update(user, kingdom, "kingdom")
+    return kingdom
+
+
 def activity_set(ctx_author, value, time_to_add):
     file = open('../thorny_data/profiles.json', 'r+')
     profile_json = json.load(file)
@@ -282,14 +296,12 @@ def activity_set(ctx_author, value, time_to_add):
     return formatted_new_total
 
 
-def month_change():
+def month_switcher():
     if date.today().day == 1:
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         for player in profile:
-            if profile[player]["user"] == "Template":
-                pass
-            else:
+            if profile[player]["user"] != "Template":
                 profile[player]["activity"]["2_months_ago"] = profile[player]["activity"]["1_month_ago"]
                 profile[player]["activity"]["1_month_ago"] = profile[player]["activity"]["current_month"]
                 profile[player]["activity"]["current_month"] = "0h00m"
@@ -297,26 +309,45 @@ def month_change():
         profile_file.truncate(0)
         profile_file.seek(0)
         json.dump(profile, profile_file, indent=3)
+        print(f"[ACTION] Months successfully switched in all user profiles")
     else:
-        print(f"{date.today()} is not the 1st of the Month")
+        print(f"[ERROR] {date.today()} is not the 1st of the Month")
 
 
-def seconds_until_1st():
-    date = datetime.now() + timedelta(days=31)
-    date_1st = str(date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
-    date_1st = datetime.strptime(date_1st, "%Y-%m-%d %H:%M:%S.%f")
-    time = date_1st - datetime.now()
-    time_seconds = time.total_seconds()
-    return time_seconds
+async def month_checker():
+    def seconds_until_next_month():
+        current_date = datetime.now() + timedelta(days=31)
+        next_months_date = str(current_date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
+        next_months_date = datetime.strptime(next_months_date, "%Y-%m-%d %H:%M:%S.%f")
+        time_until_next_month = next_months_date - datetime.now()
+        time_in_seconds = time_until_next_month.total_seconds()
+        return time_in_seconds
 
-
-async def profile_change_months():
     while True:
-        print(f"Month change in {timedelta(seconds=seconds_until_1st())}"
-              f" ({datetime.now() + timedelta(seconds=seconds_until_1st())})")
-        await asyncio.sleep(seconds_until_1st())
-        month_change()
+        print(f"[SERVER] Next month switch is in {timedelta(seconds=seconds_until_next_month())}"
+              f" (Date: {datetime.now() + timedelta(seconds=seconds_until_next_month())})")
+        await asyncio.sleep(seconds_until_next_month())
+        month_switcher()
         await asyncio.sleep(60)
+
+
+def calculate_prizes(prize_list, prizes):
+    nugs_reward = 0
+    for item in prize_list:
+        nugs_reward += item[1]
+    if prizes == prize_list:
+        nugs_reward = nugs_reward * 3
+    elif [prizes[0]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[1]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[2]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[3]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    elif [prizes[4]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 4
+    return nugs_reward
 
 
 async def birthday_announce():

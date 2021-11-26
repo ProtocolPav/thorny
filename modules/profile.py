@@ -18,13 +18,13 @@ class Profile(commands.Cog):
             user = ctx.author
         else:
             pass
+        profile_update(user)
+        kingdom = 'None'
         kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
                 kingdom = item.lower()
-                profile_update(user, kingdom, "kingdom")
-            else:
-                profile_update(user, "None", "kingdom")
+            profile_update(user, kingdom, "kingdom")
 
         profile = json.load(open('./../thorny_data/profiles.json', 'r'))
 
@@ -38,6 +38,10 @@ class Profile(commands.Cog):
         profile_embed.set_author(name=user, icon_url=user.avatar_url)
         profile_embed.set_thumbnail(url=user.avatar_url)
         if profile[f'{user.id}']['is_shown']['information']:
+            date_joined = "DM Pav to set up!"
+            if profile[f'{user.id}']['date_joined'] != "":
+                date_joined = datetime.strptime(profile[f'{user.id}']['date_joined'], "%Y-%m-%d %H:%M:%S")
+                date_joined = datetime.strftime(date_joined, "%B %d %Y")
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"**Gamertag:** {profile[f'{user.id}']['fields']['gamertag']}\n"
                                           f"**Kingdom:** {profile[f'{user.id}']['kingdom'].capitalize()}\n"
@@ -47,7 +51,7 @@ class Profile(commands.Cog):
                                           f"**Balance:** <:Nug:884320353202081833>"
                                           f"{profile[f'{user.id}']['balance']}\n\n"
                                           f"**Birthday:** {profile[f'{user.id}']['birthday']['display']}\n"
-                                          f"**Joined on:** {profile[f'{user.id}']['date_joined']}")
+                                          f"**Joined on:** {date_joined}")
         if profile[f'{user.id}']['is_shown']['activity']:
             profile_embed.add_field(name=f'**:clock8: My Activity**',
                                     value=f"**Latest Playtime:** "
@@ -255,19 +259,25 @@ class Profile(commands.Cog):
 
         if year is not None:
             if 1901 < int(year) < 2020:
-                date = f'{day} {month} {year}'
-                date_system = datetime.strptime(date, "%d %B %Y")
+                date = f'{month} {day} {year}'
+                date_system = datetime.strptime(date, "%B %d %Y")
             else:
                 await ctx.send("Mmmmmm... That is a strange year...")
                 date = 'Use !birthday DD Month YYYY'
                 date_system = None
         else:
-            date = f'{day} {month}'
-            date_system = datetime.strptime(date, "%d %B")
+            date = f'{month} {day}'
+            date_system = datetime.strptime(date, "%B %d")
 
         profile_update(ctx.author, f"{date}", 'birthday', 'display')
         profile_update(ctx.author, f"{date_system}", 'birthday', 'system')
         await ctx.send(f"Your Birthday is set to: **{date}**")
+
+    @profile.command(help="CM Only | Update some sections of people's profiles", hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def set(self, ctx, user: discord.Member, key, *value):
+        profile_update(user, " ".join(value), f"{key}")
+        await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
 
 
 
