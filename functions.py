@@ -216,7 +216,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
             if profile[f'{ctx_author.id}']['inventory'].get(f'slot{slot_number}') is None:
                 profile[f'{ctx_author.id}']['inventory'][f'slot{slot_number}'] = {"item_id": "empty_00",
                                                                                   "amount": 0}
-    elif profile[f'{ctx_author.id}']['inventory'].get(f'slot1_amount') is not None:
+    elif type(profile[f'{ctx_author.id}']['inventory']['slot1']) is not dict:
         old_inventory = profile[f'{ctx_author.id}']['inventory']
         print(old_inventory)
         profile[f'{ctx_author.id}']['inventory'] = {}
@@ -235,7 +235,14 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[str(ctx_author.id)]['user_level'] = {"level": 0,
                                                      "xp": 0,
                                                      "required_xp": 0,
-                                                     "last_message": "0:0:0"}
+                                                     "rank": 0,
+                                                     "last_message": ""}
+
+    profile[str(ctx_author.id)]['user_level'] = {"level": 0,
+                                                 "xp": 0,
+                                                 "required_xp": 0,
+                                                 "rank": 0,
+                                                 "last_message": ""}
 
     if profile[f'{ctx_author.id}'].get('date_joined') is None:  # Date Joined
         profile[f'{ctx_author.id}']['date_joined'] = ''
@@ -248,6 +255,9 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['birthday']['display'] = None
     if profile[f'{ctx_author.id}']['birthday'].get('system') is None:
         profile[f'{ctx_author.id}']['birthday']['system'] = None
+
+    if profile[f'{ctx_author.id}'].get('strikes') is None:
+        profile[f'{ctx_author.id}']['strikes'] = {}
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
