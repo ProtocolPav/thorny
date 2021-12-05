@@ -293,7 +293,7 @@ class Information(commands.Cog):
         for item in kingdoms_list:
             if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in ctx.author.roles:
                 kingdom = item.lower()
-                functions.profile_update(user, kingdom, "kingdom")
+                functions.profile_update(ctx.author, kingdom, "kingdom")
 
         config_file = open('./../thorny_data/config.json', 'r+')
         config = json.load(config_file)

@@ -13,7 +13,7 @@ class Profile(commands.Cog):
         self.client = client
 
     @commands.group(invoke_without_command=True, help="See your or a player's profile")
-    async def profile(self, ctx, user: discord.User = None):
+    async def profile(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
         else:

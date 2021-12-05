@@ -106,7 +106,7 @@ class Inventory(commands.Cog):
     @commands.group(invoke_without_command=True, help="Get a list of all items available in the store")
     async def store(self, ctx):
         await ctx.send('Items in the Store:\n'
-                       'Ticket - 18 nugs\n'
+                       'Ticket - 14 nugs\n'
                        'Use `!store buy <item>` to buy an item!')
 
     @store.command(help="Purchase an item from the store. Items: Ticket")
@@ -117,8 +117,8 @@ class Inventory(commands.Cog):
         slot = 0
 
         if item.lower() in 'scratch ticket':
-            if profile[f'{ctx.author.id}']['balance'] - 18 >= 0:
-                new_balance = profile[f"{ctx.author.id}"]['balance'] - 18
+            if profile[f'{ctx.author.id}']['balance'] - 14 >= 0:
+                new_balance = profile[f"{ctx.author.id}"]['balance'] - 14
                 profile_update(ctx.author, new_balance, 'balance')
                 while not item_found:
                     if slot <= 8:
@@ -139,6 +139,11 @@ class Inventory(commands.Cog):
                                 profile_update(ctx.author, updated_slot, 'inventory', f'slot{i}')
                                 item_found = True
                                 await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
+                    bank_log = self.client.get_channel(config['channels']['bank_logs'])
+                    await bank_log.send(embed=func.log_transaction(14,
+                                                                   ctx.author.id,
+                                                                   "STORE",
+                                                                   ['Scratch', 'Ticket']))
             else:
                 await ctx.send(embed=errors.Pay.lack_nugs_error)
         else:
@@ -150,8 +155,8 @@ class Inventory(commands.Cog):
         profile = json.load(profile_file)
         item_found = False
         slot = 0
-        ticket_prizes = [[":gem:", 2], [":ringed_planet:", 3], [":tangerine:", 5], ["<:grassyE:840170557508026368>", 7],
-                         ["<:goldenE:857714717153689610>", 14]]
+        ticket_prizes = [[":gem:", 1], [":ringed_planet:", 3], [":tangerine:", 4], ["<:grassyE:840170557508026368>", 7],
+                         ["<:goldenE:857714717153689610>", 15], [":heart_on_fire:", 30]]
 
         if item.lower() in 'scratch ticket':
             while not item_found:
@@ -172,17 +177,25 @@ class Inventory(commands.Cog):
                             player_winnings = ""
                             player_prizes = []
                             for i in range(5):
-                                random_icon = random.choices(ticket_prizes, weights=(9, 5, 3, 2, 1), k=1)
+                                random_icon = random.choices(ticket_prizes, weights=(8.9, 4.9, 3, 2, 1, 0.2), k=1)
                                 player_winnings = f"{player_winnings} ||{random_icon[0][0]}||"
                                 player_prizes.append(random_icon[0])
+                            file_ticket_number = open('./../thorny_data/ticket_number.json', 'r+')
+                            ticket_number = json.load(file_ticket_number)
                             ticket_embed = discord.Embed(color=ctx.author.color)
                             ticket_embed.add_field(name="**Scratch Ticket**",
                                                    value=f"Scratch your ticket and see your prize!\n{player_winnings}")
-                            ticket_embed.set_footer(text="Use !lottery to see how Prizes work!")
+                            ticket_embed.set_footer(text=f"Ticket #{ticket_number['num'] + 1} "
+                                                         f"| Use !lottery to see how Prizes work!")
                             await ctx.send(embed=ticket_embed)
                             nugs = profile[f"{ctx.author.id}"]['balance'] + calculate_prizes(player_prizes,
                                                                                              ticket_prizes)
                             profile_update(ctx.author, nugs, 'balance')
+                            ticket_number['num'] += 1
+                            file_ticket_number.truncate(0)
+                            file_ticket_number.seek(0)
+                            json.dump(ticket_number, file_ticket_number)
+                            file_ticket_number.close()
                 else:
                     item_found = True
                     await ctx.send(embed=errors.Shop.empty_inventory_error)
@@ -217,14 +230,16 @@ class Inventory(commands.Cog):
     async def lottery(self, ctx):
         help_embed = discord.Embed(color=ctx.author.color)
         help_embed.add_field(name="**How Prizes Work**",
-                             value="There are 3 types of prizes:\n\n"
+                             value="There are 4 types of prizes:\n\n"
                                    "**Normal**\n"
-                                   ":gem: - 2 nugs, :ringed_planet: - 3 nugs, "
-                                   ":tangerine: - 5 nugs, <:grassyE:840170557508026368> - 7 nugs,"
-                                   " <:goldenE:857714717153689610> - 14 nugs\n\n"
+                                   ":gem: - 1 nug, :ringed_planet: - 3 nugs, "
+                                   ":tangerine: - 4 nugs, <:grassyE:840170557508026368> - 7 nugs,"
+                                   " <:goldenE:857714717153689610> - 15 nugs\n\n"
                                    "**Jackpot**\n"
-                                   "When you get 1 of every icon, you get 3x the prize!\n\n"
-                                   "**Exquisite**\n"
-                                   "When you get 5 of the same icon, you get 4x the prize!\n\n"
+                                   "When you get 5 of the same scratchable, you get 2x the prize!\n\n"
+                                   "**Ultimate Jackpot**\n"
+                                   "When you get 1 of each scratchable, you get 5x the prize!\n\n"
+                                   "**NEW! Exquisite**\n"
+                                   "If you get the :heart_on_fire: scratchable, you get an additional 30 nugs!\n\n"
                                    "Nugs are added automatically!", inline=False)
         await ctx.send(embed=help_embed)
