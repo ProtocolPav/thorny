@@ -7,7 +7,7 @@ from discord.ext import commands, tasks
 import functions as func
 import errors
 import json
-from modules import bank, fun, gateway, help, inventory, leaderboard, playtime, profile, setup
+from modules import bank, fun, gateway, help, inventory, leaderboard, playtime, profile, moderation
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -36,7 +36,15 @@ async def on_ready():
 @thorny.command()
 async def version(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                   f"{vers['nickname']}\nCurrent Changelog:\n\n{vers['changelogs'][v]}")
+                   f"{vers['nickname']}")
+
+
+@thorny.command()
+async def changelog(ctx, ver=v):
+    if ver in vers['changelogs']:
+        await ctx.send(f"Changelog for {ver}:\n\n{vers['changelogs'][ver]}")
+    else:
+        await ctx.send(f"I am Thorny. I'm currently on {v}! You asked to see {ver}, which doesn't exist")
 
 
 @thorny.event
@@ -69,6 +77,7 @@ thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
+#thorny.add_cog(moderation.Moderation(thorny))
 #thorny.add_cog(fun.Fun(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
