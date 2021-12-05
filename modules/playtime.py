@@ -11,6 +11,7 @@ import errors
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
 v = version["version"]
+config = json.load(open("./../thorny_data/config.json", "r"))
 
 
 class Activity(commands.Cog):
@@ -23,7 +24,7 @@ class Activity(commands.Cog):
         temp_file = open('./../thorny_data/temp.json', 'r+')
         temp_json = json.load(temp_file)
 
-        activity_channel = self.client.get_channel(867303669203206194)
+        activity_channel = self.client.get_channel(config['channels']['activity_logs'])
 
         log_embed = discord.Embed(title=f'CONNECTION', colour=0x009E60)
         log_embed.add_field(name='Event Log:',
@@ -82,7 +83,7 @@ class Activity(commands.Cog):
             if str(ctx.author.id) not in item['userid'] and not disconnected:
                 not_user += 1
             elif str(ctx.author.id) in item['userid'] and not disconnected:
-                activity_channel = self.client.get_channel(867303669203206194)
+                activity_channel = self.client.get_channel(config['channels']['activity_logs'])
 
                 playtime = datetime.now().replace(microsecond=0) - \
                            datetime.strptime(item['datetime'], "%Y-%m-%d %H:%M:%S")
