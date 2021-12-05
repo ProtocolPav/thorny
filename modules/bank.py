@@ -6,6 +6,8 @@ import errors
 import functions as func
 from modules import help
 
+config = json.load(open("./../thorny_data/config.json", "r"))
+
 
 class Bank(commands.Cog):
     def __init__(self, client):
@@ -25,13 +27,21 @@ class Bank(commands.Cog):
 
         balance_embed = discord.Embed(color=0xF4C430)
         balance_embed.set_author(name=user, icon_url=user.avatar_url)
-        balance_embed.add_field(name=f'**Nugs:**',
-                                value=f"<:Nug:884320353202081833>{json_profile[f'{user.id}']['balance']}")
+        financials_text = f"**Personal Balance:** <:Nug:884320353202081833>{json_profile[f'{user.id}']['balance']}"
         if kingdom != 'None':
-            balance_embed.add_field(name=f'**{kingdom.capitalize()} Treasury**:',
-                                    value=f"**<:Nug:884320353202081833>{json_kingdom[kingdom]}**",
-                                    inline=False)
-        balance_embed.set_footer(text="Use !inventory, it's better!")
+            financials_text = f"{financials_text}\n" \
+                              f"**{kingdom.capitalize()} Treasury**:<:Nug:884320353202081833>{json_kingdom[kingdom]}"
+        balance_embed.add_field(name=f'**Financials:**',
+                                value=financials_text)
+        inventory_list = ''
+        for slot in range(1, 4):
+            inv_slot = json_profile[f"{user.id}"]["inventory"][f"slot{slot}"]
+            inventory_list = f'{inventory_list}<:ar_ye:862635275837243402> ' \
+                             f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
+        balance_embed.add_field(name=f'**Inventory:**',
+                                value=f"{inventory_list}<:ar_ye:862635275837243402> **Use !inv to see more!**",
+                                inline=False)
+        balance_embed.set_footer(text="Donate to your kingdom with !treasury store")
         await ctx.send(embed=balance_embed)
 
     @balance.command(aliases=['add', 'remove'], help="CM Only | Edit a player's balance (- for removal)", hidden=True)
@@ -40,13 +50,15 @@ class Bank(commands.Cog):
         func.profile_update(user)
         file_profiles = open('./../thorny_data/profiles.json', 'r+')
         json_profile = json.load(file_profiles)
+        bank_log = self.client.get_channel(config['channels']['bank_logs'])
+        await bank_log.send(embed=func.log_transaction(amount, ctx.author.id, user.id, ['Balance', 'Edit', 'Command']))
         amount = json_profile[f'{user.id}']['balance'] + int(amount)
         func.profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now **{amount}**")
 
     @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]")
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
-        if ctx.channel == self.client.get_channel(700293298652315648):
+        if ctx.channel == self.client.get_channel(config['channels']['bank']):
             func.profile_update(ctx.author)
             func.profile_update(user)
             file_profiles = open('./../thorny_data/profiles.json', 'r+')
@@ -76,6 +88,8 @@ class Bank(commands.Cog):
                                                   f'Paid to: **{user.mention}**\n'
                                                   f'\n**Reason: {" ".join(str(x) for x in reason)}**')
                         await ctx.send(embed=pay_embed)
+                        bank_log = self.client.get_channel(config['channels']['bank_logs'])
+                        await bank_log.send(embed=func.log_transaction(amount, ctx.author.id, user.id, reason))
                 else:
                     await ctx.send(embed=errors.Pay.negative_nugs_error)
         else:
@@ -151,40 +165,44 @@ class Bank(commands.Cog):
     @treasury.command(help="Ruler Only | Pay someone using treasury funds", usage="<user> <amount> [reason...]")
     @commands.has_role('Ruler')
     async def spend(self, ctx, user: discord.User, amount=None, *reason):
-        file_profiles = open('./../thorny_data/profiles.json', 'r+')
-        json_profile = json.load(file_profiles)
-        file_kingdoms = open('./../thorny_data/kingdoms.json', 'r+')
-        json_kingdoms = json.load(file_kingdoms)
+        if ctx.channel == self.client.get_channel(config['channels']['bank']):
+            file_profiles = open('./../thorny_data/profiles.json', 'r+')
+            json_profile = json.load(file_profiles)
+            file_kingdoms = open('./../thorny_data/kingdoms.json', 'r+')
+            json_kingdoms = json.load(file_kingdoms)
+            func.profile_update(user)
 
-        kingdom = func.get_user_kingdom(ctx, ctx.author)
+            kingdom = func.get_user_kingdom(ctx, ctx.author)
 
-        if user == ctx.author:
-            await ctx.send(embed=errors.Pay.self_error)
-        elif amount is None:
-            await ctx.send(embed=errors.Pay.amount_error)
-        elif str(ctx.author.id) not in json_profile:
-            await ctx.send(embed=errors.Pay.self_register_error)
-        elif json_kingdoms[kingdom] - int(amount) < 0:
-            await ctx.send(embed=errors.Pay.lack_nugs_error)
+            if user == ctx.author:
+                await ctx.send(embed=errors.Pay.self_error)
+            elif amount is None:
+                await ctx.send(embed=errors.Pay.amount_error)
+            elif str(ctx.author.id) not in json_profile:
+                await ctx.send(embed=errors.Pay.self_register_error)
+            elif json_kingdoms[kingdom] - int(amount) < 0:
+                await ctx.send(embed=errors.Pay.lack_nugs_error)
 
-        elif str(ctx.author.id) in json_profile:
-            if json_kingdoms[kingdom] - int(amount) >= 0:
-                json_kingdoms[kingdom] = json_kingdoms[kingdom] - int(amount)
-                file_kingdoms.truncate(0)
-                file_kingdoms.seek(0)
-                json.dump(json_kingdoms, file_kingdoms, indent=3)
+            elif str(ctx.author.id) in json_profile:
+                if json_kingdoms[kingdom] - int(amount) >= 0:
+                    json_kingdoms[kingdom] = json_kingdoms[kingdom] - int(amount)
+                    file_kingdoms.truncate(0)
+                    file_kingdoms.seek(0)
+                    json.dump(json_kingdoms, file_kingdoms, indent=3)
 
-                user_amount = json_profile[f'{user.id}']['balance'] + int(amount)
-                func.profile_update(user, user_amount, 'balance')
+                    user_amount = json_profile[f'{user.id}']['balance'] + int(amount)
+                    func.profile_update(user, user_amount, 'balance')
 
-                pay_embed = discord.Embed(color=0xE49B0F)
-                pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
-                pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
-                                    value=f'From the **{kingdom.upper()} TREASURY**\n'
-                                          f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
-                                          f'Paid to: **{user.mention}**\n'
-                                          f'\n**Reason: {" ".join(str(x) for x in reason)}**\n')
-                await ctx.send(embed=pay_embed)
+                    pay_embed = discord.Embed(color=0xE49B0F)
+                    pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                    pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
+                                        value=f'From the **{kingdom.upper()} TREASURY**\n'
+                                              f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
+                                              f'Paid to: **{user.mention}**\n'
+                                              f'\n**Reason: {" ".join(str(x) for x in reason)}**\n')
+                    await ctx.send(embed=pay_embed)
+        else:
+            await ctx.send(embed=errors.Pay.channel_error)
 
     @spend.error
     async def spend_error(self, ctx, error):

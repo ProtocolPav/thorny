@@ -31,7 +31,7 @@ class Leaderboard(commands.Cog):
             month = datetime.now().strftime("%B").lower()
         if month.lower() in 'july' or month.lower() in 'august':
             temp = ''
-            print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
+            # print(f'Activity gotten on {datetime.now().strftime("%B %d, %Y, %H:%M:%S")}')
             file = open(f'./../thorny_data/processed_{month[0:3]}21.txt', 'r')
             for line in file:
                 temp = f'{temp}{line}'

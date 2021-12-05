@@ -41,7 +41,7 @@ def process_json(month):
         for log in sorted_activity:
             if sorted_activity[0]['userid'] == log['userid']:
                 processing_activity.append(log)
-        print(f'[PROCESSING] {processing_activity}')
+        # print(f'[PROCESSING] {processing_activity}')
 
         for log in processing_activity:
             if processing_activity.index(log) != len(processing_activity) - 1:
@@ -56,7 +56,7 @@ def process_json(month):
                     playtime = timedelta(hours=int(log['datetime']))
                     append_to_individual_hours(playtime)
                 else:
-                    print("pass")
+                    # print("pass")
                     pass
 
             # If there is no C/DC pair, it sets it as 2h automatically, in case someone 'forgot' to disconnect.
@@ -123,7 +123,7 @@ def append_to_individual_hours(playtime):
     individual_hours.append({'user': processing_activity[0]['user'],
                              'userid': processing_activity[0]['userid'],
                              'playtime': playtime})
-    print(f"{processing_activity[0]['user']} - {playtime}")
+    # print(f"{processing_activity[0]['user']} - {playtime}")
 
 
 def write_log(status: str, datetime, ctx):
@@ -149,8 +149,8 @@ def write_log(status: str, datetime, ctx):
 def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file = open('../thorny_data/profiles.json', 'r+')
     profile = json.load(profile_file)
-    id = f'{ctx_author.id}'
-    guild = f'{ctx_author.guild.id}'
+    # id = f'{ctx_author.id}'
+    # guild = f'{ctx_author.guild.id}'
 
     if profile.get(f'{ctx_author.id}') is None:  # User ID search
         profile[str(ctx_author.id)] = {"user": f"{ctx_author}"}
@@ -345,19 +345,34 @@ def calculate_prizes(prize_list, prizes):
     nugs_reward = 0
     for item in prize_list:
         nugs_reward += item[1]
-    if prizes == prize_list:
-        nugs_reward = nugs_reward * 3
+    if prizes == prize_list[0:4]:
+        nugs_reward = nugs_reward * 5
     elif [prizes[0]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 4
+        nugs_reward = nugs_reward * 3
     elif [prizes[1]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 4
+        nugs_reward = nugs_reward * 3
     elif [prizes[2]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 4
+        nugs_reward = nugs_reward * 3
     elif [prizes[3]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 4
+        nugs_reward = nugs_reward * 3
     elif [prizes[4]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 4
+        nugs_reward = nugs_reward * 3
     return nugs_reward
+
+
+def log_transaction(amount, payable, receivable, reason):
+    if type(receivable) == int:
+        transaction_embed = discord.Embed(color=0xF4C430)
+        transaction_embed.add_field(name="**Transaction**",
+                                    value=f"<@{payable}> paid <@{receivable}> **<:Nug:884320353202081833>{amount}**\n"
+                                          f"Reason: {' '.join(str(x) for x in reason)}")
+    else:
+        transaction_embed = discord.Embed(color=0xF4C430)
+        transaction_embed.add_field(name="**Transaction**",
+                                    value=f"<@{payable}> paid {receivable} **<:Nug:884320353202081833>{amount}**\n"
+                                          f"Reason: {' '.join(str(x) for x in reason)}")
+    transaction_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+    return transaction_embed
 
 
 async def birthday_announce():
