@@ -30,13 +30,13 @@ async def on_ready():
                                     name=f"you... | {v}")
     print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
-    await func.month_checker()
+    await func.update_months(thorny)
 
 
-@thorny.command()
-async def version(ctx):
+@thorny.command(aliases=['version'])
+async def ping(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                   f"{vers['nickname']}")
+                   f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
 
 
 @thorny.command()
@@ -77,7 +77,7 @@ thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
-#thorny.add_cog(moderation.Moderation(thorny))
+thorny.add_cog(moderation.Moderation(thorny))
 #thorny.add_cog(fun.Fun(thorny))
 thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)

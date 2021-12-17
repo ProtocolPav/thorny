@@ -1,0 +1,34 @@
+import discord
+from datetime import datetime
+
+
+def transaction(payable_id, receivable_id, amount, reason):
+    if type(receivable_id) == int:
+        log_embed = discord.Embed(color=0xF4C430)
+        log_embed.add_field(name="**Transaction**",
+                            value=f"<@{payable_id}> paid <@{receivable_id}> **<:Nug:884320353202081833>{amount}**\n"
+                                  f"Reason: {' '.join(str(x) for x in reason)}")
+    else:
+        log_embed = discord.Embed(color=0xF4C430)
+        log_embed.add_field(name="**Transaction**",
+                            value=f"<@{payable_id}> paid {receivable_id} **<:Nug:884320353202081833>{amount}**\n"
+                                  f"Reason: {' '.join(str(x) for x in reason)}")
+    log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+    return log_embed
+
+
+def balance_edit(moderator, receivable_id, amount):
+    log_embed = discord.Embed(color=0xF4C430)
+    log_embed.add_field(name="**Balance Edit**",
+                        value=f"<@{moderator}> edited <@{receivable_id}>'s balance\n"
+                              f"Add/Remove: **{amount}<:Nug:884320353202081833>**\n")
+    log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+    return log_embed
+
+
+def gulag(moderator, user_id):
+    log_embed = discord.Embed(color=0xF4C430)
+    log_embed.add_field(name="**Gulag**",
+                        value=f"<@{moderator}> gulaged <@{user_id}>")
+    log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+    return log_embed

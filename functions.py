@@ -5,9 +5,6 @@ import asyncio
 import discord
 
 
-# Playtime Functions
-
-
 def reset_values():
     global openfile, raw_activity, processing_activity, individual_hours, individual_hours_copy, totaling_activity
     openfile = 'abcd'
@@ -143,7 +140,139 @@ def write_log(status: str, datetime, ctx):
     WriteFile.write(f'[{separated_list_of_event_objects}]\n')
 
 
-# Profile Functions
+def get_user_kingdom(ctx, user):
+    kingdom = 'None'
+    kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
+    for item in kingdoms_list:
+        if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
+            kingdom = item.lower()
+    profile_update(user, kingdom, "kingdom")
+    return kingdom
+
+
+def activity_set(ctx_author, value, time_to_add):
+    file = open('../thorny_data/profiles.json', 'r+')
+    profile_json = json.load(file)
+
+    #  Take information from the value's time and place into variables
+    if 'days' in profile_json[f'{ctx_author.id}']['activity'][value]:
+        current_days = int(profile_json[f'{ctx_author.id}']['activity'][value].split(' days')[0])
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+    elif 'day' in profile_json[f'{ctx_author.id}']['activity'][value]:
+        current_days = 1
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
+    else:
+        current_days = 0
+        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[0])
+
+    current_minutes = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[1][:-1])
+    #  Take information from time_to_add and place into variables
+    hours_to_add = int(time_to_add.split(':')[0])
+    minutes_to_add = int(time_to_add.split(':')[1])
+
+    current_time = timedelta(days=current_days, hours=current_hours, minutes=current_minutes)
+    playtime_to_add = timedelta(hours=hours_to_add, minutes=minutes_to_add)
+
+    new_total = current_time + playtime_to_add
+    formatted_new_total = f"{str(new_total).split(':')[0]}h{str(new_total).split(':')[1]}m"
+    return formatted_new_total
+
+
+async def update_months(client):
+    def seconds_until_next_month():
+        current_date = datetime.now() + timedelta(days=31)
+        next_months_date = str(current_date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
+        next_months_date = datetime.strptime(next_months_date, "%Y-%m-%d %H:%M:%S.%f")
+        time_until_next_month = next_months_date - datetime.now()
+        time_in_seconds = time_until_next_month.total_seconds()
+        return time_in_seconds
+
+    while True:
+        print(f"[SERVER] Next month switch is in {timedelta(seconds=seconds_until_next_month())}"
+              f" (Date: {datetime.now() + timedelta(seconds=seconds_until_next_month())})")
+        await asyncio.sleep(seconds_until_next_month())
+        if date.today().day == 1:
+            profile_file = open('../thorny_data/profiles.json', 'r+')
+            profile = json.load(profile_file)
+            for player in profile:
+                if profile[player]["user"] != "Template":
+                    profile[player]["activity"]["2_months_ago"] = profile[player]["activity"]["1_month_ago"]
+                    profile[player]["activity"]["1_month_ago"] = profile[player]["activity"]["current_month"]
+                    profile[player]["activity"]["current_month"] = "0h00m"
+
+            profile_file.truncate(0)
+            profile_file.seek(0)
+            json.dump(profile, profile_file, indent=3)
+            print(f"[ACTION] Months successfully switched in all user profiles")
+        else:
+            print(f"[ERROR] {date.today()} is not the 1st of the Month")
+            general = client.get(687720871972044826)
+            await general.send("<@266202793143042048> Month Update did not work!")
+        await asyncio.sleep(60)
+
+
+def calculate_prizes(prize_list, prizes):
+    nugs_reward = 0
+    for item in prize_list:
+        nugs_reward += item[1]
+    if prizes == prize_list[0:4]:
+        nugs_reward = nugs_reward * 5
+    elif [prizes[0]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 3
+    elif [prizes[1]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 3
+    elif [prizes[2]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 3
+    elif [prizes[3]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 3
+    elif [prizes[4]] * 5 == prize_list:
+        nugs_reward = nugs_reward * 3
+    return nugs_reward
+
+
+def log_action(action_dict, reason=None):
+    if action_dict['action'] == 'transaction':
+        payable = action_dict['payable']
+        receivable = action_dict['receivable']
+        amount = action_dict['amount']
+        if type(receivable) == int:
+            log_embed = discord.Embed(color=0xF4C430)
+            log_embed.add_field(name="**Transaction**",
+                                value=f"<@{payable}> paid <@{receivable}> **<:Nug:884320353202081833>{amount}**\n"
+                                      f"Reason: {' '.join(str(x) for x in reason)}")
+        else:
+            log_embed = discord.Embed(color=0xF4C430)
+            log_embed.add_field(name="**Transaction**",
+                                value=f"<@{payable}> paid {receivable} **<:Nug:884320353202081833>{amount}**\n"
+                                      f"Reason: {' '.join(str(x) for x in reason)}")
+        log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+
+    elif action_dict['action'] == 'balance_edit':
+        moderator = action_dict['moderator']
+        receivable = action_dict['receivable']
+        amount = action_dict['amount']
+        log_embed = discord.Embed(color=0xF4C430)
+        log_embed.add_field(name="**Balance Edit**",
+                            value=f"<@{moderator}> edited <@{receivable}>'s balance\n"
+                                  f"Add/Remove: **{amount}<:Nug:884320353202081833>**\n"
+                                  f"Reason: {' '.join(str(x) for x in reason)}")
+        log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+    return log_embed
+
+
+async def birthday_announce():
+    while True:
+        profile_file = open('../thorny_data/profiles.json', 'r+')
+        profile = json.load(profile_file)
+        date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        for person in profile:
+            birthdate = datetime.strptime(profile[person]['birthday']['system'], "%Y-%m-%d %H:%M:%S")
+            if str(date)[4:9] == str(birthdate)[4:9]:
+                if 1 in str(date)[:4] - str(birthdate)[:4]:
+                    await ctx.send(f"<@{person}> {str(date)[:4] - str(birthdate)[:4]}rd Birthday today!")
+            else:
+                pass
+        await asyncio.sleep(86400)  # Needs working on
 
 
 def profile_update(ctx_author, value=None, key1=None, key2=None):
@@ -257,7 +386,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['birthday']['system'] = None
 
     if profile[f'{ctx_author.id}'].get('strikes') is None:
-        profile[f'{ctx_author.id}']['strikes'] = {}
+        profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
@@ -266,125 +395,3 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file.truncate(0)
     profile_file.seek(0)
     json.dump(profile, profile_file, indent=3)
-
-
-def get_user_kingdom(ctx, user):
-    kingdom = 'None'
-    kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
-    for item in kingdoms_list:
-        if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
-            kingdom = item.lower()
-    profile_update(user, kingdom, "kingdom")
-    return kingdom
-
-
-def activity_set(ctx_author, value, time_to_add):
-    file = open('../thorny_data/profiles.json', 'r+')
-    profile_json = json.load(file)
-
-    #  Take information from the value's time and place into variables
-    if 'days' in profile_json[f'{ctx_author.id}']['activity'][value]:
-        current_days = int(profile_json[f'{ctx_author.id}']['activity'][value].split(' days')[0])
-        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
-    elif 'day' in profile_json[f'{ctx_author.id}']['activity'][value]:
-        current_days = 1
-        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split(', ')[1].split('h')[0])
-    else:
-        current_days = 0
-        current_hours = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[0])
-
-    current_minutes = int(profile_json[f'{ctx_author.id}']['activity'][value].split('h')[1][:-1])
-    #  Take information from time_to_add and place into variables
-    hours_to_add = int(time_to_add.split(':')[0])
-    minutes_to_add = int(time_to_add.split(':')[1])
-
-    current_time = timedelta(days=current_days, hours=current_hours, minutes=current_minutes)
-    playtime_to_add = timedelta(hours=hours_to_add, minutes=minutes_to_add)
-
-    new_total = current_time + playtime_to_add
-    formatted_new_total = f"{str(new_total).split(':')[0]}h{str(new_total).split(':')[1]}m"
-    return formatted_new_total
-
-
-def month_switcher():
-    if date.today().day == 1:
-        profile_file = open('../thorny_data/profiles.json', 'r+')
-        profile = json.load(profile_file)
-        for player in profile:
-            if profile[player]["user"] != "Template":
-                profile[player]["activity"]["2_months_ago"] = profile[player]["activity"]["1_month_ago"]
-                profile[player]["activity"]["1_month_ago"] = profile[player]["activity"]["current_month"]
-                profile[player]["activity"]["current_month"] = "0h00m"
-
-        profile_file.truncate(0)
-        profile_file.seek(0)
-        json.dump(profile, profile_file, indent=3)
-        print(f"[ACTION] Months successfully switched in all user profiles")
-    else:
-        print(f"[ERROR] {date.today()} is not the 1st of the Month")
-
-
-async def month_checker():
-    def seconds_until_next_month():
-        current_date = datetime.now() + timedelta(days=31)
-        next_months_date = str(current_date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
-        next_months_date = datetime.strptime(next_months_date, "%Y-%m-%d %H:%M:%S.%f")
-        time_until_next_month = next_months_date - datetime.now()
-        time_in_seconds = time_until_next_month.total_seconds()
-        return time_in_seconds
-
-    while True:
-        print(f"[SERVER] Next month switch is in {timedelta(seconds=seconds_until_next_month())}"
-              f" (Date: {datetime.now() + timedelta(seconds=seconds_until_next_month())})")
-        await asyncio.sleep(seconds_until_next_month())
-        month_switcher()
-        await asyncio.sleep(60)
-
-
-def calculate_prizes(prize_list, prizes):
-    nugs_reward = 0
-    for item in prize_list:
-        nugs_reward += item[1]
-    if prizes == prize_list[0:4]:
-        nugs_reward = nugs_reward * 5
-    elif [prizes[0]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[1]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[2]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[3]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[4]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    return nugs_reward
-
-
-def log_transaction(amount, payable, receivable, reason):
-    if type(receivable) == int:
-        transaction_embed = discord.Embed(color=0xF4C430)
-        transaction_embed.add_field(name="**Transaction**",
-                                    value=f"<@{payable}> paid <@{receivable}> **<:Nug:884320353202081833>{amount}**\n"
-                                          f"Reason: {' '.join(str(x) for x in reason)}")
-    else:
-        transaction_embed = discord.Embed(color=0xF4C430)
-        transaction_embed.add_field(name="**Transaction**",
-                                    value=f"<@{payable}> paid {receivable} **<:Nug:884320353202081833>{amount}**\n"
-                                          f"Reason: {' '.join(str(x) for x in reason)}")
-    transaction_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
-    return transaction_embed
-
-
-async def birthday_announce():
-    while True:
-        profile_file = open('../thorny_data/profiles.json', 'r+')
-        profile = json.load(profile_file)
-        date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        for person in profile:
-            birthdate = datetime.strptime(profile[person]['birthday']['system'], "%Y-%m-%d %H:%M:%S")
-            if str(date)[4:9] == str(birthdate)[4:9]:
-                if 1 in str(date)[:4] - str(birthdate)[:4]:
-                    await ctx.send(f"<@{person}> {str(date)[:4] - str(birthdate)[:4]}rd Birthday today!")
-            else:
-                pass
-        await asyncio.sleep(86400)  # Needs working on

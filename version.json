@@ -1,13 +1,14 @@
 {
-  "version": "v1.5.1",
+  "version": "v1.5.2",
   "nickname": "Coldharber",
   "notable_changes": {
-    "1": "Added a Moderation commands section (Hidden in v1.5.1)",
-    "2": "Added numbers to tickets, reduced price, edited prizes",
-    "3": "!bal now shows a slightly smaller inventory",
-    "4": "Added a channels section in the config for easier editing",
-    "5": "!leaderboard activity no longer shows in the console",
-    "6": "!balance edit, !store buy and !pay commands now get logged"
+    "1": "Added a Moderation commands section",
+    "2": "Tickets can be edited in-discord",
+    "3": "Added Event Logs for: transactions, balance-edit",
+    "4": "Added strikes and gulag command",
+    "5": "Edited profile sections command",
+    "6": "Added a ping command",
+    "7": ""
   },
   "changelogs": {
     "v0.2": "@Thorny#3781 v0.2 is up and running!\n\n**Features**:\n- `!c` and `!dc` commands. You can also use `!link` and `!unlink` if you want.\n- Make the bot remind you when YOU want, simply use `!c 2h` for it to remind you in 2 hours!\n- See your activity using the `!activity [month]` command. See it for july and august!\n- Scream at Thorny in #\uD83C\uDF6A┃playground using `!scream` and see what happens.",
