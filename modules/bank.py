@@ -3,6 +3,7 @@ from discord.ext import commands
 
 import json
 import errors
+import logs
 import functions as func
 from modules import help
 
@@ -50,8 +51,10 @@ class Bank(commands.Cog):
         func.profile_update(user)
         file_profiles = open('./../thorny_data/profiles.json', 'r+')
         json_profile = json.load(file_profiles)
+
         bank_log = self.client.get_channel(config['channels']['bank_logs'])
-        await bank_log.send(embed=func.log_transaction(amount, ctx.author.id, user.id, ['Balance', 'Edit', 'Command']))
+        await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
+
         amount = json_profile[f'{user.id}']['balance'] + int(amount)
         func.profile_update(user, int(amount), 'balance')
         await ctx.send(f"{user}'s balance is now **{amount}**")
@@ -89,7 +92,7 @@ class Bank(commands.Cog):
                                                   f'\n**Reason: {" ".join(str(x) for x in reason)}**')
                         await ctx.send(embed=pay_embed)
                         bank_log = self.client.get_channel(config['channels']['bank_logs'])
-                        await bank_log.send(embed=func.log_transaction(amount, ctx.author.id, user.id, reason))
+                        await bank_log.send(embed=logs.transaction(ctx.author.id, user.id, amount, reason))
                 else:
                     await ctx.send(embed=errors.Pay.negative_nugs_error)
         else:

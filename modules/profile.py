@@ -4,6 +4,7 @@ from discord.ext import commands
 import json
 from modules import help
 from functions import profile_update
+
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
 
@@ -58,7 +59,7 @@ class Profile(commands.Cog):
                                           f"{profile[f'{user.id}']['activity']['latest_playtime']}\n"
                                           f"**{datetime.now().strftime('%B')}:** "
                                           f"{profile[f'{user.id}']['activity']['current_month']}\n"
-                                          f"**{(datetime.now()-timedelta(days=30)).strftime('%B')}:** "
+                                          f"**{(datetime.now() - timedelta(days=30)).strftime('%B')}:** "
                                           f"{profile[f'{user.id}']['activity']['1_month_ago']}\n"
                                           f"**{(datetime.now() - timedelta(days=60)).strftime('%B')}:** "
                                           f"{profile[f'{user.id}']['activity']['2_months_ago']}\n\n"
@@ -119,8 +120,10 @@ class Profile(commands.Cog):
                 wrong_field = True
 
         elif section.lower() == "birthday":
-            await ctx.send("Ah! I actually can't change your birthday using this command just yet!\n"
-                           "You should use `!birthday DD Month YYYY` to set it!")
+            if len(value) == 3:
+                await Profile.birthday(self, ctx, value[0], value[1], value[2])
+            else:
+                await Profile.birthday(self, ctx, value[0], value[1])
             wrong_field = True
 
         elif section.lower() == "wiki":
@@ -226,31 +229,37 @@ class Profile(commands.Cog):
     @profile.command(help="See all of the sections in the profile, and how to edit them!")
     async def sections(self, ctx):
         help_embed = discord.Embed(colour=0xCF9FFF)
-        help_embed.add_field(name=":question: **Profile Help**",
-                             value=f"**!profile [@player]** - View your or a player's profile\n"
-                                   f"**!profile edit <field> <value>** - Edit what a certain field says on your profile"
-                                   f"\n**!profile show <category>** - Show a category on your profile\n"
-                                   f"**!profile hide <category>** - Hide a category on your profile")
-        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
-                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
-                                   f"**Slogan** - The top part of the profile | Max. 5 words\n"
-                                   f"**Gamertag** - Your Minecraft Gamertag\n"
-                                   f"**Town** - The town you live in | Max. 25 characters\n"
-                                   f"**Role** - Your role in your kingdom | Max. 5 words\n"
-                                   f"**Birthday** - Your Birthday | Format: DD Month YYYY\n"
-                                   f"**Wiki** - Featured Wiki Article | Send in the whole link!\n"
-                                   f"**Aboutme** - Your Bio | Max. 30 words\n"
-                                   f"**Lore** - Your In-Game Character Lore | Max. 30 words",
+        help_embed.add_field(name=f'**:card_index: Information** | !profile hide/show Information',
+                             value=f"**Gamertag:** !profile edit gamertag\n"
+                                   f"**Kingdom:** Automagically shown\n"
+                                   f"**Town:** !profile edit town\n"
+                                   f"**Role:** !profile edit role\n\n"
+                                   f"**Level:** Automagically shown\n"
+                                   f"**Balance:** <:Nug:884320353202081833>"
+                                   f"Automagically shown\n\n"
+                                   f"**Birthday:** !profile edit birthday `DD Month YYYY`\n"
+                                   f"**Joined on:** Automagically shown")
+        help_embed.add_field(name=f'**:clock8: My Activity** | !profile hide/show Activity',
+                             value=f"**Latest Playtime:** "
+                                   f"Automagically shown\n"
+                                   f"**{datetime.now().strftime('%B')}:** "
+                                   f"Automagically shown\n"
+                                   f"**{(datetime.now() - timedelta(days=30)).strftime('%B')}:** "
+                                   f"Automagically shown\n"
+                                   f"**{(datetime.now() - timedelta(days=60)).strftime('%B')}:** "
+                                   f"Automagically shown\n\n"
+                                   f"**Total:** "
+                                   f"Automagically shown")
+        help_embed.add_field(name=f'**Featured Wiki Article** | !profile hide/show Wiki',
+                             value=f"!profile edit wiki",
                              inline=False)
-        help_embed.add_field(name=":lock_with_ink_pen: **Categories to Show/Hide**",
-                             value=f"You can choose to show/hide the following categories:\n\n"
-                                   f"**Information/Info** - General info about you\n"
-                                   f"**Activity** - Your activity statistics\n"
-                                   f"**Wiki** - Your featured wiki article\n"
-                                   f"**Aboutme** - Your bio\n"
-                                   f"**Lore** - Your In-Game Character lore",
+        help_embed.add_field(name=f'**:person_raising_hand: About Me** | !profile hide/show Aboutme',
+                             value=f'!profile edit aboutme',
                              inline=False)
-        help_embed.set_footer(text=f"Use !help profile to see more help")
+        help_embed.add_field(name=f"**:dart: My In-Game Character's Story** | !profile hide/show Lore",
+                             value=f'!profile edit lore',
+                             inline=False)
+        help_embed.set_footer(text=f"{v} | Use !help profile for help on editing your profile!")
         await ctx.send(embed=help_embed)
 
     @commands.command(help="Set your birthday | Format: DD Month YYYY")
@@ -278,6 +287,3 @@ class Profile(commands.Cog):
     async def set(self, ctx, user: discord.Member, key, *value):
         profile_update(user, " ".join(value), f"{key}")
         await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
-
-
-
