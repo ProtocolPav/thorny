@@ -18,7 +18,7 @@ class Activity(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['link', 'c'], help="Log your connect time")
+    @commands.command(aliases=['c'], help="Log your connect time")
     async def connect(self, ctx):
         current_time = datetime.now().strftime("%B %d, %Y, %H:%M:%S")
         temp_file = open('./../thorny_data/temp.json', 'r+')
@@ -73,7 +73,7 @@ class Activity(commands.Cog):
         temp_file.seek(0)
         json.dump(temp_json, temp_file, indent=0)
 
-    @commands.command(aliases=['unlink', 'dc'], help="Log your disconnect time")
+    @commands.command(aliases=['dc'], help="Log your disconnect time")
     async def disconnect(self, ctx):
         temp_file = open('./../thorny_data/temp.json', 'r+')
         temp_json = json.load(temp_file)
