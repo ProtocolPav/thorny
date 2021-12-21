@@ -28,9 +28,9 @@ class Inventory(commands.Cog):
         inventory_list = ''
         for slot in range(1, 10):
             inv_slot = profile_json[f"{user.id}"]["inventory"][f"slot{slot}"]
-            inventory_list = f'{inventory_list}<:ar_ye:862635275837243402> ' \
+            inventory_list = f'{inventory_list}<:_pink:921708790322192396> ' \
                              f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
-        inventory_embed = discord.Embed(colour=0xF5DF4D)
+        inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.avatar_url)
         if kingdom == "None":
             inventory_embed.add_field(name="**Financials**",
