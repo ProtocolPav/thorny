@@ -34,7 +34,7 @@ class Activity(commands.Cog):
         log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
         await activity_channel.send(embed=log_embed)
 
-        response_embed = discord.Embed(title="<:_plus:897823907153838121> | Ooh! You're Playing!", color=0x009E60)
+        response_embed = discord.Embed(title="<:_plus:922184065401106442> | Ooh! You're Playing!", color=0x009E60)
         response_embed.add_field(name=f"*Keep playing... And I'll do the rest!*",
                                  value=f'{ctx.author.mention}, I am adding every single second up!\n'
                                        f"When you stop playing, use **!dc**, so I'll know when to stop "
@@ -98,7 +98,7 @@ class Activity(commands.Cog):
                 log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
                 await activity_channel.send(embed=log_embed)
 
-                response_embed = discord.Embed(title="<:_minus:897823907053203457> | Hope You Had Fun!",
+                response_embed = discord.Embed(title="<:_minus:922184065174618215> | Hope You Had Fun!",
                                                color=0xFA5F55)
                 response_embed.add_field(name=f"*You played, and here's your stats!*",
                                          value=f'{ctx.author.mention}, you played for a total of '
