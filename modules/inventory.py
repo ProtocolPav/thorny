@@ -4,6 +4,7 @@ import json
 from functions import profile_update, calculate_prizes
 import functions as func
 import errors
+import logs
 import random
 from datetime import datetime, timedelta
 
@@ -27,9 +28,9 @@ class Inventory(commands.Cog):
         inventory_list = ''
         for slot in range(1, 10):
             inv_slot = profile_json[f"{user.id}"]["inventory"][f"slot{slot}"]
-            inventory_list = f'{inventory_list}<:ar_ye:862635275837243402> ' \
+            inventory_list = f'{inventory_list}<:_pink:921708790322192396> ' \
                              f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
-        inventory_embed = discord.Embed(colour=0xF5DF4D)
+        inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.avatar_url)
         if kingdom == "None":
             inventory_embed.add_field(name="**Financials**",
@@ -105,20 +106,22 @@ class Inventory(commands.Cog):
 
     @commands.group(invoke_without_command=True, help="Get a list of all items available in the store")
     async def store(self, ctx):
+        counters = json.load(open('../thorny_data/counters.json', 'r+'))
         await ctx.send('Items in the Store:\n'
-                       'Ticket - 14 nugs\n'
+                       f'Ticket - {counters["ticket_price"]} nugs\n'
                        'Use `!store buy <item>` to buy an item!')
 
     @store.command(help="Purchase an item from the store. Items: Ticket")
     async def buy(self, ctx, item):
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
+        counters = json.load(open('../thorny_data/counters.json', 'r+'))
         item_found = False
         slot = 0
 
         if item.lower() in 'scratch ticket':
-            if profile[f'{ctx.author.id}']['balance'] - 14 >= 0:
-                new_balance = profile[f"{ctx.author.id}"]['balance'] - 14
+            if profile[f'{ctx.author.id}']['balance'] - counters["ticket_price"] >= 0:
+                new_balance = profile[f"{ctx.author.id}"]['balance'] - counters["ticket_price"]
                 profile_update(ctx.author, new_balance, 'balance')
                 while not item_found:
                     if slot <= 8:
@@ -140,14 +143,23 @@ class Inventory(commands.Cog):
                                 item_found = True
                                 await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
                     bank_log = self.client.get_channel(config['channels']['bank_logs'])
-                    await bank_log.send(embed=func.log_transaction(14,
-                                                                   ctx.author.id,
-                                                                   "STORE",
-                                                                   ['Scratch', 'Ticket']))
+                    await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
+                                                               counters["ticket_price"], ['Scratch Ticket']))
             else:
                 await ctx.send(embed=errors.Pay.lack_nugs_error)
         else:
             await ctx.send(embed=errors.Shop.item_error)
+
+    @store.command(help="Edit Prices of tickets", hidden=True)
+    async def edit(self, ctx, price):
+        file_counters = open('../thorny_data/counters.json', 'r+')
+        counters = json.load(file_counters)
+        counters['ticket_price'] = int(price)
+        file_counters.truncate(0)
+        file_counters.seek(0)
+        json.dump(counters, file_counters)
+        file_counters.close()
+        await ctx.send(f"Ticket Price set to {price}")
 
     @commands.command(help="Redeem an item from your inventory. Items: Ticket, Role")
     async def redeem(self, ctx, item):
@@ -155,7 +167,7 @@ class Inventory(commands.Cog):
         profile = json.load(profile_file)
         item_found = False
         slot = 0
-        ticket_prizes = [[":gem:", 1], [":ringed_planet:", 3], [":tangerine:", 4], ["<:grassyE:840170557508026368>", 7],
+        ticket_prizes = [[":gem:", 2], [":ringed_planet:", 3], [":tangerine:", 4], ["<:grassyE:840170557508026368>", 7],
                          ["<:goldenE:857714717153689610>", 15], [":heart_on_fire:", 30]]
 
         if item.lower() in 'scratch ticket':
@@ -180,22 +192,22 @@ class Inventory(commands.Cog):
                                 random_icon = random.choices(ticket_prizes, weights=(8.9, 4.9, 3, 2, 1, 0.2), k=1)
                                 player_winnings = f"{player_winnings} ||{random_icon[0][0]}||"
                                 player_prizes.append(random_icon[0])
-                            file_ticket_number = open('./../thorny_data/ticket_number.json', 'r+')
-                            ticket_number = json.load(file_ticket_number)
+                            file_counters = open('./../thorny_data/counters.json', 'r+')
+                            counters = json.load(file_counters)
                             ticket_embed = discord.Embed(color=ctx.author.color)
                             ticket_embed.add_field(name="**Scratch Ticket**",
                                                    value=f"Scratch your ticket and see your prize!\n{player_winnings}")
-                            ticket_embed.set_footer(text=f"Ticket #{ticket_number['num'] + 1} "
+                            ticket_embed.set_footer(text=f"Ticket #{counters['ticket_id'] + 1} "
                                                          f"| Use !lottery to see how Prizes work!")
                             await ctx.send(embed=ticket_embed)
                             nugs = profile[f"{ctx.author.id}"]['balance'] + calculate_prizes(player_prizes,
                                                                                              ticket_prizes)
                             profile_update(ctx.author, nugs, 'balance')
-                            ticket_number['num'] += 1
-                            file_ticket_number.truncate(0)
-                            file_ticket_number.seek(0)
-                            json.dump(ticket_number, file_ticket_number)
-                            file_ticket_number.close()
+                            counters['ticket_id'] += 1
+                            file_counters.truncate(0)
+                            file_counters.seek(0)
+                            json.dump(counters, file_counters)
+                            file_counters.close()
                 else:
                     item_found = True
                     await ctx.send(embed=errors.Shop.empty_inventory_error)
@@ -232,7 +244,7 @@ class Inventory(commands.Cog):
         help_embed.add_field(name="**How Prizes Work**",
                              value="There are 4 types of prizes:\n\n"
                                    "**Normal**\n"
-                                   ":gem: - 1 nug, :ringed_planet: - 3 nugs, "
+                                   ":gem: - 2 nugs, :ringed_planet: - 3 nugs, "
                                    ":tangerine: - 4 nugs, <:grassyE:840170557508026368> - 7 nugs,"
                                    " <:goldenE:857714717153689610> - 15 nugs\n\n"
                                    "**Jackpot**\n"

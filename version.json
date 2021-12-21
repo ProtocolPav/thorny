@@ -1,13 +1,15 @@
 {
-  "version": "v1.5.1",
+  "version": "v1.5.2",
   "nickname": "Coldharber",
   "notable_changes": {
-    "1": "Added a Moderation commands section (Hidden in v1.5.1)",
-    "2": "Added numbers to tickets, reduced price, edited prizes",
-    "3": "!bal now shows a slightly smaller inventory",
-    "4": "Added a channels section in the config for easier editing",
-    "5": "!leaderboard activity no longer shows in the console",
-    "6": "!balance edit, !store buy and !pay commands now get logged"
+    "1": "Added a Moderation commands section",
+    "2": "Tickets can be edited in-discord",
+    "3": "Added Event Logs for: transactions, balance-edit",
+    "4": "Added strikes and gulag command",
+    "5": "Edited profile sections command",
+    "6": "Added a ping command",
+    "7": "Birthday can be edited using !profile edit",
+    "8": "Bal and inv commands got redeisnged"
   },
   "changelogs": {
     "v0.2": "@Thorny#3781 v0.2 is up and running!\n\n**Features**:\n- `!c` and `!dc` commands. You can also use `!link` and `!unlink` if you want.\n- Make the bot remind you when YOU want, simply use `!c 2h` for it to remind you in 2 hours!\n- See your activity using the `!activity [month]` command. See it for july and august!\n- Scream at Thorny in #\uD83C\uDF6A┃playground using `!scream` and see what happens.",
@@ -24,7 +26,7 @@
     "v1.4.3": "**The Helpful Update!** - v1.4.3\n\n**What's New?**\n- The Thorny Help Center is here! Use `!help` to access it, and get help on all things Thorny :))\n- Use `!help [command]` and you can see help on individual commands, and any related commands!\n- Use `!help [Category]` and you can see all the commands in a given category (Capitalize the category)\n\n- Thorny will now periodically send `tips` in noticeboard, to help you learn all the commands! (Coming Soon...)\n- Use `!tip` to get a random tip sent in chat\n- Use `!tip [number]` to see a specific tip\n\n**Issues**\n- Inventory command doesn’t work\n- Profile command doesn’t show your kingdom",
     "v1.5": "**Thorny is in Coldharber!** - v1.5\n\n**Issue Fixes**\n- Using `!bal` or `!inv` will work, even if you don't have a kingdom!\n- `!inv` works properly now and you can access it normally!\n- `!lb treasuries` has been renamed to `!lb treasury` to make it easier!\n- The **Gateway** Category of commands is now called **Information**\n- The statistics section of Kingdom Commands is temporarily removed\n- When someone new joins, their profile is created and the date is put on their profile!\n\n**Gateway is leaving**\nThe `!gateway` command served us well, but it's purpose: Unifying all information and acting as a command center has been replaced with `!help`. For this reason, the gateway command will begin to be phased out slowly. Was a great time having you!\n- `!gateway 1` has been replaced with a new, updated `!new` command. Check it out!\n\n**Inventory**\n- The inventory has gotten a complete overhaul!\n- There are now 9 slots instead of 6, and it looks much sleeker than before, showing your balance!\n- Soon, `!bal` will also show your first 3 slots of inventory items!\n\n**Store and Scratch Tickets**\n- Use `!store` to see all the items in the store!\n- There is a new Scratch Ticket system, test your luck! Use `!lottery` to see all prizes available!\n- Use `!store buy <item>` to buy a ticket, and then use `!redeem <item>` to use it!\n- Nugs are added automatically!\n\n**Misc.**\n- A new `!everforms` command has been added, showing you a link to Everforms\n- A few new tips have been added to `!tip`\n- Thorny now feels emotion",
     "v1.5.1": "**Thorny is Modified** - v1.5.1\n\n**Issue Fixes**\n- Fixed !kedit command\n\n**Scratch Tickets**\n- Tickets now cost 14 nugs\n- Added a new ultra rare scratchable! The :heart_on_fire: \n- Edited the prizes. Use `!lottery` to see the edited prizes!\n\n**Other**\n- The `!balance` command now shows a mini inventory\n- Transactions using `!bal edit`, `!pay` and `!store buy` will be logged in a Transaction Channel",
-    "v1.5.2": "",
+    "v1.5.2": "**Thorny got a job!** - v1.5.2\nYes, it's true. Thorny's an intern at Moderation Inc.\n\n**New???**\n- Added strikes and gulag commands to Thorny.\n- Added logs for Transactions and Balance edits, more will come soon\n- Ticket prices will now be edited in discord, that way I don't need to update Thorny to change prices!\n- `!profile sections` now exists, albeit in a rather early stage!\n\n- Tickets now cost 15 nugs\n- The `gem` in the tickets now is worth 2 nugs once again",
     "1.5.3": "",
     "1.5.4": ""
   }
