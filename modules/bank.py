@@ -6,6 +6,7 @@ import errors
 import logs
 import functions as func
 from modules import help
+import dbutils
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -18,29 +19,30 @@ class Bank(commands.Cog):
     async def balance(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        func.profile_update(user)
         kingdom = func.get_user_kingdom(ctx, user)
 
-        file_profiles = open('./../thorny_data/profiles.json', 'r+')
-        json_profile = json.load(file_profiles)
         file_kingdoms = open('./../thorny_data/kingdoms.json', 'r+')
         json_kingdom = json.load(file_kingdoms)
 
         balance_embed = discord.Embed(color=0xE0115F)
         balance_embed.set_author(name=user, icon_url=user.avatar_url)
-        financials_text = f"**Personal Balance:** <:Nug:884320353202081833>{json_profile[f'{user.id}']['balance']}"
+        balance_list = dbutils.simple_select("balance", 'user', "user_id", user.id)
+        financials_text = f"**Personal Balance:** <:Nug:884320353202081833>{balance_list[0][0]}"
         if kingdom != 'None':
             financials_text = f"{financials_text}\n" \
                               f"**{kingdom.capitalize()} Treasury**:<:Nug:884320353202081833>{json_kingdom[kingdom]}"
         balance_embed.add_field(name=f'**Financials:**',
                                 value=financials_text)
-        inventory_list = ''
-        for slot in range(1, 4):
-            inv_slot = json_profile[f"{user.id}"]["inventory"][f"slot{slot}"]
-            inventory_list = f'{inventory_list}<:_pink:921708790322192396> ' \
-                             f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
+        inventory_text = ''
+        inventory_list = dbutils.simple_select("*", "inventory", "user_id", user.id)
+        for item in inventory_list[0:2]:
+            inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
+                             f'{item[2]} **|** {config["inv_items"][item[1]]}\n'
+        if len(inventory_list) < 2:
+            for item in range(0, 2 - len(inventory_list)):
+                inventory_text = f'{inventory_text}<:_pink:921708790322192396> 0 **|** Empty Slot\n'
         balance_embed.add_field(name=f'**Inventory:**',
-                                value=f"{inventory_list}<:ar_ye:862635275837243402> **Use !inv to see more!**",
+                                value=f"{inventory_text}<:_pink:921708790322192396> **Use !inv to see more!**",
                                 inline=False)
         balance_embed.set_footer(text="Donate to your kingdom with !treasury store")
         await ctx.send(embed=balance_embed)

@@ -8,6 +8,7 @@ import logs
 import random
 from datetime import datetime, timedelta
 from modules import bank
+import dbutils
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -21,29 +22,33 @@ class Inventory(commands.Cog):
         if user is None:
             user = ctx.author
 
-        func.profile_update(user)
         kingdom = func.get_user_kingdom(ctx, user)
 
-        profile_json = json.load(open('./../thorny_data/profiles.json', 'r'))
         kingdom_json = json.load(open('./../thorny_data/kingdoms.json', 'r+'))
-        inventory_list = ''
-        for slot in range(1, 10):
-            inv_slot = profile_json[f"{user.id}"]["inventory"][f"slot{slot}"]
-            inventory_list = f'{inventory_list}<:_pink:921708790322192396> ' \
-                             f'{inv_slot["amount"]} **|** {config["inv_items"][inv_slot["item_id"]]}\n'
+        inventory_text = ''
+        inventory_list = dbutils.simple_select("*", "inventory", "user_id", user.id)
+        for item in inventory_list:
+            inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
+                             f'{item[2]} **|** {config["inv_items"][item[1]]}\n'
+        if len(inventory_list) < 9:
+            for item in range(0, 9 - len(inventory_list)):
+                inventory_text = f'{inventory_text}<:_pink:921708790322192396> 0 **|** Empty Slot\n'
+
+        balance_list = dbutils.simple_select("balance", 'user', "user_id", user.id)
+
         inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.avatar_url)
         if kingdom == "None":
             inventory_embed.add_field(name="**Financials**",
                                       value=f"**Personal Balance:** "
-                                            f"<:Nug:884320353202081833>{profile_json[f'{user.id}']['balance']}\n")
+                                            f"<:Nug:884320353202081833>{balance_list[0][0]}\n")
         else:
             inventory_embed.add_field(name="**Financials**",
                                       value=f"**Personal Balance:** "
-                                            f"<:Nug:884320353202081833>{profile_json[f'{user.id}']['balance']}\n"
+                                            f"<:Nug:884320353202081833>{balance_list[0][0]}\n"
                                             f"**{kingdom.capitalize()} Treasury:** "
                                             f"<:Nug:884320353202081833>{kingdom_json[kingdom]}")
-        inventory_embed.add_field(name=f"**Inventory**", value=inventory_list, inline=False)
+        inventory_embed.add_field(name=f"**Inventory**", value=inventory_text, inline=False)
         inventory_embed.set_footer(text="Use !redeem <item> to redeem Roles & Tickets!")
         await ctx.send(embed=inventory_embed)
 
