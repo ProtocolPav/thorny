@@ -7,6 +7,7 @@ import errors
 import logs
 import random
 from datetime import datetime, timedelta
+from modules import bank
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -15,7 +16,7 @@ class Inventory(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(aliases=['inv'], invoke_without_command=True, help="See your or a person's Inventory")
+    @commands.group(aliases=['inv'], invoke_without_command=True, help="See you or a person's Inventory")
     async def inventory(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
@@ -46,9 +47,9 @@ class Inventory(commands.Cog):
         inventory_embed.set_footer(text="Use !redeem <item> to redeem Roles & Tickets!")
         await ctx.send(embed=inventory_embed)
 
-    @inventory.command(hidden=True, help="Add items to a player's inventory. Items: role_01, ticket_02, present_03")
+    @inventory.command(hidden=True, help="Add items to a player's inventory.\nItems: role_01, ticket_02, present_03")
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, user: discord.User = None, item=None, amnt=1):
+    async def add(self, ctx, user: discord.User = None, item=None, amnt=1, send_message=None):
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         item_found = False
@@ -64,7 +65,8 @@ class Inventory(commands.Cog):
                         updated_slot = {'item_id': item, "amount": amnt}
                         profile_update(user, updated_slot, 'inventory', f'slot{slot}')
                         item_found = True
-                        await ctx.send(f"Added {item} to {user}'s Inventory!")
+                        if send_message is None:
+                            await ctx.send(f"Added {item} to {user}'s Inventory!")
                 else:
                     for i in range(1, 10):
                         item_id = profile[f"{user.id}"]['inventory'][f'slot{i}']['item_id']
@@ -73,10 +75,10 @@ class Inventory(commands.Cog):
                             updated_slot = {'item_id': item, "amount": amnt}
                             profile_update(user, updated_slot, 'inventory', f'slot{i}')
                             item_found = True
-                            await ctx.send(f"Added {item} to {user}'s Inventory!")
+                            if send_message is None:
+                                await ctx.send(f"Added {item} to {user}'s Inventory!")
 
-    @inventory.command(hidden=True, help="Remove items from player's inventory. "
-                                         "Items: role_01, ticket_02, present_03")
+    @inventory.command(hidden=True, help="Remove items from player's inventory.\nItems: role_01, ticket_02, present_03")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.User = None, item=None, amnt=None):
         profile_file = open('../thorny_data/profiles.json', 'r+')
@@ -142,9 +144,9 @@ class Inventory(commands.Cog):
                                 profile_update(ctx.author, updated_slot, 'inventory', f'slot{i}')
                                 item_found = True
                                 await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
-                    bank_log = self.client.get_channel(config['channels']['bank_logs'])
-                    await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
-                                                               counters["ticket_price"], ['Scratch Ticket']))
+                bank_log = self.client.get_channel(config['channels']['bank_logs'])
+                await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
+                                                           counters["ticket_price"], ['Scratch Ticket']))
             else:
                 await ctx.send(embed=errors.Pay.lack_nugs_error)
         else:
@@ -169,6 +171,7 @@ class Inventory(commands.Cog):
         slot = 0
         ticket_prizes = [[":gem:", 2], [":ringed_planet:", 3], [":tangerine:", 4], ["<:grassyE:840170557508026368>", 7],
                          ["<:goldenE:857714717153689610>", 15], [":heart_on_fire:", 30]]
+        present_choices = ['role_01;1', 'ticket_02;1', 'nugs;13', 'nugs;24', 'ticket_02;4', 'coal;1', 'present_03;3']
 
         if item.lower() in 'scratch ticket':
             while not item_found:
@@ -226,14 +229,48 @@ class Inventory(commands.Cog):
                         profile_update(ctx.author, updated_slot, 'inventory', f'slot{slot}')
                         item_found = True
 
-                        role_embed = discord.Embed(color=ctx.author.color)
-                        role_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
-                                             value=f"I have removed 1 `Custom Role (1 Month)` from your inventory, but"
+                        present_embed = discord.Embed(color=ctx.author.color)
+                        present_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
+                                                value=f"I have removed 1 `Custom Role (1 Month)` from your inventory, but"
                                                    f" at the current moment I can't add roles to you! Please DM a CM "
                                                    f"or Pav and they will get you sorted!"
                                                    f"\n\nFor security, tell them this code: "
                                                    f"**ESC{random.randint(9999, 99999)}**")
-                        await ctx.send(embed=role_embed)
+                        await ctx.send(embed=present_embed)
+                else:
+                    item_found = True
+                    await ctx.send(embed=errors.Shop.empty_inventory_error)
+
+        elif item.lower() in 'christmas present':
+            while not item_found:
+                if slot <= 8:
+                    slot += 1
+                    item_id = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['item_id']
+                    if item_id == "present_03":
+                        amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['amount'] - 1
+                        if amnt == 0:
+                            updated_slot = {'item_id': "empty_00", "amount": 0}
+                        else:
+                            updated_slot = {'item_id': "present_03", "amount": amnt}
+                        profile_update(ctx.author, updated_slot, 'inventory', f'slot{slot}')
+                        item_found = True
+
+                        choice = random.choices(present_choices, weights=(1, 3, 5, 3, 2, 1, 0.5), k=1)[0]
+                        choice = choice.split(';')
+                        if choice[0] == 'nugs':
+                            await bank.Bank.edit(self, ctx, ctx.author, int(choice[1]), True)
+                            answer = f"{choice[1]} Nugs!\nThey have been added to your balance!"
+                        elif choice[0] == 'coal':
+                            answer = 'Coal :(\nLooks like someone has been a naughty child!'
+                        else:
+                            await Inventory.add(self, ctx, ctx.author, choice[0], int(choice[1]), True)
+                            answer = f'{choice[1]} {config["inv_items"][choice[0]]}(s)!\nThe item(s) have been added ' \
+                                     f'to your inventory!'
+
+                        present_embed = discord.Embed(color=ctx.author.color)
+                        present_embed.add_field(name="**You open your present and you get...**",
+                                                value=f"{answer}\n\nMerry Christmas!!!")
+                        await ctx.send(embed=present_embed)
                 else:
                     item_found = True
                     await ctx.send(embed=errors.Shop.empty_inventory_error)
