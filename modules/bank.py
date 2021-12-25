@@ -47,7 +47,7 @@ class Bank(commands.Cog):
 
     @balance.command(aliases=['add', 'remove'], help="CM Only | Edit a player's balance (- for removal)", hidden=True)
     @commands.has_permissions(administrator=True)
-    async def edit(self, ctx, user: discord.User, amount):
+    async def edit(self, ctx, user: discord.User, amount, send_message=None):
         func.profile_update(user)
         file_profiles = open('./../thorny_data/profiles.json', 'r+')
         json_profile = json.load(file_profiles)
@@ -57,7 +57,8 @@ class Bank(commands.Cog):
 
         amount = json_profile[f'{user.id}']['balance'] + int(amount)
         func.profile_update(user, int(amount), 'balance')
-        await ctx.send(f"{user}'s balance is now **{amount}**")
+        if send_message is None:
+            await ctx.send(f"{user}'s balance is now **{amount}**")
 
     @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]")
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
