@@ -115,6 +115,7 @@ class Inventory(commands.Cog):
 
     @store.command(help="Purchase an item from the store. Items: Ticket")
     async def buy(self, ctx, item):
+        func.profile_update(ctx.author)
         profile_file = open('../thorny_data/profiles.json', 'r+')
         profile = json.load(profile_file)
         counters = json.load(open('../thorny_data/counters.json', 'r+'))
@@ -122,33 +123,48 @@ class Inventory(commands.Cog):
         slot = 0
 
         if item.lower() in 'scratch ticket':
-            if profile[f'{ctx.author.id}']['balance'] - counters["ticket_price"] >= 0:
-                new_balance = profile[f"{ctx.author.id}"]['balance'] - counters["ticket_price"]
-                profile_update(ctx.author, new_balance, 'balance')
-                while not item_found:
-                    if slot <= 8:
-                        slot += 1
-                        item_id = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['item_id']
-                        if item_id == "ticket_02":
-                            amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['amount'] + 1
-                            updated_slot = {'item_id': "ticket_02", "amount": amnt}
-                            profile_update(ctx.author, updated_slot, 'inventory', f'slot{slot}')
-                            item_found = True
-                            await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
-                    else:
-                        for i in range(1, 10):
-                            item_id = profile[f"{ctx.author.id}"]['inventory'][f'slot{i}']['item_id']
-                            if item_id == "empty_00" and not item_found:
-                                amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{i}']['amount'] + 1
+            last_purchase = datetime.strptime(profile[f'{ctx.author.id}']['ticket_counter']['last_purchase'],
+                                              "%Y-%m-%d %H:%M:%S")
+            calc = datetime.now() - last_purchase
+            if profile[f'{ctx.author.id}']['ticket_counter']['ticket_count'] < 5 or calc > timedelta(hours=24):
+                if profile[f'{ctx.author.id}']['balance'] - counters["ticket_price"] >= 0:
+                    new_balance = profile[f"{ctx.author.id}"]['balance'] - counters["ticket_price"]
+                    profile_update(ctx.author, new_balance, 'balance')
+                    while not item_found:
+                        if slot <= 8:
+                            slot += 1
+                            item_id = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['item_id']
+                            if item_id == "ticket_02":
+                                amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{slot}']['amount'] + 1
                                 updated_slot = {'item_id': "ticket_02", "amount": amnt}
-                                profile_update(ctx.author, updated_slot, 'inventory', f'slot{i}')
+                                profile_update(ctx.author, updated_slot, 'inventory', f'slot{slot}')
                                 item_found = True
+                                ticket_count = profile[f'{ctx.author.id}']['ticket_counter']['ticket_count'] + 1
+                                profile_update(ctx.author, ticket_count, 'ticket_counter', 'ticket_count')
+                                profile_update(ctx.author, str(datetime.now().replace(microsecond=0)),
+                                               'ticket_counter', 'last_purchase')
                                 await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
-                bank_log = self.client.get_channel(config['channels']['bank_logs'])
-                await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
-                                                           counters["ticket_price"], ['Scratch Ticket']))
+                        else:
+                            for i in range(1, 10):
+                                item_id = profile[f"{ctx.author.id}"]['inventory'][f'slot{i}']['item_id']
+                                if item_id == "empty_00" and not item_found:
+                                    amnt = profile[f"{ctx.author.id}"]['inventory'][f'slot{i}']['amount'] + 1
+                                    updated_slot = {'item_id': "ticket_02", "amount": amnt}
+                                    profile_update(ctx.author, updated_slot, 'inventory', f'slot{i}')
+                                    item_found = True
+                                    await ctx.send(f"Bought a Ticket! Use `!redeem ticket` to redeem")
+                    bank_log = self.client.get_channel(config['channels']['bank_logs'])
+                    await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
+                                                               counters["ticket_price"], ['Scratch Ticket']))
+                    if calc > timedelta(hours=24):
+                        ticket_count = profile[f'{ctx.author.id}']['ticket_counter']['ticket_count'] - 4
+                        profile_update(ctx.author, ticket_count, 'ticket_counter', 'ticket_count')
+                else:
+                    await ctx.send(embed=errors.Pay.lack_nugs_error)
             else:
-                await ctx.send(embed=errors.Pay.lack_nugs_error)
+                new_date = last_purchase + timedelta(hours=24)
+                new_date = new_date - datetime.now()
+                await ctx.send(f"You can buy a ticket in {str(new_date).split(':')[0]}h{str(new_date).split(':')[1]}m!")
         else:
             await ctx.send(embed=errors.Shop.item_error)
 
