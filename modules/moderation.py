@@ -6,6 +6,8 @@ import errors
 import logs
 import functions as func
 
+config = json.load(open("./../thorny_data/config.json", "r"))
+
 
 class Moderation(commands.Cog):
     def __init__(self, client):
@@ -74,6 +76,10 @@ class Moderation(commands.Cog):
                 await user.remove_roles(not_playing_role)
             await user.add_roles(timeout_role)
             await ctx.send(f"{user.display_name} Has entered the Gulag!")
+            stafflogs = self.client.get_channel(config['channels']['event_logs'])
+            await stafflogs.send(embed=logs.gulag(ctx.author.id, user.id))
+            gulag = self.client.get_channel(config['channels']['gulag_channel'])
+            await gulag.send("**Welcome To The Gulag.**\nhttps://tenor.com/view/ba-sing-se-gif-20976912")
         else:
             await user.remove_roles(timeout_role)
             await user.add_roles(citizen_role)
