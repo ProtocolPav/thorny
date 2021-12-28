@@ -373,3 +373,8 @@ class Information(commands.Cog):
             json.dump(config, config_file, indent=3)
             config_file.close()
             await ctx.send(f"Done! Now the **{field}** of **{kingdom.capitalize()}** is '*{' '.join(value)}*'")
+
+
+    @commands.command()
+    async def wiki(self, ctx, *page):
+        await ctx.send(f"**Everthorn Wiki**\nhttps://everthorn.fandom.com/wiki/{'_'.join(page)}")
