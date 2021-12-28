@@ -387,6 +387,13 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
 
     if profile[f'{ctx_author.id}'].get('strikes') is None:
         profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
+    if profile[f'{ctx_author.id}'].get('strikes') is {}:
+        profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
+
+    if profile[f'{ctx_author.id}'].get('ticket_counter') is None:
+        profile[f'{ctx_author.id}']['ticket_counter'] = {}
+        profile[f'{ctx_author.id}']['ticket_counter']['ticket_count'] = 5
+        profile[f'{ctx_author.id}']['ticket_counter']['last_purchase'] = '1900-01-01 0:00:01'
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
