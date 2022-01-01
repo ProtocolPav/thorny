@@ -3,7 +3,9 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from thorny_core import functions as func
+import functions as func
+import logs
+import dbutils
 import json
 from modules import bank, gateway, help, inventory, leaderboard, playtime, profile, moderation
 
@@ -24,8 +26,8 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"stuff. Now Scram | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.watching,
+                                    name=f"you... | {v}")
     print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     await func.update_months(thorny)
@@ -51,10 +53,70 @@ async def on_message(message):
         await message.channel.send("Hi!")
     elif message.content.lower() == 'pav':
         await message.channel.send('Yes. He is Pav.')
-    elif message.content.lower() == '<@!879249190801248276>':
-        await message.channel.send('Use !gateway for help!')
+    elif message.content.lower() == 'yesss':
+        await message.channel.send('WOOOOOOOO!!!!!')
+    elif 'scream' in message.content.lower():
+        await message.channel.send('AAAHHHHHHHHHH')
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
+
+
+@thorny.listen()
+async def on_message(message):
+    banned_words = ['nigga', 'nigg', 'nigger', 'fag', 'faggot', 'shota', 'f*g', 'n*gg']
+    for word in banned_words:
+        if word in message.content.lower():
+            await message.delete()
+
+
+@thorny.event
+async def on_message_delete(message):
+    log_embed = logs.message_delete(message)
+    stafflogs = thorny.get_channel(config['channels']['event_logs'])
+    await stafflogs.send(embed=log_embed)
+
+
+@thorny.event
+async def on_message_edit(before, after):
+    log_embed = logs.message_edit(before, after)
+    stafflogs = thorny.get_channel(config['channels']['event_logs'])
+    await stafflogs.send(embed=log_embed)
+
+
+@thorny.event
+async def on_raw_reaction_add(payload):
+    guild = thorny.get_guild(payload.guild_id)
+    male = discord.utils.get(guild.roles, name="He/Him")
+    female = discord.utils.get(guild.roles, name="She/Her")
+    other = discord.utils.get(guild.roles, name="They/Them")
+    if payload.message_id == config['channels']['pronoun_message_id']:
+        if payload.emoji.name == '👱':
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(other)
+        elif payload.emoji.name == '👨‍🦱':
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(male)
+        elif payload.emoji.name == '👩‍🦰':
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(female)
+
+
+@thorny.event
+async def on_raw_reaction_remove(payload):
+    guild = thorny.get_guild(payload.guild_id)
+    male = discord.utils.get(guild.roles, name="He/Him")
+    female = discord.utils.get(guild.roles, name="She/Her")
+    other = discord.utils.get(guild.roles, name="They/Them")
+    if payload.message_id == config['channels']['pronoun_message_id']:
+        if payload.emoji.name == '👱':
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(other)
+        elif payload.emoji.name == '👨‍🦱':
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(male)
+        elif payload.emoji.name == '👩‍🦰':
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(female)
 
 
 @thorny.event
