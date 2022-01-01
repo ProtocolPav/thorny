@@ -1,67 +1,89 @@
-import psycopg2 as ps
+import asyncpg as pg
+import asyncio
 from datetime import datetime, timedelta
+import json
 import discord
 
-connection = ps.connect(dbname='postgres', user='postgres', password='***REMOVED***')
-cursor = connection.cursor()
+# connection = ps.connect(dbname='postgres', user='postgres', password='***REMOVED***')
+# cursor = connection.cursor()
 
-""" These are one-time use commands """
+""" Needs reworking to asyncpg. Test in school.py first """
 
 
-def port_user_profiles():
-    conn = ps.connect(dbname='postgres', user='postgres', password='***REMOVED***')
-    cur = connection.cursor()
+async def connection():
+    pool = await pg.create_pool(database='postgres', user='postgres', password='***REMOVED***')
+    return pool
 
-    profile = json.load(open("thorny_data/profiles.json", "r"))
+conn = asyncio.get_event_loop().run_until_complete(connection())
+
+
+async def port_user_profiles():
+    conn = await pg.connect(database='postgres', user='postgres', password='***REMOVED***')
+
+    profile = json.load(open("../thorny_data/profiles.json", "r"))
     for user in profile:
-        playtime = profile[str(user)]['activity']['total'].split('h')
-        if 'days' in playtime[0]:
-            playtime[0] = playtime[0].split(' days, ')
-            profile[str(user)]['activity']['total'] = timedelta(days=int(playtime[0][0]), hours=int(playtime[0][1]),
-                                                                minutes=int(playtime[1][0:2]))
-        playtime2 = profile[str(user)]['activity']['current_month'].split('h')
-        if 'days' in playtime2[0]:
-            playtime2[0] = playtime2[0].split(' days, ')
-            profile[str(user)]['activity']['current_month'] = timedelta(days=int(playtime2[0][0]),
-                                                                        hours=int(playtime2[0][1]),
-                                                                        minutes=int(playtime2[1][0:2]))
-        playtime3 = profile[str(user)]['activity']['1_month_ago'].split('h')
-        if 'days' in playtime3[0]:
-            playtime3[0] = playtime3[0].split(' days, ')
-            profile[str(user)]['activity']['1_month_ago'] = timedelta(days=int(playtime3[0][0]),
-                                                                      hours=int(playtime3[0][1]),
-                                                                      minutes=int(playtime3[1][0:2]))
-        playtime3 = profile[str(user)]['activity']['2_months_ago'].split('h')
-        if 'days' in playtime3[0]:
-            playtime3[0] = playtime3[0].split(' days, ')
-            profile[str(user)]['activity']['2_months_ago'] = timedelta(days=int(playtime3[0][0]),
-                                                                       hours=int(playtime3[0][1]),
-                                                                       minutes=int(playtime3[1][0:2]))
+        total_playtime = profile[str(user)]['activity']['total'].split('h')
+        if 'days' in total_playtime[0]:
+            total_playtime[0] = total_playtime[0].split(' days, ')
+            profile[str(user)]['activity']['total'] = timedelta(days=int(total_playtime[0][0]),
+                                                                hours=int(total_playtime[0][1]),
+                                                                minutes=int(total_playtime[1][0:2]))
+        elif 'day' in total_playtime[0]:
+            total_playtime[0] = total_playtime[0].split(' day, ')
+            profile[str(user)]['activity']['total'] = timedelta(days=int(total_playtime[0][0]),
+                                                                hours=int(total_playtime[0][1]),
+                                                                minutes=int(total_playtime[1][0:2]))
+        else:
+            profile[str(user)]['activity']['total'] = timedelta(hours=int(total_playtime[0]),
+                                                                minutes=int(total_playtime[1][0:2]))
+        current_playtime = profile[str(user)]['activity']['current_month'].split('h')
+        if 'days' in current_playtime[0]:
+            current_playtime[0] = current_playtime[0].split(' days, ')
+            profile[str(user)]['activity']['current_month'] = timedelta(days=int(current_playtime[0][0]),
+                                                                        hours=int(current_playtime[0][1]),
+                                                                        minutes=int(current_playtime[1][0:2]))
+        elif 'day' in current_playtime[0]:
+            current_playtime[0] = current_playtime[0].split(' day, ')
+            profile[str(user)]['activity']['current_month'] = timedelta(days=int(current_playtime[0][0]),
+                                                                        hours=int(current_playtime[0][1]),
+                                                                        minutes=int(current_playtime[1][0:2]))
+        else:
+            profile[str(user)]['activity']['current_month'] = timedelta(hours=int(current_playtime[0]),
+                                                                        minutes=int(current_playtime[1][0:2]))
+        last_playtime = profile[str(user)]['activity']['1_month_ago'].split('h')
+        if 'days' in last_playtime[0]:
+            last_playtime[0] = last_playtime[0].split(' days, ')
+            profile[str(user)]['activity']['1_month_ago'] = timedelta(days=int(last_playtime[0][0]),
+                                                                      hours=int(last_playtime[0][1]),
+                                                                      minutes=int(last_playtime[1][0:2]))
+        elif 'day' in last_playtime[0]:
+            last_playtime[0] = last_playtime[0].split(' day, ')
+            profile[str(user)]['activity']['1_month_ago'] = timedelta(days=int(last_playtime[0][0]),
+                                                                      hours=int(last_playtime[0][1]),
+                                                                      minutes=int(last_playtime[1][0:2]))
+        else:
+            profile[str(user)]['activity']['1_month_ago'] = timedelta(hours=int(last_playtime[0]),
+                                                                      minutes=int(last_playtime[1][0:2]))
+
+        last_playtime = profile[str(user)]['activity']['2_months_ago'].split('h')
+        if 'days' in last_playtime[0]:
+            last_playtime[0] = last_playtime[0].split(' days, ')
+            profile[str(user)]['activity']['2_months_ago'] = timedelta(days=int(last_playtime[0][0]),
+                                                                       hours=int(last_playtime[0][1]),
+                                                                       minutes=int(last_playtime[1][0:2]))
+        elif 'day' in last_playtime[0]:
+            last_playtime[0] = last_playtime[0].split(' day, ')
+            profile[str(user)]['activity']['2_months_ago'] = timedelta(days=int(last_playtime[0][0]),
+                                                                       hours=int(last_playtime[0][1]),
+                                                                       minutes=int(last_playtime[1][0:2]))
+        else:
+            profile[str(user)]['activity']['2_months_ago'] = timedelta(hours=int(last_playtime[0]),
+                                                                       minutes=int(last_playtime[1][0:2]))
+
         if profile[str(user)].get('kingdom') is not None:
             profile[str(user)]['kingdom'] = profile[str(user)]['kingdom'].capitalize()
         else:
             profile[str(user)]['kingdom'] = None
-
-        if profile[str(user)].get('balance') is None:  # Balance
-            profile[str(user)]['balance'] = 30
-
-        if profile[f'{user}'].get('kingdom') is None:  # Kingdom
-            profile[str(user)]['kingdom'] = None
-
-        if profile[f'{user}'].get('activity') is None:  # Activity
-            profile[f'{user}']['activity'] = {}
-        if profile[f'{user}']['activity'].get("total") is None:
-            profile[f'{user}']['activity']["total"] = "0h00m"
-        if profile[f'{user}']['activity'].get("latest_playtime") is None:
-            profile[f'{user}']['activity']["latest_playtime"] = "0h00m"
-        if profile[f'{user}']['activity'].get("daily_average") is None:
-            profile[f'{user}']['activity']["daily_average"] = "0h00m"
-        if profile[f'{user}']['activity'].get("current_month") is None:
-            profile[f'{user}']['activity']["current_month"] = "0h00m"
-        if profile[f'{user}']['activity'].get("1_month_ago") is None:
-            profile[f'{user}']['activity']["1_month_ago"] = "0h00m"
-        if profile[f'{user}']['activity'].get("2_months_ago") is None:
-            profile[f'{user}']['activity']["2_months_ago"] = "0h00m"
 
         if profile[f'{user}'].get('fields') is None:  # Profile Fields
             profile[f'{user}']['fields'] = {}
@@ -80,30 +102,33 @@ def port_user_profiles():
         if profile[f'{user}']['fields'].get('gamertag') is None:
             profile[f'{user}']['fields']['gamertag'] = None
 
-        if profile[f'{user}'].get('date_joined') is None:  # Date Joined
+        if profile[f'{user}'].get('date_joined') is None or profile[f'{user}']['date_joined'] == '':  # Date Joined
             profile[f'{user}']['date_joined'] = None
+        else:
+            profile[f'{user}']['date_joined'] = datetime.strptime(profile[f'{user}']['date_joined'],
+                                                                  "%Y-%m-%d %H:%M:%S")
 
-        elif profile[f'{user}']['date_joined'] == '':  # Date Joined
-            profile[f'{user}']['date_joined'] = None
-
-        if profile[f'{user}'].get('birthday') is None:  # Birthday
-            profile[f'{user}']['birthday'] = {}
-        if type(profile[f'{user}']['birthday']) == str:  # Birthday
+        if profile[f'{user}'].get('birthday') is None or type(profile[f'{user}']['birthday']) == str:  # Birthday
             profile[f'{user}']['birthday'] = {}
         if profile[f'{user}']['birthday'].get('system') is None:
             profile[f'{user}']['birthday']['system'] = None
+        else:
+            profile[f'{user}']['birthday']['system'] = datetime.strptime(profile[f'{user}']['birthday']['system'],
+                                                                         "%Y-%m-%d %H:%M:%S")
 
-        cur.execute(f'INSERT INTO thorny.user(user_id, username, join_date, birthday, kingdom, balance)'
-                    f'VALUES(%s, %s, %s, %s, %s, %s)',
-                    (user, profile[str(user)]['user'], profile[str(user)]['date_joined'],
-                     profile[str(user)]['birthday']['system'], profile[str(user)]['kingdom'],
-                     profile[str(user)]['balance']))
-        cur.execute(f'INSERT INTO thorny.user_activity(user_id, total_playtime, current_month, "1_month_ago", '
-                    f'"2_months_ago")'
-                    'VALUES(%s, %s, %s, %s, %s)', (user, profile[str(user)]['activity']['total'],
-                                                   profile[str(user)]['activity']['current_month'],
-                                                   profile[str(user)]['activity']['1_month_ago'],
-                                                   profile[str(user)]['activity']['2_months_ago']))
+        await conn.execute(f'INSERT INTO thorny.user(user_id, username, join_date, birthday, kingdom, balance)'
+                           f'VALUES($1, $2, $3, $4, $5, $6)',
+                           int(user), profile[str(user)]['user'], profile[str(user)]['date_joined'],
+                           profile[str(user)]['birthday']['system'], profile[str(user)]['kingdom'],
+                           int(profile[str(user)]['balance']))
+
+        await conn.execute(f'INSERT INTO thorny.user_activity(user_id, total_playtime, current_month, "1_month_ago", '
+                           f'"2_months_ago") VALUES($1, $2, $3, $4, $5)',
+                           int(user), profile[str(user)]['activity']['total'],
+                           profile[str(user)]['activity']['current_month'],
+                           profile[str(user)]['activity']['1_month_ago'],
+                           profile[str(user)]['activity']['2_months_ago'])
+
         delete_these = ['Here Goes 5 Word Slogan', 'A 5 Word Slogan About You', 'Your Minecraft Gamertag',
                         "What's your MC Gamertag?", "Your Town", "WHat town you live in?",
                         "Your Role in your kingdom (King, Citizen, PoorMan, Council Member, Etc.)",
@@ -114,12 +139,15 @@ def port_user_profiles():
         for field in profile[str(user)]['fields']:
             if profile[str(user)]['fields'][field] in delete_these:
                 profile[str(user)]['fields'][field] = None
-        cur.execute(f'INSERT INTO thorny.profile(user_id, slogan, gamertag, town, role, wiki, aboutme, lore)'
-                    f'VALUES(%s, %s, %s, %s, %s, %s, %s, %s)',
-                    (user, profile[str(user)]['fields']['slogan'], profile[str(user)]['fields']['gamertag'],
-                     profile[str(user)]['fields']['town'], profile[str(user)]['fields']['role'],
-                     profile[str(user)]['fields']['wiki'], profile[str(user)]['fields']['biography'],
-                     profile[str(user)]['fields']['lore']))
+
+        await conn.execute(f'INSERT INTO thorny.profile(user_id, slogan, gamertag, town, role, wiki, aboutme, lore)'
+                           f'VALUES($1, $2, $3, $4, $5, $6, $7, $8)',
+                           int(user), profile[str(user)]['fields']['slogan'], profile[str(user)]['fields']['gamertag'],
+                           profile[str(user)]['fields']['town'].capitalize(),
+                           profile[str(user)]['fields']['role'].capitalize(),
+                           profile[str(user)]['fields']['wiki'], profile[str(user)]['fields']['biography'],
+                           profile[str(user)]['fields']['lore'])
+
         for slot in profile[str(user)]['inventory']:
             if len(profile[str(user)]['inventory']) > 9:
                 pass
@@ -128,16 +156,14 @@ def port_user_profiles():
                     pass
                 else:
                     if profile[str(user)]['inventory'][slot]['item_id'] != 'empty_00':
-                        cur.execute('INSERT INTO thorny.inventory(user_id, item_id, item_count) '
-                                    'VALUES(%s, %s, %s)',
-                                    (user, profile[str(user)]['inventory'][slot]['item_id'],
-                                     profile[str(user)]['inventory'][slot]['amount']))
-        conn.commit()
+                        await conn.execute('INSERT INTO thorny.inventory(user_id, item_id, item_count) '
+                                           'VALUES($1, $2, $3)',
+                                           int(user), profile[str(user)]['inventory'][slot]['item_id'],
+                                           int(profile[str(user)]['inventory'][slot]['amount']))
 
 
-def port_activity():
-    conn = ps.connect(dbname='postgres', user='postgres', password='***REMOVED***')
-    cur = connection.cursor()
+async def port_activity():
+    conn = await pg.connect(database='postgres', user='postgres', password='***REMOVED***')
 
     month = ['oct', 'nov', 'dec']
     activity = json.load(open("thorny_data/activity_sep21.json", "r"))
@@ -149,23 +175,24 @@ def port_activity():
             # This will be used as a second key in addition with the userID to find
             connect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             user_id = log['userid']
-            cur.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                        'VALUES (%s, %s)', (user_id, connect_date))
+            await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
+                               'VALUES ($1, $2)', int(user_id), connect_date)
 
         elif log['status'] == 'CONNECT' and connect_date is not None:
             connect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             user_id = log['userid']
-            cur.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                        'VALUES (%s, %s)', (user_id, connect_date))
+            await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
+                               'VALUES ($1, $2)', int(user_id), connect_date)
             connect_date = None
             user_id = None
 
         elif log['status'] == 'DISCONNECT' and connect_date is not None:
             disconnect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             playtime = disconnect_date - connect_date
-            cur.execute("UPDATE thorny.activity "
-                        "SET disconnect_time=%s, playtime=%s "
-                        "WHERE user_id=%s AND connect_time=%s", (disconnect_date, playtime, user_id, connect_date))
+            await conn.execute("UPDATE thorny.activity "
+                               "SET disconnect_time=$1, playtime=$2 "
+                               "WHERE user_id=$3 AND connect_time=$4",
+                               disconnect_date, playtime, int(user_id), connect_date)
             connect_date = None
             user_id = None
     for mnth in month:
@@ -178,23 +205,56 @@ def port_activity():
                 # This will be used as a second key in addition with the userID to find
                 connect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 user_id = log['userid']
-                cur.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                            'VALUES (%s, %s)', (user_id, connect_date))
+                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
+                                   'VALUES ($1, $2)', int(user_id), connect_date)
 
             elif log['status'] == 'CONNECT' and connect_date is not None:
                 connect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 user_id = log['userid']
-                cur.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                            'VALUES (%s, %s)', (user_id, connect_date))
+                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
+                                   'VALUES ($1, $2)', int(user_id), connect_date)
                 connect_date = None
                 user_id = None
 
             elif log['status'] == 'DISCONNECT' and connect_date is not None:
                 disconnect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 playtime = disconnect_date - connect_date
-                cur.execute("UPDATE thorny.activity "
-                            "SET disconnect_time=%s, playtime=%s "
-                            "WHERE user_id=%s AND connect_time=%s", (disconnect_date, playtime, user_id, connect_date))
+                await conn.execute("UPDATE thorny.activity "
+                                   "SET disconnect_time=$1, playtime=$2 "
+                                   "WHERE user_id=$3 AND connect_time=$4",
+                                   disconnect_date, playtime, int(user_id), connect_date)
                 connect_date = None
                 user_id = None
-    conn.commit()
+
+
+async def condition_select(table, column, condition, condition_req):
+    return await conn.fetch(f"SELECT {column} FROM thorny.{table} WHERE {condition}=$1", condition_req)
+
+
+async def simple_select(table, column):
+
+    return await conn.fetch(f"SELECT {column} FROM thorny.{table}")
+
+
+async def simple_update(table, column, new_val, condition, condition_requirement):
+    await conn.execute(f"UPDATE thorny.{table} "
+                             f"SET {column}=$1"
+                             f"WHERE {condition}=$2", new_val, condition_requirement)
+
+
+async def inventory_insert(user_id, item_id, item_count):
+    connection = await ps.connect(database='postgres', user='postgres', password='***REMOVED***')
+
+    await connection.cursor(f"INSERT INTO thorny.inventory(user_id, item_id, item_count)"
+                            f"VALUES(%s, %s, %s)", (user_id, item_id, item_count))
+    await connection.commit()
+
+
+async def inventory_update(item_id, item_count, user_id):
+    connection = await ps.connect(database='postgres', user='postgres', password='***REMOVED***')
+
+    await connection.cursor(f"UPDATE thorny.inventory "
+                            f"SET item_count=%s"
+                            f"WHERE user_id=%s AND item_id=%s", (item_count, user_id, item_id))
+    await connection.commit()
+
