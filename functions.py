@@ -141,12 +141,11 @@ def write_log(status: str, datetime, ctx):
 
 
 def get_user_kingdom(ctx, user):
-    kingdom = 'None'
+    kingdom = None
     kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
     for item in kingdoms_list:
         if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
-            kingdom = item.lower()
-    profile_update(user, kingdom, "kingdom")
+            kingdom = item.capitalize()
     return kingdom
 
 
@@ -386,6 +385,8 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['birthday']['system'] = None
 
     if profile[f'{ctx_author.id}'].get('strikes') is None:
+        profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
+    if profile[f'{ctx_author.id}'].get('strikes') is {}:
         profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
 
     if key2 is None and key1 is not None:

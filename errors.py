@@ -38,21 +38,13 @@ class Pay:
 
 
 class Treasury:
-    store_lack_nugs_error = discord.Embed(color=0xD70040)
-    store_lack_nugs_error.add_field(name=f'<:_no:921840417362804777> Could not store in the Kingdom Treasury!',
-                                    value='Reason: You do not have enough nugs!')
-
-    take_lack_nugs_error = discord.Embed(color=0xD70040)
-    take_lack_nugs_error.add_field(name=f'<:_no:921840417362804777> Could not take from the Kingdom Treasury!',
-                                   value='Reason: There is too little nugs in there!')
-
-    negative_nugs_error = discord.Embed(color=0xD70040)
-    negative_nugs_error.add_field(name='<:_no:921840417362804777> Unsuccessful!',
-                                  value='Reason: You can not take a negative amount!')
-
     ruler_error = discord.Embed(color=0xD70040)
     ruler_error.add_field(name=f'<:_no:921840417362804777> Could not access the Treasury!',
                           value='Reason: You are not a Ruler!')
+
+    kingdom_error = discord.Embed(color=0xD70040)
+    kingdom_error.add_field(name=f'<:_no:921840417362804777> Well well well',
+                            value="Seems like you're trying to donate to your kingdom.\nIssue is... You're not in one!")
 
 
 class Shop:

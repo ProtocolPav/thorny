@@ -1,13 +1,11 @@
-import asyncio
 from datetime import datetime
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-import functions as func
-import errors
+from thorny_core import functions as func
 import json
-from modules import bank, fun, gateway, help, inventory, leaderboard, playtime, profile, moderation
+from modules import bank, gateway, help, inventory, leaderboard, playtime, profile, moderation
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -26,8 +24,8 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    bot_activity = discord.Activity(type=discord.ActivityType.watching,
-                                    name=f"you... | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.listening,
+                                    name=f"stuff. Now Scram | {v}")
     print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     await func.update_months(thorny)
