@@ -14,6 +14,7 @@ async def connection():
     pool = await pg.create_pool(database='postgres', user='postgres', password='p@v3LPlay%MC')
     return pool
 
+
 conn = asyncio.get_event_loop().run_until_complete(connection())
 
 
@@ -156,9 +157,11 @@ async def port_user_profiles():
                     pass
                 else:
                     if profile[str(user)]['inventory'][slot]['item_id'] != 'empty_00':
+                        item = '_'.split(profile[str(user)]['inventory'][slot]['item_id'])
+                        item = f"{item[0]}_{item[1][1]}"
                         await conn.execute('INSERT INTO thorny.inventory(user_id, item_id, item_count) '
                                            'VALUES($1, $2, $3)',
-                                           int(user), profile[str(user)]['inventory'][slot]['item_id'],
+                                           int(user), item,
                                            int(profile[str(user)]['inventory'][slot]['amount']))
 
 
@@ -232,29 +235,41 @@ async def condition_select(table, column, condition, condition_req):
 
 
 async def simple_select(table, column):
-
     return await conn.fetch(f"SELECT {column} FROM thorny.{table}")
 
 
 async def simple_update(table, column, new_val, condition, condition_requirement):
     await conn.execute(f"UPDATE thorny.{table} "
-                             f"SET {column}=$1"
-                             f"WHERE {condition}=$2", new_val, condition_requirement)
+                       f"SET {column}=$1"
+                       f"WHERE {condition}=$2", new_val, condition_requirement)
 
 
-async def inventory_insert(user_id, item_id, item_count):
-    connection = await ps.connect(database='postgres', user='postgres', password='p@v3LPlay%MC')
+class Inventory:
+    @staticmethod
+    async def select(item_id, user_id):
+        return await conn.fetchrow(f"SELECT * FROM thorny.inventory WHERE user_id=$1 AND item_id=$2", user_id, item_id)
 
-    await connection.cursor(f"INSERT INTO thorny.inventory(user_id, item_id, item_count)"
-                            f"VALUES(%s, %s, %s)", (user_id, item_id, item_count))
-    await connection.commit()
+    @staticmethod
+    async def delete(item_id, user_id):
+        await conn.execute("DELETE FROM thorny.inventory WHERE user_id=$1 AND item_id =$2", user_id, item_id)
 
+    @staticmethod
+    async def insert(item_id, item_count, user_id):
+        await conn.execute(f"INSERT INTO thorny.inventory(user_id, item_id, item_count)"
+                           f"VALUES($1, $2, $3)", user_id, item_id, item_count)
 
-async def inventory_update(item_id, item_count, user_id):
-    connection = await ps.connect(database='postgres', user='postgres', password='p@v3LPlay%MC')
+    @staticmethod
+    async def update(item_id, item_count, user_id):
+        await conn.execute(f"UPDATE thorny.inventory SET item_count=$1 WHERE user_id=$2 AND item_id=$3",
+                           item_count, user_id, item_id)
 
-    await connection.cursor(f"UPDATE thorny.inventory "
-                            f"SET item_count=%s"
-                            f"WHERE user_id=%s AND item_id=%s", (item_count, user_id, item_id))
-    await connection.commit()
-
+    @staticmethod
+    async def get_item_type(item):
+        try:
+            int(item)
+        except ValueError:
+            return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE item_id=$1 OR friendly_id=$1",
+                                       item)
+        else:
+            return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE unique_id=$1",
+                                       int(item))
