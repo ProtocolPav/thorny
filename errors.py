@@ -61,6 +61,12 @@ class Shop:
                                     value="You tried redeeming something that you don't even own!")
 
 
+class Inventory:
+    item_missing_error = discord.Embed(color=0xD70040)
+    item_missing_error.add_field(name="<:_no:921840417362804777> Cheeky.",
+                                 value="The user does not have this item to remove")
+
+
 class Leaderboard:
     page_error = discord.Embed(color=0xD70040)
     page_error.add_field(name="<:_no:921840417362804777> Not so fast!",
