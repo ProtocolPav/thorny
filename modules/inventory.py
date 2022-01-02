@@ -21,99 +21,80 @@ class Inventory(commands.Cog):
     async def inventory(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-
         kingdom = func.get_user_kingdom(ctx, user)
+        await dbutils.simple_update('user', 'kingdom', kingdom, 'user_id', user.id)
 
-        kingdom_json = json.load(open('./../thorny_data/kingdoms.json', 'r+'))
+        balance_list = await dbutils.condition_select("user", "balance", "user_id", user.id)
+        personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{balance_list[0][0]}"
+        kingdom_bal = ''
+        if kingdom is not None:
+            treasury_list = await dbutils.condition_select("kingdoms", 'treasury', 'kingdom', kingdom)
+            kingdom_bal = f"**{kingdom.capitalize()} Treasury:** <:Nug:884320353202081833>" \
+                          f"{treasury_list[0][0]}"
         inventory_text = ''
-        inventory_list = dbutils.simple_select("*", "inventory", "user_id", user.id)
+        inventory_list = await dbutils.condition_select("inventory", "*", "user_id", user.id)
         for item in inventory_list:
+            item_data = await dbutils.Inventory.get_item_type(item['item_id'])
             inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
-                             f'{item[2]} **|** {config["inv_items"][item[1]]}\n'
+                             f'{item["item_count"]} **|** {item_data["display_name"]}\n'
         if len(inventory_list) < 9:
             for item in range(0, 9 - len(inventory_list)):
                 inventory_text = f'{inventory_text}<:_pink:921708790322192396> 0 **|** Empty Slot\n'
 
-        balance_list = dbutils.simple_select("balance", 'user', "user_id", user.id)
-
         inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.avatar_url)
-        if kingdom == "None":
-            inventory_embed.add_field(name="**Financials**",
-                                      value=f"**Personal Balance:** "
-                                            f"<:Nug:884320353202081833>{balance_list[0][0]}\n")
-        else:
-            inventory_embed.add_field(name="**Financials**",
-                                      value=f"**Personal Balance:** "
-                                            f"<:Nug:884320353202081833>{balance_list[0][0]}\n"
-                                            f"**{kingdom.capitalize()} Treasury:** "
-                                            f"<:Nug:884320353202081833>{kingdom_json[kingdom]}")
+        inventory_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}\n{kingdom_bal}")
         inventory_embed.add_field(name=f"**Inventory**", value=inventory_text, inline=False)
         inventory_embed.set_footer(text="Use !redeem <item> to redeem Roles & Tickets!")
         await ctx.send(embed=inventory_embed)
 
-    @inventory.command(hidden=True, help="Add items to a player's inventory.\nItems: role_01, ticket_02, present_03")
+    @inventory.command(hidden=True, help="Add items to a player's inventory.")
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, user: discord.User = None, item=None, amnt=1, send_message=None):
-        profile_file = open('../thorny_data/profiles.json', 'r+')
-        profile = json.load(profile_file)
-        item_found = False
-        slot = 0
+    async def add(self, ctx, user: discord.User = None, item=None, count=1):
+        item_data = await dbutils.Inventory.get_item_type(item)
+        inv_item = await dbutils.Inventory.select(item_data['item_id'], user.id)
+        item_added = True
+        if not item_data:
+            await ctx.send("Wrong Item")
+            item_added = False
+        elif inv_item:
+            await dbutils.Inventory.update(item_data['item_id'], inv_item['item_count'] + count, user.id)
+        else:
+            await dbutils.Inventory.insert(item_data['item_id'], count, user.id)
 
-        if item in config["inv_items"]:
-            while not item_found:
-                if slot <= 8:
-                    slot += 1
-                    item_id = profile[f"{user.id}"]['inventory'][f'slot{slot}']['item_id']
-                    if item_id == item:
-                        amnt += profile[f"{user.id}"]['inventory'][f'slot{slot}']['amount']
-                        updated_slot = {'item_id': item, "amount": amnt}
-                        profile_update(user, updated_slot, 'inventory', f'slot{slot}')
-                        item_found = True
-                        if send_message is None:
-                            await ctx.send(f"Added {item} to {user}'s Inventory!")
-                else:
-                    for i in range(1, 10):
-                        item_id = profile[f"{user.id}"]['inventory'][f'slot{i}']['item_id']
-                        if item_id == "empty_00" and not item_found:
-                            amnt += profile[f"{user.id}"]['inventory'][f'slot{i}']['amount']
-                            updated_slot = {'item_id': item, "amount": amnt}
-                            profile_update(user, updated_slot, 'inventory', f'slot{i}')
-                            item_found = True
-                            if send_message is None:
-                                await ctx.send(f"Added {item} to {user}'s Inventory!")
+        if item_added is True:
+            inv_edit_embed = discord.Embed(colour=ctx.author.colour)
+            inv_edit_embed.add_field(name="**Item Added Successfully**",
+                                     value=f"Added {count}x `{item_data['display_name']}` to {user}'s Inventory")
+            await ctx.send(embed=inv_edit_embed)
 
-    @inventory.command(hidden=True, help="Remove items from player's inventory.\nItems: role_01, ticket_02, present_03")
+    @inventory.command(hidden=True, help="Remove items from player's inventory.")
     @commands.has_permissions(administrator=True)
-    async def remove(self, ctx, user: discord.User = None, item=None, amnt=None):
-        profile_file = open('../thorny_data/profiles.json', 'r+')
-        profile = json.load(profile_file)
-        item_found = False
-        slot = 0
+    async def remove(self, ctx, user: discord.User = None, item=None, count=None):
+        item_data = await dbutils.Inventory.get_item_type(item)
+        inv_item = await dbutils.Inventory.select(item_data['item_id'], user.id)
+        item_removed = True
+        if not item_data:
+            await ctx.send("Wrong Item")
+            item_removed = False
+        elif inv_item:
+            if count is None:
+                await dbutils.Inventory.delete(item_data['item_id'], user.id)
+                count = inv_item['item_count']
+            else:
+                await dbutils.Inventory.update(item_data['item_id'], inv_item['item_count'] - count, user.id)
+        else:
+            await ctx.send(embed=errors.Inventory.item_missing_error)
 
-        if item in config["inv_items"]:
-            while not item_found:
-                slot += 1
-                item_id = profile[f"{user.id}"]['inventory'][f'slot{slot}']['item_id']
-
-                if item_id == item:
-                    if amnt is None:
-                        updated_slot = {'item_id': "empty_00", "amount": 0}
-                    else:
-                        amnt = profile[f"{user.id}"]['inventory'][f'slot{slot}']['amount'] - int(amnt)
-                        if amnt <= 0:
-                            updated_slot = {'item_id': "empty_00", "amount": 0}
-                        else:
-                            updated_slot = {'item_id': item, "amount": amnt}
-                    profile_update(user, updated_slot, 'inventory', f'slot{slot}')
-                    item_found = True
-                    await ctx.send(f"Removed {item} to {user}'s Inventory!")
-                else:
-                    pass
+        if item_removed is True:
+            inv_edit_embed = discord.Embed(colour=ctx.author.colour)
+            inv_edit_embed.add_field(name="**Item Removed Successfully**",
+                                     value=f"Removed {count}x `{item_data[0]['display_name']}` "
+                                           f"from {user}'s Inventory")
+            await ctx.send(embed=inv_edit_embed)
 
     @commands.group(invoke_without_command=True, help="Get a list of all items available in the store")
     async def store(self, ctx):
-        counters = json.load(open('../thorny_data/counters.json', 'r+'))
         await ctx.send('Items in the Store:\n'
                        f'Ticket - {counters["ticket_price"]} nugs\n'
                        'Use `!store buy <item>` to buy an item!')
@@ -237,10 +218,10 @@ class Inventory(commands.Cog):
                         present_embed = discord.Embed(color=ctx.author.color)
                         present_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
                                                 value=f"I have removed 1 `Custom Role (1 Month)` from your inventory, but"
-                                                   f" at the current moment I can't add roles to you! Please DM a CM "
-                                                   f"or Pav and they will get you sorted!"
-                                                   f"\n\nFor security, tell them this code: "
-                                                   f"**ESC{random.randint(9999, 99999)}**")
+                                                      f" at the current moment I can't add roles to you! Please DM a CM "
+                                                      f"or Pav and they will get you sorted!"
+                                                      f"\n\nFor security, tell them this code: "
+                                                      f"**ESC{random.randint(9999, 99999)}**")
                         await ctx.send(embed=present_embed)
                 else:
                     item_found = True
