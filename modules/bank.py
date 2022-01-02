@@ -32,8 +32,9 @@ class Bank(commands.Cog):
         inventory_text = ''
         inventory_list = await dbutils.condition_select("inventory", "*", "user_id", user.id)
         for item in inventory_list[0:2]:
+            item_data = await dbutils.Inventory.get_item_type(item['item_id'])
             inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
-                             f'{item["item_count"]} **|** {config["inv_items"][item["item_id"]]}\n'
+                             f'{item["item_count"]} **|** {item_data["display_name"]}\n'
         if len(inventory_list) < 2:
             for item in range(0, 2 - len(inventory_list)):
                 inventory_text = f'{inventory_text}<:_pink:921708790322192396> 0 **|** Empty Slot\n'
