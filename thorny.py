@@ -7,6 +7,7 @@ import functions as func
 import logs
 import dbutils
 import json
+import asyncio
 from modules import bank, gateway, help, inventory, leaderboard, playtime, profile, moderation
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
@@ -28,7 +29,7 @@ thorny.remove_command('help')
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"you... | {v}")
-    print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
+    print(f"[ONLINE] {thorny.user}\n[INFO]   Running {v}\n[INFO]   Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     await func.update_months(thorny)
 

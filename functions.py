@@ -216,16 +216,6 @@ def calculate_prizes(prize_list, prizes):
         nugs_reward += item[1]
     if prizes == prize_list[0:4]:
         nugs_reward = nugs_reward * 5
-    elif [prizes[0]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[1]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[2]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[3]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[4]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
     return nugs_reward
 
 

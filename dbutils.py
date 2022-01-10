@@ -273,3 +273,16 @@ class Inventory:
         else:
             return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE unique_id=$1",
                                        int(item))
+
+    @staticmethod
+    async def update_item_price(item, price):
+        try:
+            int(item)
+        except ValueError:
+            await conn.execute(f"UPDATE thorny.item_type SET item_cost = $2 WHERE item_id=$1 OR friendly_id=$1",
+                               item, int(price))
+            return True
+        else:
+            await conn.execute(f"UPDATE thorny.item_type SET item_cost = $2 WHERE unique_id=$1",
+                               int(item), int(price))
+            return True
