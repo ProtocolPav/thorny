@@ -38,18 +38,18 @@ class Inventory(commands.Cog):
         inventory_text = ''
         inventory_list = await dbutils.condition_select("inventory", "*", "user_id", user.id)
         for item in inventory_list:
-            item_data = await dbutils.Inventory.get_item_type(item['item_id'])
+            item_type = await dbutils.Inventory.get_item_type(item['item_id'])
             inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
-                             f'{item["item_count"]} **|** {item_data["display_name"]}\n'
+                             f'{item["item_count"]} **|** {item_type["display_name"]}\n'
         if len(inventory_list) < 9:
             for item in range(0, 9 - len(inventory_list)):
-                inventory_text = f'{inventory_text}<:_pink:921708790322192396> Empty Slot\n'
+                inventory_text = f'{inventory_text}<:_pink:921708790322192396> Empty\n'
 
         inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.avatar_url)
         inventory_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}\n{kingdom_bal}")
         inventory_embed.add_field(name=f"**Inventory**", value=inventory_text, inline=False)
-        inventory_embed.set_footer(text="Use !redeem <item> to redeem Roles & Tickets!")
+        inventory_embed.set_footer(text="Use !redeem <item_id> to redeem Roles & Tickets!")
         await ctx.send(embed=inventory_embed)
 
     @inventory.command(hidden=True, help="Add an item to a user's inventory")
@@ -113,12 +113,11 @@ class Inventory(commands.Cog):
         item_types = await dbutils.simple_select('item_type', '*')
         store_embed = discord.Embed(colour=ctx.author.colour)
         item_text = ""
-        store_embed.add_field(name="**Note:**", value="*Use one ID. There are 2 IDs you can use, separated by a _*")
         for item in item_types:
             if item['item_cost'] > 0:
                 item_text = f"{item_text}\n**{item['display_name']}** |" \
                             f" <:Nug:884320353202081833>{item['item_cost']}\n" \
-                            f"**Item ID's:** {item['item_id']}\n"
+                            f"**Item ID:** {item['friendly_id']}\n"
         store_embed.add_field(name=f'**Items Available:**',
                               value=f"{item_text}", inline=False)
         store_embed.set_footer(text=f"{v} | Use !store buy <item_id> to purchase!")
@@ -135,20 +134,22 @@ class Inventory(commands.Cog):
             if await Inventory.add(self, ctx, ctx.author, item_type['item_id'], amount):
                 inv_edit_embed = discord.Embed(colour=ctx.author.colour)
                 inv_edit_embed.add_field(name="**Cha-Ching!**",
-                                         value=f"Bought {count}x `{item_data['display_name']}`")
+                                         value=f"Bought {amount}x `{item_type['display_name']}`")
                 inv_edit_embed.set_footer(text=f"{v} | Use !redeem <item_id> to redeem")
                 await ctx.send(embed=inv_edit_embed)
                 bank_log = self.client.get_channel(config['channels']['bank_logs'])
                 await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
                                                            item_type['item_cost'] * amount, ['Scratch Ticket']))
-        elif balance[0][0] - item_type['item_cost'] < 0:
+        elif balance[0][0] - item_type['item_cost'] * amount < 0:
             await ctx.send(embed=errors.Pay.lack_nugs_error)
         elif not item_type or item_type['item_cost'] == 0:
             await ctx.send(embed=errors.Shop.item_error)
 
     @store.command(help="Edit Prices of tickets", hidden=True)
-    async def edit(self, ctx, price):
-        pass
+    @commands.has_permissions(administrator=True)
+    async def price(self, ctx, item_id, price):
+        if await dbutils.Inventory.update_item_price(item_id, price):
+            await ctx.send(f"Done! {item_id} is now {price} Nugs")
 
     @commands.command(help="Redeem an item from your inventory. Items: Ticket, Role")
     async def redeem(self, ctx, item_id):
@@ -156,9 +157,8 @@ class Inventory(commands.Cog):
             return m.author == ctx.author and m.channel == ctx.channel
 
         redeemable_id = [1, 2, 4]
-        ticket_prizes = [[":gem:", 2], [":ringed_planet:", 3], [":tangerine:", 4], ["<:grassyE:840170557508026368>", 7],
-                         ["<:goldenE:857714717153689610>", 15], [":heart_on_fire:", 30]]
-        present_choices = ['role_01;1', 'ticket_02;1', 'nugs;13', 'nugs;24', 'ticket_02;4', 'coal;1', 'present_03;3']
+        ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 5],
+                         ["<:goldenE:857714717153689610>", 7]]
 
         item_type = await dbutils.Inventory.get_item_type(item_id)
         if item_type['unique_id'] in redeemable_id:
@@ -201,13 +201,13 @@ class Inventory(commands.Cog):
                     await Inventory.add(self, ctx, ctx.author, item_id, 1)
 
             elif removed and item_type['unique_id'] == 2:
-                if random.choices([True, False], weights=(20, 80), k=1)[0]:
+                if random.choices([True, False], weights=(10, 90), k=1)[0]:
                     await ctx.send(embed=errors.Shop.faulty_ticket_error)
                 else:
                     prizes = []
                     winnings = []
                     for i in range(4):
-                        random_icon = random.choices(ticket_prizes, weights=(8.9, 4.9, 3, 2, 1, 0.2), k=1)
+                        random_icon = random.choices(ticket_prizes, weights=(3, 4, 5, 3, 1), k=1)
                         prizes.append(random_icon[0])
                         winnings.append(f"||{random_icon[0][0]}||")
 
@@ -225,20 +225,15 @@ class Inventory(commands.Cog):
         else:
             await ctx.send("Wrong item!")
 
-    @commands.command(help="See a list of how lottery tickets work!")
+    @commands.command(help="See how tickets work!")
     async def tickets(self, ctx):
         help_embed = discord.Embed(color=ctx.author.color)
         help_embed.add_field(name="**How Prizes Work**",
-                             value="There are 4 types of prizes:\n\n"
-                                   "**Normal**\n"
-                                   ":gem: - 2 nugs, :ringed_planet: - 3 nugs, "
-                                   ":tangerine: - 4 nugs, <:grassyE:840170557508026368> - 7 nugs,"
-                                   " <:goldenE:857714717153689610> - 15 nugs\n\n"
-                                   "**Jackpot**\n"
-                                   "When you get 5 of the same scratchable, you get 2x the prize!\n\n"
-                                   "**Ultimate Jackpot**\n"
-                                   "When you get 1 of each scratchable, you get 5x the prize!\n\n"
-                                   "**NEW! Exquisite**\n"
-                                   "If you get the :heart_on_fire: scratchable, you get an additional 30 nugs!\n\n"
+                             value="There are 2 types of prizes:\n\n"
+                                   "**Normal Prize**\n"
+                                   ":yellow_heart: - 1 nug, :gem: - 2 nugs, :dagger: - 4 nugs, "
+                                   "<:grassyE:840170557508026368> - 5 nugs, <:goldenE:857714717153689610> - 7 nugs\n\n"
+                                   "**Jackpot Prize**\n"
+                                   "When you get 4 different scratchables, you get double the prize!\n\n"
                                    "Nugs are added automatically!", inline=False)
         await ctx.send(embed=help_embed)
