@@ -73,8 +73,8 @@ class Moderation(commands.Cog):
             elif not_playing_role in user.roles:
                 await user.remove_roles(not_playing_role)
             await user.add_roles(timeout_role)
-            await ctx.send(f"{user.display_name} Has entered the Gulag!")
+            await ctx.send(f"{user.display_name} Has entered the Gulag! https://tenor.com/view/ba-sing-se-gif-20976912")
         else:
             await user.remove_roles(timeout_role)
             await user.add_roles(citizen_role)
-            await ctx.send(f"{user.display_name} Has left the Gulag!")
+            await ctx.send(f"{user.display_name} Has left the Gulag! https://tenor.com/view/ba-sing-se-gif-20976912")
