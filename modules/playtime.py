@@ -14,13 +14,13 @@ v = version["version"]
 config = json.load(open("./../thorny_data/config.json", "r"))
 
 
-class Activity(commands.Cog):
+class Playtime(commands.Cog):
     def __init__(self, client):
         self.client = client
 
     @commands.command(aliases=['c'], help="Log your connect time")
     async def connect(self, ctx):
-        last_connect = await dbutils.Activity.get_recent_connect(ctx.author.id)
+        last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is not None:
             log_embed = discord.Embed(title=f'CONNECTION', colour=0x00FF7F)
             log_embed.add_field(name='Event Log:',
@@ -69,9 +69,9 @@ class Activity(commands.Cog):
         else:
             await ctx.send(embed=errors.Activity.already_connected_error)
 
-    @commands.command(aliases=['dc'], help="Log your disconnect time")
-    async def disconnect(self, ctx):
-        last_connect = await dbutils.Activity.get_recent_connect(ctx.author.id)
+    @commands.command(aliases=['dc'], help="Log your disconnect time as well as what you did")
+    async def disconnect(self, ctx, *journal):
+        last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is None:
             playtime = datetime.now().replace(microsecond=0) - last_connect['connect_time']
             overtime = False
@@ -109,7 +109,32 @@ class Activity(commands.Cog):
         elif last_connect['disconnect_time'] is not None:
             await ctx.send(embed=errors.Activity.connect_error)
 
-    @commands.command(help="See all players currently connected")
+    @commands.command(help='BETA Adjust your recent playtime. Format: Xh, Xm, XhXXm')
+    async def adjust(self, ctx, time):
+        last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
+        if last_connect['disconnect_time'] is not None and '-' not in time:
+            if 'm' in time.lower() and 'h' not in time.lower():
+                time_object = timedelta(minutes=int(time[0:len(time)-1]))
+            elif 'm' not in time.lower() and 'h' in time.lower():
+                time_object = timedelta(hours=int(time[0:len(time)-1]))
+            elif 'm' in time.lower() and 'h' in time.lower():
+                time_list = time.lower().split('h')
+                time_object = timedelta(hours=time_list[0], minutes=time_list[1][0:-1])
+            else:
+                time_object = timedelta(days=5000)
+                await ctx.send("Please use the format 0h00m, 0h, or 0m")
+
+            if last_connect['playtime'] - time_object > timedelta(hours=0, minutes=0):
+                await dbutils.Activity.update_adjust(ctx.author.id, last_connect['connect_time'],
+                                                     last_connect['playtime'] - time_object)
+                await ctx.send(f'Your most recent playtime has been reduced by {time}. '
+                               f'It is now **{last_connect["playtime"] - time_object}**')
+
+    @commands.command(help='View stats about your playtime!')
+    async def journal(self, ctx, page):
+        pass
+
+    @commands.command(help="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
         connected = await dbutils.Activity.get_online()
         online_text = ''

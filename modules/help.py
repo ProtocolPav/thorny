@@ -12,115 +12,71 @@ class Help(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(aliases=['hlp', 'ask'], invoke_without_command=True, help="Access the Thorny Help Center")
+    @commands.group(aliases=['hlp'], invoke_without_command=True, help="Access the Thorny Help Center")
     async def help(self, ctx, cmd=None):
-        help_dict = {"CM": {}}
-        hidden_num = 1
+        help_dict = {}
         for cog in self.client.cogs:
-            help_dict[f"{cog}"] = {}
-            cmd_num = 1
+            help_dict[f"{cog}"] = []
+            cmd_num = 0
             for command in self.client.get_cog(cog).get_commands():
+                cmd_num += 1
+                if not command.hidden:
+                    help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
+                                                "alias": command.aliases, "desc": command.help,
+                                                "example": command.brief})
+                elif command.hidden and ctx.author.guild_permissions.administrator:
+                    help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
+                                                "alias": command.aliases, "desc": command.help,
+                                                "example": command.brief})
                 if isinstance(command, commands.Group):
-                    if command.signature == "" and not command.hidden:
-                        help_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
-                                                             "usage": "",
-                                                             "alias": command.aliases,
-                                                             "desc": command.help}
-                    elif not command.hidden:
-                        help_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
-                                                             "usage": command.signature,
-                                                             "alias": command.aliases,
-                                                             "desc": command.help}
-                    else:
-                        cmd_num -= 1
-                        help_dict["CM"][str(hidden_num)] = {"name": command.name,
-                                                            "usage": command.signature,
-                                                            "alias": command.aliases,
-                                                            "desc": command.help}
-                        hidden_num += 1
                     for subcommand in command.walk_commands():
                         cmd_num += 1
-                        if subcommand.signature == "" and not subcommand.hidden:
-                            help_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
-                                                                 "usage": "",
-                                                                 "alias": subcommand.aliases,
-                                                                 "desc": subcommand.help}
-                        elif not subcommand.hidden:
-                            help_dict[f"{cog}"][str(cmd_num)] = {"name": f"{command.name} {subcommand.name}",
-                                                                 "usage": subcommand.signature,
-                                                                 "alias": subcommand.aliases,
-                                                                 "desc": subcommand.help}
-                        else:
-                            cmd_num -= 1
-                            help_dict["CM"][str(hidden_num)] = {"name": f"{command.name} {subcommand.name}",
-                                                                "usage": subcommand.signature,
-                                                                "alias": subcommand.aliases,
-                                                                "desc": subcommand.help}
-                            hidden_num += 1
-                else:
-                    if command.signature == "" and not command.hidden:
-                        help_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
-                                                             "usage": "",
-                                                             "alias": command.aliases,
-                                                             "desc": command.help}
-                    elif not command.hidden:
-                        help_dict[f"{cog}"][str(cmd_num)] = {"name": command.name,
-                                                             "usage": command.signature,
-                                                             "alias": command.aliases,
-                                                             "desc": command.help}
-                    else:
-                        cmd_num -= 1
-                        help_dict["CM"][str(hidden_num)] = {"name": command.name,
-                                                            "usage": command.signature,
-                                                            "alias": command.aliases,
-                                                            "desc": command.help}
-                        hidden_num += 1
-                cmd_num += 1
-
+                        if not subcommand.hidden:
+                            help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                        "usage": subcommand.signature,
+                                                        "alias": subcommand.aliases, "desc": subcommand.help,
+                                                        "example": subcommand.brief})
+                        elif subcommand.hidden and ctx.author.guild_permissions.administrator:
+                            help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                        "usage": subcommand.signature,
+                                                        "alias": subcommand.aliases, "desc": subcommand.help,
+                                                        "example": subcommand.brief})
         if cmd is None:
             help_embed = discord.Embed(title="Thorny Help Center",
                                        description="Use `!help [command]` to see specific commands\n"
                                                    "Use `!help [Category]` to see specific categories! (Capitalize)",
-                                       color=0xCF9FFF)
+                                       color=0x65b39b)
             help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
             for cog in self.client.cogs:
-                if cog in ["CM", "Setup"]:
-                    pass
+                easy_view_text = []
+                for command in help_dict[f'{cog}']:
+                    easy_view_text.append(command['name'])
+                if len(' '.join(easy_view_text)) >= 50:
+                    easy_view_text = f"!{', !'.join(easy_view_text)[0:50]}..."
                 else:
-                    if len(help_dict[f"{cog}"]) == 3:
-                        help_embed.add_field(name=f"**{cog} Commands**",
-                                             value=f"```!{help_dict[f'{cog}']['1']['name']}, "
-                                                   f"!{help_dict[f'{cog}']['2']['name']}, "
-                                                   f"!{help_dict[f'{cog}']['3']['name']}```",
-                                             inline=False)
-                    else:
-                        help_embed.add_field(name=f"**{cog} Commands**",
-                                             value=f"```!{help_dict[f'{cog}']['1']['name']}, "
-                                                   f"!{help_dict[f'{cog}']['2']['name']}, "
-                                                   f"!{help_dict[f'{cog}']['3']['name']}, "
-                                                   f"!{help_dict[f'{cog}']['4']['name'][0:3]}...```",
-                                             inline=False)
+                    easy_view_text = f"!{', !'.join(easy_view_text)}"
+                help_embed.add_field(name=f"**{cog} Commands**",
+                                     value=f"```{easy_view_text}```",
+                                     inline=False)
             await ctx.send(embed=help_embed)
 
-        elif cmd in self.client.cogs or cmd == 'CM':
+        elif cmd.capitalize() in self.client.cogs:
             help_embed = discord.Embed(title="Thorny Help Center",
-                                       description="Use `!help [command]` to see specific commands\n\n"
-                                                   "Do not include brackets in commands, they just show which"
-                                                   " fields are optional to put and which are not.\n"
-                                                   "`<fields>` in these must be included, `[fields]` in these are "
-                                                   "optional.",
-                                       color=0xCF9FFF)
+                                       description="Use `!help [command]` to see specific commands\n"
+                                                   "Do not include brackets in commands, they just show the"
+                                                   " `[optional]` and `<required>` fields of a command",
+                                       color=0x65b39b)
             text = ''
+            cmd = cmd.capitalize()
             for command in help_dict[f'{cmd}']:
-                command = help_dict[f'{cmd}'][command]
                 if not command['alias']:
                     text = f"{text}**!{command['name']}"
                 else:
                     text = f"{text}**!{command['name']}/{'/'.join(command['alias'])}"
                 if command['usage'] == "":
-                    text = f"{text}**\n```{command['desc']}```\n"
+                    text = f"{text}**\n```{command['desc']}\nExample: {command['example']}```\n"
                 else:
-                    text = f"{text} {command['usage']}**\n```{command['desc']}```\n"
+                    text = f"{text} {command['usage']}**\n```{command['desc']}\nExample: {command['example']}```\n"
             help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
             help_embed.add_field(name=f"**{cmd} Commands**",
                                  value=f"{text}")
@@ -129,9 +85,7 @@ class Help(commands.Cog):
         elif cmd == cmd.lower():
             for cog in self.client.cogs:
                 for command in help_dict[f"{cog}"]:
-                    cmd_dict = help_dict[f"{cog}"][command]
-                    if cmd == cmd_dict['name'] or cmd in cmd_dict['alias']:
-                        command = help_dict[f'{cog}'][command]
+                    if cmd == command['name'] or cmd in command['alias']:
                         text = ''
                         text2 = ''
                         if not command['alias']:
@@ -139,30 +93,29 @@ class Help(commands.Cog):
                         else:
                             text = f"{text}**!{command['name']}/{'/'.join(command['alias'])}"
                         if command['usage'] == "":
-                            text = f"{text}**\n```{command['desc']}```\n"
+                            text = f"{text}**\n```{command['desc']}\nExample: {command['example']}```\n"
                         else:
-                            text = f"{text} {command['usage']}**\n```{command['desc']}```\n"
+                            text = f"{text} {command['usage']}**\n```{command['desc']}\n" \
+                                   f"Example: {command['example']}```\n"
 
-                        for similar_command in help_dict[f"{cog}"]:
-                            if command['name'][0:4] in help_dict[f"{cog}"][similar_command]['name'] and \
-                                    command['name'] != help_dict[f"{cog}"][similar_command]['name']:
-                                sim_cmd = help_dict[f"{cog}"][similar_command]
+                        for sim_cmd in help_dict[f"{cog}"]:
+                            if command['name'][0:4] in sim_cmd['name'] and \
+                                    command['name'] != sim_cmd['name']:
                                 if not sim_cmd['alias']:
                                     text2 = f"{text2}**!{sim_cmd['name']}"
                                 else:
                                     text2 = f"{text2}**!{sim_cmd['name']}/{'/'.join(sim_cmd['alias'])}"
                                 if sim_cmd['usage'] == "":
-                                    text2 = f"{text2}**\n```{sim_cmd['desc']}```\n"
+                                    text2 = f"{text2}**\n```{sim_cmd['desc']}\nExample: {sim_cmd['example']}```\n"
                                 else:
-                                    text2 = f"{text2} {sim_cmd['usage']}**\n```{sim_cmd['desc']}```\n"
+                                    text2 = f"{text2} {sim_cmd['usage']}**\n```{sim_cmd['desc']}\n" \
+                                            f"Example: {sim_cmd['example']}```\n"
 
                         help_embed = discord.Embed(title="Thorny Help Center",
-                                                   description="Use `!help [command]` to see specific commands\n\n"
-                                                               "Do not include brackets in commands, they just "
-                                                               "show which fields are optional to put and which "
-                                                               "are not.\n`<fields>` in these must be included, "
-                                                               "`[fields]` in these are optional",
-                                                   color=0xCF9FFF)
+                                                   description="Use `!help [command]` to see specific commands\n"
+                                                               "Do not include brackets in commands, they just show the"
+                                                               " `[optional]` and `<required>` fields of a command",
+                                                   color=0x65b39b)
                         help_embed.add_field(name=f"\u200b", value=f"{text}")
                         if text2 != '':
                             help_embed.add_field(name=f"**Similar Commands to !{cmd}**", value=f"{text2}",
@@ -174,7 +127,7 @@ class Help(commands.Cog):
 
     @help.command(help="Get help on editing the Kingdom Command")
     async def kingdoms(self, ctx):
-        help_embed = discord.Embed(colour=0xCF9FFF)
+        help_embed = discord.Embed(colour=0x65b39b)
         help_embed.add_field(name=":question: **Kingdom Help**",
                              value=f"**!your_kingdom** - View a kingdom's command! (Asba, Ambria, Streg, Dal, Eir)\n"
                                    f"**!kedit <field> <value>** - Edit a certain field on the command!")
@@ -196,7 +149,7 @@ class Help(commands.Cog):
     @commands.command(help="Get a random tip!")
     async def tip(self, ctx, number=None):
         tip = json.load(open('./../thorny_data/tips.json', 'r'))
-        tip_embed = discord.Embed(color=0xCF9FFF)
+        tip_embed = discord.Embed(color=0x65b39b)
         if number is None:
             number = str(random.randint(1, len(tip['tips'])))
         tip_embed.add_field(name=f"Pro Tip!",

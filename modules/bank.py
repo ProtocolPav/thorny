@@ -15,7 +15,8 @@ class Bank(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(aliases=['bal'], help="Checks your or a user's balance", invoke_without_command=True)
+    @commands.group(aliases=['bal'], help="Checks your or a user's balance", invoke_without_command=True,
+                    brief="!bal @ProtocolPav#0038")
     async def balance(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
@@ -48,7 +49,8 @@ class Bank(commands.Cog):
         balance_embed.set_footer(text="Donate to your kingdom with !treasury store")
         await ctx.send(embed=balance_embed)
 
-    @balance.command(aliases=['add', 'remove'], help="CM Only | Edit a player's balance (- for removal)", hidden=True)
+    @balance.command(aliases=['add', 'remove'], help="CM Only | Edit a player's balance (- for removal)", hidden=True,
+                     brief="!bal edit @ProtocolPav#0038 -55")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.User, amount, send_message=None):
         bank_log = self.client.get_channel(config['channels']['bank_logs'])
@@ -61,7 +63,8 @@ class Bank(commands.Cog):
         if send_message is None:
             await ctx.send(f"{user}'s balance is now **{new_amount}**")
 
-    @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]")
+    @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]",
+                      brief="!pay @ProtocolPav#0038 50 for diamonds")
     async def pay(self, ctx, user: discord.User, amount=None, *reason):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
             receivable = await dbutils.condition_select('user', 'balance', 'user_id', user.id)
@@ -98,7 +101,8 @@ class Bank(commands.Cog):
     async def treasury(self, ctx):
         await help.Help.help(self, ctx, "treasury")
 
-    @treasury.command(help="Store money in your kingdom's treasury", usage="<amount>")
+    @treasury.command(help="Store money in your kingdom's treasury", usage="<amount>",
+                      brief="!tres store 55")
     async def store(self, ctx, amount=None):
         kingdom = func.get_user_kingdom(ctx, ctx.author)
         if kingdom is not None:
@@ -126,7 +130,8 @@ class Bank(commands.Cog):
         else:
             await ctx.send(embed=errors.Treasury.kingdom_error)
 
-    @treasury.command(help="Ruler Only | Take money from the treasury", usage="<amount>")
+    @treasury.command(help="Ruler Only | Take money from the treasury", usage="<amount>",
+                      brief="!tres take 12")
     @commands.has_role('Ruler')
     async def take(self, ctx, amount=None):
         kingdom = func.get_user_kingdom(ctx, ctx.author)
@@ -159,7 +164,8 @@ class Bank(commands.Cog):
         if isinstance(error, commands.CheckFailure):
             await ctx.send(embed=errors.Treasury.ruler_error)
 
-    @treasury.command(help="Ruler Only | Pay someone using treasury funds", usage="<user> <amount> [reason...]")
+    @treasury.command(help="Ruler Only | Pay someone using treasury funds", usage="<user> <amount> [reason...]",
+                      brief="!tres spend @ProtocolPav#0038 55 for work")
     @commands.has_role('Ruler')
     async def spend(self, ctx, user: discord.User, amount=None, *reason):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
