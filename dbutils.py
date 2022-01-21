@@ -1,3 +1,4 @@
+import asyncpg
 import asyncpg as pg
 import asyncio
 from datetime import datetime, timedelta
@@ -230,6 +231,86 @@ async def port_activity():
                 user_id = None
 
 
+async def create_thorny_database():
+    await conn.execute('CREATE DATABASE thorny')
+    await conn.execute("CREATE TABLE user ("
+                       "user_id bigint,"
+                       "username char,"
+                       "join_date date,"
+                       "birthday date,"
+                       "kingdom char,"
+                       "balance int4 DEFAULT 30,"
+                       "playing bool DEFAULT True,"
+                       "server_role char)")
+    await conn.execute("CREATE TABLE activity("
+                       "user_id bigint,"
+                       "playtime interval,"
+                       "connect_time timestamp,"
+                       "disconnect_time timestamp,"
+                       "description varchar(275))")
+    await conn.execute("CREATE TABLE counter("
+                       "user_id bigint,"
+                       "counter_id char,"
+                       "count int,"
+                       "datetime timestamp)")
+    await conn.execute('CREATE TABLE inventory('
+                       'user_id bigint,'
+                       'item_id char,'
+                       'item_count int)')
+    await conn.execute("CREATE TABLE item_type("
+                       "unique_id int4,"
+                       "friendly_id char,"
+                       "display_name char,"
+                       "max_item_count int4 DEFAULT 8,"
+                       "item_cost int4 DEFAULT 0)")
+    await conn.execute('CREATE TABLE kingdoms('
+                       'kingdom char,'
+                       'treasury int4,'
+                       'ruler_name char,'
+                       'ruler_id int8,'
+                       'capital char,'
+                       'town_count int,'
+                       'slogan char,'
+                       'border_type char,'
+                       'gov_type char,'
+                       'creation_date timestamp,'
+                       'description varchar(600))')
+    await conn.execute("CREATE TABLE levels("
+                       "user_id int8,"
+                       "user_level int DEFAULT 0,"
+                       "xp int DEFAULT 0,"
+                       "required_xp int DEFAULT 100,"
+                       "last_message timestamp DEFAULT 1900-01-01 19:23:32)")
+    await conn.execute("CREATE TABLE profile("
+                       "user_id int8,"
+                       "slogan varchar(35),"
+                       "gamertag char,"
+                       "town varchar(50),"
+                       "role varchar(50),"
+                       "wiki char,"
+                       "aboutme varchar(300),"
+                       "lore varchar(300),"
+                       "information_shown bool DEFAULT true,"
+                       "aboutme_shown bool DEFAULT true,"
+                       "activity_shown bool DEFAULT true,"
+                       "wiki_shown bool DEFAULT true,"
+                       "lore_shown bool DEFAULT true)")
+    await conn.execute("CREATE TABLE strikes("
+                       "strike_id int,"
+                       "user_id int8,"
+                       "reason char,"
+                       "manager_id int8)")
+    await conn.execute("CREATE TABLE user_activity("
+                       "user_id int8,"
+                       "total_playtime interval,"
+                       "current_mont interval,"
+                       "1_month_ago interval,"
+                       "2_months_ago interval,"
+                       "daily_average interval,"
+                       "session_average interval,"
+                       "weekly_average interval)")
+
+
 async def condition_select(table, column, condition, condition_req):
     return await conn.fetch(f"SELECT {column} FROM thorny.{table} WHERE {condition}=$1", condition_req)
 
@@ -286,3 +367,85 @@ class Inventory:
             await conn.execute(f"UPDATE thorny.item_type SET item_cost = $2 WHERE unique_id=$1",
                                int(item), int(price))
             return True
+
+
+class Activity:
+    @staticmethod
+    async def select_recent_connect(user_id):
+        return await conn.fetchrow("SELECT * FROM thorny.activity WHERE user_id = $1 ORDER BY connect_time DESC",
+                                   user_id)
+
+    @staticmethod
+    async def select_online():
+        return await conn.fetch("SELECT * FROM thorny.activity WHERE disconnect_time is NULL AND connect_time > $1 "
+                                "ORDER BY connect_time DESC", datetime.now().replace(day=1))
+
+    @staticmethod
+    async def insert_connect(user_id):
+        await conn.execute("INSERT INTO thorny.activity(user_id, connect_time) "
+                           "VALUES($1, $2)", user_id, datetime.now().replace(microsecond=0))
+
+    @staticmethod
+    async def update_disconnect(user_id, connect_time, playtime=None):
+        await conn.execute("UPDATE thorny.activity SET disconnect_time = $1, playtime = $2 "
+                           "WHERE user_id = $3 and connect_time = $4",
+                           datetime.now(), playtime, user_id, connect_time)
+
+    @staticmethod
+    async def update_adjust(user_id, connect_time, playtime):
+        await conn.execute("UPDATE thorny.activity SET playtime = $1 "
+                           "WHERE user_id = $2 and connect_time = $3",
+                           playtime, user_id, connect_time)
+
+
+class Leaderboard:
+    @staticmethod
+    async def select_activity(month: datetime):
+        if datetime.now() < month:
+            month = month.replace(year=datetime.now().year - 1)
+        return await conn.fetch(
+            f"""
+            SELECT SUM(playtime), user_id 
+            FROM thorny.activity 
+            WHERE connect_time >= $1
+            GROUP BY user_id 
+            ORDER BY SUM(playtime) DESC
+            """,
+            month.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+
+    @staticmethod
+    async def select_nugs():
+        return await conn.fetch(f"SELECT user_id, balance FROM thorny.user "
+                                f"GROUP BY user_id, balance ORDER BY balance DESC")
+
+
+class Profile:
+    @staticmethod
+    async def select_profile(user_id):
+        return await conn.fetchrow(f"SELECT * FROM ((thorny.user "
+                                   f"INNER JOIN thorny.profile ON thorny.profile.user_id = thorny.user.user_id) "
+                                   f"INNER JOIN thorny.levels ON thorny.levels.user_id = thorny.user.user_id) "
+                                   f"WHERE thorny.user.user_id = $1", user_id)
+
+    @staticmethod
+    async def update_profile(user_id, section, value):
+        availabe_sections = ['slogan', 'gamertag', 'town', 'role', 'wiki', 'aboutme', 'lore']
+        if section.lower() in availabe_sections:
+            try:
+                await conn.execute('UPDATE thorny.profile '
+                                   f'SET {section} = $1 '
+                                   f'WHERE user_id = $2', value, user_id)
+            except asyncpg.StringDataRightTruncationError:
+                return "length_error"
+        else:
+            return "section_error"
+
+    @staticmethod
+    async def update_toggle(user_id, section):
+        availabe_sections = ['information', 'activity', 'wiki', 'aboutme', 'lore']
+        if section.lower() in availabe_sections:
+            await conn.execute('UPDATE thorny.profile '
+                               f'SET {section}_shown = NOT {section}_shown '
+                               f'WHERE user_id = $1', user_id)
+        else:
+            return "section_error"

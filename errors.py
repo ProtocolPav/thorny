@@ -6,6 +6,10 @@ class Activity:
     connect_error.add_field(name="<:_no:921840417362804777> Aww... Shucks",
                             value="I don't recall you connecting actually...")
 
+    already_connected_error = discord.Embed(color=0xD70040)
+    already_connected_error.add_field(name="<:_no:921840417362804777> It's all good!",
+                                      value="No need to connect now, you're already connected!")
+
 
 class Pay:
     self_error = discord.Embed(color=0xD70040)
