@@ -3,11 +3,18 @@
   "nickname": "Revival",
   "notable_changes": {
     "1": "Thorny Now uses a database",
-    "2": "!store command is improved",
+    "2": "!store command has a new UI",
     "3": "!buy command uses itemID and you can purchase multiple items",
     "4": "!bal shows the first 2 items only",
     "5": "Added a !redeem role command for custom roles",
-    "6": "Buying items can be done in bulk"
+    "6": "Tickets now have 4 scratchables per ticket",
+    "7": "Ticket weights and prizes have been modified",
+    "8": "Connecting after connecting before no longer works",
+    "9": "!online shows AFK players",
+    "10": "!dc after 12 hours brings down activity and explains why",
+    "11": "!adjust lets people lower their activity in case they log too much time in",
+    "12": "Leaderboard commands have been updated",
+    "13": "Profile commands have been updated"
   },
   "changelogs": {
     "v0.2": "@Thorny#3781 v0.2 is up and running!\n\n**Features**:\n- `!c` and `!dc` commands. You can also use `!link` and `!unlink` if you want.\n- Make the bot remind you when YOU want, simply use `!c 2h` for it to remind you in 2 hours!\n- See your activity using the `!activity [month]` command. See it for july and august!\n- Scream at Thorny in #\uD83C\uDF6A┃playground using `!scream` and see what happens.",

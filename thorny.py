@@ -134,11 +134,11 @@ async def on_guild_join(guild):
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
-thorny.add_cog(inventory.Inventory(thorny))
+thorny.add_cog(inventory.Item(thorny))
 thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 #thorny.add_cog(fun.Fun(thorny))
-thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.add_cog(playtime.Playtime(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
