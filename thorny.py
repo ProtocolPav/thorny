@@ -29,9 +29,26 @@ thorny.remove_command('help')
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"you... | {v}")
-    print(f"[ONLINE] {thorny.user}\n[INFO]   Running {v}\n[INFO]   Date is {datetime.now()}")
+    print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     await func.update_months(thorny)
+
+
+@thorny.command()
+@commands.has_permissions(administrator=True)
+async def port(ctx):
+    version_file = open('version.json', 'r+')
+    version = json.load(version_file)
+    if not version['v1.6_ported']:
+        await dbutils.create_thorny_database(ctx)
+        await dbutils.port_user_profiles(ctx)
+        await dbutils.port_activity(ctx)
+        await dbutils.populate_tables(ctx)
+        version['v1.6_ported'] = True
+        version_file.truncate(0)
+        version_file.seek(0)
+        json.dump(version, version_file, indent=0)
+        await ctx.send(f"All porting Complete!")
 
 
 @thorny.command(aliases=['version'])
@@ -58,6 +75,8 @@ async def on_message(message):
         await message.channel.send('WOOOOOOOO!!!!!')
     elif 'scream' in message.content.lower():
         await message.channel.send('AAAHHHHHHHHHH')
+    elif 'baffl' in message.content.lower():
+        await message.channel.send("Is that right?")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -134,11 +153,10 @@ async def on_guild_join(guild):
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
-thorny.add_cog(inventory.Item(thorny))
+thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
-#thorny.add_cog(fun.Fun(thorny))
 thorny.add_cog(playtime.Playtime(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
