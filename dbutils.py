@@ -5,25 +5,19 @@ from datetime import datetime, timedelta
 import json
 import discord
 
-# connection = ps.connect(dbname='postgres', user='postgres', password='***REMOVED***')
-# cursor = connection.cursor()
-
-""" Needs reworking to asyncpg. Test in school.py first """
-
 
 async def connection():
-    pool = await pg.create_pool(database='postgres', user='postgres', password='***REMOVED***')
+    pool = await pg.create_pool(database='tester', user='postgres', password='***REMOVED***')
     return pool
 
 
 conn = asyncio.get_event_loop().run_until_complete(connection())
 
 
-async def port_user_profiles():
-    conn = await pg.connect(database='postgres', user='postgres', password='***REMOVED***')
-
+async def port_user_profiles(ctx):
     profile = json.load(open("../thorny_data/profiles.json", "r"))
     for user in profile:
+        print(f"Porting {profile[str(user)]['user']}...")
         total_playtime = profile[str(user)]['activity']['total'].split('h')
         if 'days' in total_playtime[0]:
             total_playtime[0] = total_playtime[0].split(' days, ')
@@ -117,19 +111,23 @@ async def port_user_profiles():
         else:
             profile[f'{user}']['birthday']['system'] = datetime.strptime(profile[f'{user}']['birthday']['system'],
                                                                          "%Y-%m-%d %H:%M:%S")
-
-        await conn.execute(f'INSERT INTO thorny.user(user_id, username, join_date, birthday, kingdom, balance)'
-                           f'VALUES($1, $2, $3, $4, $5, $6)',
+        guild_id = 611008530077712395
+        await conn.execute(f'INSERT INTO thorny.user(user_id, username, join_date, birthday, kingdom, balance, '
+                           f'guild_id)'
+                           f'VALUES($1, $2, $3, $4, $5, $6, $7)',
                            int(user), profile[str(user)]['user'], profile[str(user)]['date_joined'],
                            profile[str(user)]['birthday']['system'], profile[str(user)]['kingdom'],
-                           int(profile[str(user)]['balance']))
+                           int(profile[str(user)]['balance']), guild_id)
 
-        await conn.execute(f'INSERT INTO thorny.user_activity(user_id, total_playtime, current_month, "1_month_ago", '
-                           f'"2_months_ago") VALUES($1, $2, $3, $4, $5)',
+        thorny_id = await conn.fetchrow("SELECT thorny_user_id from thorny.user "
+                                        "WHERE user_id = $1", int(user))
+
+        await conn.execute(f'INSERT INTO thorny.user_activity(user_id, total_playtime, current_month, one_month_ago, '
+                           f'two_months_ago, thorny_user_id, guild_id) VALUES($1, $2, $3, $4, $5, $6, $7)',
                            int(user), profile[str(user)]['activity']['total'],
                            profile[str(user)]['activity']['current_month'],
                            profile[str(user)]['activity']['1_month_ago'],
-                           profile[str(user)]['activity']['2_months_ago'])
+                           profile[str(user)]['activity']['2_months_ago'], thorny_id['thorny_user_id'], guild_id)
 
         delete_these = ['Here Goes 5 Word Slogan', 'A 5 Word Slogan About You', 'Your Minecraft Gamertag',
                         "What's your MC Gamertag?", "Your Town", "WHat town you live in?",
@@ -142,13 +140,14 @@ async def port_user_profiles():
             if profile[str(user)]['fields'][field] in delete_these:
                 profile[str(user)]['fields'][field] = None
 
-        await conn.execute(f'INSERT INTO thorny.profile(user_id, slogan, gamertag, town, role, wiki, aboutme, lore)'
-                           f'VALUES($1, $2, $3, $4, $5, $6, $7, $8)',
+        await conn.execute(f'INSERT INTO thorny.profile(user_id, slogan, gamertag, town, role, wiki, aboutme, lore,'
+                           f'thorny_user_id, guild_id)'
+                           f'VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
                            int(user), profile[str(user)]['fields']['slogan'], profile[str(user)]['fields']['gamertag'],
-                           profile[str(user)]['fields']['town'].capitalize(),
-                           profile[str(user)]['fields']['role'].capitalize(),
+                           profile[str(user)]['fields']['town'],
+                           profile[str(user)]['fields']['role'],
                            profile[str(user)]['fields']['wiki'], profile[str(user)]['fields']['biography'],
-                           profile[str(user)]['fields']['lore'])
+                           profile[str(user)]['fields']['lore'], thorny_id['thorny_user_id'], guild_id)
 
         for slot in profile[str(user)]['inventory']:
             if len(profile[str(user)]['inventory']) > 9:
@@ -158,19 +157,23 @@ async def port_user_profiles():
                     pass
                 else:
                     if profile[str(user)]['inventory'][slot]['item_id'] != 'empty_00':
-                        item = '_'.split(profile[str(user)]['inventory'][slot]['item_id'])
-                        item = f"{item[0]}_{item[1][1]}"
-                        await conn.execute('INSERT INTO thorny.inventory(user_id, item_id, item_count) '
-                                           'VALUES($1, $2, $3)',
+                        item = profile[str(user)]['inventory'][slot]['item_id'].split('_')
+                        item = f"{item[0]}"
+                        await conn.execute('INSERT INTO thorny.inventory(user_id, item_id, item_count, '
+                                           'thorny_user_id, guild_id) '
+                                           'VALUES($1, $2, $3, $4, $5)',
                                            int(user), item,
-                                           int(profile[str(user)]['inventory'][slot]['amount']))
+                                           int(profile[str(user)]['inventory'][slot]['amount']),
+                                           thorny_id['thorny_user_id'], guild_id)
+        await conn.execute("INSERT INTO thorny.levels(user_id, thorny_user_id, guild_id) "
+                           "VALUES($1, $2, $3)", int(user), thorny_id['thorny_user_id'], guild_id)
+        print(f"Porting of {profile[str(user)]['user']} Complete!")
 
 
-async def port_activity():
-    conn = await pg.connect(database='postgres', user='postgres', password='***REMOVED***')
-
+async def port_activity(ctx):
     month = ['oct', 'nov', 'dec']
-    activity = json.load(open("thorny_data/activity_sep21.json", "r"))
+    await ctx.send(f"Porting September Activity...")
+    activity = json.load(open("../thorny_data/activity_sep21.json", "r"))
     sorted_activity = sorted(activity, key=lambda x: (x['userid'], x['date'], x['time']))
     connect_date = None
     user_id = None
@@ -179,28 +182,47 @@ async def port_activity():
             # This will be used as a second key in addition with the userID to find
             connect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             user_id = log['userid']
-            await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                               'VALUES ($1, $2)', int(user_id), connect_date)
+            thorny_id = await conn.fetchrow("SELECT thorny_user_id from thorny.user "
+                                            "WHERE user_id = $1", int(user_id))
+            guild_id = 611008530077712395
+            if thorny_id is not None:
+                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, thorny_user_id, guild_id) '
+                                   'VALUES ($1, $2, $3, $4)', int(user_id), connect_date, thorny_id['thorny_user_id'],
+                                   guild_id)
+            else:
+                connect_date = None
+                user_id = None
 
         elif log['status'] == 'CONNECT' and connect_date is not None:
             connect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             user_id = log['userid']
-            await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                               'VALUES ($1, $2)', int(user_id), connect_date)
+            playtime = timedelta(hours=1, minutes=5)
+            thorny_id = await conn.fetchrow("SELECT thorny_user_id from thorny.user "
+                                            "WHERE user_id = $1", int(user_id))
+            guild_id = 611008530077712395
+            if thorny_id is not None:
+                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, playtime, disconnect_time,'
+                                   'thorny_user_id, guild_id) '
+                                   'VALUES ($1, $2, $3, $4, $5, $6)', int(user_id), connect_date, playtime, connect_date,
+                                   thorny_id['thorny_user_id'], guild_id)
             connect_date = None
             user_id = None
 
         elif log['status'] == 'DISCONNECT' and connect_date is not None:
             disconnect_date = datetime.strptime(f"2021 {log['date']} {log['time']}", "%Y %B %d %H:%M:%S")
             playtime = disconnect_date - connect_date
+            if playtime >= timedelta(hours=12):
+                playtime = timedelta(hours=1, minutes=5)
             await conn.execute("UPDATE thorny.activity "
                                "SET disconnect_time=$1, playtime=$2 "
                                "WHERE user_id=$3 AND connect_time=$4",
                                disconnect_date, playtime, int(user_id), connect_date)
             connect_date = None
             user_id = None
+    await ctx.send(f"Porting of September Activity Complete!")
     for mnth in month:
-        activity = json.load(open(f"thorny_data/activity_{mnth}21.json", "r"))
+        await ctx.send(f"Porting {mnth} Activity...")
+        activity = json.load(open(f"../thorny_data/activity_{mnth}21.json", "r"))
         sorted_activity = sorted(activity, key=lambda x: (x['userid'], x['datetime']))
         connect_date = None
         user_id = None
@@ -209,106 +231,187 @@ async def port_activity():
                 # This will be used as a second key in addition with the userID to find
                 connect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 user_id = log['userid']
-                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                                   'VALUES ($1, $2)', int(user_id), connect_date)
+                thorny_id = await conn.fetchrow("SELECT thorny_user_id from thorny.user "
+                                                "WHERE user_id = $1", int(user_id))
+                guild_id = 611008530077712395
+                if thorny_id is not None:
+                    await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, thorny_user_id, guild_id) '
+                                       'VALUES ($1, $2, $3, $4)', int(user_id), connect_date, thorny_id['thorny_user_id'],
+                                       guild_id)
+                else:
+                    connect_date = None
+                    user_id = None
 
             elif log['status'] == 'CONNECT' and connect_date is not None:
                 connect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 user_id = log['userid']
-                await conn.execute('INSERT INTO thorny.activity(user_id, connect_time) '
-                                   'VALUES ($1, $2)', int(user_id), connect_date)
+                playtime = timedelta(hours=1, minutes=5)
+                thorny_id = await conn.fetchrow("SELECT thorny_user_id from thorny.user "
+                                                "WHERE user_id = $1", int(user_id))
+                guild_id = 611008530077712395
+                if thorny_id is not None:
+                    await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, playtime, disconnect_time,'
+                                       'thorny_user_id, guild_id) '
+                                       'VALUES ($1, $2, $3, $4, $5, $6)', int(user_id), connect_date, playtime,
+                                       connect_date,
+                                       thorny_id['thorny_user_id'], guild_id)
                 connect_date = None
                 user_id = None
 
             elif log['status'] == 'DISCONNECT' and connect_date is not None:
                 disconnect_date = datetime.strptime(log['datetime'], "%Y-%m-%d %H:%M:%S")
                 playtime = disconnect_date - connect_date
+                if playtime >= timedelta(hours=12):
+                    playtime = timedelta(hours=1, minutes=5)
                 await conn.execute("UPDATE thorny.activity "
                                    "SET disconnect_time=$1, playtime=$2 "
                                    "WHERE user_id=$3 AND connect_time=$4",
                                    disconnect_date, playtime, int(user_id), connect_date)
                 connect_date = None
                 user_id = None
+        await ctx.send(f"Porting of {mnth} Activity Complete!")
 
 
-async def create_thorny_database():
-    await conn.execute('CREATE DATABASE thorny')
-    await conn.execute("CREATE TABLE user ("
-                       "user_id bigint,"
-                       "username char,"
+async def create_thorny_database(ctx):
+    await conn.execute("DROP SCHEMA thorny CASCADE")
+    await conn.execute("CREATE SCHEMA thorny")
+    await conn.execute("CREATE TABLE thorny.user ("
+                       "thorny_user_id bigserial,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
+                       "username varchar,"
                        "join_date date,"
                        "birthday date,"
-                       "kingdom char,"
-                       "balance int4 DEFAULT 30,"
-                       "playing bool DEFAULT True,"
-                       "server_role char)")
-    await conn.execute("CREATE TABLE activity("
-                       "user_id bigint,"
+                       "kingdom varchar,"
+                       "balance int4,"
+                       "playing bool DEFAULT true,"
+                       "server_role varchar,"
+                       "PRIMARY KEY(thorny_user_id))")
+    await conn.execute("CREATE TABLE thorny.activity("
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
                        "playtime interval,"
                        "connect_time timestamp,"
                        "disconnect_time timestamp,"
-                       "description varchar(275))")
-    await conn.execute("CREATE TABLE counter("
-                       "user_id bigint,"
-                       "counter_id char,"
+                       "description varchar(275),"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await conn.execute("CREATE TABLE thorny.counter("
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
+                       "counter_name varchar,"
                        "count int,"
-                       "datetime timestamp)")
-    await conn.execute('CREATE TABLE inventory('
-                       'user_id bigint,'
-                       'item_id char,'
-                       'item_count int)')
-    await conn.execute("CREATE TABLE item_type("
-                       "unique_id int4,"
-                       "friendly_id char,"
-                       "display_name char,"
+                       "datetime timestamp,"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await conn.execute('CREATE TABLE thorny.inventory('
+                       'inventory_id serial,'
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
+                       'item_id varchar,'
+                       'item_count int,'
+                       'PRIMARY KEY(inventory_id),'
+                       'FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))')
+    await conn.execute("CREATE TABLE thorny.item_type("
+                       "unique_id serial,"
+                       "friendly_id varchar,"
+                       "display_name varchar,"
                        "max_item_count int4 DEFAULT 8,"
-                       "item_cost int4 DEFAULT 0)")
-    await conn.execute('CREATE TABLE kingdoms('
-                       'kingdom char,'
+                       "item_cost int4 DEFAULT 0,"
+                       "PRIMARY KEY(unique_id))")
+    await conn.execute('CREATE TABLE thorny.kingdoms('
+                       'kingdom_id serial,'
+                       'kingdom varchar,'
                        'treasury int4,'
-                       'ruler_name char,'
+                       'emoji varchar,'
+                       'ruler_name varchar,'
                        'ruler_id int8,'
-                       'capital char,'
+                       'capital varchar,'
+                       'alliances varchar,'
                        'town_count int,'
-                       'slogan char,'
-                       'border_type char,'
-                       'gov_type char,'
+                       'slogan varchar,'
+                       'border_type varchar,'
+                       'gov_type varchar,'
                        'creation_date timestamp,'
-                       'description varchar(600))')
-    await conn.execute("CREATE TABLE levels("
-                       "user_id int8,"
+                       'description varchar(450),'
+                       'PRIMARY KEY(kingdom_id))')
+    await conn.execute("CREATE TABLE thorny.levels("
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
                        "user_level int DEFAULT 0,"
                        "xp int DEFAULT 0,"
                        "required_xp int DEFAULT 100,"
-                       "last_message timestamp DEFAULT 1900-01-01 19:23:32)")
-    await conn.execute("CREATE TABLE profile("
-                       "user_id int8,"
+                       "last_message timestamp,"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await conn.execute("CREATE TABLE thorny.profile("
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
                        "slogan varchar(35),"
-                       "gamertag char,"
+                       "gamertag varchar,"
                        "town varchar(50),"
                        "role varchar(50),"
-                       "wiki char,"
+                       "wiki varchar,"
                        "aboutme varchar(300),"
                        "lore varchar(300),"
                        "information_shown bool DEFAULT true,"
                        "aboutme_shown bool DEFAULT true,"
                        "activity_shown bool DEFAULT true,"
                        "wiki_shown bool DEFAULT true,"
-                       "lore_shown bool DEFAULT true)")
-    await conn.execute("CREATE TABLE strikes("
+                       "lore_shown bool DEFAULT true,"
+                       "PRIMARY KEY(thorny_user_id),"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await conn.execute("CREATE TABLE thorny.strikes("
                        "strike_id int,"
-                       "user_id int8,"
-                       "reason char,"
-                       "manager_id int8)")
-    await conn.execute("CREATE TABLE user_activity("
-                       "user_id int8,"
+                       "thorny_user_id int8 NOT NULL,"
+                       "reason varchar,"
+                       "manager_id int8,"
+                       "PRIMARY KEY(strike_id),"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await conn.execute("CREATE TABLE thorny.user_activity("
+                       "thorny_user_id int8 NOT NULL,"
+                       "user_id int8 NOT NULL,"
+                       "guild_id int8 NOT NULL,"
                        "total_playtime interval,"
-                       "current_mont interval,"
-                       "1_month_ago interval,"
-                       "2_months_ago interval,"
+                       "current_month interval,"
+                       "one_month_ago interval,"
+                       "two_months_ago interval,"
                        "daily_average interval,"
                        "session_average interval,"
-                       "weekly_average interval)")
+                       "weekly_average interval,"
+                       "PRIMARY KEY(thorny_user_id),"
+                       "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
+    await ctx.send(f"Created the Database!")
+
+
+async def populate_tables(ctx):
+    await conn.execute("INSERT INTO thorny.user(thorny_user_id, username, user_id, guild_id)"
+                       "VALUES($1, $2, $3, $4)", 0, 'SERVER', 0, 0)
+    await conn.execute("INSERT INTO thorny.item_type "
+                       "VALUES($1, $2, $3, $4, $5)", 1, 'role', 'Custom Role 1 Month', 8, 0)
+    await conn.execute("INSERT INTO thorny.item_type "
+                       "VALUES($1, $2, $3, $4, $5)", 2, 'ticket', 'Scratch Ticket', 8, 14)
+    await conn.execute("INSERT INTO thorny.item_type "
+                       "VALUES($1, $2, $3, $4, $5)", 3, 'present', 'Christmas Present', 3, 0)
+    await conn.execute("INSERT INTO thorny.item_type "
+                       "VALUES($1, $2, $3, $4, $5)", 4, 'gift', 'Birthday Gift', 1, 0)
+    await ctx.send("Item_type table populated")
+    await conn.execute("INSERT INTO thorny.counter(user_id, counter_name, count, thorny_user_id, guild_id) "
+                       "VALUES($1, $2, $3, $4, $5)", 0, 'ticket_count', 626, 0, 0)
+    await ctx.send("Ticket Counter added to counter table\n Populating Kingdoms table")
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    treasury = json.load(open('../thorny_data/kingdoms.json', 'r+'))
+    for kingdom in treasury:
+        await conn.execute("INSERT INTO thorny.kingdoms(kingdom, treasury, ruler_name, capital, alliances, town_count,"
+                           "slogan, border_type, gov_type, description) "
+                           "VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", kingdom.capitalize(), treasury[kingdom],
+                           config['kingdoms'][kingdom]['ruler'], config['kingdoms'][kingdom]['capital'],
+                           config['kingdoms'][kingdom]['alliances'], int(config['kingdoms'][kingdom]['towns']),
+                           config['kingdoms'][kingdom]['slogan'], config['kingdoms'][kingdom]['borders'],
+                           config['kingdoms'][kingdom]['government'], config['kingdoms'][kingdom]['description'])
+    await ctx.send("Kingdoms table populated")
 
 
 async def condition_select(table, column, condition, condition_req):
@@ -349,7 +452,7 @@ class Inventory:
         try:
             int(item)
         except ValueError:
-            return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE item_id=$1 OR friendly_id=$1",
+            return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE friendly_id=$1",
                                        item)
         else:
             return await conn.fetchrow(f"SELECT * FROM thorny.item_type WHERE unique_id=$1",
@@ -447,5 +550,43 @@ class Profile:
             await conn.execute('UPDATE thorny.profile '
                                f'SET {section}_shown = NOT {section}_shown '
                                f'WHERE user_id = $1', user_id)
+        else:
+            return "section_error"
+
+    @staticmethod
+    async def insert_strike(user_id, reason, cm_id):
+        strike_id = await conn.fetchrow('SELECT strike_id '
+                                        'FROM thorny.strikes '
+                                        'ORDER BY strike_id DESC')
+        await conn.execute('INSERT INTO thorny.strikes '
+                           'VALUES($1, $2, $3, $4)',
+                           strike_id[0] + 1, user_id, reason, cm_id)
+        return strike_id[0] + 1
+
+    @staticmethod
+    async def delete_strike(strike_id):
+        await conn.execute("DELETE FROM thorny.strikes "
+                           "WHERE strike_id = $1", strike_id)
+        return True
+
+
+class Kingdom:
+    @staticmethod
+    async def select_kingdom(kingdom):
+        kingdom_dict = await conn.fetchrow("SELECT * "
+                                           "FROM thorny.kingdoms "
+                                           "WHERE kingdom = $1", kingdom)
+        return kingdom_dict
+
+    @staticmethod
+    async def update_kingdom(kingdom, section, value):
+        availabe_sections = ['slogan', 'capital', 'town_count', 'border_type', 'gov_type', 'description', 'alliances']
+        if section.lower() in availabe_sections:
+            try:
+                await conn.execute('UPDATE thorny.kingdoms '
+                                   f'SET {section} = $1 '
+                                   f'WHERE kingdom = $2', value, kingdom)
+            except asyncpg.StringDataRightTruncationError:
+                return "length_error"
         else:
             return "section_error"
