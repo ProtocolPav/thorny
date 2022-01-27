@@ -81,6 +81,7 @@ class Inventory(commands.Cog):
             return item_added
 
     @inventory.command(hidden=True, help="Remove or clear and item from a user's inventory")
+
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.User = None, item=None, count=None):
         item_data = await dbutils.Inventory.get_item_type(item)
@@ -203,6 +204,7 @@ class Inventory(commands.Cog):
             elif removed and item_type['unique_id'] == 2:
                 if random.choices([True, False], weights=(2, 98), k=1)[0]:
                     await ctx.send(embed=errors.Shop.faulty_ticket_error)
+
                 else:
                     prizes = []
                     winnings = []
