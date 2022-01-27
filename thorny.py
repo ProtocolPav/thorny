@@ -51,6 +51,14 @@ async def port(ctx):
         await ctx.send(f"All porting Complete!")
 
 
+@thorny.command()
+@commands.has_permissions(administrator=True)
+async def register(ctx, member: discord.Member):
+    await dbutils.create_user(member)
+    print(f"{member} joined")
+    await ctx.send("Created for Member")
+
+
 @thorny.command(aliases=['version'])
 async def ping(ctx):
     await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
@@ -141,7 +149,7 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    func.profile_update(member, f'{datetime.now().replace(microsecond=0)}', 'date_joined')
+    await dbutils.create_user(member)
     print(f"{member} joined")
     await gateway.Information.new(thorny, member)
 

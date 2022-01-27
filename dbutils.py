@@ -7,7 +7,7 @@ import discord
 
 
 async def connection():
-    pool = await pg.create_pool(database='tester', user='postgres', password='***REMOVED***')
+    pool = await pg.create_pool(database='postgres', user='postgres', password='***REMOVED***')
     return pool
 
 
@@ -171,7 +171,7 @@ async def port_user_profiles(ctx):
 
 
 async def port_activity(ctx):
-    month = ['oct', 'nov', 'dec']
+    month = ['oct', 'nov', 'dec', 'jan']
     await ctx.send(f"Porting September Activity...")
     activity = json.load(open("../thorny_data/activity_sep21.json", "r"))
     sorted_activity = sorted(activity, key=lambda x: (x['userid'], x['date'], x['time']))
@@ -203,7 +203,8 @@ async def port_activity(ctx):
             if thorny_id is not None:
                 await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, playtime, disconnect_time,'
                                    'thorny_user_id, guild_id) '
-                                   'VALUES ($1, $2, $3, $4, $5, $6)', int(user_id), connect_date, playtime, connect_date,
+                                   'VALUES ($1, $2, $3, $4, $5, $6)', int(user_id), connect_date, playtime,
+                                   connect_date,
                                    thorny_id['thorny_user_id'], guild_id)
             connect_date = None
             user_id = None
@@ -236,7 +237,8 @@ async def port_activity(ctx):
                 guild_id = 611008530077712395
                 if thorny_id is not None:
                     await conn.execute('INSERT INTO thorny.activity(user_id, connect_time, thorny_user_id, guild_id) '
-                                       'VALUES ($1, $2, $3, $4)', int(user_id), connect_date, thorny_id['thorny_user_id'],
+                                       'VALUES ($1, $2, $3, $4)', int(user_id), connect_date,
+                                       thorny_id['thorny_user_id'],
                                        guild_id)
                 else:
                     connect_date = None
@@ -289,8 +291,8 @@ async def create_thorny_database(ctx):
                        "PRIMARY KEY(thorny_user_id))")
     await conn.execute("CREATE TABLE thorny.activity("
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        "playtime interval,"
                        "connect_time timestamp,"
                        "disconnect_time timestamp,"
@@ -298,8 +300,8 @@ async def create_thorny_database(ctx):
                        "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
     await conn.execute("CREATE TABLE thorny.counter("
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        "counter_name varchar,"
                        "count int,"
                        "datetime timestamp,"
@@ -307,8 +309,8 @@ async def create_thorny_database(ctx):
     await conn.execute('CREATE TABLE thorny.inventory('
                        'inventory_id serial,'
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        'item_id varchar,'
                        'item_count int,'
                        'PRIMARY KEY(inventory_id),'
@@ -338,8 +340,8 @@ async def create_thorny_database(ctx):
                        'PRIMARY KEY(kingdom_id))')
     await conn.execute("CREATE TABLE thorny.levels("
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        "user_level int DEFAULT 0,"
                        "xp int DEFAULT 0,"
                        "required_xp int DEFAULT 100,"
@@ -347,8 +349,8 @@ async def create_thorny_database(ctx):
                        "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
     await conn.execute("CREATE TABLE thorny.profile("
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        "slogan varchar(35),"
                        "gamertag varchar,"
                        "town varchar(50),"
@@ -372,8 +374,8 @@ async def create_thorny_database(ctx):
                        "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
     await conn.execute("CREATE TABLE thorny.user_activity("
                        "thorny_user_id int8 NOT NULL,"
-                       "user_id int8 NOT NULL,"
-                       "guild_id int8 NOT NULL,"
+                       "user_id int8,"
+                       "guild_id int8,"
                        "total_playtime interval,"
                        "current_month interval,"
                        "one_month_ago interval,"
@@ -390,7 +392,7 @@ async def populate_tables(ctx):
     await conn.execute("INSERT INTO thorny.user(thorny_user_id, username, user_id, guild_id)"
                        "VALUES($1, $2, $3, $4)", 0, 'SERVER', 0, 0)
     await conn.execute("INSERT INTO thorny.item_type "
-                       "VALUES($1, $2, $3, $4, $5)", 1, 'role', 'Custom Role 1 Month', 8, 0)
+                       "VALUES($1, $2, $3, $4, $5)", 1, 'role', 'Custom Role Voucher', 8, 0)
     await conn.execute("INSERT INTO thorny.item_type "
                        "VALUES($1, $2, $3, $4, $5)", 2, 'ticket', 'Scratch Ticket', 8, 14)
     await conn.execute("INSERT INTO thorny.item_type "
@@ -428,7 +430,26 @@ async def simple_update(table, column, new_val, condition, condition_requirement
                        f"WHERE {condition}=$2", new_val, condition_requirement)
 
 
+async def create_user(member):
+    if await conn.fetchrow('SELECT * FROM thorny.user WHERE user_id = $1 AND guild_id = $2',
+                           member.id, member.guild.id) is None:
+        await conn.execute('INSERT INTO thorny.user(user_id, guild_id, username, join_date) '
+                           'VALUES($1, $2, $3, $4)', member.id, member.guild.id, member.name, datetime.now())
+        thorny_id = await conn.fetchrow('SELECT thorny_user_id FROM thorny.user WHERE user_id=$1 AND guild_id=$2',
+                                        member.id, member.guild.id)
+        await conn.execute("INSERT INTO thorny.user_activity(thorny_user_id, user_id, guild_id)"
+                           "VALUES($1, $2, $3)", thorny_id[0], member.id, member.guild.id)
+        await conn.execute("INSERT INTO thorny.profile(thorny_user_id, user_id, guild_id)"
+                           "VALUES($1, $2, $3)", thorny_id[0], member.id, member.guild.id)
+        await conn.execute("INSERT INTO thorny.levels(thorny_user_id, user_id, guild_id)"
+                           "VALUES($1, $2, $3)", thorny_id[0], member.id, member.guild.id)
+
+
 class Inventory:
+    """
+    Needs updating, make all of them use the member object instead of user_id
+    """
+
     @staticmethod
     async def select(item_id, user_id):
         return await conn.fetchrow(f"SELECT * FROM thorny.inventory WHERE user_id=$1 AND item_id=$2", user_id, item_id)
@@ -438,9 +459,11 @@ class Inventory:
         await conn.execute("DELETE FROM thorny.inventory WHERE user_id=$1 AND item_id =$2", user_id, item_id)
 
     @staticmethod
-    async def insert(item_id, item_count, user_id):
-        await conn.execute(f"INSERT INTO thorny.inventory(user_id, item_id, item_count)"
-                           f"VALUES($1, $2, $3)", user_id, item_id, item_count)
+    async def insert(item_id, item_count, member):
+        thorny_id = await conn.fetchrow('SELECT thorny_user_id FROM thorny.user WHERE user_id=$1 AND guild_id=$2',
+                                        member.id, member.guild.id)
+        await conn.execute(f"INSERT INTO thorny.inventory(user_id, item_id, item_count, thorny_user_id)"
+                           f"VALUES($1, $2, $3, $4)", member.id, item_id, item_count, thorny_id[0])
 
     @staticmethod
     async def update(item_id, item_count, user_id):
@@ -463,7 +486,7 @@ class Inventory:
         try:
             int(item)
         except ValueError:
-            await conn.execute(f"UPDATE thorny.item_type SET item_cost = $2 WHERE item_id=$1 OR friendly_id=$1",
+            await conn.execute(f"UPDATE thorny.item_type SET item_cost = $2 WHERE friendly_id=$1",
                                item, int(price))
             return True
         else:
@@ -484,9 +507,12 @@ class Activity:
                                 "ORDER BY connect_time DESC", datetime.now().replace(day=1))
 
     @staticmethod
-    async def insert_connect(user_id):
-        await conn.execute("INSERT INTO thorny.activity(user_id, connect_time) "
-                           "VALUES($1, $2)", user_id, datetime.now().replace(microsecond=0))
+    async def insert_connect(ctx):
+        thorny_id = await conn.fetchrow('SELECT thorny_user_id FROM thorny.user WHERE user_id=$1 AND guild_id=$2',
+                                        ctx.author.id, ctx.author.guild.id)
+        await conn.execute("INSERT INTO thorny.activity(thorny_user_id, user_id, connect_time, guild_id) "
+                           "VALUES($1, $2, $3, $4)", thorny_id[0], ctx.author.id, datetime.now().replace(microsecond=0),
+                           ctx.author.guild.id)
 
     @staticmethod
     async def update_disconnect(user_id, connect_time, playtime=None):
@@ -499,6 +525,22 @@ class Activity:
         await conn.execute("UPDATE thorny.activity SET playtime = $1 "
                            "WHERE user_id = $2 and connect_time = $3",
                            playtime, user_id, connect_time)
+
+    @staticmethod
+    async def update_user_activity(ctx):
+        thorny_id = await conn.fetchrow('SELECT thorny_user_id FROM thorny.user WHERE user_id=$1 AND guild_id=$2',
+                                        ctx.author.id, ctx.author.guild.id)
+        total_hours = await conn.fetchrow("SELECT SUM(playtime) FROM thorny.activity WHERE user_id = $1",
+                                          ctx.author.id)
+        current_month_hours = await conn.fetchrow("SELECT SUM(playtime) FROM thorny.activity WHERE user_id = $1 "
+                                                  "AND connect_time >= $2",
+                                                  ctx.author.id,
+                                                  datetime.now().replace(day=1, hour=0, minute=0, second=0,
+                                                                         microsecond=0))
+        await conn.execute('UPDATE thorny.user_activity '
+                           'SET total_playtime = $1, current_month = $2 '
+                           'WHERE user_id = $3', total_hours['sum'], current_month_hours['sum'],
+                           ctx.author.id)
 
 
 class Leaderboard:
@@ -525,9 +567,11 @@ class Leaderboard:
 class Profile:
     @staticmethod
     async def select_profile(user_id):
-        return await conn.fetchrow(f"SELECT * FROM ((thorny.user "
+        return await conn.fetchrow(f"SELECT * FROM (((thorny.user "
                                    f"INNER JOIN thorny.profile ON thorny.profile.user_id = thorny.user.user_id) "
                                    f"INNER JOIN thorny.levels ON thorny.levels.user_id = thorny.user.user_id) "
+                                   f"INNER JOIN thorny.user_activity ON "
+                                   f"thorny.user_activity.user_id = thorny.user.user_id)"
                                    f"WHERE thorny.user.user_id = $1", user_id)
 
     @staticmethod
