@@ -141,12 +141,11 @@ def write_log(status: str, datetime, ctx):
 
 
 def get_user_kingdom(ctx, user):
-    kingdom = 'None'
+    kingdom = None
     kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
     for item in kingdoms_list:
         if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
-            kingdom = item.lower()
-    profile_update(user, kingdom, "kingdom")
+            kingdom = item.capitalize()
     return kingdom
 
 
@@ -215,18 +214,8 @@ def calculate_prizes(prize_list, prizes):
     nugs_reward = 0
     for item in prize_list:
         nugs_reward += item[1]
-    if prizes == prize_list[0:4]:
-        nugs_reward = nugs_reward * 5
-    elif [prizes[0]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[1]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[2]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[3]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
-    elif [prizes[4]] * 5 == prize_list:
-        nugs_reward = nugs_reward * 3
+    if prize_list[0] != prize_list[1] != prize_list[2] != prize_list[3] and prizes[5] not in prize_list:
+        nugs_reward = nugs_reward * 2
     return nugs_reward
 
 
@@ -394,6 +383,7 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
         profile[f'{ctx_author.id}']['ticket_counter'] = {}
         profile[f'{ctx_author.id}']['ticket_counter']['ticket_count'] = 5
         profile[f'{ctx_author.id}']['ticket_counter']['last_purchase'] = '1900-01-01 0:00:01'
+
 
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value

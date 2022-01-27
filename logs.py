@@ -49,3 +49,4 @@ def message_edit(before, after):
                               f"**BEFORE:**\n{before.content}\n**AFTER:**\n{after.content}")
     log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
     return log_embed
+

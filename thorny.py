@@ -3,9 +3,12 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 
-from thorny_core import functions as func
-from thorny_core import logs
+
+import functions as func
+import logs
+import dbutils
 import json
+import asyncio
 from modules import bank, gateway, help, inventory, leaderboard, playtime, profile, moderation
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
@@ -27,9 +30,34 @@ thorny.remove_command('help')
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"you... | {v}")
-    print(f"[ONLINE] {thorny.user}\n\t\t Running {v}\n\t\t Date is {datetime.now()}")
+    print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     await func.update_months(thorny)
+
+
+@thorny.command()
+@commands.has_permissions(administrator=True)
+async def port(ctx):
+    version_file = open('version.json', 'r+')
+    version = json.load(version_file)
+    if not version['v1.6_ported']:
+        await dbutils.create_thorny_database(ctx)
+        await dbutils.port_user_profiles(ctx)
+        await dbutils.port_activity(ctx)
+        await dbutils.populate_tables(ctx)
+        version['v1.6_ported'] = True
+        version_file.truncate(0)
+        version_file.seek(0)
+        json.dump(version, version_file, indent=0)
+        await ctx.send(f"All porting Complete!")
+
+
+@thorny.command()
+@commands.has_permissions(administrator=True)
+async def register(ctx, member: discord.Member):
+    await dbutils.create_user(member)
+    print(f"{member} joined")
+    await ctx.send("Created for Member")
 
 
 @thorny.command(aliases=['version'])
@@ -56,6 +84,8 @@ async def on_message(message):
         await message.channel.send('WOOOOOOOO!!!!!')
     elif 'scream' in message.content.lower():
         await message.channel.send('AAAHHHHHHHHHH')
+    elif 'baffl' in message.content.lower():
+        await message.channel.send("Is that right?")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -120,7 +150,7 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    func.profile_update(member, f'{datetime.now().replace(microsecond=0)}', 'date_joined')
+    await dbutils.create_user(member)
     print(f"{member} joined")
     await gateway.Information.new(thorny, member)
 
@@ -137,6 +167,5 @@ thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(help.Help(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
-#thorny.add_cog(fun.Fun(thorny))
-thorny.add_cog(playtime.Activity(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.add_cog(playtime.Playtime(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
