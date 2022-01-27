@@ -75,3 +75,4 @@ class Information(commands.Cog):
             await help.Help.kingdoms(self, ctx)
         else:
             await ctx.send(f"Success! {field} is now {' '.join(value)} for {kingdom[0][0]}")
+
