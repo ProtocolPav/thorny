@@ -17,7 +17,7 @@ vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
 
-class Item(commands.Cog):
+class Inventory(commands.Cog):
     def __init__(self, client):
         self.client = client
 
@@ -54,17 +54,17 @@ class Item(commands.Cog):
 
     @inventory.command(hidden=True, help="Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
-    async def add(self, ctx, user: discord.User = None, item=None, count=1):
+    async def add(self, ctx, user: discord.Member = None, item=None, count=1):
         item_data = await dbutils.Inventory.get_item_type(item)
-        inv_item = await dbutils.Inventory.select(item_data['item_id'], user.id)
+        inv_item = await dbutils.Inventory.select(item_data['friendly_id'], user.id)
         item_added = True
         if not item_data:
-            await ctx.send("Wrong Item")
+            await ctx.send("Wrong Inventory")
             item_added = False
         elif inv_item and inv_item['item_count'] + int(count) <= item_data['max_item_count']:
-            await dbutils.Inventory.update(item_data['item_id'], inv_item['item_count'] + int(count), user.id)
+            await dbutils.Inventory.update(item_data['friendly_id'], inv_item['item_count'] + int(count), user.id)
         elif not inv_item and count <= item_data['max_item_count']:
-            await dbutils.Inventory.insert(item_data['item_id'], int(count), user.id)
+            await dbutils.Inventory.insert(item_data['friendly_id'], int(count), user)
         else:
             if 'add' in ctx.message.content.lower():
                 await ctx.send(f"You are adding too many! Max count for this item is {item_data['max_item_count']}")
@@ -74,7 +74,7 @@ class Item(commands.Cog):
 
         if item_added and 'add' in ctx.message.content.lower():
             inv_edit_embed = discord.Embed(colour=ctx.author.colour)
-            inv_edit_embed.add_field(name="**Item Added Successfully**",
+            inv_edit_embed.add_field(name="**Inventory Added Successfully**",
                                      value=f"Added {count}x `{item_data['display_name']}` to {user}'s Inventory")
             await ctx.send(embed=inv_edit_embed)
         elif item_added and 'buy' in ctx.message.content.lower():
@@ -84,24 +84,24 @@ class Item(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.User = None, item=None, count=None):
         item_data = await dbutils.Inventory.get_item_type(item)
-        inv_item = await dbutils.Inventory.select(item_data['item_id'], user.id)
+        inv_item = await dbutils.Inventory.select(item_data['friendly_id'], user.id)
         item_removed = True
         if not item_data:
-            await ctx.send("Wrong Item")
+            await ctx.send("Wrong Inventory")
             item_removed = False
         elif inv_item:
             if count is None or inv_item['item_count'] - int(count) <= 0:
-                await dbutils.Inventory.delete(item_data['item_id'], user.id)
+                await dbutils.Inventory.delete(item_data['friendly_id'], user.id)
                 count = inv_item['item_count']
             else:
-                await dbutils.Inventory.update(item_data['item_id'], inv_item['item_count'] - int(count), user.id)
+                await dbutils.Inventory.update(item_data['friendly_id'], inv_item['item_count'] - int(count), user.id)
         else:
             await ctx.send(embed=errors.Inventory.item_missing_error)
             item_removed = False
 
         if item_removed and 'remove' in ctx.message.content.lower():
             inv_edit_embed = discord.Embed(colour=ctx.author.colour)
-            inv_edit_embed.add_field(name="**Item Removed Successfully**",
+            inv_edit_embed.add_field(name="**Inventory Removed Successfully**",
                                      value=f"Removed {count}x `{item_data['display_name']}` "
                                            f"from {user}'s Inventory")
             await ctx.send(embed=inv_edit_embed)
@@ -123,7 +123,7 @@ class Item(commands.Cog):
         store_embed.set_footer(text=f"{v} | Use !store buy <item_id> to purchase!")
         await ctx.send(embed=store_embed)
 
-    @store.command(help="Purchase an item from the store.")
+    @store.command(help="Purchase an item from the store", brief='!store buy ticket')
     async def buy(self, ctx, item_id, amount=1):
         item_type = await dbutils.Inventory.get_item_type(item_id)
         balance = await dbutils.condition_select('user', 'balance', 'user_id', ctx.author.id)
@@ -131,7 +131,7 @@ class Item(commands.Cog):
         if item_type and balance[0][0] - item_type['item_cost'] * amount >= 0 and item_type['item_cost'] != 0:
             await dbutils.simple_update('user', 'balance', balance[0][0] - item_type['item_cost'] * amount,
                                         'user_id', ctx.author.id)
-            if await Item.add(self, ctx, ctx.author, item_type['item_id'], amount):
+            if await Inventory.add(self, ctx, ctx.author, item_type['friendly_id'], amount):
                 inv_edit_embed = discord.Embed(colour=ctx.author.colour)
                 inv_edit_embed.add_field(name="**Cha-Ching!**",
                                          value=f"Bought {amount}x `{item_type['display_name']}`")
@@ -151,18 +151,18 @@ class Item(commands.Cog):
         if await dbutils.Inventory.update_item_price(item_id, price):
             await ctx.send(f"Done! {item_id} is now {price} Nugs")
 
-    @commands.command(help="Redeem an item from your inventory. Items: Ticket, Role")
+    @commands.command(help="Redeem an item from your inventory. Items: ticket, role, gift", brief='!redeem role')
     async def redeem(self, ctx, item_id):
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
 
         redeemable_id = [1, 2, 4]
         ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],
-                         ["<:goldenE:857714717153689610>", 7]]
+                         ["<:goldenE:857714717153689610>", 7], [":dragon_face:", 64]]
 
         item_type = await dbutils.Inventory.get_item_type(item_id)
         if item_type['unique_id'] in redeemable_id:
-            removed = await Item.remove(self, ctx, ctx.author, item_id, 1)
+            removed = await Inventory.remove(self, ctx, ctx.author, item_id, 1)
 
             if removed and item_type['unique_id'] == 1:
                 customization_embed = discord.Embed(color=ctx.author.color)
@@ -198,7 +198,7 @@ class Item(commands.Cog):
                         await ctx.send(embed=customization3_embed)
                 except asyncio.TimeoutError:
                     await ctx.send("You took too long to answer! Use `!redeem role` again to restart")
-                    await Item.add(self, ctx, ctx.author, item_id, 1)
+                    await Inventory.add(self, ctx, ctx.author, item_id, 1)
 
             elif removed and item_type['unique_id'] == 2:
                 if random.choices([True, False], weights=(2, 98), k=1)[0]:
@@ -207,11 +207,11 @@ class Item(commands.Cog):
                     prizes = []
                     winnings = []
                     for i in range(4):
-                        random_icon = random.choices(ticket_prizes, weights=(3, 4, 5, 3, 1), k=1)
+                        random_icon = random.choices(ticket_prizes, weights=(2.98, 4, 5, 3, 1, 0.01), k=1)
                         prizes.append(random_icon[0])
                         winnings.append(f"||{random_icon[0][0]}||")
 
-                    counter = await dbutils.condition_select('counter', 'total_tickets', 'user_id', 0)
+                    counter = await dbutils.condition_select('counter', 'count', 'counter_name', 'ticket_count')
                     ticket_embed = discord.Embed(color=ctx.author.color)
                     ticket_embed.add_field(name="**Scratch Ticket**",
                                            value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
@@ -222,6 +222,7 @@ class Item(commands.Cog):
                     await dbutils.simple_update('user', 'balance',
                                                 bal[0][0] + func.calculate_prizes(prizes, ticket_prizes),
                                                 'user_id', ctx.author.id)
+                    await dbutils.simple_update('counter', 'count', counter[0][0] + 1, 'counter_name', 'ticket_count')
         else:
             await ctx.send("Wrong item!")
 
@@ -232,8 +233,10 @@ class Item(commands.Cog):
                              value="There are 2 types of prizes:\n\n"
                                    "**Normal Prize**\n"
                                    ":yellow_heart: - 1 nug, :gem: - 2 nugs, :dagger: - 4 nugs, "
-                                   "<:grassyE:840170557508026368> - 6 nugs, <:goldenE:857714717153689610> - 7 nugs\n\n"
+                                   "<:grassyE:840170557508026368> - 6 nugs, <:goldenE:857714717153689610> - 7 nugs, "
+                                   ":dragon_face: - 64 nugs\n\n"
                                    "**Jackpot Prize**\n"
-                                   "When you get 4 different scratchables, you get double the prize!\n\n"
+                                   "When you get 4 different scratchables, you get double the prize! Except for when "
+                                   "you get a :dragon_face:.\n\n"
                                    "Nugs are added automatically!", inline=False)
         await ctx.send(embed=help_embed)

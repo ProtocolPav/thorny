@@ -129,17 +129,15 @@ class Help(commands.Cog):
     async def kingdoms(self, ctx):
         help_embed = discord.Embed(colour=0x65b39b)
         help_embed.add_field(name=":question: **Kingdom Help**",
-                             value=f"**!your_kingdom** - View a kingdom's command! (Asba, Ambria, Streg, Dal, Eir)\n"
-                                   f"**!kedit <field> <value>** - Edit a certain field on the command!")
+                             value=f"**!kedit <field> <value>** - Edit a certain field on the command!")
         help_embed.add_field(name=":pencil: **Fields You Can Edit**",
                              value=f"You can edit the following fields (In order from top to bottom):\n\n"
                                    f"**Slogan** - The top part of the kingdom command | Max. 5 words\n"
                                    f"**Ruler** - Your Kingdom's Ruler\n"
                                    f"**Capital** - The Capital CIty | Max. 30 characters\n"
-                                   f"**Borders** - Open, Closed, Partially Open | Max. 30 characters\n"
-                                   f"**Government** - Kingdom's Government Type\n"
+                                   f"**Border_type** - Open, Closed, Partially Open | Max. 30 characters\n"
+                                   f"**Gov_type** - Kingdom's Government Type\n"
                                    f"**Alliances** - Your kingdom's alliances | Max. 50 characters\n"
-                                   f"**Wiki** - Kingdom's Wiki Article | Send in the whole link!\n"
                                    f"**Description** - Your Kingdom's Description | Max. 30 words\n"
                                    f"**Lore** - Your Kingdom's Lore | Max. 30 words",
                              inline=False)

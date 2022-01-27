@@ -41,7 +41,7 @@ class Playtime(commands.Cog):
             response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
             response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
 
-            await dbutils.Activity.insert_connect(ctx.author.id)
+            await dbutils.Activity.insert_connect(ctx)
             await ctx.send(embed=response_embed)
         elif datetime.now() - last_connect['connect_time'] > timedelta(hours=12):
             log_embed = discord.Embed(title=f'CONNECTION', colour=0x00FF7F)
@@ -70,7 +70,7 @@ class Playtime(commands.Cog):
             await ctx.send(embed=errors.Activity.already_connected_error)
 
     @commands.command(aliases=['dc'], help="Log your disconnect time as well as what you did")
-    async def disconnect(self, ctx, *journal):
+    async def disconnect(self, ctx):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is None:
             playtime = datetime.now().replace(microsecond=0) - last_connect['connect_time']
@@ -109,7 +109,8 @@ class Playtime(commands.Cog):
         elif last_connect['disconnect_time'] is not None:
             await ctx.send(embed=errors.Activity.connect_error)
 
-    @commands.command(help='BETA Adjust your recent playtime. Format: Xh, Xm, XhXXm')
+    @commands.command(help='BETA Adjust your recent playtime. Format: Xh or Xm or XhXXm',
+                      breif='!adjust 1h21m')
     async def adjust(self, ctx, time):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is not None and '-' not in time:
@@ -129,14 +130,16 @@ class Playtime(commands.Cog):
                                                      last_connect['playtime'] - time_object)
                 await ctx.send(f'Your most recent playtime has been reduced by {time}. '
                                f'It is now **{last_connect["playtime"] - time_object}**')
+            else:
+                await ctx.send(f"Sorry! You can't remove that many hours!")
 
-    @commands.command(help='View stats about your playtime!')
-    async def journal(self, ctx, page):
-        pass
+    @commands.command(help='COMING SOON! View stats about your playtime!')
+    async def journal(self, ctx, page=None):
+        await ctx.send("This command is coming very soon to Thorny v2.0!")
 
     @commands.command(help="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
-        connected = await dbutils.Activity.get_online()
+        connected = await dbutils.Activity.select_online()
         online_text = ''
         afk_text = ''
         for player in connected:

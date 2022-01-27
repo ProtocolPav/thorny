@@ -20,6 +20,7 @@ class Profile(commands.Cog):
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
         await dbutils.simple_update('user', 'kingdom', kingdom, 'user_id', user.id)
+        await dbutils.Activity.update_user_activity(ctx)
         profile = await dbutils.Profile.select_profile(user.id)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.message.guild.roles) in user.roles:
@@ -35,7 +36,12 @@ class Profile(commands.Cog):
             date_joined = "DM Pav to set up!"
             if profile['join_date'] is not None:
                 date_joined = datetime.strftime(profile['join_date'], "%B %d %Y")
-
+            else:
+                date_joined = "DM Pav to set up!"
+            if profile['birthday'] is not None:
+                birthday = datetime.strftime(profile['birthday'], '%B %d %Y')
+            else:
+                birthday = "Use `!birthday` to set up!"
             profile_embed.add_field(name=f'**:card_index: Information**',
                                     value=f"{is_donator}**Gamertag:** {profile['gamertag']}\n"
                                           f"**Kingdom:** {profile['kingdom']}\n"
@@ -43,20 +49,20 @@ class Profile(commands.Cog):
                                           f"**Level:** {profile['user_level']}\n"
                                           f"**Balance:** <:Nug:884320353202081833>"
                                           f"{profile['balance']}\n\n"
-                                          f"**Birthday:** {datetime.strftime(profile['birthday'], '%B %d %Y')}\n"
+                                          f"**Birthday:** {birthday}\n"
                                           f"**Joined on:** {date_joined}")
             if profile['activity_shown']:
                 profile_embed.add_field(name=f'**:clock8: My Activity**',
                                         value=f"Use `!journal` for more stats\n**Latest Playtime:** "
-                                              f"5h34m\n"
+                                              f"Coming Soon...\n"
                                               f"**{datetime.now().strftime('%B')}:** "
-                                              f"4h50m\n"
+                                              f"{profile['current_month']}\n"
                                               f"**{(datetime.now() - timedelta(days=30)).strftime('%B')}:** "
-                                              f"23h55m\n"
+                                              f"{profile['one_month_ago']}\n"
                                               f"**{(datetime.now() - timedelta(days=60)).strftime('%B')}:** "
-                                              f"12h43m\n\n"
+                                              f"{profile['two_months_ago']}\n\n"
                                               f"**Total:** "
-                                              f"45h", inline=True)
+                                              f"{profile['total_playtime']}", inline=True)
         if profile['aboutme_shown']:
             profile_embed.add_field(name=f'**:person_raising_hand: About Me**',
                                     value=f'"{profile["aboutme"]}"', inline=False)
@@ -73,7 +79,7 @@ class Profile(commands.Cog):
 
     @profile.command(help="Edit what a section says on your profile. The section can be: slogan, gamertag, town, role,"
                           " birthday, wiki, aboutme or lore.",
-                     usage="<section> [text...]")
+                     usage="<section> [text...]", brief='!profile edit gamertag SpiritedOwl342')
     async def edit(self, ctx, section=None, *value):
         if section.lower() == "birthday":
             if len(value) == 3:
@@ -83,14 +89,15 @@ class Profile(commands.Cog):
         else:
             update = await dbutils.Profile.update_profile(ctx.author.id, section, " ".join(value))
             if update == "length_error":
-                await ctx.send("Too long of a character")
+                await ctx.send("This message is too long! Try shortening it please!")
             elif update == "section_error":
                 await help.Help.help(self, ctx, 'profile')
             else:
                 await Profile.profile(self, ctx)
 
     @profile.command(help="Toggle visibility of a category on your profile. "
-                          "The category can be: aboutme, activity, information, wiki or lore", usage="<category>")
+                          "The category can be: aboutme, activity, information, wiki or lore", usage="<category>",
+                     brief='!profile toggle wiki')
     async def toggle(self, ctx, category=None):
         update = await dbutils.Profile.update_toggle(ctx.author.id, category)
         if update == "section_error":
@@ -135,7 +142,7 @@ class Profile(commands.Cog):
         profile_embed.set_footer(text=f"{v} | Use !help profile for help on editing your profile!")
         await ctx.send(embed=profile_embed)
 
-    @commands.command(help="Set your birthday | Format: DD Month YYYY")
+    @commands.command(help="Set your birthday | Format: DD Month YYYY", brief='!birthday 4 November 2000')
     async def birthday(self, ctx, day, month, year=None):
         if year is not None:
             if 1901 < int(year) < 2015:
@@ -155,10 +162,15 @@ class Profile(commands.Cog):
     @profile.command(help="CM Only | Update some sections of people's profiles", hidden=True)
     @commands.has_permissions(administrator=True)
     async def set(self, ctx, user: discord.Member, key, *value):
-        update = await dbutils.Profile.update_profile(user.id, key, " ".join(value))
-        if update == "length_error":
-            await ctx.send("Too long of a character")
-        elif update == "section_error":
-            await help.Help.help(self, ctx, 'profile')
-        else:
+        if key.lower() == 'join_date':
+            date = datetime.strptime(" ".join(value), '%Y-%m-%d %H:%M:%S')
+            await dbutils.simple_update('user', 'join_date', date, 'user_id', user.id)
             await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
+        else:
+            update = await dbutils.Profile.update_profile(user.id, key, " ".join(value))
+            if update == "length_error":
+                await ctx.send("Too long of a character")
+            elif update == "section_error":
+                await ctx.send("**Some Common Edits:**\n!profile set @player ")
+            else:
+                await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")

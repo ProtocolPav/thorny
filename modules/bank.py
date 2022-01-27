@@ -149,8 +149,8 @@ class Bank(commands.Cog):
         elif amount is None:
             await ctx.send(embed=errors.Pay.amount_error)
         else:
-            await dbutils.simple_update('user', 'balance', payable - int(amount), 'kingdom', kingdom)
-            await dbutils.simple_update('kingdoms', 'treasury', receivable + int(amount), 'user_id', ctx.author.id)
+            await dbutils.simple_update('user', 'balance', receivable + int(amount), 'user_id', ctx.author.id)
+            await dbutils.simple_update('kingdoms', 'treasury', payable - int(amount), 'kingdom', kingdom)
 
             pay_embed = discord.Embed(color=0xE49B0F)
             pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
