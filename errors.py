@@ -6,6 +6,10 @@ class Activity:
     connect_error.add_field(name="<:_no:921840417362804777> Aww... Shucks",
                             value="I don't recall you connecting actually...")
 
+    already_connected_error = discord.Embed(color=0xD70040)
+    already_connected_error.add_field(name="<:_no:921840417362804777> It's all good!",
+                                      value="No need to connect now, you're already connected!")
+
 
 class Pay:
     self_error = discord.Embed(color=0xD70040)
@@ -38,21 +42,13 @@ class Pay:
 
 
 class Treasury:
-    store_lack_nugs_error = discord.Embed(color=0xD70040)
-    store_lack_nugs_error.add_field(name=f'<:_no:921840417362804777> Could not store in the Kingdom Treasury!',
-                                    value='Reason: You do not have enough nugs!')
-
-    take_lack_nugs_error = discord.Embed(color=0xD70040)
-    take_lack_nugs_error.add_field(name=f'<:_no:921840417362804777> Could not take from the Kingdom Treasury!',
-                                   value='Reason: There is too little nugs in there!')
-
-    negative_nugs_error = discord.Embed(color=0xD70040)
-    negative_nugs_error.add_field(name='<:_no:921840417362804777> Unsuccessful!',
-                                  value='Reason: You can not take a negative amount!')
-
     ruler_error = discord.Embed(color=0xD70040)
     ruler_error.add_field(name=f'<:_no:921840417362804777> Could not access the Treasury!',
                           value='Reason: You are not a Ruler!')
+
+    kingdom_error = discord.Embed(color=0xD70040)
+    kingdom_error.add_field(name=f'<:_no:921840417362804777> Well well well',
+                            value="Seems like you're trying to donate to your kingdom.\nIssue is... You're not in one!")
 
 
 class Shop:
@@ -67,6 +63,12 @@ class Shop:
     empty_inventory_error = discord.Embed(color=0xD70040)
     empty_inventory_error.add_field(name="<:_no:921840417362804777> Cheeky.",
                                     value="You tried redeeming something that you don't even own!")
+
+
+class Inventory:
+    item_missing_error = discord.Embed(color=0xD70040)
+    item_missing_error.add_field(name="<:_no:921840417362804777> Cheeky.",
+                                 value="The user does not have this item to remove")
 
 
 class Leaderboard:
