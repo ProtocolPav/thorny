@@ -18,16 +18,16 @@ class Playtime(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['c'], help="Log your connect time")
+    @commands.slash_command(aliases=['c'], help="Log your connect time")
     async def connect(self, ctx):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
-        if last_connect['disconnect_time'] is not None:
+        if last_connect['disconnect_time'] is not None or last_connect is None:
             log_embed = discord.Embed(title=f'CONNECTION', colour=0x00FF7F)
             log_embed.add_field(name='Event Log:',
                                 value=f'**CONNECT**, **{ctx.author}**, '
                                       f'{ctx.author.id}, '
                                       f'{datetime.now().replace(microsecond=0)}')
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             activity_channel = self.client.get_channel(config['channels']['activity_logs'])
             await activity_channel.send(embed=log_embed)
 
@@ -38,18 +38,18 @@ class Playtime(commands.Cog):
                                            f"so I'll know when to stop!\n\n"
                                            "`!lb activity` - View this month's activity!\n"
                                            "`!profile` - View your individual activity stats!")
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
 
             await dbutils.Activity.insert_connect(ctx)
-            await ctx.send(embed=response_embed)
+            await ctx.respond(embed=response_embed)
         elif datetime.now() - last_connect['connect_time'] > timedelta(hours=12):
             log_embed = discord.Embed(title=f'CONNECTION', colour=0x00FF7F)
             log_embed.add_field(name='Event Log:',
                                 value=f'**CONNECT**, **{ctx.author}**, '
                                       f'{ctx.author.id}, '
                                       f'{datetime.now().replace(microsecond=0)}')
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             activity_channel = self.client.get_channel(config['channels']['activity_logs'])
             await activity_channel.send(embed=log_embed)
 
@@ -59,17 +59,18 @@ class Playtime(commands.Cog):
                                            f"so I'll know when to stop!\n\n"
                                            "`!lb activity` - View this month's activity\n"
                                            "`!profile` - View your individual activity stats")
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
 
             await dbutils.Activity.update_disconnect(ctx.author.id, last_connect['connect_time'],
                                                      timedelta(hours=1, minutes=5))
             await dbutils.Activity.insert_connect(ctx.author.id)
-            await ctx.send(embed=response_embed)
+            await dbutils.Activity.update_user_activity(ctx)
+            await ctx.respond(embed=response_embed)
         else:
-            await ctx.send(embed=errors.Activity.already_connected_error)
+            await ctx.respond(embed=errors.Activity.already_connected_error, ephemeral=True)
 
-    @commands.command(aliases=['dc'], help="Log your disconnect time as well as what you did")
+    @commands.slash_command(aliases=['dc'], help="Log your disconnect time as well as what you did")
     async def disconnect(self, ctx):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is None:
@@ -84,7 +85,7 @@ class Playtime(commands.Cog):
                                 value=f'**DISCONNECT**, **{ctx.author}**, '
                                       f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
                                       f'Playtime: **{str(playtime).split(":")[0]}h{str(playtime).split(":")[1]}m**')
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             activity_channel = self.client.get_channel(config['channels']['activity_logs'])
             await activity_channel.send(embed=log_embed)
 
@@ -100,24 +101,25 @@ class Playtime(commands.Cog):
                                            f"Use `!c` to connect again next time!\n\n"
                                            "`!lb activity` - View this month's activity\n"
                                            "`!profile` - View your individual activity stats")
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
             response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
 
             await dbutils.Activity.update_disconnect(ctx.author.id, last_connect['connect_time'],
                                                      playtime)
-            await ctx.send(embed=response_embed)
+            await dbutils.Activity.update_user_activity(ctx)
+            await ctx.respond(embed=response_embed)
         elif last_connect['disconnect_time'] is not None:
-            await ctx.send(embed=errors.Activity.connect_error)
+            await ctx.respond(embed=errors.Activity.connect_error, ephemeral=True)
 
-    @commands.command(help='BETA Adjust your recent playtime. Format: Xh or Xm or XhXXm',
-                      breif='!adjust 1h21m')
+    @commands.slash_command(help='BETA Adjust your recent playtime. Format: Xh or Xm or XhXXm',
+                            breif='!adjust 1h21m')
     async def adjust(self, ctx, time):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is not None and '-' not in time:
             if 'm' in time.lower() and 'h' not in time.lower():
-                time_object = timedelta(minutes=int(time[0:len(time)-1]))
+                time_object = timedelta(minutes=int(time[0:len(time) - 1]))
             elif 'm' not in time.lower() and 'h' in time.lower():
-                time_object = timedelta(hours=int(time[0:len(time)-1]))
+                time_object = timedelta(hours=int(time[0:len(time) - 1]))
             elif 'm' in time.lower() and 'h' in time.lower():
                 time_list = time.lower().split('h')
                 time_object = timedelta(hours=time_list[0], minutes=time_list[1][0:-1])
@@ -128,16 +130,17 @@ class Playtime(commands.Cog):
             if last_connect['playtime'] - time_object > timedelta(hours=0, minutes=0):
                 await dbutils.Activity.update_adjust(ctx.author.id, last_connect['connect_time'],
                                                      last_connect['playtime'] - time_object)
-                await ctx.send(f'Your most recent playtime has been reduced by {time}. '
-                               f'It is now **{last_connect["playtime"] - time_object}**')
+                await dbutils.Activity.update_user_activity(ctx)
+                await ctx.respond(f'Your most recent playtime has been reduced by {time}. '
+                                  f'It is now **{last_connect["playtime"] - time_object}**')
             else:
-                await ctx.send(f"Sorry! You can't remove that many hours!")
+                await ctx.respond(f"Sorry! You can't remove that many hours!", ephemeral=True)
 
     @commands.command(help='COMING SOON! View stats about your playtime!')
-    async def journal(self, ctx, page=None):
+    async def journal(self, ctx):
         await ctx.send("This command is coming very soon to Thorny v2.0!")
 
-    @commands.command(help="See connected and AFK players and how much time they played for")
+    @commands.slash_command(help="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
         connected = await dbutils.Activity.select_online()
         online_text = ''
@@ -146,12 +149,12 @@ class Playtime(commands.Cog):
             time = datetime.now() - player['connect_time']
             if time < timedelta(hours=12):
                 online_text = f"{online_text}\n" \
-                            f"<@{player['user_id']}> • " \
-                            f"connected {str(time).split(':')[0]}h{str(time).split(':')[1]}m ago"
-            else:
-                afk_text = f"{afk_text}\n" \
                               f"<@{player['user_id']}> • " \
                               f"connected {str(time).split(':')[0]}h{str(time).split(':')[1]}m ago"
+            else:
+                afk_text = f"{afk_text}\n" \
+                           f"<@{player['user_id']}> • " \
+                           f"connected {str(time).split(':')[0]}h{str(time).split(':')[1]}m ago"
 
         online_embed = discord.Embed(color=0x6495ED)
         if online_text == "":
@@ -165,4 +168,4 @@ class Playtime(commands.Cog):
                                    value=f"**These people will have their playtime default to 1h05m**\n"
                                          f"{afk_text}", inline=False)
 
-        await ctx.send(embed=online_embed)
+        await ctx.respond(embed=online_embed)
