@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
-from discord.ext import commands
-
+from discord.ext import commands, tasks
 
 import functions as func
 import logs
@@ -32,38 +31,38 @@ async def on_ready():
                                     name=f"you... | {v}")
     print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
-    await func.update_months(thorny)
+    print(f"[SERVER] Next month switch is in {timedelta(seconds=dbutils.Activity.seconds_until_next_month())}"
+          f" (Date: {datetime.now() + timedelta(seconds=dbutils.Activity.seconds_until_next_month())})")
+
+    print(dbutils.select_all_guilds(thorny))
+
+
+@tasks.loop(seconds=dbutils.Activity.seconds_until_next_month())
+async def update_months():
+    if update_months.current_loop != 0:
+        print(f"[ACTION] Beginning Month Switch (Loop {update_months.current_loop})")
+        await dbutils.Activity.update_user_months()
 
 
 @thorny.command()
 @commands.has_permissions(administrator=True)
-async def port(ctx):
-    version_file = open('version.json', 'r+')
-    version = json.load(version_file)
-    if not version['v1.6_ported']:
-        await dbutils.create_thorny_database(ctx)
-        await dbutils.port_user_profiles(ctx)
-        await dbutils.port_activity(ctx)
-        await dbutils.populate_tables(ctx)
-        version['v1.6_ported'] = True
-        version_file.truncate(0)
-        version_file.seek(0)
-        json.dump(version, version_file, indent=0)
-        await ctx.send(f"All porting Complete!")
-
-
-@thorny.command()
-@commands.has_permissions(administrator=True)
-async def register(ctx, member: discord.Member):
+async def register(member: discord.Member):
     await dbutils.create_user(member)
-    print(f"{member} joined")
-    await ctx.send("Created for Member")
 
 
-@thorny.command(aliases=['version'])
+@thorny.slash_command()
+@commands.cooldown(1, 10, commands.BucketType.user)
 async def ping(ctx):
-    await ctx.send(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                   f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
+    await ctx.respond(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
+                      f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
+
+
+@thorny.event
+async def on_application_command_error(ctx, error):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.respond("This command is currently on cooldown.")
+    else:
+        raise error
 
 
 @thorny.command()
@@ -86,6 +85,8 @@ async def on_message(message):
         await message.channel.send('AAAHHHHHHHHHH')
     elif 'baffl' in message.content.lower():
         await message.channel.send("Is that right?")
+    elif message.content.startswith('!profile'):
+        await message.channel.send("Oh! It looks like you're using the old prefix! Thorny now has **slash commands**!")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -157,15 +158,20 @@ async def on_member_join(member):
 
 @thorny.event
 async def on_guild_join(guild):
-    print("I joined" + guild)
+    print(f"I joined {guild.name}")
+    for member in guild.members:
+        if member.bot is not True:
+            await register(member)
 
+
+update_months.start()
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(gateway.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
-thorny.add_cog(help.Help(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
-thorny.add_cog(playtime.Playtime(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.add_cog(playtime.Playtime(thorny))
+thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)

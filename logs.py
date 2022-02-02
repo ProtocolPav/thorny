@@ -7,12 +7,12 @@ def transaction(payable_id, receivable_id, amount, reason):
         log_embed = discord.Embed(color=0xF4C430)
         log_embed.add_field(name="**Transaction**",
                             value=f"<@{payable_id}> paid <@{receivable_id}> **<:Nug:884320353202081833>{amount}**\n"
-                                  f"Reason: {' '.join(str(x) for x in reason)}")
+                                  f"Reason: {reason}")
     else:
         log_embed = discord.Embed(color=0xF4C430)
         log_embed.add_field(name="**Transaction**",
                             value=f"<@{payable_id}> paid {receivable_id} **<:Nug:884320353202081833>{amount}**\n"
-                                  f"Reason: {' '.join(str(x) for x in reason)}")
+                                  f"Reason: {reason}")
     log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
     return log_embed
 
@@ -49,4 +49,3 @@ def message_edit(before, after):
                               f"**BEFORE:**\n{before.content}\n**AFTER:**\n{after.content}")
     log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
     return log_embed
-
