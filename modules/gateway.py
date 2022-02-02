@@ -76,3 +76,38 @@ class Information(commands.Cog):
         else:
             await ctx.send(f"Success! {field} is now {' '.join(value)} for {kingdom[0][0]}")
 
+    @commands.slash_command(description="Get help on editing the Kingdom Command", guild_ids=[733716450774351933])
+    async def kingdoms(self, ctx):
+        help_embed = discord.Embed(colour=0x65b39b)
+        help_embed.add_field(name=":question: **Kingdom Help**",
+                             value=f"**!kedit <field> <value>** - Edit a certain field on the command!")
+        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
+                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
+                                   f"**Slogan** - The top part of the kingdom command | Max. 5 words\n"
+                                   f"**Ruler** - Your Kingdom's Ruler\n"
+                                   f"**Capital** - The Capital CIty | Max. 30 characters\n"
+                                   f"**Border_type** - Open, Closed, Partially Open | Max. 30 characters\n"
+                                   f"**Gov_type** - Kingdom's Government Type\n"
+                                   f"**Alliances** - Your kingdom's alliances | Max. 50 characters\n"
+                                   f"**Description** - Your Kingdom's Description | Max. 30 words\n"
+                                   f"**Lore** - Your Kingdom's Lore | Max. 30 words",
+                             inline=False)
+        help_embed.set_footer(text=f"Use !help kingdoms to access this!")
+        await ctx.send(embed=help_embed)
+
+    @commands.command(help="Get a random tip!")
+    async def tip(self, ctx, number=None):
+        tip = json.load(open('./../thorny_data/tips.json', 'r'))
+        tip_embed = discord.Embed(color=0x65b39b)
+        if number is None:
+            number = str(random.randint(1, len(tip['tips'])))
+        tip_embed.add_field(name=f"Pro Tip!",
+                            value=tip['tips'][number])
+        tip_embed.set_footer(text=f"Tip {number}/{len(tip['tips'])} | Use !tip [number] to get a tip!")
+        await ctx.send(embed=tip_embed)
+
+    @commands.command(aliases=["form"], help="Get a link to the EverForms")
+    async def everforms(self, ctx):
+        await ctx.send(f"**Here's a link!**\n"
+                       f"EverForms is the unified way to submit different forms!\n"
+                       f"https://forms.gle/kTaB7NN2gkpzWmcs7")
