@@ -85,7 +85,7 @@ async def on_message(message):
         await message.channel.send('AAAHHHHHHHHHH')
     elif 'baffl' in message.content.lower():
         await message.channel.send("Is that right?")
-    elif message.content.startswith('!profile'):
+    elif message.content.startswith('!'):
         await message.channel.send("Oh! It looks like you're using the old prefix! Thorny now has **slash commands**!")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
