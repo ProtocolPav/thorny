@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta, date
 import asyncio
 import discord
+from dateutil import relativedelta
 
 
 def reset_values():
@@ -144,7 +145,7 @@ def get_user_kingdom(ctx, user):
     kingdom = None
     kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
     for item in kingdoms_list:
-        if discord.utils.find(lambda r: r.name == item, ctx.message.guild.roles) in user.roles:
+        if discord.utils.find(lambda r: r.name == item, ctx.guild.roles) in user.roles:
             kingdom = item.capitalize()
     return kingdom
 
@@ -179,9 +180,8 @@ def activity_set(ctx_author, value, time_to_add):
 
 async def update_months(client):
     def seconds_until_next_month():
-        current_date = datetime.now() + timedelta(days=31)
-        next_months_date = str(current_date).split(' ')[0][0:7] + "-01" + " 0:00:00.0"
-        next_months_date = datetime.strptime(next_months_date, "%Y-%m-%d %H:%M:%S.%f")
+        next_months_date = datetime.now().replace(day=1) + relativedelta.relativedelta(months=1)
+        print(next_months_date)
         time_until_next_month = next_months_date - datetime.now()
         time_in_seconds = time_until_next_month.total_seconds()
         return time_in_seconds
@@ -379,12 +379,6 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     if profile[f'{ctx_author.id}'].get('strikes') is {}:
         profile[f'{ctx_author.id}']['strikes'] = {"counter": 0}
 
-    if profile[f'{ctx_author.id}'].get('ticket_counter') is None:
-        profile[f'{ctx_author.id}']['ticket_counter'] = {}
-        profile[f'{ctx_author.id}']['ticket_counter']['ticket_count'] = 5
-        profile[f'{ctx_author.id}']['ticket_counter']['last_purchase'] = '1900-01-01 0:00:01'
-
-
     if key2 is None and key1 is not None:
         profile[f"{ctx_author.id}"][key1] = value
     elif key1 and key2 is not None:
@@ -392,3 +386,65 @@ def profile_update(ctx_author, value=None, key1=None, key2=None):
     profile_file.truncate(0)
     profile_file.seek(0)
     json.dump(profile, profile_file, indent=3)
+
+
+async def generate_help_dict(self, ctx):
+    help_dict = {}
+    for cog in self.client.cogs:
+        help_dict[f"{cog}"] = []
+        cmd_num = 0
+        for command in self.client.get_cog(cog).get_commands():
+            cmd_num += 1
+            if isinstance(command, discord.SlashCommandGroup):
+                for subcommand in command.walk_commands():
+                    options = ''
+                    for item in subcommand.options:
+                        if item.required is True:
+                            options = f"{options} <{item.name}>"
+                        else:
+                            options = f"{options} [{item.name}]"
+                    if not subcommand.checks:
+                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                    "desc": subcommand.description,
+                                                    "alias": None, 'usage': options, 'example': None})
+                    elif subcommand.checks and ctx.author.guild_permissions.administrator:
+                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                    "desc": subcommand.description,
+                                                    "alias": None, 'usage': options, 'example': None})
+            elif isinstance(command, discord.SlashCommand):
+                options = ''
+                for item in command.options:
+                    if item.required is True:
+                        options = f"{options} <{item.name}>"
+                    else:
+                        options = f"{options} [{item.name}]"
+                if not command.checks:
+                    help_dict[f"{cog}"].append({"name": command.name,
+                                                "desc": command.description,
+                                                "alias": None, 'usage': options, 'example': None})
+                elif command.checks and ctx.author.guild_permissions.administrator:
+                    help_dict[f"{cog}"].append({"name": command.name,
+                                                "desc": command.description,
+                                                "alias": None, 'usage': options, 'example': None})
+            elif not command.hidden:
+                help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
+                                            "alias": command.aliases, "desc": command.help,
+                                            "example": command.brief})
+            elif command.hidden and ctx.author.guild_permissions.administrator:
+                help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
+                                            "alias": command.aliases, "desc": command.help,
+                                            "example": command.brief})
+            if isinstance(command, discord.ext.commands.Group):
+                for subcommand in command.walk_commands():
+                    cmd_num += 1
+                    if not subcommand.hidden:
+                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                    "usage": subcommand.signature,
+                                                    "alias": subcommand.aliases, "desc": subcommand.help,
+                                                    "example": subcommand.brief})
+                    elif subcommand.hidden and ctx.author.guild_permissions.administrator:
+                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
+                                                    "usage": subcommand.signature,
+                                                    "alias": subcommand.aliases, "desc": subcommand.help,
+                                                    "example": subcommand.brief})
+    return help_dict

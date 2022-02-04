@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 import json
 import discord
+from dateutil.relativedelta import relativedelta
 
 
 async def connection():
@@ -171,7 +172,7 @@ async def port_user_profiles(ctx):
 
 
 async def port_activity(ctx):
-    month = ['oct', 'nov', 'dec', 'jan']
+    month = ['oct', 'nov', 'dec']
     await ctx.send(f"Porting September Activity...")
     activity = json.load(open("../thorny_data/activity_sep21.json", "r"))
     sorted_activity = sorted(activity, key=lambda x: (x['userid'], x['date'], x['time']))
@@ -433,8 +434,9 @@ async def simple_update(table, column, new_val, condition, condition_requirement
 async def create_user(member):
     if await conn.fetchrow('SELECT * FROM thorny.user WHERE user_id = $1 AND guild_id = $2',
                            member.id, member.guild.id) is None:
-        await conn.execute('INSERT INTO thorny.user(user_id, guild_id, username, join_date) '
-                           'VALUES($1, $2, $3, $4)', member.id, member.guild.id, member.name, datetime.now())
+        await conn.execute('INSERT INTO thorny.user(user_id, guild_id, username, join_date, balance) '
+                           'VALUES($1, $2, $3, $4, $5)', member.id, member.guild.id, member.discriminator,
+                           datetime.now(), 25)
         thorny_id = await conn.fetchrow('SELECT thorny_user_id FROM thorny.user WHERE user_id=$1 AND guild_id=$2',
                                         member.id, member.guild.id)
         await conn.execute("INSERT INTO thorny.user_activity(thorny_user_id, user_id, guild_id)"
@@ -443,6 +445,14 @@ async def create_user(member):
                            "VALUES($1, $2, $3)", thorny_id[0], member.id, member.guild.id)
         await conn.execute("INSERT INTO thorny.levels(thorny_user_id, user_id, guild_id)"
                            "VALUES($1, $2, $3)", thorny_id[0], member.id, member.guild.id)
+        print(f"{member} has been registered")
+
+
+def select_all_guilds(client):
+    returned_guilds = []
+    for guild in client.guilds:
+        returned_guilds.append(guild.id)
+    return returned_guilds
 
 
 class Inventory:
@@ -542,21 +552,43 @@ class Activity:
                            'WHERE user_id = $3', total_hours['sum'], current_month_hours['sum'],
                            ctx.author.id)
 
+    @staticmethod
+    async def update_user_months():
+        await conn.execute('UPDATE thorny.user_activity '
+                           'SET two_months_ago = one_month_ago, one_month_ago = current_month, current_month = $1',
+                           timedelta(hours=0))
+        print(f"[ACTION] Months successfully switched in all user profiles")
+
+    @staticmethod
+    def seconds_until_next_month():
+        next_months_date = datetime.now().replace(day=1) + relativedelta(months=1)
+        time_until_next_month = next_months_date - datetime.now()
+        time_in_seconds = time_until_next_month.total_seconds()
+        return time_in_seconds
+
 
 class Leaderboard:
     @staticmethod
     async def select_activity(month: datetime):
         if datetime.now() < month:
             month = month.replace(year=datetime.now().year - 1)
+            year = datetime.now().year - 1
+        else:
+            year = datetime.now().year
+        next_month = month.month + 1
+        if next_month == 13:
+            next_month = 1
+            year = datetime.now().year
         return await conn.fetch(
             f"""
             SELECT SUM(playtime), user_id 
             FROM thorny.activity 
-            WHERE connect_time >= $1
+            WHERE connect_time BETWEEN $1 AND $2
             GROUP BY user_id 
             ORDER BY SUM(playtime) DESC
             """,
-            month.replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+            month.replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+            month.replace(year=year, month=next_month, day=1, hour=0, minute=0, second=0, microsecond=0))
 
     @staticmethod
     async def select_nugs():
@@ -624,7 +656,8 @@ class Kingdom:
 
     @staticmethod
     async def update_kingdom(kingdom, section, value):
-        availabe_sections = ['slogan', 'capital', 'town_count', 'border_type', 'gov_type', 'description', 'alliances']
+        availabe_sections = ['slogan', 'capital', 'town_count', 'border_type', 'gov_type', 'description',
+                             'alliances', 'lore']
         if section.lower() in availabe_sections:
             try:
                 await conn.execute('UPDATE thorny.kingdoms '
