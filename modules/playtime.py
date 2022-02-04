@@ -18,7 +18,7 @@ class Playtime(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(aliases=['c'], help="Log your connect time")
+    @commands.slash_command(description="Log your connect time")
     async def connect(self, ctx):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is not None or last_connect is None:
@@ -70,7 +70,7 @@ class Playtime(commands.Cog):
         else:
             await ctx.respond(embed=errors.Activity.already_connected_error, ephemeral=True)
 
-    @commands.slash_command(aliases=['dc'], help="Log your disconnect time as well as what you did")
+    @commands.slash_command(description="Log your disconnect time as well as what you did")
     async def disconnect(self, ctx):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is None:
@@ -111,8 +111,7 @@ class Playtime(commands.Cog):
         elif last_connect['disconnect_time'] is not None:
             await ctx.respond(embed=errors.Activity.connect_error, ephemeral=True)
 
-    @commands.slash_command(help='BETA Adjust your recent playtime. Format: Xh or Xm or XhXXm',
-                            breif='!adjust 1h21m')
+    @commands.slash_command(description='BETA Adjust your recent playtime. Format: Xh or Xm or XhXXm')
     async def adjust(self, ctx, time):
         last_connect = await dbutils.Activity.select_recent_connect(ctx.author.id)
         if last_connect['disconnect_time'] is not None and '-' not in time:
@@ -136,11 +135,11 @@ class Playtime(commands.Cog):
             else:
                 await ctx.respond(f"Sorry! You can't remove that many hours!", ephemeral=True)
 
-    @commands.command(help='COMING SOON! View stats about your playtime!')
+    @commands.command(description='COMING SOON! View stats about your playtime!')
     async def journal(self, ctx):
         await ctx.send("This command is coming very soon to Thorny v2.0!")
 
-    @commands.slash_command(help="See connected and AFK players and how much time they played for")
+    @commands.slash_command(description="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
         connected = await dbutils.Activity.select_online()
         online_text = ''

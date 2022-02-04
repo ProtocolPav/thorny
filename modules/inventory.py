@@ -32,7 +32,7 @@ class Inventory(commands.Cog):
 
     inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
 
-    @inventory.command(aliases=['inv'], invoke_without_command=True, help="See you or a person's Inventory")
+    @inventory.command(description="See you or a person's Inventory")
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
@@ -63,7 +63,7 @@ class Inventory(commands.Cog):
         inventory_embed.set_footer(text="Use /redeem <item_id> to redeem Roles & Tickets!")
         await ctx.respond(embed=inventory_embed)
 
-    @inventory.command(hidden=True, help="Add an item to a user's inventory")
+    @inventory.command(description="CM Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member = None,
                   item_id: discord.Option(str, "Select an item to redeem",
@@ -94,7 +94,7 @@ class Inventory(commands.Cog):
         elif item_added and 'buy' in ctx.command.qualified_name.lower():
             return item_added
 
-    @inventory.command(hidden=True, help="Remove or clear and item from a user's inventory")
+    @inventory.command(description="CM Only | Remove or clear an item from a user's inventory")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member = None,
                      item_id: discord.Option(str, "Select an item to redeem",
@@ -126,7 +126,7 @@ class Inventory(commands.Cog):
 
     store = discord.SlashCommandGroup("store", "Store Commands")
 
-    @store.command(invoke_without_command=True, help="Get a list of all items available in the store")
+    @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
         item_types = await dbutils.simple_select('item_type', '*')
         store_embed = discord.Embed(colour=ctx.author.colour)
@@ -141,16 +141,16 @@ class Inventory(commands.Cog):
         store_embed.set_footer(text=f"{v} | Use !store buy <item_id> to purchase!")
         await ctx.respond(embed=store_embed)
 
-    @store.command(help="Purchase an item from the store", brief='!store buy ticket')
+    @store.command(description="Purchase an item from the store")
     async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                      autocomplete=utils.basic_autocomplete(get_items)), amount=1):
         item_type = await dbutils.Inventory.get_item_type(item_id)
         balance = await dbutils.condition_select('user', 'balance', 'user_id', ctx.author.id)
 
-        if item_type and balance[0][0] - item_type['item_cost'] * amount >= 0 and item_type['item_cost'] != 0:
-            await dbutils.simple_update('user', 'balance', balance[0][0] - item_type['item_cost'] * amount,
+        if item_type and balance[0][0] - item_type['item_cost'] * int(amount) >= 0 and item_type['item_cost'] != 0:
+            await dbutils.simple_update('user', 'balance', balance[0][0] - item_type['item_cost'] * int(amount),
                                         'user_id', ctx.author.id)
-            if await Inventory.add(self, ctx, ctx.author, item_type['friendly_id'], amount):
+            if await Inventory.add(self, ctx, ctx.author, item_type['friendly_id'], int(amount)):
                 inv_edit_embed = discord.Embed(colour=ctx.author.colour)
                 inv_edit_embed.add_field(name="**Cha-Ching!**",
                                          value=f"Bought {amount}x `{item_type['display_name']}`")
@@ -158,20 +158,20 @@ class Inventory(commands.Cog):
                 await ctx.respond(embed=inv_edit_embed)
                 bank_log = self.client.get_channel(config['channels']['bank_logs'])
                 await bank_log.send(embed=logs.transaction(ctx.author.id, 'Store',
-                                                           item_type['item_cost'] * amount, ['Scratch Ticket']))
-        elif balance[0][0] - item_type['item_cost'] * amount < 0:
+                                                           item_type['item_cost'] * int(amount), ['Scratch Ticket']))
+        elif balance[0][0] - item_type['item_cost'] * int(amount) < 0:
             await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
         elif not item_type or item_type['item_cost'] == 0:
             await ctx.respond(embed=errors.Shop.item_error, ephemeral=True)
 
-    @store.command(help="Edit Prices of tickets", hidden=True)
+    @store.command(description="CM Only | Edit prices of items (0 to remove from the store)")
     @commands.has_permissions(administrator=True)
     async def price(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                        autocomplete=utils.basic_autocomplete(get_items)), price):
         if await dbutils.Inventory.update_item_price(item_id, price):
             await ctx.respond(f"Done! {item_id} is now {price} Nugs", ephemeral=True)
 
-    @commands.slash_command(help="Redeem an item from your inventory. Items: ticket, role, gift", brief='!redeem role')
+    @commands.slash_command(description="Redeem an item from your inventory")
     async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                         autocomplete=utils.basic_autocomplete(get_items))):
         def check(m):
@@ -247,7 +247,7 @@ class Inventory(commands.Cog):
         else:
             await ctx.respond("Wrong item!")
 
-    @commands.command(help="See how tickets work!")
+    @commands.slash_command(description="See how tickets work!")
     async def tickets(self, ctx):
         help_embed = discord.Embed(color=ctx.author.color)
         help_embed.add_field(name="**How Prizes Work**",
@@ -260,4 +260,4 @@ class Inventory(commands.Cog):
                                    "When you get 4 different scratchables, you get double the prize! Except for when "
                                    "you get a :dragon_face:.\n\n"
                                    "Nugs are added automatically!", inline=False)
-        await ctx.send(embed=help_embed)
+        await ctx.respond(embed=help_embed, ephemeral=True)
