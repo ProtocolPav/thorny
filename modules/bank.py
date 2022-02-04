@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.commands import permissions
 
 import json
 import errors
@@ -15,9 +16,10 @@ class Bank(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.group(aliases=['bal'], help="Checks your or a user's balance", invoke_without_command=True,
-                    brief="!bal @ProtocolPav#0038")
-    async def balance(self, ctx, user: discord.Member = None):
+    balance = discord.SlashCommandGroup("balance", "Balance Commands")
+
+    @balance.command(description="View someone's balance")
+    async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
@@ -38,21 +40,21 @@ class Bank(commands.Cog):
                              f'{item["item_count"]} **|** {item_data["display_name"]}\n'
         if len(inventory_list) < 2:
             for item in range(0, 2 - len(inventory_list)):
-                inventory_text = f'{inventory_text}<:_pink:921708790322192396> 0 **|** Empty Slot\n'
+                inventory_text = f'{inventory_text}<:_pink:921708790322192396> Empty\n'
 
         balance_embed = discord.Embed(color=0xE0115F)
-        balance_embed.set_author(name=user, icon_url=user.avatar_url)
+        balance_embed.set_author(name=user, icon_url=user.avatar)
         balance_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}\n{kingdom_bal}")
         balance_embed.add_field(name=f'**Inventory:**',
-                                value=f"{inventory_text}<:_purple:921708790368309269> **Use !inv to see more!**",
+                                value=f"{inventory_text}<:_purple:921708790368309269> "
+                                      f"**/inventory view to see more!**",
                                 inline=False)
         balance_embed.set_footer(text="Donate to your kingdom with !treasury store")
-        await ctx.send(embed=balance_embed)
+        await ctx.respond(embed=balance_embed)
 
-    @balance.command(aliases=['add', 'remove'], help="CM Only | Edit a player's balance (- for removal)", hidden=True,
-                     brief="!bal edit @ProtocolPav#0038 -55")
+    @balance.command(description="CM Only | Edit a player's balance")
     @commands.has_permissions(administrator=True)
-    async def edit(self, ctx, user: discord.User, amount, send_message=None):
+    async def edit(self, ctx, user: discord.Member, amount: discord.Option(int, "Put a - if you want to remove nugs")):
         bank_log = self.client.get_channel(config['channels']['bank_logs'])
         await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
 
@@ -60,12 +62,12 @@ class Bank(commands.Cog):
 
         new_amount = balance_list[0][0] + int(amount)
         await dbutils.simple_update("user", "balance", new_amount, 'user_id', user.id)
-        if send_message is None:
-            await ctx.send(f"{user}'s balance is now **{new_amount}**")
+        if 'edit' in ctx.command.qualified_name.lower():
+            await ctx.respond(f"{user}'s balance is now **{new_amount}**! (Added/Removed: {amount})")
 
-    @commands.command(help="Pay a player using nugs", usage="<user> <amount> [reason...]",
-                      brief="!pay @ProtocolPav#0038 50 for diamonds")
-    async def pay(self, ctx, user: discord.User, amount=None, *reason):
+    @commands.slash_command(help="Pay a player using nugs", usage="<user> <amount> [reason...]",
+                            brief="!pay @ProtocolPav#0038 50 for diamonds")
+    async def pay(self, ctx, user: discord.Member, amount, reason=None):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
             receivable = await dbutils.condition_select('user', 'balance', 'user_id', user.id)
             receivable = receivable[0][0]
@@ -73,33 +75,32 @@ class Bank(commands.Cog):
             payable = payable[0][0]
 
             if user == ctx.author:
-                await ctx.send(embed=errors.Pay.self_error)
+                await ctx.respond(embed=errors.Pay.self_error, ephemeral=True)
             elif amount is None:
-                await ctx.send(embed=errors.Pay.amount_error)
+                await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
             elif payable - int(amount) < 0:
-                await ctx.send(embed=errors.Pay.lack_nugs_error)
+                await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
             elif int(amount) > 0:
                 await dbutils.simple_update('user', 'balance', payable - int(amount), 'user_id', ctx.author.id)
                 await dbutils.simple_update('user', 'balance', receivable + int(amount), 'user_id', user.id)
 
                 pay_embed = discord.Embed(color=0xF4C430)
-                pay_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+                pay_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
                 pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
                                     value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
                                           f'Paid to: **{user.mention}**\n'
-                                          f'\n**Reason: {" ".join(str(x) for x in reason)}**')
-                await ctx.send(embed=pay_embed)
+                                          f'\n**Reason: {reason}**')
+                await ctx.respond(f"{user.mention} You've been paid!")
+                await ctx.edit(content=None, embed=pay_embed)
 
                 bank_log = self.client.get_channel(config['channels']['bank_logs'])
                 await bank_log.send(embed=logs.transaction(ctx.author.id, user.id, amount, reason))
             elif int(amount) < 0:
-                await ctx.send(embed=errors.Pay.negative_nugs_error)
+                await ctx.respond(embed=errors.Pay.negative_nugs_error, ephemeral=True)
         else:
-            await ctx.send(embed=errors.Pay.channel_error)
+            await ctx.respond(embed=errors.Pay.channel_error, ephemeral=True)
 
-    @commands.group(aliases=['tres'], invoke_without_command=True, help="See all available actions for the Treasury")
-    async def treasury(self, ctx):
-        await help.Help.help(self, ctx, "treasury")
+    treasury = discord.SlashCommandGroup("treasury", "Treasury Commands")
 
     @treasury.command(help="Store money in your kingdom's treasury", usage="<amount>",
                       brief="!tres store 55")
@@ -114,21 +115,21 @@ class Bank(commands.Cog):
             payable = payable[0][0]
 
             if payable - int(amount) < 0:
-                await ctx.send(embed=errors.Pay.lack_nugs_error)
+                await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
             elif amount is None:
-                await ctx.send(embed=errors.Pay.amount_error)
+                await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
             else:
                 await dbutils.simple_update('user', 'balance', payable - int(amount), 'user_id', ctx.author.id)
                 await dbutils.simple_update('kingdoms', 'treasury', receivable + int(amount), 'kingdom', kingdom)
 
                 pay_embed = discord.Embed(color=0xE49B0F)
-                pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar}')
                 pay_embed.add_field(name='<:Nug:884320353202081833> Storage Successful!',
                                     value=f'Amount stored: **<:Nug:884320353202081833>{amount}**\n'
                                           f'Stored in: **{kingdom} Treasury**\n')
-                await ctx.send(embed=pay_embed)
+                await ctx.respond(embed=pay_embed)
         else:
-            await ctx.send(embed=errors.Treasury.kingdom_error)
+            await ctx.respond(embed=errors.Treasury.kingdom_error, ephemeral=True)
 
     @treasury.command(help="Ruler Only | Take money from the treasury", usage="<amount>",
                       brief="!tres take 12")
@@ -143,43 +144,43 @@ class Bank(commands.Cog):
         receivable = receivable[0][0]
 
         if int(amount) < 0:
-            await ctx.send(embed=errors.Pay.negative_nugs_error)
+            await ctx.respond(embed=errors.Pay.negative_nugs_error, ephemeral=True)
         elif payable - int(amount) < 0:
-            await ctx.send(embed=errors.Pay.lack_nugs_error)
+            await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
         elif amount is None:
-            await ctx.send(embed=errors.Pay.amount_error)
+            await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
         else:
             await dbutils.simple_update('user', 'balance', receivable + int(amount), 'user_id', ctx.author.id)
             await dbutils.simple_update('kingdoms', 'treasury', payable - int(amount), 'kingdom', kingdom)
 
             pay_embed = discord.Embed(color=0xE49B0F)
-            pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+            pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar}')
             pay_embed.add_field(name='<:Nug:884320353202081833> Taking Successful!',
                                 value=f'Amount taken: **<:Nug:884320353202081833>{amount}**\n'
                                       f'Taken from: **{kingdom} Treasury**\n')
-            await ctx.send(embed=pay_embed)
+            await ctx.respond(embed=pay_embed)
 
     @take.error
     async def take_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            await ctx.send(embed=errors.Treasury.ruler_error)
+            await ctx.respond(embed=errors.Treasury.ruler_error, ephemeral=True)
 
     @treasury.command(help="Ruler Only | Pay someone using treasury funds", usage="<user> <amount> [reason...]",
                       brief="!tres spend @ProtocolPav#0038 55 for work")
     @commands.has_role('Ruler')
-    async def spend(self, ctx, user: discord.User, amount=None, *reason):
+    async def spend(self, ctx, user: discord.Member, amount, reason):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
             kingdom = func.get_user_kingdom(ctx, ctx.author)
             await dbutils.simple_update('user', 'kingdom', kingdom, 'user_id', ctx.author.id)
 
             if user == ctx.author:
-                await ctx.send(embed=errors.Pay.self_error)
+                await ctx.respond(embed=errors.Pay.self_error, ephemeral=True)
             elif amount is None:
-                await ctx.send(embed=errors.Pay.amount_error)
+                await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
             elif str(ctx.author.id) not in json_profile:
-                await ctx.send(embed=errors.Pay.self_register_error)
+                await ctx.respond(embed=errors.Pay.self_register_error, ephemeral=True)
             elif json_kingdoms[kingdom] - int(amount) < 0:
-                await ctx.send(embed=errors.Pay.lack_nugs_error)
+                await ctx.respond(embed=errors.Pay.lack_nugs_error)
 
             elif str(ctx.author.id) in json_profile:
                 if json_kingdoms[kingdom] - int(amount) >= 0:
@@ -192,7 +193,7 @@ class Bank(commands.Cog):
                     func.profile_update(user, user_amount, 'balance')
 
                     pay_embed = discord.Embed(color=0xE49B0F)
-                    pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar_url}')
+                    pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar}')
                     pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
                                         value=f'From the **{kingdom.upper()} TREASURY**\n'
                                               f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
@@ -205,4 +206,4 @@ class Bank(commands.Cog):
     @spend.error
     async def spend_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            await ctx.send(embed=errors.Treasury.ruler_error)
+            await ctx.respond(embed=errors.Treasury.ruler_error, ephemeral=True)
