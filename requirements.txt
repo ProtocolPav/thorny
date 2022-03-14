@@ -1,3 +1,5 @@
 discord.py==1.7.3
 schedule==1.1.0
-giphy_client==1.0.0
+asyncpg==0.25.0
+python-dateutil==2.8.2
+py-cord==2.0.0b5
