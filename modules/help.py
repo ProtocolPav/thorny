@@ -1,78 +1,46 @@
-from datetime import datetime, timedelta
 import discord
-import random
 from discord.ext import commands
-import errors
+import functions as func
 import json
 
 v = json.load(open('version.json', 'r'))['version']
 
 
-class Help(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+class Dropdown(discord.ui.View):
+    options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🚀",
+                                    default=True),
+               discord.SelectOption(label="Bank", description="All Bank Commands", emoji="<:Nug:884320353202081833>"),
+               discord.SelectOption(label="Leaderboard", description="All Leaderboard Commands", emoji="🔢"),
+               discord.SelectOption(label="Inventory", description="All Inventory Commands", emoji="📦"),
+               discord.SelectOption(label="Information", description="All Information Commands", emoji="💡"),
+               discord.SelectOption(label="Profile", description="All Profile Commands", emoji="😁"),
+               discord.SelectOption(label="Moderation", description="All Moderation Commands", emoji="🛡️"),
+               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⏱️")]
 
-    @commands.group(aliases=['hlp'], invoke_without_command=True, help="Access the Thorny Help Center")
-    async def help(self, ctx, cmd=None):
-        help_dict = {}
-        for cog in self.client.cogs:
-            help_dict[f"{cog}"] = []
-            cmd_num = 0
-            for command in self.client.get_cog(cog).get_commands():
-                cmd_num += 1
-                if not command.hidden:
-                    help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
-                                                "alias": command.aliases, "desc": command.help,
-                                                "example": command.brief})
-                elif command.hidden and ctx.author.guild_permissions.administrator:
-                    help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
-                                                "alias": command.aliases, "desc": command.help,
-                                                "example": command.brief})
-                if isinstance(command, commands.Group):
-                    for subcommand in command.walk_commands():
-                        cmd_num += 1
-                        if not subcommand.hidden:
-                            help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
-                                                        "usage": subcommand.signature,
-                                                        "alias": subcommand.aliases, "desc": subcommand.help,
-                                                        "example": subcommand.brief})
-                        elif subcommand.hidden and ctx.author.guild_permissions.administrator:
-                            help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
-                                                        "usage": subcommand.signature,
-                                                        "alias": subcommand.aliases, "desc": subcommand.help,
-                                                        "example": subcommand.brief})
-        if cmd is None:
-            help_embed = discord.Embed(title="Thorny Help Center",
-                                       description="Use `!help [command]` to see specific commands\n"
-                                                   "Use `!help [Category]` to see specific categories! (Capitalize)",
-                                       color=0x65b39b)
-            help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
-            for cog in self.client.cogs:
-                easy_view_text = []
-                for command in help_dict[f'{cog}']:
-                    easy_view_text.append(command['name'])
-                if len(' '.join(easy_view_text)) >= 50:
-                    easy_view_text = f"!{', !'.join(easy_view_text)[0:50]}..."
-                else:
-                    easy_view_text = f"!{', !'.join(easy_view_text)}"
-                help_embed.add_field(name=f"**{cog} Commands**",
-                                     value=f"```{easy_view_text}```",
-                                     inline=False)
-            await ctx.send(embed=help_embed)
-
-        elif cmd.capitalize() in self.client.cogs:
-            help_embed = discord.Embed(title="Thorny Help Center",
-                                       description="Use `!help [command]` to see specific commands\n"
-                                                   "Do not include brackets in commands, they just show the"
-                                                   " `[optional]` and `<required>` fields of a command",
+    @discord.ui.select(placeholder="Click on a category to see its commands",
+                       min_values=1, max_values=1, options=options)
+    async def callback(self, select, interaction):
+        cmd = select.values[0]
+        for item in select.options:
+            if item.label == select.values[0]:
+                index = select.options.index(item)
+                select.options[index].default = True
+            else:
+                index = select.options.index(item)
+                select.options[index].default = False
+        if cmd == "Home":
+            help_embed = home_embed
+        else:
+            help_embed = discord.Embed(title=f"{cmd} | Thorny Help Center",
+                                       description="Use `/help [command]` to see specific commands",
                                        color=0x65b39b)
             text = ''
             cmd = cmd.capitalize()
             for command in help_dict[f'{cmd}']:
                 if not command['alias']:
-                    text = f"{text}**!{command['name']}"
+                    text = f"{text}**/{command['name']}"
                 else:
-                    text = f"{text}**!{command['name']}/{'/'.join(command['alias'])}"
+                    text = f"{text}**/{command['name']}/{'/'.join(command['alias'])}"
                 if command['usage'] == "":
                     text = f"{text}**\n```{command['desc']}\nExample: {command['example']}```\n"
                 else:
@@ -80,7 +48,66 @@ class Help(commands.Cog):
             help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
             help_embed.add_field(name=f"**{cmd} Commands**",
                                  value=f"{text}")
-            await ctx.send(embed=help_embed)
+        await interaction.response.edit_message(embed=help_embed, view=select.view)
+
+
+class Help(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.slash_command(description="Access the Thorny Help Center")
+    async def help(self, ctx, cmd: discord.Option(str, "Write a command for specific help") = None):
+        global help_dict
+        help_dict = await func.generate_help_dict(self, ctx)
+        global home_embed
+
+        home_embed = discord.Embed(title="Home | Thorny Help Center",
+                                   description="Use `/help [command]` to see specific commands",
+                                   color=0x65b39b)
+        home_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
+        for cog in self.client.cogs:
+            easy_view_text = []
+            for command in help_dict[f'{cog}']:
+                easy_view_text.append(command['name'])
+            if len(' '.join(easy_view_text)) >= 50:
+                easy_view_text = f"/{', /'.join(easy_view_text)[0:50]}..."
+            else:
+                easy_view_text = f"/{', /'.join(easy_view_text)}"
+            if cog != "Help":
+                home_embed.add_field(name=f"**{cog} Commands**",
+                                     value=f"```{easy_view_text}```",
+                                     inline=False)
+        if cmd is None:
+            view = Dropdown()
+            for item in view.options:
+                if item.label == "Home":
+                    index = view.options.index(item)
+                    view.options[index].default = True
+                else:
+                    index = view.options.index(item)
+                    view.options[index].default = False
+            await ctx.respond(embed=home_embed, view=view)
+
+        elif cmd.capitalize() in self.client.cogs:
+            help_embed = discord.Embed(title=f"{cmd} | Thorny Help Center",
+                                       description="Use `/help [command]` to see specific commands",
+                                       color=0x65b39b)
+            text = ''
+            cmd = cmd.capitalize()
+            for command in help_dict[f'{cmd}']:
+                if not command['alias']:
+                    text = f"{text}**/{command['name']}"
+                else:
+                    text = f"{text}**/{command['name']}/{'/'.join(command['alias'])}"
+                if command['usage'] == "":
+                    text = f"{text}**\n```{command['desc']}\nExample: {command['example']}```\n"
+                else:
+                    text = f"{text} {command['usage']}**\n```{command['desc']}\nExample: {command['example']}```\n"
+            help_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
+            help_embed.add_field(name=f"**{cmd} Commands**",
+                                 value=f"{text}")
+            view_cog = Dropdown()
+            await ctx.respond(embed=help_embed, view=view_cog)
 
         elif cmd == cmd.lower():
             for cog in self.client.cogs:
@@ -89,9 +116,9 @@ class Help(commands.Cog):
                         text = ''
                         text2 = ''
                         if not command['alias']:
-                            text = f"{text}**!{command['name']}"
+                            text = f"{text}**/{command['name']}"
                         else:
-                            text = f"{text}**!{command['name']}/{'/'.join(command['alias'])}"
+                            text = f"{text}**/{command['name']}/{'/'.join(command['alias'])}"
                         if command['usage'] == "":
                             text = f"{text}**\n```{command['desc']}\nExample: {command['example']}```\n"
                         else:
@@ -99,12 +126,12 @@ class Help(commands.Cog):
                                    f"Example: {command['example']}```\n"
 
                         for sim_cmd in help_dict[f"{cog}"]:
-                            if command['name'][0:4] in sim_cmd['name'] and \
+                            if command['name'][0:2] in sim_cmd['name'] and \
                                     command['name'] != sim_cmd['name']:
                                 if not sim_cmd['alias']:
-                                    text2 = f"{text2}**!{sim_cmd['name']}"
+                                    text2 = f"{text2}**/{sim_cmd['name']}"
                                 else:
-                                    text2 = f"{text2}**!{sim_cmd['name']}/{'/'.join(sim_cmd['alias'])}"
+                                    text2 = f"{text2}**/{sim_cmd['name']}/{'/'.join(sim_cmd['alias'])}"
                                 if sim_cmd['usage'] == "":
                                     text2 = f"{text2}**\n```{sim_cmd['desc']}\nExample: {sim_cmd['example']}```\n"
                                 else:
@@ -112,53 +139,12 @@ class Help(commands.Cog):
                                             f"Example: {sim_cmd['example']}```\n"
 
                         help_embed = discord.Embed(title="Thorny Help Center",
-                                                   description="Use `!help [command]` to see specific commands\n"
-                                                               "Do not include brackets in commands, they just show the"
-                                                               " `[optional]` and `<required>` fields of a command",
                                                    color=0x65b39b)
-                        help_embed.add_field(name=f"\u200b", value=f"{text}")
+                        help_embed.add_field(name=f"Command Help", value=f"{text}")
                         if text2 != '':
-                            help_embed.add_field(name=f"**Similar Commands to !{cmd}**", value=f"{text2}",
+                            help_embed.add_field(name=f"Similar Commands", value=f"{text2}",
                                                  inline=False)
-                        await ctx.send(embed=help_embed)
+                        await ctx.respond(embed=help_embed, ephemeral=True)
 
         else:
             await ctx.send(f"Hmm... Looks like this command doesn't exist, or you didn't Capitalize the Category!")
-
-    @help.command(help="Get help on editing the Kingdom Command")
-    async def kingdoms(self, ctx):
-        help_embed = discord.Embed(colour=0x65b39b)
-        help_embed.add_field(name=":question: **Kingdom Help**",
-                             value=f"**!your_kingdom** - View a kingdom's command! (Asba, Ambria, Streg, Dal, Eir)\n"
-                                   f"**!kedit <field> <value>** - Edit a certain field on the command!")
-        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
-                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
-                                   f"**Slogan** - The top part of the kingdom command | Max. 5 words\n"
-                                   f"**Ruler** - Your Kingdom's Ruler\n"
-                                   f"**Capital** - The Capital CIty | Max. 30 characters\n"
-                                   f"**Borders** - Open, Closed, Partially Open | Max. 30 characters\n"
-                                   f"**Government** - Kingdom's Government Type\n"
-                                   f"**Alliances** - Your kingdom's alliances | Max. 50 characters\n"
-                                   f"**Wiki** - Kingdom's Wiki Article | Send in the whole link!\n"
-                                   f"**Description** - Your Kingdom's Description | Max. 30 words\n"
-                                   f"**Lore** - Your Kingdom's Lore | Max. 30 words",
-                             inline=False)
-        help_embed.set_footer(text=f"Use !help kingdoms to access this!")
-        await ctx.send(embed=help_embed)
-
-    @commands.command(help="Get a random tip!")
-    async def tip(self, ctx, number=None):
-        tip = json.load(open('./../thorny_data/tips.json', 'r'))
-        tip_embed = discord.Embed(color=0x65b39b)
-        if number is None:
-            number = str(random.randint(1, len(tip['tips'])))
-        tip_embed.add_field(name=f"Pro Tip!",
-                            value=tip['tips'][number])
-        tip_embed.set_footer(text=f"Tip {number}/{len(tip['tips'])} | Use !tip [number] to get a tip!")
-        await ctx.send(embed=tip_embed)
-
-    @commands.command(aliases=["form"], help="Get a link to the EverForms")
-    async def everforms(self, ctx):
-        await ctx.send(f"**Here's a link!**\n"
-                       f"EverForms is the unified way to submit different forms!\n"
-                       f"https://forms.gle/kTaB7NN2gkpzWmcs7")
