@@ -67,7 +67,8 @@ async def port(ctx):
 
 @thorny.command()
 async def send(ctx):
-    print(await dbclass.fetch_thorny_user(266202793143042048, 611008530077712395))
+    user = await dbclass.ThornyFactory.build(266202793143042048, 611008530077712395)
+    await ctx.send(await user.inventory.get_all_slots())
 
 
 @thorny.slash_command()
@@ -173,7 +174,6 @@ async def on_raw_reaction_remove(payload):
 async def on_member_join(member):
     await dbutils.create_user(member)
     print(f"{member} joined")
-    await gateway.Information.new(thorny, member)
 
 
 @thorny.event

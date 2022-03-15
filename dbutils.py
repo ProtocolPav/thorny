@@ -507,9 +507,8 @@ class Inventory:
 class Activity:
     @staticmethod
     async def select_recent_connect(user_id):
-        res = await conn.fetchrow("SELECT * FROM thorny.activity WHERE user_id = $1 ORDER BY connect_time DESC",
+        return await conn.fetchrow("SELECT * FROM thorny.activity WHERE user_id = $1 ORDER BY connect_time DESC",
                                    user_id)
-        return ActivityData(connect_time=res.connect_time)
 
     @staticmethod
     async def select_online():
@@ -584,6 +583,7 @@ class Leaderboard:
             SELECT SUM(playtime), user_id 
             FROM thorny.activity 
             WHERE connect_time BETWEEN $1 AND $2
+            AND playtime IS NOT NULL
             GROUP BY user_id 
             ORDER BY SUM(playtime) DESC
             """,
@@ -644,6 +644,11 @@ class Profile:
         await conn.execute("DELETE FROM thorny.strikes "
                            "WHERE strike_id = $1", strike_id)
         return True
+
+    @staticmethod
+    async def select_gamertags(gamertag: str):
+        return await conn.fetch("SELECT user_id, gamertag FROM thorny.profile "
+                                "WHERE LOWER(gamertag) LIKE $1", f'%{gamertag[0:3].lower()}%')
 
 
 class Kingdom:
