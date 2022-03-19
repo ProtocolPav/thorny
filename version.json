@@ -5,7 +5,8 @@
   "1": "Began work on dbclass for v2.0",
   "2": "Fixed a bug where lb activity would not load if someone is connected",
   "3": "Fixed a bug for balance and inventory view, where it would not show if you did not have an avatar",
-  "4": ""
+  "4": "Added database connection to config file and changed password",
+  "5": ""
 },
 "changelogs": {
 "v0.2": "@Thorny#3781 v0.2 is up and running!\n\n**Features**:\n- `!c` and `!dc` commands. You can also use `!link` and `!unlink` if you want.\n- Make the bot remind you when YOU want, simply use `!c 2h` for it to remind you in 2 hours!\n- See your activity using the `!activity [month]` command. See it for july and august!\n- Scream at Thorny in #\ud83c\udf6a\u00e2\u201d\u0192playground using `!scream` and see what happens.",

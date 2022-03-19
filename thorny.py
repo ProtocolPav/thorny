@@ -16,7 +16,7 @@ v = vers["version"]
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
     TOKEN = config["token"]
-elif ans == 'd':
+else:
     TOKEN = config["dev_token"]
 
 intents = discord.Intents.all()
@@ -44,12 +44,6 @@ async def update_months():
 
 
 @thorny.command()
-@commands.has_permissions(administrator=True)
-async def register(member: discord.Member):
-    await dbutils.create_user(member)
-
-
-@thorny.command()
 async def port(ctx):
     version_file = open('version.json', 'r+')
     version = json.load(version_file)
@@ -67,8 +61,10 @@ async def port(ctx):
 
 @thorny.command()
 async def send(ctx):
-    user = await dbclass.ThornyFactory.build(266202793143042048, 611008530077712395)
-    await ctx.send(await user.inventory.get_all_slots())
+    await dbclass.ThornyFactory.create(ctx.author.id, ctx.author.guild.id)
+    user = await dbclass.ThornyFactory.build(ctx.author.id, ctx.author.guild.id)
+    await user.inventory.fetch_slot('role')
+    await ctx.send(user)
 
 
 @thorny.slash_command()
@@ -107,7 +103,7 @@ async def on_message(message):
     elif 'baffl' in message.content.lower():
         await message.channel.send("Is that right?")
     elif message.content.startswith('!'):
-        await message.channel.send("Oh! It looks like you're using the old prefix! Thorny now has **slash commands**!")
+        await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -172,8 +168,7 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    await dbutils.create_user(member)
-    print(f"{member} joined")
+    await dbclass.ThornyFactory.create(member.id, member.guild.id)
 
 
 @thorny.event
@@ -181,7 +176,7 @@ async def on_guild_join(guild):
     print(f"I joined {guild.name}")
     for member in guild.members:
         if member.bot is not True:
-            await register(member)
+            await dbclass.ThornyFactory.create(member.id, member.guild.id)
 
 
 update_months.start()

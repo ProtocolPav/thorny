@@ -9,7 +9,11 @@ from dataclasses import dataclass, field
 
 
 async def connection():
-    pool = await pg.create_pool(database='postgres', user='postgres', password='p@v3LPlay%MC')
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    pool = await pg.create_pool(database=config['database']['name'],
+                                user=config['database']['user'],
+                                password=config['database']['password'])
+    print("[CONNECT] Successfully connected to Database at", datetime.now())
     return pool
 
 
@@ -18,22 +22,54 @@ class ThornyFactory:
     async def build(cls, user_id, guild_id):
         conn = await connection()
         thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
-                                                       WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
+                                             WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
         thorny_id = thorny_user['thorny_user_id']
 
         user_profile = await conn.fetchrow("""SELECT * FROM thorny.profile
-                                              WHERE thorny_user_id = $1""", thorny_id)
+                                              INNER JOIN thorny.levels
+                                              ON thorny.levels.thorny_user_id = thorny.profile.thorny_user_id
+                                              WHERE thorny.profile.thorny_user_id = $1""", thorny_id)
         user_activity = await conn.fetchrow("""SELECT * FROM thorny.user_activity
                                                WHERE thorny_user_id = $1""", thorny_id)
         user_recent_playtime = await conn.fetchrow("""SELECT playtime FROM thorny.activity
                                                       WHERE thorny_user_id = $1 AND disconnect_time IS NOT NULL
                                                       ORDER BY connect_time DESC""", thorny_id)
+        user_strikes = await conn.fetch("""SELECT * from thorny.strikes
+                                           WHERE thorny_user_id = $1""", thorny_id)
+        user_counters = await conn.fetch("""SELECT * from thorny.counter
+                                            WHERE thorny_user_id = $1""", thorny_id)
         master_datalayer = DataLayer(connection=conn,
                                      thorny_user=thorny_user,
                                      thorny_user_profile=user_profile,
                                      thorny_user_activity=user_activity,
-                                     thorny_user_recent_playtime=user_recent_playtime)
+                                     thorny_user_recent_playtime=user_recent_playtime,
+                                     thorny_user_strikes=user_strikes,
+                                     thorny_user_counters=user_counters)
         return ThornyUser(master_datalayer)
+
+    @classmethod
+    async def create(cls, user_id, guild_id):
+        conn = await connection()
+        user = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
+                                      WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
+        if user is None:
+            await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance)
+                                  VALUES($1, $2, $3, $4)""", user_id, guild_id, datetime.now(), 25)
+            thorny_id = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
+                                               WHERE user_id=$1 AND guild_id=$2""", user_id, guild_id)
+            await conn.execute("""INSERT INTO thorny.user_activity(thorny_user_id)
+                                  VALUES($1)""", thorny_id[0])
+            await conn.execute("""INSERT INTO thorny.profile(thorny_user_id)
+                                  VALUES($1)""", thorny_id[0])
+            await conn.execute("""INSERT INTO thorny.levels(thorny_user_id)
+                                  VALUES($1)""", thorny_id[0])
+            await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, count)
+                                  VALUES($1, $2, $3)""", thorny_id[0], 'ticket_count', 0)
+            await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                  VALUES($1, $2, $3)""", thorny_id[0], 'ticket_last_purchase', datetime.now())
+            await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                  VALUES($1, $2, $3)""", thorny_id[0], 'level_last_message', datetime.now())
+            print("[SERVER] User profile created with Thorny ID", thorny_id[0])
 
 
 @dataclass
@@ -43,12 +79,18 @@ class DataLayer:
     thorny_user_profile: pg.Record
     thorny_user_activity: pg.Record
     thorny_user_recent_playtime: pg.Record
+    thorny_user_strikes: pg.Record
+    thorny_user_counters: pg.Record
 
 
 @dataclass
 class ThornyUserProfile:
     id: int = field(repr=False)
     conn: connection() = field(repr=False)
+    level: int
+    xp: int
+    required_xp: int
+    last_message: datetime = None
     slogan: str = None
     gamertag: str = None
     town: str = None
@@ -78,6 +120,11 @@ class ThornyUserProfile:
         self.lore_shown = profile['lore_shown']
         self.wiki_shown = profile['wiki_shown']
 
+        self.level = profile['user_level']
+        self.xp = profile['xp']
+        self.required_xp = profile['required_xp']
+        self.last_message = profile['last_message']
+
 
 @dataclass
 class ThornyUserPlaytime:
@@ -87,7 +134,7 @@ class ThornyUserPlaytime:
     current_playtime: timedelta
     previous_playtime: timedelta
     expiring_playtime: timedelta
-    recent_session: timedelta
+    recent_session: timedelta = None
     daily_average: timedelta = None
     session_average: timedelta = None
 
@@ -99,9 +146,10 @@ class ThornyUserPlaytime:
         self.current_playtime = playtime['current_month']
         self.previous_playtime = playtime['one_month_ago']
         self.expiring_playtime = playtime['two_months_ago']
-        self.recent_session = master_datalayer.thorny_user_recent_playtime['playtime']
         self.daily_average = playtime['daily_average']
         self.session_average = playtime['session_average']
+        if master_datalayer.thorny_user_recent_playtime is not None:
+            self.recent_session = master_datalayer.thorny_user_recent_playtime['playtime']
 
 
 @dataclass
@@ -129,16 +177,57 @@ class ThornyUserInventory:
         slot = await self.conn.fetchrow("""SELECT inventory_id, item_id, item_count, display_name FROM thorny.inventory
                                            INNER JOIN thorny.item_type ON friendly_id=item_id
                                            WHERE thorny_user_id = $1 AND item_id = $2""", self.id, item_id)
-        self.inventory_id = slot['inventory_id']
-        self.item_id = slot['item_id']
+        if slot is not None:
+            self.inventory_id = slot['inventory_id']
+            self.item_id = slot['item_id']
+            self.item_display_name = slot['display_name']
+            self.item_count = slot['item_count']
 
+
+@dataclass
+class ThornyUserStrikes:
+    id: int = field(repr=False)
+    conn: connection() = field(repr=False)
+    strike_list: list
+
+    def __init__(self, master_datalayer):
+        self.id = master_datalayer.thorny_user['thorny_user_id']
+        self.conn = master_datalayer.connection
+        self.strike_list = []
+        for strike in master_datalayer.thorny_user_strikes:
+            self.strike_list.append({
+                "id": strike['strike_id'],
+                "manager_id": strike['manager_id'],
+                "reason": strike['reason']
+            })
+
+
+@dataclass
+class ThornyUserCounters:
+    id: int = field(repr=False)
+    conn: connection() = field(repr=False)
+    tickets: int = None
+    tickets_last_purchase: datetime = None
+    levels_last_message: datetime = None
+
+    def __init__(self, master_datalayer):
+        self.id = master_datalayer.thorny_user['thorny_user_id']
+        self.conn = master_datalayer.connection
+        counters = master_datalayer.thorny_user_counters
+        for counter in counters:
+            if counter['counter_name'] == 'ticket_count':
+                self.tickets = counter['count']
+            elif counter['counter_name'] == 'ticket_last_purchase':
+                self.tickets_last_purchase = counter['datetime']
+            elif counter['counter_name'] == 'level_last_message':
+                self.levels_last_message = counter['datetime']
 
 
 @dataclass
 class ThornyUser:
     conn: connection() = field(repr=False)
     id: int
-    user_id: int
+    discord_id: int
     guild_id: int
     username: str
     balance: int
@@ -146,6 +235,8 @@ class ThornyUser:
     profile: ThornyUserProfile
     playtime: ThornyUserPlaytime
     inventory: ThornyUserInventory
+    strikes: ThornyUserStrikes
+    counters: ThornyUserCounters
 
     def __init__(self, master_datalayer):
         self.conn = master_datalayer.connection
@@ -153,11 +244,15 @@ class ThornyUser:
         self.id = user['thorny_user_id']
         self.username = user['username']
         self.guild_id = user['guild_id']
-        self.user_id = user['user_id']
+        self.discord_id = user['user_id']
         self.balance = user['balance']
         self.kingdom = user['kingdom']
         self.profile = ThornyUserProfile(master_datalayer)
         self.playtime = ThornyUserPlaytime(master_datalayer)
         self.inventory = ThornyUserInventory(master_datalayer)
+        self.strikes = ThornyUserStrikes(master_datalayer)
+        self.counters = ThornyUserCounters(master_datalayer)
+
+    def __post_init__(self):
 
 
