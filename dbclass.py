@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timedelta
 import json
 import discord
+from thorny_code import errors
 from dateutil.relativedelta import relativedelta
 from dataclasses import dataclass, field
 
@@ -19,8 +20,10 @@ async def connection():
 
 class ThornyFactory:
     @classmethod
-    async def build(cls, user_id, guild_id):
+    async def build(cls, member: discord.Member):
         conn = await connection()
+        user_id = member.id
+        guild_id = member.guild.id
         thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                              WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
         thorny_id = thorny_user['thorny_user_id']
@@ -38,7 +41,8 @@ class ThornyFactory:
                                            WHERE thorny_user_id = $1""", thorny_id)
         user_counters = await conn.fetch("""SELECT * from thorny.counter
                                             WHERE thorny_user_id = $1""", thorny_id)
-        master_datalayer = DataLayer(connection=conn,
+        master_datalayer = DataLayer(discord_member=member,
+                                     connection=conn,
                                      thorny_user=thorny_user,
                                      thorny_user_profile=user_profile,
                                      thorny_user_activity=user_activity,
@@ -48,13 +52,15 @@ class ThornyFactory:
         return ThornyUser(master_datalayer)
 
     @classmethod
-    async def create(cls, user_id, guild_id):
+    async def create(cls, member: discord.Member):
         conn = await connection()
-        user = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
+        user_id = member.id
+        guild_id = member.guild.id
+        user = await conn.fetchrow("""SELECT * FROM thorny.user
                                       WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
         if user is None:
-            await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance)
-                                  VALUES($1, $2, $3, $4)""", user_id, guild_id, datetime.now(), 25)
+            await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
+                                  VALUES($1, $2, $3, $4, $5)""", user_id, guild_id, datetime.now(), 25, member.name)
             thorny_id = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
                                                WHERE user_id=$1 AND guild_id=$2""", user_id, guild_id)
             await conn.execute("""INSERT INTO thorny.user_activity(thorny_user_id)
@@ -70,10 +76,25 @@ class ThornyFactory:
             await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
                                   VALUES($1, $2, $3)""", thorny_id[0], 'level_last_message', datetime.now())
             print("[SERVER] User profile created with Thorny ID", thorny_id[0])
+        else:
+            await conn.execute("""UPDATE thorny.user
+                                  SET active = True WHERE thorny_user_id = $1""", user['thorny_user_id'])
+            print(f"[SERVER] Reactivated account of {user['username']}, Thorny ID {user['thorny_user_id']}")
+
+    @classmethod
+    async def deactivate(cls, member: discord.Member):
+        conn = await connection()
+        thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
+                                             WHERE user_id = $1 AND guild_id = $2""", member.id, member.guild.id)
+        thorny_id = thorny_user['thorny_user_id']
+        await conn.execute("""UPDATE thorny.user
+                              SET active = False WHERE thorny_user_id = $1""", thorny_id)
+        print(f"[SERVER] Deactivated account of {thorny_user['username']}, Thorny ID {thorny_id}")
 
 
 @dataclass
 class DataLayer:
+    discord_member: discord.Member
     connection: connection()
     thorny_user: pg.Record
     thorny_user_profile: pg.Record
@@ -96,7 +117,7 @@ class ThornyUserProfile:
     town: str = None
     role: str = None
     wiki: str = None
-    biography: str = None
+    aboutme: str = None
     lore: str = None
     information_shown: bool = True
     aboutme_shown: bool = True
@@ -113,7 +134,7 @@ class ThornyUserProfile:
         self.town = profile['town']
         self.role = profile['role']
         self.wiki = profile['wiki']
-        self.biography = profile['aboutme']
+        self.aboutme = profile['aboutme']
         self.lore = profile['lore']
         self.information_shown = profile['information_shown']
         self.activity_shown = profile['activity_shown']
@@ -124,6 +145,21 @@ class ThornyUserProfile:
         self.xp = profile['xp']
         self.required_xp = profile['required_xp']
         self.last_message = profile['last_message']
+
+    async def update(self, section, value):
+        self.__setattr__(section, value)
+        try:
+            await self.conn.execute(f"""UPDATE thorny.profile
+                                        SET {section} = $1
+                                        WHERE thorny_user_id = $2""", value, self.id)
+        except asyncpg.StringDataRightTruncationError:
+            return errors.Profile.length_error
+
+    async def toggle(self, category):
+        self.__setattr__(category, not category)
+        await self.conn.execute(f"""UPDATE thorny.profile
+                                    SET {category} = NOT {category}
+                                    WHERE thorny_user_id = $1""", self.id)
 
 
 @dataclass
@@ -226,12 +262,15 @@ class ThornyUserCounters:
 @dataclass
 class ThornyUser:
     conn: connection() = field(repr=False)
+    member_object: discord.Member = field(repr=False)
     id: int
     discord_id: int
     guild_id: int
     username: str
     balance: int
     kingdom: str
+    join_date: datetime
+    birthday: datetime
     profile: ThornyUserProfile
     playtime: ThornyUserPlaytime
     inventory: ThornyUserInventory
@@ -240,19 +279,26 @@ class ThornyUser:
 
     def __init__(self, master_datalayer):
         self.conn = master_datalayer.connection
+        self.member_object = master_datalayer.discord_member
         user = master_datalayer.thorny_user
         self.id = user['thorny_user_id']
-        self.username = user['username']
+        self.username = self.member_object.name
         self.guild_id = user['guild_id']
         self.discord_id = user['user_id']
         self.balance = user['balance']
         self.kingdom = user['kingdom']
+        self.join_date = user['join_date']
+        self.birthday = user['birthday']
         self.profile = ThornyUserProfile(master_datalayer)
         self.playtime = ThornyUserPlaytime(master_datalayer)
         self.inventory = ThornyUserInventory(master_datalayer)
         self.strikes = ThornyUserStrikes(master_datalayer)
         self.counters = ThornyUserCounters(master_datalayer)
 
-    def __post_init__(self):
+    async def update_birthday(self, date):
+        self.__setattr__("birthday", date)
+        await self.conn.execute("""UPDATE thorny.user 
+                                   SET birthday = $1 
+                                   WHERE thorny_user_id = $2""", date, self.id)
 
 

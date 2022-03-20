@@ -61,25 +61,15 @@ async def port(ctx):
 
 @thorny.command()
 async def send(ctx):
-    await dbclass.ThornyFactory.create(ctx.author.id, ctx.author.guild.id)
-    user = await dbclass.ThornyFactory.build(ctx.author.id, ctx.author.guild.id)
-    await user.inventory.fetch_slot('role')
+    user = await dbclass.ThornyFactory.build(ctx.author)
+    user.profile.wiki_shown = False
     await ctx.send(user)
 
 
 @thorny.slash_command()
-@commands.cooldown(1, 10, commands.BucketType.user)
 async def ping(ctx):
     await ctx.respond(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
                       f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
-
-
-@thorny.event
-async def on_application_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.respond("This command is currently on cooldown.")
-    else:
-        raise error
 
 
 @thorny.command()
@@ -168,7 +158,12 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    await dbclass.ThornyFactory.create(member.id, member.guild.id)
+    await dbclass.ThornyFactory.create(member)
+
+
+@thorny.event
+async def on_member_remove(member):
+    await dbclass.ThornyFactory.deactivate(member)
 
 
 @thorny.event
@@ -176,7 +171,7 @@ async def on_guild_join(guild):
     print(f"I joined {guild.name}")
     for member in guild.members:
         if member.bot is not True:
-            await dbclass.ThornyFactory.create(member.id, member.guild.id)
+            await dbclass.ThornyFactory.create(member)
 
 
 update_months.start()
