@@ -6,6 +6,7 @@ from thorny_code import errors
 from thorny_code import logs
 from thorny_code import functions as func
 from thorny_code import dbutils
+from thorny_code import dbclass
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 

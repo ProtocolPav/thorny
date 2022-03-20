@@ -29,13 +29,13 @@ class Moderation(commands.Cog):
         if await dbutils.Profile.delete_strike(int(strike_id)):
             await ctx.send(f"Strike {strike_id} has been removed")
 
-    @commands.command(help='View a persons strikes')
+    @commands.command(help='View a persons strike_list')
     async def strikes(self, ctx, user: discord.Member):
         profile = json.load(open('./../thorny_data/profiles.json', 'r'))
         num = 0
-        for strike in profile[str(user.id)]['strikes']:
+        for strike in profile[str(user.id)]['strike_list']:
             if strike != 'counter':
-                strike = profile[str(user.id)]['strikes'][strike]
+                strike = profile[str(user.id)]['strike_list'][strike]
                 if strike.get('disregarded') is not None:
                     pass
                 else:
