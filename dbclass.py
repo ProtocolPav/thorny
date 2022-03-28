@@ -295,10 +295,10 @@ class ThornyUser:
         self.strikes = ThornyUserStrikes(master_datalayer)
         self.counters = ThornyUserCounters(master_datalayer)
 
-    async def update_birthday(self, date):
-        self.__setattr__("birthday", date)
-        await self.conn.execute("""UPDATE thorny.user 
-                                   SET birthday = $1 
-                                   WHERE thorny_user_id = $2""", date, self.id)
+    async def update(self, attribute, value):
+        self.__setattr__(attribute, value)
+        await self.conn.execute(f"""UPDATE thorny.user 
+                                    SET {attribute} = $1 
+                                    WHERE thorny_user_id = $2""", value, self.id)
 
 
