@@ -3,9 +3,7 @@ import discord
 from discord.ext import commands
 from discord import utils
 import json
-from thorny_code.modules import help
 from thorny_code import functions as func
-from thorny_code import dbutils
 from thorny_code import dbclass as db
 
 version_json = json.load(open('./version.json', 'r'))
@@ -29,11 +27,11 @@ class Profile(commands.Cog):
         if user is None:
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
-        await dbutils.simple_update('user', 'kingdom', kingdom, 'user_id', user.id)
         thorny_user = await db.ThornyFactory.build(user)
+        await thorny_user.update_kingdom(kingdom)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
-            is_donator = f'{user.mention} donated!\n'
+            is_donator = f'I donated to Everthorn!\n'
         else:
             is_donator = ''
 
@@ -153,22 +151,22 @@ class Profile(commands.Cog):
             date_system = datetime.strptime(date, "%B %d")
 
         thorny_user = await db.ThornyFactory.build(ctx.author)
-        await thorny_user.update_birthday(date_system)
+        await thorny_user.update("birthday", date_system)
         await ctx.respond(f"Your Birthday is set to: **{date}**", ephemeral=True)
 
-    @profile.command(description="CM Only | Update some sections of people's profiles")
-    @commands.has_permissions(administrator=True)
-    async def set(self, ctx, user: discord.Member, key, *value):
-        thorny_user = await db.ThornyFactory.build(user)
-        if key.lower() == 'join_date':
-            date = datetime.strptime(" ".join(value), '%Y-%m-%d %H:%M:%S')
-            await thorny_user.join_date
-            await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
-        else:
-            update = await dbutils.Profile.update_profile(user.id, key, " ".join(value))
-            if update == "length_error":
-                await ctx.send("Too long of a character")
-            elif update == "section_error":
-                await ctx.send("**Some Common Edits:**\n!profile set @player ")
-            else:
-                await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
+    # @profile.command(description="CM Only | Update some sections of people's profiles")
+    # @commands.has_permissions(administrator=True)
+    # async def set(self, ctx, user: discord.Member, key, *value):
+    #     thorny_user = await db.ThornyFactory.build(user)
+    #     if key.lower() == 'join_date':
+    #         date = datetime.strptime(" ".join(value), '%Y-%m-%d %H:%M:%S')
+    #         await thorny_user.join_date
+    #         await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
+    #     else:
+    #         update = await dbutils.Profile.update_profile(user.id, key, " ".join(value))
+    #         if update == "length_error":
+    #             await ctx.send("Too long of a character")
+    #         elif update == "section_error":
+    #             await ctx.send("**Some Common Edits:**\n!profile set @player ")
+    #         else:
+    #             await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
