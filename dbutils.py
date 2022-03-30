@@ -8,9 +8,11 @@ from dateutil.relativedelta import relativedelta
 
 
 async def connection():
-    pool = await pg.create_pool(database='postgres', user='postgres', password='***REMOVED***')
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    pool = await pg.create_pool(database=config['database']['name'],
+                                user=config['database']['user'],
+                                password=config['database']['password'])
     return pool
-
 
 conn = asyncio.get_event_loop().run_until_complete(connection())
 
@@ -366,7 +368,7 @@ async def create_thorny_database(ctx):
                        "lore_shown bool DEFAULT true,"
                        "PRIMARY KEY(thorny_user_id),"
                        "FOREIGN KEY(thorny_user_id) REFERENCES thorny.user(thorny_user_id))")
-    await conn.execute("CREATE TABLE thorny.strikes("
+    await conn.execute("CREATE TABLE thorny.strike_list("
                        "strike_id int,"
                        "thorny_user_id int8 NOT NULL,"
                        "reason varchar,"
@@ -584,6 +586,7 @@ class Leaderboard:
             SELECT SUM(playtime), user_id 
             FROM thorny.activity 
             WHERE connect_time BETWEEN $1 AND $2
+            AND playtime IS NOT NULL
             GROUP BY user_id 
             ORDER BY SUM(playtime) DESC
             """,
@@ -632,18 +635,23 @@ class Profile:
     @staticmethod
     async def insert_strike(user_id, reason, cm_id):
         strike_id = await conn.fetchrow('SELECT strike_id '
-                                        'FROM thorny.strikes '
+                                        'FROM thorny.strike_list '
                                         'ORDER BY strike_id DESC')
-        await conn.execute('INSERT INTO thorny.strikes '
+        await conn.execute('INSERT INTO thorny.strike_list '
                            'VALUES($1, $2, $3, $4)',
                            strike_id[0] + 1, user_id, reason, cm_id)
         return strike_id[0] + 1
 
     @staticmethod
     async def delete_strike(strike_id):
-        await conn.execute("DELETE FROM thorny.strikes "
+        await conn.execute("DELETE FROM thorny.strike_list "
                            "WHERE strike_id = $1", strike_id)
         return True
+
+    @staticmethod
+    async def select_gamertags(gamertag: str):
+        return await conn.fetch("SELECT user_id, gamertag FROM thorny.profile "
+                                "WHERE LOWER(gamertag) LIKE $1", f'%{gamertag[0:3].lower()}%')
 
 
 class Kingdom:

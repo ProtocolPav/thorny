@@ -80,3 +80,10 @@ class Leaderboard:
     month_syntax_error.add_field(name="<:_no:921840417362804777> Oh",
                                  value="This command is **!leaderboard activity <month> <page>**, means you need to "
                                        "write the month first and then flip the pages!")
+
+
+class Profile:
+    length_error = discord.Embed(color=0xD70040)
+    length_error.add_field(name="<:_no:921840417362804777> Damn that's long",
+                           value="Sorry, you gotta shorten that. The database can't hold such long prose!\n"
+                                 "Use `/profile sections` to get some help on the max lengths")
