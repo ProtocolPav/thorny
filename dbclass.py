@@ -187,6 +187,64 @@ class ThornyUserPlaytime:
         if master_datalayer.thorny_user_recent_playtime is not None:
             self.recent_session = master_datalayer.thorny_user_recent_playtime['playtime']
 
+    async def connect(self):
+        recent_connection = await self.conn.fetchrow("""SELECT * FROM thorny.activity
+                                                        WHERE thorny_user_id = $1
+                                                        ORDER BY connect_time DESC""", self.id)
+        if recent_connection is None or recent_connection['disconnect_time'] is not None:
+            await self.conn.execute("INSERT INTO thorny.activity(thorny_user_id, connect_time) "
+                                    "VALUES($1, $2)", self.id, datetime.now().replace(microsecond=0))
+            already_connected = False
+        elif datetime.now() - recent_connection['connect_time'] > timedelta(hours=12):
+            playtime = timedelta(hours=1, minutes=5)
+            await self.conn.execute("UPDATE thorny.activity SET disconnect_time = $1, playtime = $2 "
+                                    "WHERE thorny_user_id = $3 and connect_time = $4",
+                                    datetime.now().replace(microsecond=0), playtime,
+                                    self.id, recent_connection['connect_time'])
+
+            await self.conn.execute("INSERT INTO thorny.activity(thorny_user_id, connect_time) "
+                                    "VALUES($1, $2)", self.id, datetime.now().replace(microsecond=0))
+            already_connected = False
+        else:
+            already_connected = True
+        return already_connected
+
+    async def disconnect(self, journal_entry):
+        recent_connection = await self.conn.fetchrow("""SELECT * FROM thorny.activity
+                                                        WHERE thorny_user_id = $1
+                                                        ORDER BY connect_time DESC""", self.id)
+        if recent_connection is None or recent_connection['disconnect_time'] is not None:
+            not_connected = True
+            overtime = False
+            playtime = None
+        else:
+            not_connected = False
+            playtime = datetime.now().replace(microsecond=0) - recent_connection['connect_time']
+            overtime = False
+            if playtime > timedelta(hours=12):
+                overtime = True
+                playtime = timedelta(hours=1, minutes=5)
+            await self.conn.execute("""UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                       WHERE thorny_user_id = $3 and connect_time = $4""",
+                                    datetime.now().replace(microsecond=0), playtime,
+                                    self.id, recent_connection['connect_time'], journal_entry)
+        return not_connected, overtime, playtime
+
+    async def adjust(self, hour, minute):
+        recent_connection = await self.conn.fetchrow("""SELECT * FROM thorny.activity
+                                                        WHERE thorny_user_id = $1
+                                                        ORDER BY connect_time DESC""", self.id)
+        if recent_connection is None or recent_connection['disconnect_time'] is None:
+            already_connected = True
+        else:
+            already_connected = False
+            playtime = recent_connection['playtime'] - timedelta(hours=hour or 0, minutes=minute or 0)
+            desc = f"Adjusted by {hour or 0}h{minute or 0}m | {recent_connection['description']}"
+            await self.conn.execute("""UPDATE thorny.activity SET playtime = $1, description = $2
+                                       WHERE thorny_user_id = $3 and connect_time = $4""",
+                                    playtime, desc, self.id, recent_connection['connect_time'])
+        return already_connected
+
 
 @dataclass
 class ThornyUserInventory:
@@ -300,5 +358,3 @@ class ThornyUser:
         await self.conn.execute(f"""UPDATE thorny.user 
                                     SET {attribute} = $1 
                                     WHERE thorny_user_id = $2""", value, self.id)
-
-
