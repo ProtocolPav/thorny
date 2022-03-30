@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands, tasks
 
-import functions as func
 import logs
 import dbutils
+import dbclass
 import json
-import asyncio
-from modules import bank, gateway, help, inventory, leaderboard, playtime, profile, moderation
+from thorny_code.modules import help, inventory, leaderboard, playtime, moderation, bank, gateway, profile
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -17,7 +16,7 @@ v = vers["version"]
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
     TOKEN = config["token"]
-elif ans == 'd':
+else:
     TOKEN = config["dev_token"]
 
 intents = discord.Intents.all()
@@ -45,24 +44,32 @@ async def update_months():
 
 
 @thorny.command()
-@commands.has_permissions(administrator=True)
-async def register(member: discord.Member):
-    await dbutils.create_user(member)
+async def port(ctx):
+    version_file = open('version.json', 'r+')
+    version = json.load(version_file)
+    if not version['v1.6_ported']:
+        await dbutils.create_thorny_database(ctx)
+        await dbutils.port_user_profiles(ctx)
+        await dbutils.port_activity(ctx)
+        await dbutils.populate_tables(ctx)
+        version['v1.6_ported'] = True
+        version_file.truncate(0)
+        version_file.seek(0)
+        json.dump(version, version_file, indent=0)
+        await ctx.send(f"All porting Complete!")
+
+
+@thorny.command()
+async def send(ctx):
+    user = await dbclass.ThornyFactory.build(ctx.author)
+    user.profile.wiki_shown = False
+    await ctx.send(user)
 
 
 @thorny.slash_command()
-@commands.cooldown(1, 10, commands.BucketType.user)
 async def ping(ctx):
     await ctx.respond(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
                       f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
-
-
-@thorny.event
-async def on_application_command_error(ctx, error):
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.respond("This command is currently on cooldown.")
-    else:
-        raise error
 
 
 @thorny.command()
@@ -86,7 +93,7 @@ async def on_message(message):
     elif 'baffl' in message.content.lower():
         await message.channel.send("Is that right?")
     elif message.content.startswith('!'):
-        await message.channel.send("Oh! It looks like you're using the old prefix! Thorny now has **slash commands**!")
+        await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -151,9 +158,12 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    await dbutils.create_user(member)
-    print(f"{member} joined")
-    await gateway.Information.new(thorny, member)
+    await dbclass.ThornyFactory.create(member)
+
+
+@thorny.event
+async def on_member_remove(member):
+    await dbclass.ThornyFactory.deactivate(member)
 
 
 @thorny.event
@@ -161,7 +171,7 @@ async def on_guild_join(guild):
     print(f"I joined {guild.name}")
     for member in guild.members:
         if member.bot is not True:
-            await register(member)
+            await dbclass.ThornyFactory.create(member)
 
 
 update_months.start()
