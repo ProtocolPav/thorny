@@ -28,7 +28,7 @@ class Profile(commands.Cog):
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
         thorny_user = await db.ThornyFactory.build(user)
-        await thorny_user.update_kingdom(kingdom)
+        await thorny_user.update("kingdom", kingdom)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
             is_donator = f'I donated to Everthorn!\n'
@@ -79,7 +79,7 @@ class Profile(commands.Cog):
             profile_embed.add_field(name=f'**Featured Wiki Article**',
                                     value=f"{thorny_user.profile.wiki}",
                                     inline=False)
-        profile_embed.set_footer(text=f"{v} | Use /help profile for help on editing your profile!")
+        profile_embed.set_footer(text=f"{v} | Use /profile edit")
         await ctx.respond(embed=profile_embed)
 
     @profile.command(description="Edit what a section says on your profile")
@@ -153,20 +153,3 @@ class Profile(commands.Cog):
         thorny_user = await db.ThornyFactory.build(ctx.author)
         await thorny_user.update("birthday", date_system)
         await ctx.respond(f"Your Birthday is set to: **{date}**", ephemeral=True)
-
-    # @profile.command(description="CM Only | Update some sections of people's profiles")
-    # @commands.has_permissions(administrator=True)
-    # async def set(self, ctx, user: discord.Member, key, *value):
-    #     thorny_user = await db.ThornyFactory.build(user)
-    #     if key.lower() == 'join_date':
-    #         date = datetime.strptime(" ".join(value), '%Y-%m-%d %H:%M:%S')
-    #         await thorny_user.join_date
-    #         await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")
-    #     else:
-    #         update = await dbutils.Profile.update_profile(user.id, key, " ".join(value))
-    #         if update == "length_error":
-    #             await ctx.send("Too long of a character")
-    #         elif update == "section_error":
-    #             await ctx.send("**Some Common Edits:**\n!profile set @player ")
-    #         else:
-    #             await ctx.send(f"{key} is now {' '.join(value)} for {user.display_name}")

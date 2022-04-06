@@ -62,8 +62,8 @@ class Playtime(commands.Cog):
 
             response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
             if overtime:
-                stats = f'''You were connected for over 12 hours, so I brought your playtime down.
-                            I set it to **1h05m**.'''
+                stats = f'You were connected for over 12 hours, so I brought your playtime down.' \
+                        f'I set it to **1h05m**.'
             else:
                 stats = f'You played for a total of **{playtime[0]}h{playtime[1]}m** this session. Nice!'
             response_embed.add_field(name=f"**Here's your stats:**",
@@ -122,7 +122,6 @@ class Playtime(commands.Cog):
         if afk_text != "":
             online_embed.add_field(name="**AFK Players (Connected over 12h ago)**\n"
                                         "*Playtime: Defaults to 1h05m*",
-                                   value=f"\n"
-                                         f"{afk_text}", inline=False)
+                                   value=f"{afk_text}", inline=False)
 
         await ctx.respond(embed=online_embed)

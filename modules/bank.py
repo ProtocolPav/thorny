@@ -64,7 +64,7 @@ class Bank(commands.Cog):
             await ctx.respond(f"{user}'s balance is now **{thorny_user.balance}**! (Added/Removed: {amount})")
 
     @commands.slash_command(description="Pay a player using nugs")
-    async def pay(self, ctx, user: discord.Member, amount: int, reason=None):
+    async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
             receivable_user = await db.ThornyFactory.build(user)
             payable_user = await db.ThornyFactory.build(ctx.author)

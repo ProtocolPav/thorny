@@ -12,6 +12,10 @@ class Information(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    k_list = ["Ambria", "Asbahamael", "Dalvasha", "Eireann", "Stregabor"]
+    edit_list = ["ruler_name", "capital", "alliances", "town_count", "slogan", "border_type",
+                 "gov_type", "description", "lore"]
+
     @commands.command(help="CM Only | Change the ruler within the Gateway Command", hidden=True)
     @commands.has_permissions(administrator=True)
     async def newruler(self, ctx, kingdom, *ruler):
@@ -30,13 +34,9 @@ class Information(commands.Cog):
                                               config['kingdoms']['eireann']['ruler'],
                                               config['kingdoms']['stregabor']['ruler']))
 
-    @staticmethod
-    def get_kingdoms():
-        return ["Ambria", "Asbahamael", "Dalvasha", "Eireann", "Stregabor"]
-
     @commands.slash_command(description="Shows the kingdom description for the kingdom")
-    async def kingdom(self, ctx, kingdom: discord.Option(str, "Pick a kingdom",
-                                                         autocomplete=utils.basic_autocomplete(get_kingdoms()))):
+    async def kingdom(self, ctx,
+                      kingdom: discord.Option(str, "Pick a kingdom", autocomplete=utils.basic_autocomplete(k_list))):
         kingdom_record = await dbutils.Kingdom.select_kingdom(kingdom)
 
         kingdom_embed = discord.Embed(title=f"**{kingdom}, {kingdom_record['slogan']}**",
@@ -61,42 +61,21 @@ class Information(commands.Cog):
                                 value=f"{kingdom_record['description']}",
                                 inline=False)
         kingdom_embed.add_field(name=":postal_horn: **Kingdom Lore**",
-                                value=f"Soon...",
+                                value=f"{kingdom_record['lore']}",
                                 inline=False)
 
         await ctx.respond(embed=kingdom_embed)
 
-    @commands.slash_command(help="Ruler Only | Edit what your Kingdom Command says")
+    @commands.slash_command(description="Ruler Only | Edit what your Kingdom Command says")
     @commands.has_role('Ruler')
-    async def kedit(self, ctx, field, value):
+    async def kedit(self, ctx, field: discord.Option(str, autocomplete=utils.basic_autocomplete(edit_list)), value):
         kingdom = await dbutils.condition_select('user', 'kingdom', 'user_id', ctx.author.id)
 
         update = await dbutils.Kingdom.update_kingdom(kingdom[0][0], field, value)
         if update == "length_error":
             await ctx.respond("This is too long!")
-        elif update == "section_error":
-            await help.Help.kingdoms(self, ctx)
         else:
             await ctx.respond(f"Success! {field} is now {value} for {kingdom[0][0]}")
-
-    @commands.slash_command(description="Get help on editing the Kingdom Command")
-    async def kingdoms(self, ctx):
-        help_embed = discord.Embed(colour=0x65b39b)
-        help_embed.add_field(name=":question: **Kingdom Help**",
-                             value=f"**!kedit <field> <value>** - Edit a certain field on the command!")
-        help_embed.add_field(name=":pencil: **Fields You Can Edit**",
-                             value=f"You can edit the following fields (In order from top to bottom):\n\n"
-                                   f"**Slogan** - The top part of the kingdom command | Max. 5 words\n"
-                                   f"**Ruler** - Your Kingdom's Ruler\n"
-                                   f"**Capital** - The Capital CIty | Max. 30 characters\n"
-                                   f"**Border_type** - Open, Closed, Partially Open | Max. 30 characters\n"
-                                   f"**Gov_type** - Kingdom's Government Type\n"
-                                   f"**Alliances** - Your kingdom's alliances | Max. 50 characters\n"
-                                   f"**Description** - Your Kingdom's Description | Max. 30 words\n"
-                                   f"**Lore** - Your Kingdom's Lore | Max. 30 words",
-                             inline=False)
-        help_embed.set_footer(text=f"Use !help kingdoms to access this!")
-        await ctx.respond(embed=help_embed)
 
     @commands.slash_command(description="Get a random tip")
     async def tip(self, ctx, number=None):
@@ -106,10 +85,19 @@ class Information(commands.Cog):
             number = str(random.randint(1, len(tip['tips'])))
         tip_embed.add_field(name=f"Pro Tip!",
                             value=tip['tips'][number])
-        tip_embed.set_footer(text=f"Tip {number}/{len(tip['tips'])} | Use !tip [number] to get a tip!")
+        tip_embed.set_footer(text=f"Tip {number}/{len(tip['tips'])} | Use /tip to get a tip!")
         await ctx.respond(embed=tip_embed)
 
-    @commands.slash_command(description="Search the database for gamertags", guild_ids=[733716450774351933,])
+    @commands.slash_command(description="Search the database for gamertags")
     async def gtsearch(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
         gamertags = await dbutils.Profile.select_gamertags(gamertag)
-        await ctx.respond(f"**Gamertags matching `{gamertag}`:**\n{gamertags}")
+        send_text = []
+        for tag in gamertags:
+            send_text.append(f"<@{tag['user_id']}> • {tag['gamertag']}")
+        if not send_text:
+            send_text.append("No matches found!")
+
+        gamertag_embed = discord.Embed(colour=0x64d5ac)
+        gamertag_embed.add_field(name=f"**Gamertags matching `{gamertag}`:**",
+                                 value="\n".join(send_text))
+        await ctx.respond(embed=gamertag_embed)
