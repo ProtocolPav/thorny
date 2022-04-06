@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 import logs
 import dbutils
 import dbclass
+import connection_pool
 import json
 from thorny_code.modules import help, inventory, leaderboard, playtime, moderation, bank, gateway, profile
 
@@ -30,40 +31,20 @@ async def on_ready():
                                     name=f"you... | {v}")
     print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
-    print(f"[SERVER] Next month switch is in {timedelta(seconds=dbutils.Activity.seconds_until_next_month())}"
-          f" (Date: {datetime.now() + timedelta(seconds=dbutils.Activity.seconds_until_next_month())})")
-
-    print(dbutils.select_all_guilds(thorny))
-
-
-@tasks.loop(seconds=dbutils.Activity.seconds_until_next_month())
-async def update_months():
-    if update_months.current_loop != 0:
-        print(f"[ACTION] Beginning Month Switch (Loop {update_months.current_loop})")
-        await dbutils.Activity.update_user_months()
+    print(f"[SERVER] I am in {len(dbutils.select_all_guilds(thorny))} Guilds")
+    connection_pool.pool.assign(await dbclass.connection())
 
 
 @thorny.command()
-async def port(ctx):
-    version_file = open('version.json', 'r+')
-    version = json.load(version_file)
-    if not version['v1.6_ported']:
-        await dbutils.create_thorny_database(ctx)
-        await dbutils.port_user_profiles(ctx)
-        await dbutils.port_activity(ctx)
-        await dbutils.populate_tables(ctx)
-        version['v1.6_ported'] = True
-        version_file.truncate(0)
-        version_file.seek(0)
-        json.dump(version, version_file, indent=0)
-        await ctx.send(f"All porting Complete!")
-
-
-@thorny.command()
-async def send(ctx):
-    user = await dbclass.ThornyFactory.build(ctx.author)
-    user.profile.wiki_shown = False
-    await ctx.send(user)
+@commands.has_permissions(administrator=True)
+async def update(ctx):
+    members = await dbutils.simple_select('user', 'thorny_user_id')
+    for member in members:
+        counter = await dbutils.condition_select('counter', 'counter_name', 'thorny_user_id', member[0])
+        print(member, counter)
+        if not counter:
+            await dbutils.insert_counters(member[0])
+            print("[SERVER] Inserted counters for Thorny ID", member[0])
 
 
 @thorny.slash_command()
@@ -93,7 +74,8 @@ async def on_message(message):
     elif 'baffl' in message.content.lower():
         await message.channel.send("Is that right?")
     elif message.content.startswith('!'):
-        await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*")
+        await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*\n"
+                                   "*This message will be going away soon, so learn the commands!*")
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
@@ -158,23 +140,26 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    await dbclass.ThornyFactory.create(member)
+    await dbclass.ThornyFactory.create([member])
 
 
 @thorny.event
 async def on_member_remove(member):
-    await dbclass.ThornyFactory.deactivate(member)
+    await dbclass.ThornyFactory.deactivate([member])
 
 
 @thorny.event
 async def on_guild_join(guild):
     print(f"I joined {guild.name}")
-    for member in guild.members:
-        if member.bot is not True:
-            await dbclass.ThornyFactory.create(member)
+    member_list = await guild.fetch_members().flatten()
+    await dbclass.ThornyFactory.create(member_list)
 
 
-update_months.start()
+@thorny.event
+async def on_guild_remove(guild):
+    print(f"I left {guild.name}")
+    member_list = guild.members
+    await dbclass.ThornyFactory.deactivate(member_list)
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
