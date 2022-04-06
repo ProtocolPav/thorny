@@ -525,7 +525,9 @@ class Activity:
 
     @staticmethod
     async def select_online():
-        return await conn.fetch("SELECT * FROM thorny.activity WHERE disconnect_time is NULL AND connect_time > $1 "
+        return await conn.fetch("SELECT * FROM thorny.activity "
+                                "JOIN thorny.user ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
+                                "WHERE disconnect_time is NULL AND connect_time > $1 "
                                 "ORDER BY connect_time DESC", datetime.now().replace(day=1))
 
     @staticmethod
@@ -664,9 +666,11 @@ class Profile:
         return True
 
     @staticmethod
-    async def select_gamertags(gamertag: str):
-        return await conn.fetch("SELECT user_id, gamertag FROM thorny.profile "
-                                "WHERE LOWER(gamertag) LIKE $1", f'%{gamertag[0:3].lower()}%')
+    async def select_gamertags(gamertag: str, guild_id):
+        return await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
+                                "JOIN thorny.user ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
+                                "WHERE LOWER(gamertag) LIKE $1 "
+                                "AND thorny.user.guild_id = $2", f'%{gamertag[0:3].lower()}%', guild_id)
 
 
 class Kingdom:
