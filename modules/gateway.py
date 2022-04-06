@@ -90,7 +90,7 @@ class Information(commands.Cog):
 
     @commands.slash_command(description="Search the database for gamertags")
     async def gtsearch(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
-        gamertags = await dbutils.Profile.select_gamertags(gamertag)
+        gamertags = await dbutils.Profile.select_gamertags(gamertag, ctx.guild.id)
         send_text = []
         for tag in gamertags:
             send_text.append(f"<@{tag['user_id']}> • {tag['gamertag']}")
