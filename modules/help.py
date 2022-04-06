@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import functions as func
 import json
+import dbutils
 
 v = json.load(open('version.json', 'r'))['version']
 

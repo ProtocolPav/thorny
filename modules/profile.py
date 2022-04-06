@@ -69,6 +69,7 @@ class Profile(commands.Cog):
                                           f"**Total:** "
                                           f"{thorny_user.playtime.total_playtime}", inline=True)
         if thorny_user.profile.aboutme_shown:
+
             profile_embed.add_field(name=f'**:person_raising_hand: About Me**',
                                     value=f'"{thorny_user.profile.aboutme}"', inline=False)
         if thorny_user.profile.lore_shown:

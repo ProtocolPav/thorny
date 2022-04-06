@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.commands import permissions
 
 import json
 from thorny_code import errors

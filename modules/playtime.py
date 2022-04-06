@@ -78,6 +78,7 @@ class Playtime(commands.Cog):
         else:
             await ctx.respond(embed=errors.Activity.connect_error, ephemeral=True)
 
+
     @commands.slash_command(description='Adjust your recent playtime')
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):

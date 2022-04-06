@@ -34,6 +34,7 @@ async def on_ready():
     print(f"[SERVER] I am in {len(dbutils.select_all_guilds(thorny))} Guilds")
     connection_pool.pool.assign(await dbclass.connection())
 
+    print(dbutils.select_all_guilds(thorny))
 
 @thorny.command()
 @commands.has_permissions(administrator=True)
@@ -76,6 +77,7 @@ async def on_message(message):
     elif message.content.startswith('!'):
         await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*\n"
                                    "*This message will be going away soon, so learn the commands!*")
+
 
     await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
 
