@@ -22,7 +22,7 @@ class Pay:
 
     self_register_error = discord.Embed(color=0xD70040)
     self_register_error.add_field(name='<:_no:921840417362804777> Oh, you ARE new!',
-                                  value="I don't see you in the database :(\nIt's okay, just use `!bal`")
+                                  value="I don't see you in the database :(\nIt's okay, just use `/balance view`")
 
     lack_nugs_error = discord.Embed(color=0xD70040)
     lack_nugs_error.add_field(name='<:_no:921840417362804777> Broke boiii :grimacing:',
@@ -54,7 +54,7 @@ class Treasury:
 class Shop:
     item_error = discord.Embed(color=0xD70040)
     item_error.add_field(name=f'<:_no:921840417362804777> Hey...',
-                         value="This item doesn't exist! To see what items DO exist, use `!store`")
+                         value="This item doesn't exist! To see what items DO exist, use `/store catalogue`")
 
     faulty_ticket_error = discord.Embed(color=0xD70040)
     faulty_ticket_error.add_field(name="<:_no:921840417362804777> Oh No!",
@@ -78,7 +78,7 @@ class Leaderboard:
 
     month_syntax_error = discord.Embed(color=0xD70040)
     month_syntax_error.add_field(name="<:_no:921840417362804777> Oh",
-                                 value="This command is **!leaderboard activity <month> <page>**, means you need to "
+                                 value="This command is **/lb activity <month> <page>**, means you need to "
                                        "write the month first and then flip the pages!")
 
 

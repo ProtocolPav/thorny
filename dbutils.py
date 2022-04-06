@@ -172,7 +172,6 @@ async def port_user_profiles(ctx):
                            "VALUES($1, $2, $3)", int(user), thorny_id['thorny_user_id'], guild_id)
         print(f"Porting of {profile[str(user)]['user']} Complete!")
 
-
 async def port_activity(ctx):
     month = ['oct', 'nov', 'dec']
     await ctx.send(f"Porting September Activity...")
@@ -457,6 +456,16 @@ def select_all_guilds(client):
     return returned_guilds
 
 
+async def insert_counters(thorny_id):
+    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, count)
+                                              VALUES($1, $2, $3)""", thorny_id, 'ticket_count', 0)
+    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                              VALUES($1, $2, $3)""", thorny_id, 'ticket_last_purchase',
+                       datetime.now())
+    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                              VALUES($1, $2, $3)""", thorny_id, 'level_last_message', datetime.now())
+
+
 class Inventory:
     """
     Needs updating, make all of them use the member object instead of user_id
@@ -515,7 +524,9 @@ class Activity:
 
     @staticmethod
     async def select_online():
-        return await conn.fetch("SELECT * FROM thorny.activity WHERE disconnect_time is NULL AND connect_time > $1 "
+        return await conn.fetch("SELECT * FROM thorny.activity "
+                                "JOIN thorny.user ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
+                                "WHERE disconnect_time is NULL AND connect_time > $1 "
                                 "ORDER BY connect_time DESC", datetime.now().replace(day=1))
 
     @staticmethod
@@ -571,32 +582,37 @@ class Activity:
 
 class Leaderboard:
     @staticmethod
-    async def select_activity(month: datetime):
+    async def select_activity(ctx, month: datetime):
         if datetime.now() < month:
-            month = month.replace(year=datetime.now().year - 1)
-            year = datetime.now().year - 1
+            month = month.replace(day=1) - relativedelta(years=1, days=1)
         else:
-            year = datetime.now().year
-        next_month = month.month + 1
-        if next_month == 13:
-            next_month = 1
-            year = datetime.now().year
+            month = month.replace(day=1) - relativedelta(days=1)
+        next_month = month + relativedelta(months=1)
         return await conn.fetch(
             f"""
-            SELECT SUM(playtime), user_id 
+            SELECT SUM(playtime), thorny.user.user_id 
             FROM thorny.activity 
+            JOIN thorny.user ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
             WHERE connect_time BETWEEN $1 AND $2
             AND playtime IS NOT NULL
-            GROUP BY user_id 
+            AND thorny.user.guild_id = $3 
+            AND thorny.user.active = True
+            GROUP BY thorny.user.user_id
             ORDER BY SUM(playtime) DESC
             """,
-            month.replace(day=1, hour=0, minute=0, second=0, microsecond=0),
-            month.replace(year=year, month=next_month, day=1, hour=0, minute=0, second=0, microsecond=0))
+            month, next_month, ctx.guild.id)
 
     @staticmethod
-    async def select_nugs():
+    async def select_nugs(ctx):
         return await conn.fetch(f"SELECT user_id, balance FROM thorny.user "
-                                f"GROUP BY user_id, balance ORDER BY balance DESC")
+                                f"WHERE thorny.user.guild_id = $1 "
+                                f"AND thorny.user.active = True "
+                                f"GROUP BY user_id, balance ORDER BY balance DESC", ctx.guild.id)
+
+    @staticmethod
+    async def select_treasury():
+        return await conn.fetch(f"SELECT kingdom, treasury FROM thorny.kingdoms "
+                                f"ORDER BY treasury DESC")
 
 
 class Profile:
@@ -635,23 +651,25 @@ class Profile:
     @staticmethod
     async def insert_strike(user_id, reason, cm_id):
         strike_id = await conn.fetchrow('SELECT strike_id '
-                                        'FROM thorny.strike_list '
+                                        'FROM thorny.strikes '
                                         'ORDER BY strike_id DESC')
-        await conn.execute('INSERT INTO thorny.strike_list '
+        await conn.execute('INSERT INTO thorny.strikes '
                            'VALUES($1, $2, $3, $4)',
-                           strike_id[0] + 1, user_id, reason, cm_id)
+                           strike_id[0] + 1, str(user_id), reason, cm_id)
         return strike_id[0] + 1
 
     @staticmethod
     async def delete_strike(strike_id):
-        await conn.execute("DELETE FROM thorny.strike_list "
+        await conn.execute("DELETE FROM thorny.strikes "
                            "WHERE strike_id = $1", strike_id)
         return True
 
     @staticmethod
-    async def select_gamertags(gamertag: str):
-        return await conn.fetch("SELECT user_id, gamertag FROM thorny.profile "
-                                "WHERE LOWER(gamertag) LIKE $1", f'%{gamertag[0:3].lower()}%')
+    async def select_gamertags(gamertag: str, guild_id):
+        return await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
+                                "JOIN thorny.user ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
+                                "WHERE LOWER(gamertag) LIKE $1 "
+                                "AND thorny.user.guild_id = $2", f'%{gamertag[0:3].lower()}%', guild_id)
 
 
 class Kingdom:
@@ -664,14 +682,9 @@ class Kingdom:
 
     @staticmethod
     async def update_kingdom(kingdom, section, value):
-        availabe_sections = ['slogan', 'capital', 'town_count', 'border_type', 'gov_type', 'description',
-                             'alliances', 'lore']
-        if section.lower() in availabe_sections:
-            try:
-                await conn.execute('UPDATE thorny.kingdoms '
-                                   f'SET {section} = $1 '
-                                   f'WHERE kingdom = $2', value, kingdom)
-            except asyncpg.StringDataRightTruncationError:
-                return "length_error"
-        else:
-            return "section_error"
+        try:
+            await conn.execute('UPDATE thorny.kingdoms '
+                               f'SET {section} = $1 '
+                               f'WHERE kingdom = $2', value, kingdom)
+        except asyncpg.StringDataRightTruncationError:
+            return "length_error"
