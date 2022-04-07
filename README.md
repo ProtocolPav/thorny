@@ -7,7 +7,7 @@ Thorny - The only bot you'll ever need
 - All thorny commands are separated in separate python files, located in `modules`
 
 ## Dbclass
-*New in v1.7* 
+*New in v1.7*  
 There are 2 main classes which exist
 
 ### ThornyFactory
