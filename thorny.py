@@ -13,6 +13,7 @@ from thorny_code.modules import help, inventory, leaderboard, playtime, moderati
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
+#  Git test check
 
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
