@@ -172,6 +172,7 @@ async def port_user_profiles(ctx):
                            "VALUES($1, $2, $3)", int(user), thorny_id['thorny_user_id'], guild_id)
         print(f"Porting of {profile[str(user)]['user']} Complete!")
 
+
 async def port_activity(ctx):
     month = ['oct', 'nov', 'dec']
     await ctx.send(f"Porting September Activity...")
