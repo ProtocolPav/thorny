@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import json
-import errors
+from thorny_core import errors
 import random
 
 config_file = open('./../thorny_data/config.json', 'r')

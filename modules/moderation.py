@@ -1,12 +1,9 @@
 import discord
 from discord.ext import commands
 
-import json
-from thorny_code import dbutils
-from thorny_code import dbclass as db
-from thorny_code import errors
-from thorny_code import logs
-from thorny_code import functions as func
+from thorny_core import dbclass as db
+from thorny_core.dbfactory import ThornyFactory
+from thorny_core.dbcommit import commit
 
 
 class Moderation(commands.Cog):
@@ -16,21 +13,22 @@ class Moderation(commands.Cog):
     @commands.slash_command(description='CM Only | Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)
     async def strike(self, ctx, user: discord.Member, reason):
-        thorny_user = await db.ThornyFactory.build(user)
-        await thorny_user.strikes.insert(ctx.author, reason)
+        thorny_user = await ThornyFactory.build(user)
+        await thorny_user.strikes.append(ctx.author.id, reason)
         strike_embed = discord.Embed(color=0xCD853F)
         strike_embed.add_field(name=f"**{user} Got Striked!**",
                                value=f"From: {ctx.author.mention}\n"
                                      f"Reason: {reason}")
         strike_embed.set_footer(text=f"Strike ID: {thorny_user.strikes.strike_list[-1]['id']}")
         await ctx.respond(embed=strike_embed)
+        await commit(thorny_user)
 
     @commands.slash_command(description='[DISABLED] CM Only | Remove a strike')
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, strike_id):
         await ctx.respond("Command is disabled")
 
-    @commands.slash_command(description='[DISABLED] View a persons strike_list')
+    @commands.slash_command(description='[DISABLED] View a persons strikes')
     async def strikes(self, ctx, user: discord.Member):
         await ctx.respond("Command is disabled")
 

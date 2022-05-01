@@ -4,7 +4,7 @@ from discord.ext import commands, pages
 import json
 import math
 
-from thorny_code import dbutils
+from thorny_core import dbutils
 
 
 class Leaderboard(commands.Cog):
@@ -23,7 +23,6 @@ class Leaderboard(commands.Cog):
             month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
 
         playtime = await dbutils.Leaderboard.select_activity(ctx, month)
-        print(playtime)
         total_pages = math.ceil(len(playtime) / 20)
         for page in range(1, total_pages+1):
             start = page*20 - 20
@@ -34,6 +33,7 @@ class Leaderboard(commands.Cog):
                 time = f"{user['sum']}".split(":")
                 playtime_text.append(f'**{playtime.index(user) + 1}.** <@{user["user_id"]}> • '
                                      f'**{time[0]}h{time[1]}m**')
+            for user in playtime:
                 if user['user_id'] == ctx.author.id:
                     rank = f"You are #{playtime.index(user) + 1} on the Leaderboard"
             if page != total_pages+1:
@@ -72,6 +72,7 @@ class Leaderboard(commands.Cog):
             for user in balances[start:stop]:
                 balance_text.append(f'**{balances.index(user) + 1}.** <@{user["user_id"]}> • '
                                     f'<:Nug:884320353202081833> **{user["balance"]}**')
+            for user in balances:
                 if user['user_id'] == ctx.author.id:
                     rank = f"You are #{balances.index(user) + 1} on the Leaderboard"
             if page != total_pages + 1:
@@ -82,3 +83,8 @@ class Leaderboard(commands.Cog):
                 self.pages.append(lb_embed)
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
+
+    @leaderboard.command(description="See the levels leaderboard")
+    async def levels(self, ctx):
+        pass
+

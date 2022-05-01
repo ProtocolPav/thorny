@@ -1,10 +1,11 @@
 import discord
 from discord.ext import commands
-from thorny_code import dbutils
+from thorny_core import dbutils, dbclass as db
 from datetime import datetime, timedelta
 import json
-from thorny_code import errors
-from thorny_code import dbclass as db
+from thorny_core import errors
+from thorny_core import dbevent as ev
+from thorny_core.dbfactory import ThornyFactory
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
@@ -18,18 +19,13 @@ class Playtime(commands.Cog):
 
     @commands.slash_command(description="Log your connect time")
     async def connect(self, ctx):
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        error = await thorny_user.playtime.connect()
+        thorny_user = await ThornyFactory.build(ctx.author)
 
-        if not error:
-            log_embed = discord.Embed(title=f'CONNECTION', colour=0x00FF7F)
-            log_embed.add_field(name='Event Log:',
-                                value=f'**CONNECT**, **{ctx.author}**, '
-                                      f'{ctx.author.id}, '
-                                      f'{datetime.now().replace(microsecond=0)}')
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
-            activity_channel = self.client.get_channel(config['channels']['activity_logs'])
-            await activity_channel.send(embed=log_embed)
+        connection: ev.ConnectEvent = await ev.fetch(ev.ConnectEvent, thorny_user, self.client)
+        metadata = await connection.log_event_in_database()
+
+        if metadata.database_log:
+            await connection.log_event_in_discord()
 
             response_embed = discord.Embed(title="Playing? On Everthorn?! :smile:",
                                            color=0x00FF7F)
@@ -39,29 +35,25 @@ class Playtime(commands.Cog):
                                      value="`/profile view` - See your profile\n`/online` - See who else is on!",
                                      inline=False)
             response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
-            response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
+            response_embed.set_footer(text=f'{v} | {metadata.event_time}')
             await ctx.respond(embed=response_embed)
         else:
             await ctx.respond(embed=errors.Activity.already_connected_error, ephemeral=True)
 
     @commands.slash_command(description="Log your disconnect time as well as what you did")
     async def disconnect(self, ctx, journal: discord.Option(str, "Write a journal entry. Viewable in /journal") = None):
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        error, overtime, playtime = await thorny_user.playtime.disconnect(journal)
+        thorny_user = await ThornyFactory.build(ctx.author)
 
-        if not error:
-            playtime = str(playtime).split(":")
-            log_embed = discord.Embed(title=f'DISCONNECTION', colour=0xFF5F15)
-            log_embed.add_field(name='Event Log:',
-                                value=f'**DISCONNECT**, **{ctx.author}**, '
-                                      f'{ctx.author.id}, {datetime.now().replace(microsecond=0)}\n'
-                                      f'Playtime: **{playtime[0]}h{playtime[1]}m**')
-            log_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
-            activity_channel = self.client.get_channel(config['channels']['activity_logs'])
-            await activity_channel.send(embed=log_embed)
+        connection: ev.DisconnectEvent = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
+        connection.metadata.event_comment = journal
+        metadata = await connection.log_event_in_database()
+
+        if metadata.database_log:
+            playtime = str(metadata.playtime).split(":")
+            await connection.log_event_in_discord()
 
             response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
-            if overtime:
+            if metadata.playtime_overtime:
                 stats = f'You were connected for over 12 hours, so I brought your playtime down.' \
                         f'I set it to **1h05m**.'
             else:
@@ -70,22 +62,23 @@ class Playtime(commands.Cog):
                                      value=f'{stats}')
             response_embed.add_field(name=f"**Adjust Your Hours:**",
                                      value="Did you forget to disconnect for many hours? Use the `/adjust` command "
-                                           "to bring your hours down!\n **Example:** `/adjust 2h34m` | Brings "
+                                           "to bring your hours down!\n**Example:** `/adjust 2h34m` | Brings "
                                            "it down by 2 hours and 34 minutes", inline=False)
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.avatar)
-            response_embed.set_footer(text=f'{v} | {datetime.now().replace(microsecond=0)}')
+            response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
+            response_embed.set_footer(text=f'{v} | {metadata.event_time}')
             await ctx.respond(embed=response_embed)
         else:
             await ctx.respond(embed=errors.Activity.connect_error, ephemeral=True)
 
-
     @commands.slash_command(description='Adjust your recent playtime')
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        error = await thorny_user.playtime.adjust(hours, minutes)
+        thorny_user = await ThornyFactory.build(ctx.author)
+        adjusting: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client,
+                                                   adjust_hour=hours, adjust_minute=minutes)
+        metadata = await adjusting.log_event_in_database()
 
-        if not error:
+        if metadata.database_log:
             await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
         else:
             await ctx.respond("You are already connected", ephemeral=True)
