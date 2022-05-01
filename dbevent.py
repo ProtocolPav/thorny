@@ -29,6 +29,8 @@ class EventMetadata:
     playtime_overtime: bool = False
     playtime: timedelta = None
     recent_connection: pg.Record = None
+    adjusting_hour = None
+    adjusting_minute = None
 
     sender_user: ThornyUser = None
     receiver_user: ThornyUser = None
@@ -106,7 +108,6 @@ class DisconnectEvent(Event):
         self.recent_connection = metadata.recent_connection
 
     async def log_event_in_discord(self):
-
         log_embed = discord.Embed(title=f'DISCONNECTION', colour=0x44ef56)
         log_embed.set_footer(text=f"Event Time: `{self.time}`")
         log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
@@ -115,6 +116,7 @@ class DisconnectEvent(Event):
 
     async def log_event_in_database(self) -> EventMetadata:
         data = self.metadata
+        print(self.recent_connection)
         async with self.pool.acquire() as conn:
             if self.recent_connection is None or self.recent_connection['disconnect_time'] is not None:
                 data.database_log = False
@@ -135,7 +137,33 @@ class DisconnectEvent(Event):
 
 
 class AdjustEvent(Event):
-    pass
+    def __init__(self, metadata):
+        super().__init__(metadata)
+        self.recent_connection = metadata.recent_connection
+
+    async def log_event_in_discord(self):
+        log_embed = discord.Embed(title=f'PLAYTIME ADJUSTED', colour=0x44ef56)
+        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
+        activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
+        await activity_channel.send(embed=log_embed)
+
+    async def log_event_in_database(self) -> EventMetadata:
+        async with self.pool.acquire() as conn:
+            if self.recent_connection is None or self.recent_connection['disconnect_time'] is None:
+                self.metadata.database_log = False
+            else:
+                hour = self.metadata.adjusting_hour
+                minute = self.metadata.adjusting_minute
+                playtime = self.recent_connection['playtime'] - timedelta(hours=hour or 0, minutes=minute or 0)
+                desc = f"Adjusted by {hour or 0}h{minute or 0}m | {self.recent_connection['description']}"
+                await conn.execute("""
+                                    UPDATE thorny.activity SET playtime = $1, description = $2
+                                    WHERE thorny_user_id = $3 and connect_time = $4
+                                   """,
+                                   playtime, desc, self.user.id, self.recent_connection['connect_time'])
+                self.metadata.database_log = True
+        return self.metadata
 
 
 class PlayerTransaction(Event):
@@ -204,13 +232,15 @@ class GainXP(Event):
         pass
 
 
-async def fetch(event, thorny_user: ThornyUser, client, pool: pg.Pool):
-    metadata = EventMetadata(thorny_user, client, pool, datetime.now().replace(microsecond=0))
-    async with pool.acquire() as connection:
+async def fetch(event, thorny_user: ThornyUser, client, adjust_hour=None, adjust_minute=None):
+    metadata = EventMetadata(thorny_user, client, thorny_user.pool, datetime.now().replace(microsecond=0))
+    async with thorny_user.pool.acquire() as connection:
         metadata.recent_connection = await connection.fetchrow("""
                                                                SELECT * FROM thorny.activity
                                                                WHERE thorny_user_id = $1
                                                                ORDER BY connect_time DESC
                                                                """,
                                                                thorny_user.id)
+        metadata.adjusting_hour = adjust_hour
+        metadata.adjusting_minute = adjust_minute
         return event(metadata)

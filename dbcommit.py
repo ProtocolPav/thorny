@@ -74,36 +74,37 @@ async def update_inventory_slot(inventory_slot: ThornyUserSlot):
 async def insert_inventory_slot(inventory_slot: ThornyUserSlot):
     async with inventory_slot.pool.acquire() as conn:
         await conn.execute("""
-                                            INSERT INTO thorny.inventory(thorny_user_id, item_id, item_count)
-                                            VALUES($1, $2, $3)
-                                          """,
+                           INSERT INTO thorny.inventory(thorny_user_id, item_id, item_count)
+                           VALUES($1, $2, $3)
+                           """,
                            inventory_slot.id, inventory_slot.item_id, inventory_slot.item_count)
 
 
 async def delete_inventory_slot(inventory_slot: ThornyUserSlot):
     async with inventory_slot.pool.acquire() as conn:
+        print("removing")
         await conn.execute("""
-                                            DELETE FROM thorny.inventory
-                                            WHERE inventory_id = $1
-                                          """,
+                           DELETE FROM thorny.inventory
+                           WHERE inventory_id = $1
+                           """,
                            inventory_slot.inventory_id)
 
 
 async def insert_strike(strike: ThornyUserStrike):
     async with strike.pool.acquire() as conn:
         await conn.execute("""
-                                    INSERT INTO thorny.strikes(thorny_user_id, manager_id, reason)
-                                    VALUES($1, $2, $3)
-                                  """,
+                           INSERT INTO thorny.strikes(thorny_user_id, manager_id, reason)
+                           VALUES($1, $2, $3)
+                           """,
                            strike.id, strike.manager_id, strike.reason)
 
 
 async def delete_strike(strike: ThornyUserStrike):
     async with strike.pool.acquire() as conn:
         await conn.execute("""
-                                    DELETE FROM thorny.strikes
-                                    WHERE strike_id = $1
-                                  """,
+                           DELETE FROM thorny.strikes
+                           WHERE strike_id = $1
+                           """,
                            strike.strike_id)
 
 
@@ -117,6 +118,7 @@ async def commit(thorny_user: ThornyUser):
 
             original_slots = thorny_user.inventory.original_slots
             slots = thorny_user.inventory.slots
+            print(original_slots, slots)
             if len(original_slots) > len(slots):
                 for slot in original_slots:
                     if slot not in slots:

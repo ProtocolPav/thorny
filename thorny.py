@@ -5,7 +5,7 @@ from discord.ext import commands
 
 import logs
 import dbutils
-import dbclass
+from dbcommit import commit
 import connection_pool
 from dbfactory import ThornyFactory
 import dbevent

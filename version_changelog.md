@@ -12,12 +12,22 @@ Nickname: Revival
   * `gateway.py` -> `information.py` Reflects the changes in commands
 * Separated the ThornyFactory class from dbclass
 * Created new ThornyEvent class, and `dbevent.py` file
-  * Stores all events, such as connect, disconnect, adjust
+  * Stores all events, such as connect, disconnect, adjust, etc.
 * Updated `functions.py` to store other functions, such as getting leaderboard info,
 and other non-ThornyUser affiliated things and removed un-used functions
 * Added a new `/events` command, which fetches all current scheduled events
 * Added new updated responses, now stored in `config.json`
+* Fixed a bug where your rank would not show up on leaderboards
+*
+
+### New Pooling Updates
+* `bank.py` has been fully updated to support the new Pooling Method
+* `inventory.py` has been fully updated
+* `profile.py` has been fully updated
 
 ### Database Changes
 
 * Added `redeemable` (boolean, default True) to `thorny.item_type`
+* Added a new table `guilds` where all guild data is stored. 
+But this needs working on and will be introduced fully in **v1.7.2**
+* 

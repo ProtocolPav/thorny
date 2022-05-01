@@ -51,20 +51,12 @@ class ThornyUserProfile:
         self.required_xp = profile['required_xp']
         self.last_message = profile['last_message']
 
-    async def update(self, section, value):
-        self.__setattr__(section, value)
-        try:
-            await self.conn.execute(f"""UPDATE thorny.profile
-                                        SET {section} = $1
-                                        WHERE thorny_user_id = $2""", value, self.id)
-        except asyncpg.StringDataRightTruncationError:
-            return errors.Profile.length_error
-
-    async def toggle(self, category):
-        self.__setattr__(category, not category)
-        await self.conn.execute(f"""UPDATE thorny.profile
-                                    SET {category} = NOT {category}
-                                    WHERE thorny_user_id = $1""", self.id)
+    def update(self, attribute, value=None, toggle=False):
+        if toggle:
+            toggler = self.__getattribute__(attribute)
+            self.__setattr__(attribute, not toggler)
+        else:
+            self.__setattr__(attribute, value)
 
 
 @dataclass
@@ -95,23 +87,6 @@ class ThornyUserPlaytime:
         if master_datalayer.recent_playtime is not None:
             self.recent_session = master_datalayer.recent_playtime['playtime']
 
-    # Adjust must be changed to be in dbevent.py
-
-    async def adjust(self, hour, minute):
-        recent_connection = await self.conn.fetchrow("""SELECT * FROM thorny.activity
-                                                        WHERE thorny_user_id = $1
-                                                        ORDER BY connect_time DESC""", self.id)
-        if recent_connection is None or recent_connection['disconnect_time'] is None:
-            already_connected = True
-        else:
-            already_connected = False
-            playtime = recent_connection['playtime'] - timedelta(hours=hour or 0, minutes=minute or 0)
-            desc = f"Adjusted by {hour or 0}h{minute or 0}m | {recent_connection['description']}"
-            await self.conn.execute("""UPDATE thorny.activity SET playtime = $1, description = $2
-                                       WHERE thorny_user_id = $3 and connect_time = $4""",
-                                    playtime, desc, self.id, recent_connection['connect_time'])
-        return already_connected
-
 
 @dataclass
 class ThornyUserSlot:
@@ -125,9 +100,9 @@ class ThornyUserSlot:
     item_cost: int
     redeemable: bool
 
-    def __init__(self, thorny_id, pool, slot):
+    def __init__(self, thorny_id, pool_object, slot):
         self.id = thorny_id
-        self.pool = pool
+        self.pool = pool_object
         self.inventory_id = slot['inventory_id']
         self.item_id = slot['item_id']
         self.item_count = slot['item_count']
@@ -149,37 +124,17 @@ class ThornyUserInventory:
         self.id = master_datalayer.thorny_user['thorny_user_id']
         self.pool = master_datalayer.connection_pool
         self.slots = []
+        self.original_slots = []
         self.all_item_metadata = []
         for slot in master_datalayer.inventory:
             self.slots.append(ThornyUserSlot(self.id, self.pool, slot))
+            self.original_slots.append(ThornyUserSlot(self.id, self.pool, slot))
         for item in master_datalayer.item_data:
             self.all_item_metadata.append(item)
-        self.original_slots = self.slots
-
-    async def fetch_slot(self, item_id):
-        slot = await self.conn.fetchrow("""SELECT inventory_id, item_id, item_count
-                                           FROM thorny.inventory
-                                           WHERE thorny_user_id = $1 AND item_id = $2""",
-                                        self.id, item_id)
-        item_data = await self.conn.fetchrow("""SELECT display_name, max_item_count, item_cost
-                                                FROM thorny.item_type
-                                                WHERE friendly_id = $1""", item_id)
-        self.item_display_name = item_data['display_name']
-        self.item_max_count = item_data['max_item_count']
-        self.item_cost = item_data['item_cost']
-
-        if slot is not None:
-            self.inventory_id = slot['inventory_id']
-            self.item_id = slot['item_id']
-            self.item_count = slot['item_count']
-
-    async def update_count(self, count):
-        self.__setattr__("item_count", count)
-        await self.conn.execute(f"""UPDATE thorny.inventory 
-                                    SET item_count = $1 
-                                    WHERE inventory_id = $2""", count, self.inventory_id)
 
     def append(self, item_id, count):
+        error = False
+        added = False
         for item_data in self.all_item_metadata:
             if item_data["friendly_id"] == item_id and count <= item_data["max_item_count"]:
                 item = {
@@ -191,13 +146,14 @@ class ThornyUserInventory:
                     "item_cost": item_data["item_cost"],
                     "redeemable": item_data["redeemable"]
                 }
-                self.slots.append(ThornyUserSlot(None, None, item))
-                return False
+                self.slots.append(ThornyUserSlot(self.id, self.pool, item))
+                error = False
+                added = True
+                return error, added
             else:
-                return True
-
-    async def delete(self):
-        await self.conn.execute("""DELETE FROM thorny.inventory WHERE inventory_id = $1""", self.inventory_id)
+                error = True
+                added = False
+        return error, added
 
 
 @dataclass
@@ -208,9 +164,9 @@ class ThornyUserStrike:
     manager_id: int
     reason: str
 
-    def __init__(self, thorny_id, pool, strike):
+    def __init__(self, thorny_id, pool_object, strike):
         self.id = thorny_id
-        self.pool = pool
+        self.pool = pool_object
         self.strike_id = strike['strike_id']
         self.manager_id = strike['manager_id']
         self.reason = strike['reason']
@@ -231,15 +187,13 @@ class ThornyUserStrikes:
             self.strikes.append(ThornyUserStrike(self.id, self.pool, strike))
         self.original_strikes = self.strikes
 
-    async def insert(self, manager: discord.Member, reason: str):
-        await self.conn.execute("""
-                                INSERT INTO thorny.strikes(thorny_user_id, manager_id, reason)
-                                VALUES($1, $2, $3)
-                                """,
-                                self.id, manager.id, reason)
-        strike_id = await self.conn.fetchrow('SELECT strike_id '
-                                             'FROM thorny.strikes '
-                                             'ORDER BY strike_id DESC')
+    async def append(self, manager_id, reason):
+        strike = {
+            "strike_id": 0,
+            "manager_id": manager_id,
+            "reason": reason
+        }
+        self.strikes.append(ThornyUserStrike(self.id, self.pool, strike))
 
 
 @dataclass
@@ -261,29 +215,6 @@ class ThornyUserCounters:
                 self.ticket_last_purchase = counter['datetime']
             elif counter['counter_name'] == 'level_last_message':
                 self.level_last_message = counter['datetime']
-
-    async def update(self, counter: str, value):
-        self.__setattr__(counter, value)
-        if type(value) == int:
-            await self.conn.execute(f"""UPDATE thorny.counter SET count=$1 
-                                        WHERE thorny_user_id = $2 AND counter_name = $3""", value, self.id, counter)
-        else:
-            await self.conn.execute(f"""UPDATE thorny.counter SET datetime=$1 
-                                        WHERE thorny_user_id = $2 AND counter_name = $3""", value, self.id, counter)
-
-    async def commit(self):
-        await self.conn.execute("""
-                                UPDATE thorny.counter
-                                SET count = $1 
-                                WHERE thorny_user_id = $2 AND counter_name = $3
-                                """,
-                                self.ticket_count, self.id, "ticket_count")
-        await self.conn.execute("""
-                                UPDATE thorny.counter
-                                SET ticket_last_purchase = $1 
-                                WHERE thorny_user_id = $2 AND counter_name = $3
-                                """,
-                                self.ticket_last_purchase, self.id, "ticket_last_purchase")
 
 
 @dataclass
