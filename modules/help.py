@@ -1,33 +1,36 @@
 import discord
 from discord.ext import commands
-import functions as func
+from thorny_core import functions as func
 import json
-import dbutils
 
 v = json.load(open('version.json', 'r'))['version']
 
+home_embed = None
+help_dict = {}
+
 
 class Dropdown(discord.ui.View):
-    options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🚀",
+    options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡",
                                     default=True),
                discord.SelectOption(label="Bank",
-                                    description="Commands to do with money, such as /pay, /balance view",
-                                    emoji="<:Nug:884320353202081833>"),
+                                    description="Money Commands",
+                                    emoji="💳"),
                discord.SelectOption(label="Leaderboard",
-                                    description="All of the available Leaderboards", emoji="🔢"),
+                                    description="All of the available Leaderboards", emoji="🏅"),
                discord.SelectOption(label="Inventory",
-                                    description="Commands to do with the Inventory and Store, such as /store buy",
-                                    emoji="📦"),
+                                    description="Inventory and Store Commands",
+                                    emoji="🎒"),
                discord.SelectOption(label="Information",
-                                    description="Informative commands, like /new, /kingdom", emoji="💡"),
+                                    description="Informative commands, like /new, /kingdom", emoji="🔰"),
                discord.SelectOption(label="Profile", description="Everything to do with your profile", emoji="📝"),
-               discord.SelectOption(label="Moderation", description="All Moderation Commands", emoji="🛡️"),
-               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⏱")]
+               discord.SelectOption(label="Moderation", description="All Moderation Commands", emoji="📢"),
+               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⌛"),
+               discord.SelectOption(label="Level", description="Level commands", emoji="✨")]
 
     @discord.ui.select(placeholder="Click on a category to see its commands",
                        min_values=1, max_values=1, options=options)
     async def callback(self, select, interaction):
-        cmd = select.values[0]
+        category = select.values[0]
         for item in select.options:
             if item.label == select.values[0]:
                 index = select.options.index(item)
@@ -35,25 +38,21 @@ class Dropdown(discord.ui.View):
             else:
                 index = select.options.index(item)
                 select.options[index].default = False
-        if cmd == "Home":
+        if category == "Home":
             help_embed = home_embed
         else:
-            help_embed = discord.Embed(title=f"{cmd} | Thorny Help Center",
+            help_embed = discord.Embed(title=f"{category} | Thorny Help Center",
                                        description="Scroll through the commands list to see all commands!",
                                        color=0x65b39b)
             text = ''
-            cmd = cmd.capitalize()
-            for command in help_dict[f'{cmd}']:
-                if not command['alias']:
-                    text = f"{text}**/{command['name']}"
-                else:
-                    text = f"{text}**/{command['name']}/{'/'.join(command['alias'])}"
+            category = category.capitalize()
+            for command in help_dict[f'{category}']:
                 if command['usage'] == "":
-                    text = f"{text}**\n```{command['desc']}```\n"
+                    text = f"{text}**/{command['name']}**\n```{command['desc']}```\n"
                 else:
-                    text = f"{text} {command['usage']}**\n```{command['desc']}```\n"
+                    text = f"{text}**/{command['name']} {command['usage']}**\n```{command['desc']}```\n"
             help_embed.set_footer(text=f"{v} | I add fun little messages here, always check down here!")
-            help_embed.add_field(name=f"**{cmd} Commands**",
+            help_embed.add_field(name=f"**{category} Commands**",
                                  value=f"{text}")
         await interaction.response.edit_message(embed=help_embed, view=select.view)
 
@@ -64,9 +63,8 @@ class Help(commands.Cog):
 
     @commands.slash_command(description="Access the Thorny Help Center")
     async def help(self, ctx):
-        global help_dict
+        global help_dict, home_embed
         help_dict = await func.generate_help_dict(self, ctx)
-        global home_embed
 
         home_embed = discord.Embed(title="Home | Thorny Help Center",
                                    description="Scroll through the commands list to see all commands!",

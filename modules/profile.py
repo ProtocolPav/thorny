@@ -3,8 +3,9 @@ import discord
 from discord.ext import commands
 from discord import utils
 import json
-from thorny_code import functions as func
-from thorny_code import dbclass as db
+from thorny_core import functions as func
+from thorny_core.dbcommit import commit
+from thorny_core.dbfactory import ThornyFactory
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -27,8 +28,9 @@ class Profile(commands.Cog):
         if user is None:
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
-        thorny_user = await db.ThornyFactory.build(user)
-        await thorny_user.update("kingdom", kingdom)
+        thorny_user = await ThornyFactory.build(user)
+        thorny_user.kingdom = kingdom
+        await commit(thorny_user)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
             is_donator = f'I donated to Everthorn!\n'
@@ -69,7 +71,6 @@ class Profile(commands.Cog):
                                           f"**Total:** "
                                           f"{thorny_user.playtime.total_playtime}", inline=True)
         if thorny_user.profile.aboutme_shown:
-
             profile_embed.add_field(name=f'**:person_raising_hand: About Me**',
                                     value=f'"{thorny_user.profile.aboutme}"', inline=False)
         if thorny_user.profile.lore_shown:
@@ -88,19 +89,18 @@ class Profile(commands.Cog):
                    section: discord.Option(str, "Pick a section of your profile to edit",
                                            autocomplete=utils.basic_autocomplete(profile_edit_sections)),
                    value):
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        update = await thorny_user.profile.update(section, value)
-        if update is not None:
-            await ctx.respond(embed=update, ephemeral=True)
-        else:
-            await Profile.view(self, ctx)
+        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user.profile.update(section, value)
+        await commit(thorny_user)
+        await Profile.view(self, ctx)
 
     @profile.command(description="Toggle visibility of a category on your profile")
     async def toggle(self, ctx,
                      category: discord.Option(str, "Pick a category to show/hide!",
                                               autocomplete=utils.basic_autocomplete(profile_edit_categories))):
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        await thorny_user.profile.toggle(f"{category}_shown")
+        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user.profile.update(f"{category}_shown", toggle=True)
+        await commit(thorny_user)
         await Profile.view(self, ctx)
 
     @profile.command(description="See all of the sections in the profile, and how to edit them")
@@ -151,6 +151,7 @@ class Profile(commands.Cog):
             date = f'{month} {day}'
             date_system = datetime.strptime(date, "%B %d")
 
-        thorny_user = await db.ThornyFactory.build(ctx.author)
-        await thorny_user.update("birthday", date_system)
+        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user.birthday = date_system
+        await commit(thorny_user)
         await ctx.respond(f"Your Birthday is set to: **{date}**", ephemeral=True)

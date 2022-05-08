@@ -1,19 +1,22 @@
 from datetime import datetime, timedelta
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-import logs
-import dbutils
-import dbclass
-import connection_pool
+import giphy_client
+from dbfactory import ThornyFactory
+import dbevent as ev
+from dbevent import Event
 import json
-from thorny_code.modules import help, inventory, leaderboard, playtime, moderation, bank, gateway, profile
+import random
+from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
-#  Git test check
+
+api_instance = giphy_client.DefaultApi()
+giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
@@ -32,21 +35,7 @@ async def on_ready():
                                     name=f"you... | {v}")
     print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
-    print(f"[SERVER] I am in {len(dbutils.select_all_guilds(thorny))} Guilds")
-    connection_pool.pool.assign(await dbclass.connection())
-
-    print(dbutils.select_all_guilds(thorny))
-
-@thorny.command()
-@commands.has_permissions(administrator=True)
-async def update(ctx):
-    members = await dbutils.simple_select('user', 'thorny_user_id')
-    for member in members:
-        counter = await dbutils.condition_select('counter', 'counter_name', 'thorny_user_id', member[0])
-        print(member, counter)
-        if not counter:
-            await dbutils.insert_counters(member[0])
-            print("[SERVER] Inserted counters for Thorny ID", member[0])
+    print(f"[SERVER] I am in {len(thorny.guilds)} Guilds")
 
 
 @thorny.slash_command()
@@ -65,44 +54,71 @@ async def changelog(ctx, ver=v):
 
 @thorny.event
 async def on_message(message):
-    if message.content.lower() == 'hello':
-        await message.channel.send("Hi!")
-    elif message.content.lower() == 'pav':
-        await message.channel.send('Yes. He is Pav.')
-    elif message.content.lower() == 'yesss':
-        await message.channel.send('WOOOOOOOO!!!!!')
-    elif 'scream' in message.content.lower():
-        await message.channel.send('AAAHHHHHHHHHH')
-    elif 'baffl' in message.content.lower():
-        await message.channel.send("Is that right?")
-    elif message.content.startswith('!'):
+    exact = config['exact_responses']
+    wildcard = config['wildcard_responses']
+    if message.author != thorny.user:
+        if message.content.lower() in exact:
+            response_list = exact[message.content.lower()]
+            response = response_list[random.randint(0, len(response_list) - 1)]
+            await message.channel.send(response)
+        else:
+            for invoker in wildcard:
+                if invoker in message.content.lower():
+                    response_list = wildcard[invoker]
+                    response = response_list[random.randint(0, len(response_list) - 1)]
+                    await message.channel.send(response)
+
+    if message.content.startswith('!'):
         await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*\n"
                                    "*This message will be going away soon, so learn the commands!*")
 
 
-    await thorny.process_commands(message)  # Not putting this on on_message breaks all .command()
-
-
 @thorny.listen()
 async def on_message(message):
-    banned_words = ['nigga', 'nigg', 'nigger', 'fag', 'faggot', 'shota', 'f*g', 'n*gg']
+    banned_words = config['banned_words']
     for word in banned_words:
-        if word in message.content.lower():
+        if word in message.content.lower() and message.author != thorny.user:
             await message.delete()
 
 
+@thorny.listen()
+async def on_message(message: discord.Message):
+    if message.author != thorny.user:
+        thorny_user = await ThornyFactory.build(message.author)
+        if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
+            event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
+            data = await event.log_event_in_database()
+            if data.level_up:
+                api_response = api_instance.gifs_search_get(giphy_token, f"{data.user.profile.level}", limit=5)
+                gifs_list = list(api_response.data)
+                gif = random.choice(gifs_list)
+
+                level_up_embed = discord.Embed(colour=message.author.colour)
+                level_up_embed.set_author(name=message.author, icon_url=message.author.display_avatar.url)
+                level_up_embed.add_field(name=f":partying_face: Congrats!",
+                                         value=f"You leveled up to **Level {data.user.profile.level}!**\n"
+                                               f"Keep chatting and maybe, just maybe, you'll beat the #1")
+                level_up_embed.set_image(url=gif.images.original.url)
+                await message.channel.send(embed=level_up_embed)
+
+
 @thorny.event
-async def on_message_delete(message):
-    log_embed = logs.message_delete(message)
-    stafflogs = thorny.get_channel(config['channels']['event_logs'])
-    await stafflogs.send(embed=log_embed)
+async def on_message_delete(message: discord.Message):
+    if message.author != thorny.user:
+        thorny_user = await ThornyFactory.build(message.author)
+        event: Event = await ev.fetch(ev.MessageDelete, thorny_user, thorny)
+        event.metadata.deleted_message = message
+        await event.log_event_in_discord()
 
 
 @thorny.event
 async def on_message_edit(before, after):
-    log_embed = logs.message_edit(before, after)
-    stafflogs = thorny.get_channel(config['channels']['event_logs'])
-    await stafflogs.send(embed=log_embed)
+    if before.author != thorny.user:
+        thorny_user = await ThornyFactory.build(before.author)
+        event: Event = await ev.fetch(ev.MessageEdit, thorny_user, thorny)
+        event.metadata.message_before = before
+        event.metadata.message_after = after
+        await event.log_event_in_discord()
 
 
 @thorny.event
@@ -143,33 +159,34 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member):
-    await dbclass.ThornyFactory.create([member])
+    await ThornyFactory.create([member])
 
 
 @thorny.event
 async def on_member_remove(member):
-    await dbclass.ThornyFactory.deactivate([member])
+    await ThornyFactory.deactivate([member])
 
 
 @thorny.event
 async def on_guild_join(guild):
     print(f"I joined {guild.name}")
     member_list = await guild.fetch_members().flatten()
-    await dbclass.ThornyFactory.create(member_list)
+    await ThornyFactory.create(member_list)
 
 
 @thorny.event
 async def on_guild_remove(guild):
     print(f"I left {guild.name}")
     member_list = guild.members
-    await dbclass.ThornyFactory.deactivate(member_list)
+    await ThornyFactory.deactivate(member_list)
 
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
-thorny.add_cog(gateway.Information(thorny))
+thorny.add_cog(information.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
+thorny.add_cog(level.Level(thorny))
 thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)
