@@ -2,10 +2,14 @@ import discord
 from discord.ext import commands
 import json
 from thorny_core import errors
+import giphy_client
 import random
 
 config_file = open('./../thorny_data/config.json', 'r')
 config = json.load(config_file)
+
+api_instance = giphy_client.DefaultApi()
+token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
 
 class Fun(commands.Cog):

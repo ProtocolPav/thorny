@@ -13,18 +13,19 @@ class Dropdown(discord.ui.View):
     options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡",
                                     default=True),
                discord.SelectOption(label="Bank",
-                                    description="Commands to do with money, such as /pay, /balance view",
+                                    description="Money Commands",
                                     emoji="💳"),
                discord.SelectOption(label="Leaderboard",
                                     description="All of the available Leaderboards", emoji="🏅"),
                discord.SelectOption(label="Inventory",
-                                    description="Commands to do with the Inventory and Store, such as /store buy",
+                                    description="Inventory and Store Commands",
                                     emoji="🎒"),
                discord.SelectOption(label="Information",
                                     description="Informative commands, like /new, /kingdom", emoji="🔰"),
                discord.SelectOption(label="Profile", description="Everything to do with your profile", emoji="📝"),
                discord.SelectOption(label="Moderation", description="All Moderation Commands", emoji="📢"),
-               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⌛")]
+               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⌛"),
+               discord.SelectOption(label="Level", description="Level commands", emoji="✨")]
 
     @discord.ui.select(placeholder="Click on a category to see its commands",
                        min_values=1, max_values=1, options=options)

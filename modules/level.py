@@ -1,23 +1,46 @@
 import discord
 from discord.ext import commands
 
-import json
-from thorny_core import errors, dbclass as db
 from thorny_core.dbfactory import ThornyFactory
-from thorny_core import logs
-from thorny_core import functions as func
 from thorny_core import dbutils
-from thorny_core import dbevent as ev
 
 
 class Level(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command()
-    async def rank(self, ctx):
-        thorny_user = await ThornyFactory.build(ctx.author)
-        percentage = round(thorny_user.profile.xp / thorny_user.profile.required_xp, 2)
-        await ctx.respond(f"You are level {thorny_user.profile.level}.\n"
-                          f"You have {int(percentage*100)}% xp towards you next level.\n"
-                          f"You are {thorny_user.profile.required_xp - thorny_user.profile.xp} away from next level.")
+    @commands.slash_command(description="See someone's Thorny Level, as well as their rank")
+    async def level(self, ctx, user: discord.Member = None):
+        if user is None:
+            user = ctx.author
+        thorny_user = await ThornyFactory.build(user)
+        last_required_xp = 100
+        for lvl in range(1, thorny_user.profile.level):
+            last_required_xp += (lvl ** 2) * 4 + (50 * lvl) + 100
+        total_xp_to_gain = thorny_user.profile.required_xp - last_required_xp
+        xp_gained = thorny_user.profile.xp - last_required_xp
+        if xp_gained == 0 or total_xp_to_gain == 0:
+            percentage = 0
+        else:
+            percentage = round(xp_gained / total_xp_to_gain, 2)
+        percentage *= 100
+
+        rank_embed = discord.Embed(colour=user.colour)
+        rank_embed.set_author(name=user.name, icon_url=user.display_avatar.url)
+        rank_embed.set_thumbnail(url=user.display_avatar.url)
+        progressbar = ""
+        for i in range(int(percentage/10)):
+            progressbar = f"{progressbar}:green_square:"
+        for i in range(10 - int(percentage/10)):
+            progressbar = f"{progressbar}:white_large_square:"
+
+        levels_leaderboard = dbutils.Leaderboard()
+        await levels_leaderboard.select_levels(ctx, user)
+        user_rank = levels_leaderboard.user_rank
+
+        rank_embed.add_field(name=f"You are Level {thorny_user.profile.level}!",
+                             value=f"**Your Rank:** #{user_rank} on the Leaderboard\n"
+                                   f"**Lv.{thorny_user.profile.level}** {progressbar} "
+                                   f"**Lv.{thorny_user.profile.level + 1}**\n\n"
+                                   f"Level {thorny_user.profile.level} is {int(percentage)}% Complete")
+        await ctx.respond(embed=rank_embed)

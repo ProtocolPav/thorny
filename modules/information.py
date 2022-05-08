@@ -4,6 +4,7 @@ import random
 import discord
 from discord.ext import commands
 from thorny_core import dbutils
+from thorny_core.dbfactory import ThornyFactory
 from discord import utils
 
 
@@ -14,17 +15,6 @@ class Information(commands.Cog):
     k_list = ["Ambria", "Asbahamael", "Dalvasha", "Eireann", "Stregabor"]
     edit_list = ["ruler_name", "capital", "alliances", "town_count", "slogan", "border_type",
                  "gov_type", "description", "lore"]
-
-    @commands.slash_command()
-    async def new(self, ctx):
-        file_new_cmd = open("./../thorny_data/new_command.txt", "r").read()
-        config_file = open('./../thorny_data/config.json', 'r+')
-        config = json.load(config_file)
-        await ctx.respond(file_new_cmd.format(config['kingdoms']['ambria']['ruler'],
-                                              config['kingdoms']['asbahamael']['ruler'],
-                                              config['kingdoms']['dalvasha']['ruler'],
-                                              config['kingdoms']['eireann']['ruler'],
-                                              config['kingdoms']['stregabor']['ruler']))
 
     @commands.slash_command(description="Shows the kingdom description for the kingdom")
     async def kingdom(self, ctx,
@@ -61,7 +51,9 @@ class Information(commands.Cog):
     @commands.slash_command(description="Ruler Only | Edit what your Kingdom Command says")
     @commands.has_role('Ruler')
     async def kedit(self, ctx, field: discord.Option(str, autocomplete=utils.basic_autocomplete(edit_list)), value):
-        kingdom = await dbutils.condition_select('user', 'kingdom', 'user_id', ctx.author.id)
+        thorny_user = await ThornyFactory.build(ctx.author)
+        selector = dbutils.Base()
+        kingdom = await selector.select('kingdom', 'user', 'thorny_user_id', thorny_user.id)
 
         update = await dbutils.Kingdom.update_kingdom(kingdom[0][0], field, value)
         if update == "length_error":
@@ -82,7 +74,8 @@ class Information(commands.Cog):
 
     @commands.slash_command(description="Search the database for gamertags")
     async def gtsearch(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
-        gamertags = await dbutils.Profile.select_gamertags(gamertag, ctx.guild.id)
+        selector = dbutils.Base()
+        gamertags = await selector.select_gamertags(ctx.guild.id, gamertag)
         send_text = []
         for tag in gamertags:
             send_text.append(f"<@{tag['user_id']}> • {tag['gamertag']}")

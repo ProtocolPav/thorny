@@ -74,9 +74,10 @@ class Playtime(commands.Cog):
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
         thorny_user = await ThornyFactory.build(ctx.author)
-        adjusting: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client,
-                                                   adjust_hour=hours, adjust_minute=minutes)
-        metadata = await adjusting.log_event_in_database()
+        event: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client)
+        event.metadata.adjusting_hour = abs(hours)
+        event.metadata.adjusting_minute = abs(minutes)
+        metadata = await event.log_event_in_database()
 
         if metadata.database_log:
             await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
@@ -89,7 +90,8 @@ class Playtime(commands.Cog):
 
     @commands.slash_command(description="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
-        connected = await dbutils.Activity.select_online()
+        selector = dbutils.Base()
+        connected = await selector.select_online()
         online_text = ''
         afk_text = ''
         for player in connected:

@@ -92,8 +92,7 @@ class Bank(commands.Cog):
                 await ctx.respond(f"{user.mention} You've been paid!")
                 await ctx.edit(content=None, embed=pay_embed)
 
-                event: ev.PlayerTransaction = await ev.fetch(ev.PlayerTransaction,
-                                                             payable_user, self.client, payable_user.conn)
+                event: ev.PlayerTransaction = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
                 event.metadata.sender_user = payable_user
                 event.metadata.receiver_user = receivable_user
                 event.metadata.nugs_amount = amount
