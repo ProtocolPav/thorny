@@ -56,8 +56,8 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def baledit(self, ctx, user: discord.Member,
                       amount: discord.Option(int, "Put a - if you want to remove nugs")):
-        bank_log = self.client.get_channel(config['channels']['bank_logs'])
-        await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
+        # bank_log = self.client.get_channel(config['channels']['bank_logs'])
+        # await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
 
         thorny_user = await ThornyFactory.build(user)
         thorny_user.balance += amount
