@@ -72,55 +72,54 @@ class ThornyFactory:
                                          inventory=user_inventory,
                                          item_data=item_data,
                                          counters=user_counters)
-            #  print("[DATABASE] Built ThornyUser object for ID", thorny_id)
             return ThornyUser(master_datalayer)
 
     @classmethod
     async def create(cls, member_list: list[discord.Member]):
-        conn = await pool.acquire_connection()
-        for member in member_list:
-            if not member.bot:
-                user_id = member.id
-                guild_id = member.guild.id
-                user = await conn.fetchrow("""SELECT * FROM thorny.user
-                                              WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
-                if user is None:
-                    await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
-                                          VALUES($1, $2, $3, $4, $5)""",
-                                       user_id, guild_id, datetime.now(), 25, member.name)
-                    thorny_id = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
-                                                       WHERE user_id=$1 AND guild_id=$2""", user_id, guild_id)
-                    await conn.execute("""INSERT INTO thorny.user_activity(thorny_user_id)
-                                          VALUES($1)""", thorny_id[0])
-                    await conn.execute("""INSERT INTO thorny.profile(thorny_user_id)
-                                          VALUES($1)""", thorny_id[0])
-                    await conn.execute("""INSERT INTO thorny.levels(thorny_user_id)
-                                          VALUES($1)""", thorny_id[0])
-                    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, count)
-                                          VALUES($1, $2, $3)""", thorny_id[0], 'ticket_count', 0)
-                    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
-                                          VALUES($1, $2, $3)""", thorny_id[0], 'ticket_last_purchase', datetime.now())
-                    await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
-                                          VALUES($1, $2, $3)""", thorny_id[0], 'level_last_message', datetime.now())
-                    print("[SERVER] User profile created with Thorny ID", thorny_id[0])
-                else:
-                    await conn.execute("""UPDATE thorny.user
-                                          SET active = True WHERE thorny_user_id = $1""", user['thorny_user_id'])
-                    print(f"[SERVER] Reactivated account of {user['username']}, Thorny ID {user['thorny_user_id']}")
+        async with pool.pool.acquire() as conn:
+            for member in member_list:
+                if not member.bot:
+                    user_id = member.id
+                    guild_id = member.guild.id
+                    user = await conn.fetchrow("""SELECT * FROM thorny.user
+                                                  WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
+                    if user is None:
+                        await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
+                                              VALUES($1, $2, $3, $4, $5)""",
+                                           user_id, guild_id, datetime.now(), 25, member.name)
+                        thorny_id = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
+                                                           WHERE user_id=$1 AND guild_id=$2""", user_id, guild_id)
+                        await conn.execute("""INSERT INTO thorny.user_activity(thorny_user_id)
+                                              VALUES($1)""", thorny_id[0])
+                        await conn.execute("""INSERT INTO thorny.profile(thorny_user_id)
+                                              VALUES($1)""", thorny_id[0])
+                        await conn.execute("""INSERT INTO thorny.levels(thorny_user_id)
+                                              VALUES($1)""", thorny_id[0])
+                        await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, count)
+                                              VALUES($1, $2, $3)""", thorny_id[0], 'ticket_count', 0)
+                        await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                              VALUES($1, $2, $3)""", thorny_id[0], 'ticket_last_purchase', datetime.now())
+                        await conn.execute("""INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
+                                              VALUES($1, $2, $3)""", thorny_id[0], 'level_last_message', datetime.now())
+                        print("[SERVER] User profile created with Thorny ID", thorny_id[0])
+                    else:
+                        await conn.execute("""UPDATE thorny.user
+                                              SET active = True WHERE thorny_user_id = $1""", user['thorny_user_id'])
+                        print(f"[SERVER] Reactivated account of {user['username']}, Thorny ID {user['thorny_user_id']}")
 
     @classmethod
     async def deactivate(cls, member_list: list[discord.Member]):
-        conn = await pool.acquire_connection()
-        for member in member_list:
-            if not member.bot:
-                thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
-                                                     WHERE user_id = $1 AND guild_id = $2""",
-                                                  member.id, member.guild.id)
-                thorny_id = thorny_user['thorny_user_id']
-                await conn.execute("""UPDATE thorny.user
-                                      SET active = False WHERE thorny_user_id = $1""",
-                                   thorny_id)
-                print(f"[SERVER] Deactivated account of {thorny_user['username']}, Thorny ID {thorny_id}")
+        async with pool.pool.acquire() as conn:
+            for member in member_list:
+                if not member.bot:
+                    thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
+                                                         WHERE user_id = $1 AND guild_id = $2""",
+                                                      member.id, member.guild.id)
+                    thorny_id = thorny_user['thorny_user_id']
+                    await conn.execute("""UPDATE thorny.user
+                                          SET active = False WHERE thorny_user_id = $1""",
+                                       thorny_id)
+                    print(f"[SERVER] Deactivated account of {thorny_user['username']}, Thorny ID {thorny_id}")
 
 
 @dataclass

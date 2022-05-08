@@ -118,7 +118,6 @@ async def commit(thorny_user: ThornyUser):
 
             original_slots = thorny_user.inventory.original_slots
             slots = thorny_user.inventory.slots
-            print(original_slots, slots)
             if len(original_slots) > len(slots):
                 for slot in original_slots:
                     if slot not in slots:

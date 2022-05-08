@@ -38,6 +38,10 @@ class EventMetadata:
 
     level_up: bool = False
 
+    message_before: discord.Message = None
+    message_after: discord.Message = None
+    deleted_message: discord.Message = None
+
 
 class Event:
     def __init__(self, metadata: EventMetadata):
@@ -217,11 +221,11 @@ class GainXP(Event):
     async def log_event_in_database(self) -> EventMetadata:
         thorny_user = self.metadata.user
         thorny_user.counters.level_last_message = datetime.now()
-        thorny_user.profile.xp += random.randint(2, 14)
+        thorny_user.profile.xp += random.randint(5, 16)
         if thorny_user.profile.xp >= thorny_user.profile.required_xp:
             thorny_user.profile.level += 1
             lv = thorny_user.profile.level
-            thorny_user.profile.required_xp = (lv ** 2) * 4 + (60 * lv) + 100
+            thorny_user.profile.required_xp += (lv ** 2) * 4 + (50 * lv) + 100
             self.metadata.level_up = True
         await commit(thorny_user)
         self.metadata.user = thorny_user
@@ -232,7 +236,46 @@ class GainXP(Event):
         pass
 
 
-async def fetch(event, thorny_user: ThornyUser, client, adjust_hour=None, adjust_minute=None):
+class MessageEdit(Event):
+    def __init__(self, metadata):
+        super().__init__(metadata)
+
+    async def log_event_in_database(self) -> EventMetadata:
+        pass
+
+    async def log_event_in_discord(self):
+        if self.metadata.message_before.content != self.metadata.message_after.content:
+            log_embed = discord.Embed(color=0xF4C430)
+            log_embed.add_field(name="**Message Edited**",
+                                value=f"{self.user.member_object.mention} edited a message in "
+                                      f"<#{self.metadata.message_before.channel.id}>:\n"
+                                      f"**BEFORE:**\n{self.metadata.message_before.content}\n"
+                                      f"**AFTER:**\n{self.metadata.message_after.content}")
+            log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+            logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
+            await logs_channel.send(embed=log_embed)
+
+
+class MessageDelete(Event):
+    def __init__(self, metadata):
+        super().__init__(metadata)
+
+    async def log_event_in_database(self) -> EventMetadata:
+        pass
+
+    async def log_event_in_discord(self):
+        if self.metadata.deleted_message is not None:
+            log_embed = discord.Embed(color=0xF4C430)
+            log_embed.add_field(name="**Message Deleted**",
+                                value=f"{self.user.member_object.mention} deleted a message in "
+                                      f"<#{self.metadata.deleted_message.channel.id}>:"
+                                      f"\n{self.metadata.deleted_message.content}")
+            log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+            logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
+            await logs_channel.send(embed=log_embed)
+
+
+async def fetch(event, thorny_user: ThornyUser, client):
     metadata = EventMetadata(thorny_user, client, thorny_user.pool, datetime.now().replace(microsecond=0))
     async with thorny_user.pool.acquire() as connection:
         metadata.recent_connection = await connection.fetchrow("""
@@ -241,6 +284,4 @@ async def fetch(event, thorny_user: ThornyUser, client, adjust_hour=None, adjust
                                                                ORDER BY connect_time DESC
                                                                """,
                                                                thorny_user.id)
-        metadata.adjusting_hour = adjust_hour
-        metadata.adjusting_minute = adjust_minute
         return event(metadata)

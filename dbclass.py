@@ -155,6 +155,13 @@ class ThornyUserInventory:
                 added = False
         return error, added
 
+    def fetch(self, item_id):
+        for item in self.slots:
+            if item.item_id == item_id:
+                return item
+            else:
+                return None
+
 
 @dataclass
 class ThornyUserStrike:

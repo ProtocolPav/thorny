@@ -34,20 +34,21 @@ async def generate_help_dict(self, ctx):
             cmd_num += 1
             if isinstance(command, discord.SlashCommandGroup):
                 for subcommand in command.walk_commands():
-                    options = ''
-                    for item in subcommand.options:
-                        if item.required is True:
-                            options = f"{options} <{item.name}>"
-                        else:
-                            options = f"{options} [{item.name}]"
-                    if not subcommand.checks:
-                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
-                                                    "desc": subcommand.description,
-                                                    "alias": None, 'usage': options, 'example': None})
-                    elif subcommand.checks and ctx.author.guild_permissions.administrator:
-                        help_dict[f"{cog}"].append({"name": f"{command.name} {subcommand.name}",
-                                                    "desc": subcommand.description,
-                                                    "alias": None, 'usage': options, 'example': None})
+                    if isinstance(subcommand, discord.SlashCommand):
+                        options = ''
+                        for item in subcommand.options:
+                            if item.required is True:
+                                options = f"{options} <{item.name}>"
+                            else:
+                                options = f"{options} [{item.name}]"
+                        if not subcommand.checks:
+                            help_dict[f"{cog}"].append({"name": f"{subcommand}",
+                                                        "desc": subcommand.description,
+                                                        "alias": None, 'usage': options, 'example': None})
+                        elif subcommand.checks and ctx.author.guild_permissions.administrator:
+                            help_dict[f"{cog}"].append({"name": f"{subcommand}",
+                                                        "desc": subcommand.description,
+                                                        "alias": None, 'usage': options, 'example': None})
             elif isinstance(command, discord.SlashCommand):
                 options = ''
                 for item in command.options:
@@ -63,12 +64,4 @@ async def generate_help_dict(self, ctx):
                     help_dict[f"{cog}"].append({"name": command.name,
                                                 "desc": command.description,
                                                 "alias": None, 'usage': options, 'example': None})
-            elif not command.hidden:
-                help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
-                                            "alias": command.aliases, "desc": command.help,
-                                            "example": command.brief})
-            elif command.hidden and ctx.author.guild_permissions.administrator:
-                help_dict[f"{cog}"].append({"name": command.name, "usage": command.signature,
-                                            "alias": command.aliases, "desc": command.help,
-                                            "example": command.brief})
     return help_dict

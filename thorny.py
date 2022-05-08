@@ -3,12 +3,10 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 
-import logs
-import dbutils
-from dbcommit import commit
-import connection_pool
+import giphy_client
 from dbfactory import ThornyFactory
-import dbevent
+import dbevent as ev
+from dbevent import Event
 import json
 import random
 from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level
@@ -16,6 +14,9 @@ from modules import bank, help, information, inventory, leaderboard, moderation,
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
+
+api_instance = giphy_client.DefaultApi()
+giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
 ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
 if ans == 't':
@@ -35,18 +36,6 @@ async def on_ready():
     print(f"[ONLINE] {thorny.user}\n[SERVER] Running {v}\n[SERVER] Date is {datetime.now()}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[SERVER] I am in {len(thorny.guilds)} Guilds")
-
-
-@thorny.command()
-@commands.has_permissions(administrator=True)
-async def update(ctx):
-    members = await dbutils.simple_select('user', 'thorny_user_id')
-    for member in members:
-        counter = await dbutils.condition_select('counter', 'counter_name', 'thorny_user_id', member[0])
-        print(member, counter)
-        if not counter:
-            await dbutils.insert_counters(member[0])
-            print("[SERVER] Inserted counters for Thorny ID", member[0])
 
 
 @thorny.slash_command()
@@ -97,24 +86,39 @@ async def on_message(message: discord.Message):
     if message.author != thorny.user:
         thorny_user = await ThornyFactory.build(message.author)
         if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
-            event: dbevent.GainXP = await dbevent.fetch(dbevent.GainXP, thorny_user, thorny, thorny_user.pool)
+            event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
             data = await event.log_event_in_database()
             if data.level_up:
-                await message.channel.send(f"You leveled up to level {data.user.profile.level}!")
+                api_response = api_instance.gifs_search_get(giphy_token, f"{data.user.profile.level}", limit=5)
+                gifs_list = list(api_response.data)
+                gif = random.choice(gifs_list)
+
+                level_up_embed = discord.Embed(colour=message.author.colour)
+                level_up_embed.set_author(name=message.author, icon_url=message.author.display_avatar.url)
+                level_up_embed.add_field(name=f":partying_face: Congrats!",
+                                         value=f"You leveled up to **Level {data.user.profile.level}!**\n"
+                                               f"Keep chatting and maybe, just maybe, you'll beat the #1")
+                level_up_embed.set_image(url=gif.images.original.url)
+                await message.channel.send(embed=level_up_embed)
 
 
 @thorny.event
-async def on_message_delete(message):
-    log_embed = logs.message_delete(message)
-    stafflogs = thorny.get_channel(config['channels']['event_logs'])
-    await stafflogs.send(embed=log_embed)
+async def on_message_delete(message: discord.Message):
+    if message.author != thorny.user:
+        thorny_user = await ThornyFactory.build(message.author)
+        event: Event = await ev.fetch(ev.MessageDelete, thorny_user, thorny)
+        event.metadata.deleted_message = message
+        await event.log_event_in_discord()
 
 
 @thorny.event
 async def on_message_edit(before, after):
-    log_embed = logs.message_edit(before, after)
-    stafflogs = thorny.get_channel(config['channels']['event_logs'])
-    await stafflogs.send(embed=log_embed)
+    if before.author != thorny.user:
+        thorny_user = await ThornyFactory.build(before.author)
+        event: Event = await ev.fetch(ev.MessageEdit, thorny_user, thorny)
+        event.metadata.message_before = before
+        event.metadata.message_after = after
+        await event.log_event_in_discord()
 
 
 @thorny.event
