@@ -31,7 +31,8 @@ class Bank(commands.Cog):
         personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
         kingdom_bal = ''
         if kingdom is not None:
-            treasury_list = await dbutils.condition_select("kingdoms", 'treasury', 'kingdom', kingdom)
+            selector = dbutils.Base()
+            treasury_list = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
             kingdom_bal = f"**{kingdom.capitalize()} Treasury:** <:Nug:884320353202081833>" \
                           f"{treasury_list[0][0]}"
         inventory_text = ''
@@ -53,19 +54,6 @@ class Bank(commands.Cog):
                                 inline=False)
         balance_embed.set_footer(text="Donate to your kingdom with /treasury store")
         await ctx.respond(embed=balance_embed)
-
-    @balance.command(description="CM Only | Edit a player's balance")
-    @commands.has_permissions(administrator=True)
-    async def edit(self, ctx, user: discord.Member, amount: discord.Option(int, "Put a - if you want to remove nugs")):
-        bank_log = self.client.get_channel(config['channels']['bank_logs'])
-        await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
-
-        thorny_user = await ThornyFactory.build(user)
-        thorny_user.balance += amount
-
-        if 'edit' in ctx.command.qualified_name.lower():
-            await ctx.respond(f"{user}'s balance is now **{thorny_user.balance}**! (Added/Removed: {amount})")
-        await commit(thorny_user)
 
     @commands.slash_command(description="Pay a player using nugs")
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
@@ -116,14 +104,16 @@ class Bank(commands.Cog):
         thorny_user.kingdom = kingdom
 
         if kingdom is not None:
-            receivable = await dbutils.condition_select('kingdoms', 'treasury', 'kingdom', kingdom)
+            selector = dbutils.Base()
+            receivable = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
             receivable = receivable[0][0]
 
             if thorny_user.balance - amount < 0:
                 await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
             else:
                 thorny_user.balance -= amount
-                await dbutils.simple_update('kingdoms', 'treasury', receivable + int(amount), 'kingdom', kingdom)
+                selector = dbutils.Base()
+                await selector.update("treasury", receivable + int(amount), "kingdoms", "kingdom", kingdom)
 
                 pay_embed = discord.Embed(color=0xE49B0F)
                 pay_embed.set_author(name=f'{user}', icon_url=user.display_avatar.url)
@@ -143,7 +133,8 @@ class Bank(commands.Cog):
         thorny_user = await ThornyFactory.build(user)
         thorny_user.kingdom = kingdom
 
-        payable = await dbutils.condition_select('kingdoms', 'treasury', 'kingdom', kingdom)
+        selector = dbutils.Base()
+        payable = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
         payable = payable[0][0]
 
         if amount < 0:
@@ -154,7 +145,7 @@ class Bank(commands.Cog):
             await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
         else:
             thorny_user.balance += amount
-            await dbutils.simple_update('kingdoms', 'treasury', payable - amount, 'kingdom', kingdom)
+            await selector.update("treasury", payable - int(amount), "kingdoms", "kingdom", kingdom)
 
             pay_embed = discord.Embed(color=0xE49B0F)
             pay_embed.set_author(name=f'{ctx.author}', icon_url=user.display_avatar.url)
