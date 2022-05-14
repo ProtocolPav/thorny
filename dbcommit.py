@@ -140,4 +140,5 @@ async def commit(thorny_user: ThornyUser):
                 for strike in strikes:
                     if strike not in original_strikes:
                         await insert_strike(strike)
-            print("[DATABASE] Committed ThornyUser with Thorny ID", thorny_user.id, "at", datetime.now())
+            print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed ThornyUser with "
+                  f"Thorny ID", thorny_user.id)

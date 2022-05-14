@@ -1,5 +1,5 @@
 {
-"version": "v1.7.1",
+"version": "v1.7.3",
 "nickname": "Revival",
 "changelogs": {
   "v0.2": "@Thorny#3781 v0.2 is up and running!\n\n**Features**:\n- `!c` and `!dc` commands. You can also use `!link` and `!unlink` if you want.\n- Make the bot remind you when YOU want, simply use `!c 2h` for it to remind you in 2 hours!\n- See your activity using the `!activity [month]` command. See it for july and august!\n- Scream at Thorny in #\ud83c\udf6a\u00e2\u201d\u0192playground using `!scream` and see what happens.",

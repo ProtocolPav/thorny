@@ -1,35 +1,19 @@
 ### Version Info
-Version: v1.7.1  
+Version: v1.7.3  
 Nickname: Revival 
 
 ### Changelog
-
-* Added the ThornyUserSlot and ThornyUserStrike classes to `dbclass.py`
-* Renamed `gateway.py` to `information.py`
-* Added `dbcommit.py`, which will be used to commit transactions into the database
-  * The `commit` function is the main one to be used, at the end of every command which uses ThornyUser
-* Separated the ThornyFactory class from dbclass into its own `dbfactory.py` file
-* Created new ThornyEvent class, and `dbevent.py` file
-  * Stores all events, such as connect, disconnect, adjust, etc.
-* Updated `dbutils.py` to store other functions, such as getting leaderboard info,
-and other non-ThornyUser affiliated things and removed un-used functions
-* Added a new `/events` command, which fetches all current scheduled events
-* Added new updated responses, now stored in `config.json`
-* Fixed a bug where your rank would not show up on leaderboards
-* Added the `/rank` command
-* Added the events for gaining XP and leveling up, as well as their messages
-* Updated leaderboards to give a better rank
-* Added mod force commands
-
-### New Pooling Updates
-* `bank.py` has been fully updated to support the new Pooling Method
-* `inventory.py` has been fully updated
-* `profile.py` has been fully updated
+* Created player Join and Leave events. For now they will be embeds, but soon wil be images
+* Created `/setup` command, which is ran once by the owner. 
 
 ### Database Changes
-* Added `redeemable` (boolean, default True) to `thorny.item_type`
-* Added a new table `guilds` where all guild data is stored. 
-But this needs working on and will be introduced fully in **v1.7.2**
+* Add new table (using SQL script) called guilds. It stores:
+  * Guild IDs
+  * Join Channel ID
+  * General Channel ID
+  * Gulag channel ID
+  * Log channel ID
+  * 
 
 ### Project dependencies
-* Install giphy_client from pip
+None

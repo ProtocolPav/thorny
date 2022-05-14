@@ -1,16 +1,15 @@
-import asyncpg
 import random
 import asyncpg as pg
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
+import giphy_client
 import json
 import discord
-import errors
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from dbclass import ThornyUser
 from dbcommit import commit
-from connection_pool import pool
-import math
+
+api_instance = giphy_client.DefaultApi()
+giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
 
 @dataclass
@@ -37,6 +36,9 @@ class EventMetadata:
     nugs_amount: int = None
 
     level_up: bool = False
+    xp_multiplier: int = 1
+    xp_gained: int = 0
+    level_up_message: discord.Message = None
 
     message_before: discord.Message = None
     message_after: discord.Message = None
@@ -63,6 +65,9 @@ class Event:
         """
         Every class must have this method, but it is different for each
         """
+
+    def edit_metadata(self, attribute, new_val):
+        self.__setattr__(str(attribute), new_val)
 
 
 class ConnectEvent(Event):
@@ -120,7 +125,6 @@ class DisconnectEvent(Event):
 
     async def log_event_in_database(self) -> EventMetadata:
         data = self.metadata
-        print(self.recent_connection)
         async with self.pool.acquire() as conn:
             if self.recent_connection is None or self.recent_connection['disconnect_time'] is not None:
                 data.database_log = False
@@ -221,19 +225,41 @@ class GainXP(Event):
     async def log_event_in_database(self) -> EventMetadata:
         thorny_user = self.metadata.user
         thorny_user.counters.level_last_message = datetime.now()
-        thorny_user.profile.xp += random.randint(5, 16)
+        multiplier = self.metadata.xp_multiplier
+        xp_at_first = thorny_user.profile.xp
+
+        if self.metadata.playtime is None:
+            thorny_user.profile.xp += random.randint(5 * multiplier, 16 * multiplier)
+        else:
+            if not self.metadata.playtime_overtime:
+                time_in_minutes = self.metadata.playtime.total_seconds() / 60
+                thorny_user.profile.xp += (1 * time_in_minutes) * multiplier
+
         if thorny_user.profile.xp >= thorny_user.profile.required_xp:
             thorny_user.profile.level += 1
             lv = thorny_user.profile.level
             thorny_user.profile.required_xp += (lv ** 2) * 4 + (50 * lv) + 100
             self.metadata.level_up = True
         await commit(thorny_user)
+        xp_gain = thorny_user.profile.xp - xp_at_first
+        self.metadata.xp_gained = int(xp_gain)
         self.metadata.user = thorny_user
         self.metadata.database_log = True
         return self.metadata
 
     async def log_event_in_discord(self):
-        pass
+        api_response = api_instance.gifs_search_get(giphy_token, f"{self.metadata.user.profile.level}", limit=10)
+        gifs_list = list(api_response.data)
+        gif = random.choice(gifs_list)
+
+        level_up_embed = discord.Embed(colour=self.metadata.user.member_object.colour)
+        level_up_embed.set_author(name=self.metadata.user.username,
+                                  icon_url=self.metadata.user.member_object.display_avatar.url)
+        level_up_embed.add_field(name=f":partying_face: Congrats!",
+                                 value=f"You leveled up to **Level {self.metadata.user.profile.level}!**\n"
+                                       f"Keep chatting and maybe, just maybe, you'll beat the #1")
+        level_up_embed.set_image(url=gif.images.original.url)
+        await self.metadata.level_up_message.channel.send(embed=level_up_embed)
 
 
 class MessageEdit(Event):
@@ -275,8 +301,63 @@ class MessageDelete(Event):
             await logs_channel.send(embed=log_embed)
 
 
-async def fetch(event, thorny_user: ThornyUser, client):
-    metadata = EventMetadata(thorny_user, client, thorny_user.pool, datetime.now().replace(microsecond=0))
+class UserJoin(Event):
+    def __init__(self, metadata):
+        super().__init__(metadata)
+
+    async def log_event_in_database(self) -> EventMetadata:
+        pass
+
+    async def log_event_in_discord(self):
+        user = self.metadata.user
+        guild = user.member_object.guild
+
+        if str(guild.member_count)[-1] == "1":
+            suffix = "st"
+        elif str(guild.member_count)[-1] == "2":
+            suffix = "nd"
+        elif str(guild.member_count)[-1] == "3":
+            suffix = "rd"
+        else:
+            suffix = "th"
+
+        searches = ["welcome", "hello", "heartfelt welcome", "join us"]
+        api_response = api_instance.gifs_search_get(giphy_token, random.choice(searches), limit=10)
+        gifs_list = list(api_response.data)
+        gif = random.choice(gifs_list)
+
+        join_embed = discord.Embed(colour=0x57945c)
+        join_embed.add_field(name=f"**Welcome to {guild.name}, {user.username}!**",
+                             value=f"You are the **{guild.member_count}{suffix}** member!\n\n"
+                                   f"Have fun here, and remember to follow the Rules.")
+        join_embed.set_thumbnail(url=user.member_object.display_avatar.url)
+        join_embed.set_image(url=gif.images.original.url)
+
+        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
+        await join_channel.send(embed=join_embed)
+
+
+class UserLeave(Event):
+    def __init__(self, metadata):
+        super().__init__(metadata)
+
+    async def log_event_in_database(self) -> EventMetadata:
+        pass
+
+    async def log_event_in_discord(self):
+        user = self.metadata.user
+
+        join_embed = discord.Embed(colour=0xc34184)
+        join_embed.add_field(name=f"**{user.username} has left**",
+                             value=f"Always sad to see someone go :pensive:")
+
+        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
+        await join_channel.send(embed=join_embed)
+
+
+async def fetch(event, thorny_user: ThornyUser, client, metadata: EventMetadata = None):
+    if metadata is None:
+        metadata = EventMetadata(thorny_user, client, thorny_user.pool, datetime.now().replace(microsecond=0))
     async with thorny_user.pool.acquire() as connection:
         metadata.recent_connection = await connection.fetchrow("""
                                                                SELECT * FROM thorny.activity

@@ -17,7 +17,6 @@ class Pool:
                                                 password=config['database']['password'],
                                                 max_inactive_connection_lifetime=10.0,
                                                 max_size=300)
-        print("[SERVER] Successfully pooled Database at", datetime.now())
         self.pool = pool_object
 
     async def acquire_connection(self):
