@@ -86,7 +86,7 @@ class ThornyFactory:
                     if user is None:
                         await conn.execute("""INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
                                               VALUES($1, $2, $3, $4, $5)""",
-                                           user_id, guild_id, datetime.now(), 25, member.name)
+                                           user_id, guild_id, member.joined_at, 25, member.name)
                         thorny_id = await conn.fetchrow("""SELECT thorny_user_id FROM thorny.user
                                                            WHERE user_id=$1 AND guild_id=$2""", user_id, guild_id)
                         await conn.execute("""INSERT INTO thorny.user_activity(thorny_user_id)
@@ -105,7 +105,8 @@ class ThornyFactory:
                     else:
                         await conn.execute("""UPDATE thorny.user
                                               SET active = True WHERE thorny_user_id = $1""", user['thorny_user_id'])
-                        print(f"[SERVER] Reactivated account of {user['username']}, Thorny ID {user['thorny_user_id']}")
+                        print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Reactivated account of "
+                              f"{user['username']}, Thorny ID {user['thorny_user_id']}")
 
     @classmethod
     async def deactivate(cls, member_list: list[discord.Member]):
@@ -119,7 +120,8 @@ class ThornyFactory:
                     await conn.execute("""UPDATE thorny.user
                                           SET active = False WHERE thorny_user_id = $1""",
                                        thorny_id)
-                    print(f"[SERVER] Deactivated account of {thorny_user['username']}, Thorny ID {thorny_id}")
+                    print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
+                          f"{thorny_user['username']}, Thorny ID {thorny_id}")
 
 
 @dataclass

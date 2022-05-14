@@ -15,14 +15,15 @@ class Level(commands.Cog):
             user = ctx.author
         thorny_user = await ThornyFactory.build(user)
         last_required_xp = 100
-        for lvl in range(1, thorny_user.profile.level):
-            last_required_xp += (lvl ** 2) * 4 + (50 * lvl) + 100
-        total_xp_to_gain = thorny_user.profile.required_xp - last_required_xp
-        xp_gained = thorny_user.profile.xp - last_required_xp
-        if xp_gained == 0 or total_xp_to_gain == 0:
-            percentage = 0
+        if thorny_user.profile.level == 0:
+            total_xp_to_gain = thorny_user.profile.required_xp
+            xp_gained = thorny_user.profile.xp
         else:
-            percentage = round(xp_gained / total_xp_to_gain, 2)
+            for lvl in range(1, thorny_user.profile.level):
+                last_required_xp += (lvl ** 2) * 4 + (50 * lvl) + 100
+            total_xp_to_gain = thorny_user.profile.required_xp - last_required_xp
+            xp_gained = thorny_user.profile.xp - last_required_xp
+        percentage = round(xp_gained / total_xp_to_gain, 2)
         percentage *= 100
 
         rank_embed = discord.Embed(colour=user.colour)

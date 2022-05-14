@@ -44,26 +44,34 @@ class Playtime(commands.Cog):
     async def disconnect(self, ctx, journal: discord.Option(str, "Write a journal entry. Viewable in /journal") = None):
         thorny_user = await ThornyFactory.build(ctx.author)
 
-        connection: ev.DisconnectEvent = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-        connection.metadata.event_comment = journal
-        metadata = await connection.log_event_in_database()
+        connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
+        connection.edit_metadata("event_comment", journal)
+        await connection.log_event_in_database()
+
+        metadata = connection.metadata
 
         if metadata.database_log:
             playtime = str(metadata.playtime).split(":")
             await connection.log_event_in_discord()
 
+            xp_gain: ev.Event = await ev.fetch(ev.GainXP, thorny_user, self.client, metadata)
+            metadata = await xp_gain.log_event_in_database()
+
             response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
             if metadata.playtime_overtime:
                 stats = f'You were connected for over 12 hours, so I brought your playtime down.' \
-                        f'I set it to **1h05m**.'
+                        f' I set it to **1h05m**.\n' \
+                        f'You received **{metadata.xp_gained}XP** for this session.'
             else:
-                stats = f'You played for a total of **{playtime[0]}h{playtime[1]}m** this session. Nice!'
+                stats = f'You played for a total of **{playtime[0]}h{playtime[1]}m** this session. Nice!\n' \
+                        f'You received **{metadata.xp_gained}XP** for this session.'
             response_embed.add_field(name=f"**Here's your stats:**",
                                      value=f'{stats}')
+            if metadata.level_up:
+                response_embed.add_field(name=f"You levelled up!", value="", inline=False)
             response_embed.add_field(name=f"**Adjust Your Hours:**",
                                      value="Did you forget to disconnect for many hours? Use the `/adjust` command "
-                                           "to bring your hours down!\n**Example:** `/adjust 2h34m` | Brings "
-                                           "it down by 2 hours and 34 minutes", inline=False)
+                                           "to bring your hours down!", inline=False)
             response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
             response_embed.set_footer(text=f'{v} | {metadata.event_time}')
             await ctx.respond(embed=response_embed)
