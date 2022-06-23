@@ -1,15 +1,20 @@
 from datetime import datetime, timedelta
+import time
+from dateutil.relativedelta import relativedelta
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
+from discord.utils import get
 
 import giphy_client
 from dbfactory import ThornyFactory
+from dbutils import User
 import dbevent as ev
 from dbevent import Event
+from thorny_core import errors
 import json
 import random
-from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level
+from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level, setup
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -41,18 +46,69 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    bot_activity = discord.Activity(type=discord.ActivityType.playing,
-                                    name=f"thornballs | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.listening,
+                                    name=f"Relaxing Thorns [1 HOUR] | {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
 
 
+@tasks.loop(hours=24.0)
+async def birthday_checker():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
+    bday_list = await User().select_birthdays()
+    for user in bday_list:
+        if user["birthday"].day == datetime.now().day:
+            if user["birthday"].month == datetime.now().month:
+                for guild in thorny.guilds:
+                    if guild.id == user["guild_id"]:
+                        member = guild.get_member(user["user_id"])
+                        thorny_user = await ThornyFactory.build(member)
+
+                        event: Event = await ev.fetch(ev.Birthday, thorny_user, thorny)
+                        await event.log_event_in_discord()
+
+
+@birthday_checker.before_loop
+async def before_check():
+    await thorny.wait_until_ready()
+
+birthday_checker.start()
+
+
+# @thorny.slash_command(guild_ids=[723951903725060136,])
+# async def update(ctx: discord.ApplicationContext):
+#     await ctx.trigger_typing()
+#     await ctx.defer()
+# When the time comes add this code in!
+
+
 @thorny.slash_command()
 async def ping(ctx):
     await ctx.respond(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
                       f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
+
+
+@thorny.event
+async def on_application_command_error(context: discord.ApplicationContext, exception):
+    if isinstance(exception, errors.ThornyError):
+        try:
+            await context.respond(embed=exception.return_embed(), ephemeral=True)
+        except discord.NotFound:
+            await context.channel.send(embed=exception.return_embed())
+    elif isinstance(exception, discord.ApplicationCommandInvokeError):
+        error = errors.UnexpectedError2(str(exception.with_traceback(None)))
+        try:
+            await context.respond(embed=error.return_embed(), ephemeral=True)
+        except discord.NotFound:
+            await context.channel.send(embed=error.return_embed())
+    else:
+        error = errors.UnexpectedError1(str(exception.with_traceback(None)))
+        try:
+            await context.respond(embed=error.return_embed())
+        except discord.NotFound:
+            await context.channel.send(embed=error.return_embed())
 
 
 @thorny.event
@@ -72,19 +128,6 @@ async def on_message(message):
                     response = response_list[random.randint(0, len(response_list) - 1)]
                     await message.channel.send(response)
 
-    if message.content.startswith('!'):
-        await message.channel.send("*Hint: Maybe this command works with a `/` prefix?*\n"
-                                   "*This message will be going away soon, so learn the commands!*")
-
-
-@thorny.listen()
-async def on_message(message):
-    # This event listens for banned words and deletes them
-    banned_words = config['banned_words']
-    for word in banned_words:
-        if word in message.content.lower() and message.author != thorny.user:
-            await message.delete()
-
 
 @thorny.listen()
 async def on_message(message: discord.Message):
@@ -95,7 +138,7 @@ async def on_message(message: discord.Message):
             event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
             data = await event.log_event_in_database()
             if data.level_up:
-                event.metadata.level_up_message = message
+                event.edit_metadata("level_up_message", message)
                 await event.log_event_in_discord()
 
 
@@ -192,5 +235,6 @@ thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
+# thorny.add_cog(setup.Configurations(thorny))
 thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
 thorny.run(TOKEN)

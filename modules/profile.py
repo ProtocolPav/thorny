@@ -15,7 +15,7 @@ class Profile(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    profile_edit_sections = ['slogan', 'gamertag', 'town', 'role', 'wiki', 'aboutme', 'lore']
+    profile_edit_sections = ['slogan', 'gamertag', 'role', 'wiki', 'aboutme', 'lore']
     profile_edit_categories = ['activity', 'aboutme', 'lore', 'wiki']
     days = [i for i in range(1, 31)]
     months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
@@ -51,8 +51,6 @@ class Profile(commands.Cog):
             user_birthday = "Use `/birthday` to set up!"
         profile_embed.add_field(name=f'**:card_index: Information**',
                                 value=f"{is_donator}**Gamertag:** {thorny_user.profile.gamertag}\n"
-                                      f"**Kingdom:** {thorny_user.kingdom}\n"
-                                      f"**Town:** {thorny_user.profile.town}\n"
                                       f"**Level:** {thorny_user.profile.level}\n"
                                       f"**Balance:** <:Nug:884320353202081833>"
                                       f"{thorny_user.balance}\n\n"
@@ -61,7 +59,7 @@ class Profile(commands.Cog):
         if thorny_user.profile.activity_shown:
             profile_embed.add_field(name=f'**:clock8: My Activity**',
                                     value=f"Use `/journal` for more stats\n**Latest Playtime:** "
-                                          f"Coming Soon...\n"
+                                          f"{thorny_user.playtime.recent_session}\n"
                                           f"**{datetime.now().strftime('%B')}:** "
                                           f"{thorny_user.playtime.current_playtime}\n"
                                           f"**{(datetime.now() - timedelta(days=30)).strftime('%B')}:** "
@@ -77,7 +75,7 @@ class Profile(commands.Cog):
             profile_embed.add_field(name=f"**:dart: My Lore**",
                                     value=f'**Role:** {thorny_user.profile.role}\n"{thorny_user.profile.lore}"',
                                     inline=False)
-        if thorny_user.profile.wiki_shown:
+        if thorny_user.profile.wiki_shown and thorny_user.profile.wiki is not None:
             profile_embed.add_field(name=f'**Featured Wiki Article**',
                                     value=f"{thorny_user.profile.wiki}",
                                     inline=False)
@@ -103,47 +101,15 @@ class Profile(commands.Cog):
         await commit(thorny_user)
         await Profile.view(self, ctx)
 
-    @profile.command(description="See all of the sections in the profile, and how to edit them")
-    async def sections(self, ctx):
-        user = ctx.author
-        profile_embed = discord.Embed(title=f"This is the Slogan! Max. 35 characters",
-                                      color=user.color)
-        profile_embed.set_author(name=user, icon_url=user.avatar)
-        profile_embed.set_thumbnail(url=user.avatar)
-        profile_embed.add_field(name=f'**:card_index: Information**',
-                                value=f"**Gamertag:** Your MC gamertag goes here\n"
-                                      f"**Kingdom:** ||Automatic||\n"
-                                      f"**Town:** Your town goes here\n"
-                                      f"**Level:** ||Automatic||\n"
-                                      f"**Balance:** ||Automatic||\n\n"
-                                      f"**Birthday:** Use the format `Month DD YYYY`\n"
-                                      f"**Joined on:** ||Automatic||")
-        profile_embed.add_field(name=f'**:clock8: My Activity**',
-                                value=f"All activity is automatically entered!\n"
-                                      f"All you gotta do is use `/connect` and `/disconnect`!", inline=True)
-        profile_embed.add_field(name=f'**:person_raising_hand: About Me**',
-                                value=f'"This is your About Me section. Max. 300 characters"', inline=False)
-        profile_embed.add_field(name=f"**:dart: My Lore**",
-                                value=f'**Role:** You choose your role!\n'
-                                      f'"And then down here, your Lore goes! Max. 300 characters"',
-                                inline=False)
-        profile_embed.add_field(name=f'**Featured Wiki Article**',
-                                value=f"When editing this section, just paste the entire link!",
-                                inline=False)
-        profile_embed.add_field(name=":bangbang: **Editing Commands:**",
-                                value="There's two main commands:\n"
-                                      "`/profile edit` - Edit individual sections, like Slogan, Aboutme, Gamertag\n"
-                                      "`/profile toggle` - Hide or show categories, like Activity, Lore, Aboutme")
-        profile_embed.set_footer(text=f"{v} | Use /help profile for help on editing your profile!")
-        await ctx.respond(embed=profile_embed)
+    birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
 
-    @commands.slash_command(description="Set your birthday | Format: Month DD YYYY")
-    async def birthday(self, ctx, month: discord.Option(str, "Pick or type a month",
-                                                        autocomplete=utils.basic_autocomplete(months)),
-                       day: discord.Option(int, "Pick or type a day",
-                                           autocomplete=utils.basic_autocomplete(days)),
-                       year: discord.Option(int, "Pick or type a year",
-                                            autocomplete=utils.basic_autocomplete(years))):
+    @birthday.command(description="Set your birthday")
+    async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
+                                                   autocomplete=utils.basic_autocomplete(months)),
+                  day: discord.Option(int, "Pick or type a day",
+                                      autocomplete=utils.basic_autocomplete(days)),
+                  year: discord.Option(int, "Pick or type a year",
+                                       autocomplete=utils.basic_autocomplete(years))):
         if year is not None:
             date = f'{month} {day} {year}'
             date_system = datetime.strptime(date, "%B %d %Y")
@@ -155,3 +121,11 @@ class Profile(commands.Cog):
         thorny_user.birthday = date_system
         await commit(thorny_user)
         await ctx.respond(f"Your Birthday is set to: **{date}**", ephemeral=True)
+
+    @birthday.command(description="Remove your birthday")
+    async def remove(self, ctx):
+        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user.birthday = None
+        await commit(thorny_user)
+        await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages and gifts though :(",
+                          ephemeral=True)

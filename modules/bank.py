@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 import json
-from thorny_core import errors, dbclass as db
+from thorny_core import errors
 from thorny_core.dbfactory import ThornyFactory
 from thorny_core import logs
 from thorny_core import functions as func
@@ -55,6 +55,20 @@ class Bank(commands.Cog):
         balance_embed.set_footer(text="Donate to your kingdom with /treasury store")
         await ctx.respond(embed=balance_embed)
 
+    @balance.command(description="CM ONLY | Edit someone's balance")
+    @commands.has_permissions(administrator=True)
+    async def edit(self, ctx, user: discord.Member,
+                   amount: discord.Option(int, "Put a - if you want to remove nugs")):
+        # bank_log = self.client.get_channel(config['channels']['bank_logs'])
+        # await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
+
+        thorny_user = await ThornyFactory.build(user)
+        thorny_user.balance += amount
+
+        if 'edit' in ctx.command.qualified_name.lower():
+            await ctx.respond(f"{user}'s balance is now **{thorny_user.balance}**! (Added/Removed: {amount})")
+        await commit(thorny_user)
+
     @commands.slash_command(description="Pay a player using nugs")
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
         if ctx.channel == self.client.get_channel(config['channels']['bank']):
@@ -62,11 +76,9 @@ class Bank(commands.Cog):
             payable_user = await ThornyFactory.build(ctx.author)
 
             if user == ctx.author:
-                await ctx.respond(embed=errors.Pay.self_error, ephemeral=True)
-            elif amount is None:
-                await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
+                raise errors.SelfPaymentError
             elif payable_user.balance - amount < 0:
-                await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
+                raise errors.BrokeError
             elif amount > 0:
                 payable_user.balance -= amount
                 receivable_user.balance += amount
@@ -80,7 +92,7 @@ class Bank(commands.Cog):
                 await ctx.respond(f"{user.mention} You've been paid!")
                 await ctx.edit(content=None, embed=pay_embed)
 
-                event: ev.PlayerTransaction = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
+                event: ev.Event = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
                 event.metadata.sender_user = payable_user
                 event.metadata.receiver_user = receivable_user
                 event.metadata.nugs_amount = amount
@@ -90,9 +102,9 @@ class Bank(commands.Cog):
                 await commit(payable_user)
                 await commit(receivable_user)
             elif amount < 0:
-                await ctx.respond(embed=errors.Pay.negative_nugs_error, ephemeral=True)
+                raise errors.NegativeAmountError
         else:
-            await ctx.respond(embed=errors.Pay.channel_error, ephemeral=True)
+            raise errors.ItemNotAvailableError
 
     treasury = discord.SlashCommandGroup("treasury", "Treasury Commands")
 
@@ -109,7 +121,7 @@ class Bank(commands.Cog):
             receivable = receivable[0][0]
 
             if thorny_user.balance - amount < 0:
-                await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
+                raise errors.BrokeError
             else:
                 thorny_user.balance -= amount
                 selector = dbutils.Base()
@@ -123,7 +135,7 @@ class Bank(commands.Cog):
                 await ctx.respond(embed=pay_embed)
                 await commit(thorny_user)
         else:
-            await ctx.respond(embed=errors.Treasury.kingdom_error, ephemeral=True)
+            raise errors.StoreError
 
     @treasury.command(description="Ruler Only | Take money from the treasury")
     @commands.has_role('Ruler')
@@ -138,11 +150,9 @@ class Bank(commands.Cog):
         payable = payable[0][0]
 
         if amount < 0:
-            await ctx.respond(embed=errors.Pay.negative_nugs_error, ephemeral=True)
+            raise errors.NegativeAmountError
         elif payable - amount < 0:
-            await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
-        elif amount is None:
-            await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
+            raise errors.BrokeError
         else:
             thorny_user.balance += amount
             await selector.update("treasury", payable - int(amount), "kingdoms", "kingdom", kingdom)
@@ -154,50 +164,3 @@ class Bank(commands.Cog):
                                       f'Taken from: **{kingdom} Treasury**\n')
             await ctx.respond(embed=pay_embed)
             await commit(thorny_user)
-
-    @take.error
-    async def take_error(self, ctx, error):
-        if isinstance(error, commands.CheckFailure):
-            await ctx.respond(embed=errors.Treasury.ruler_error, ephemeral=True)
-
-    # @treasury.command(description="Ruler Only | Pay someone using treasury funds")
-    # @commands.has_role('Ruler')
-    # async def spend(self, ctx, user: discord.Member, amount, reason):
-    #     if ctx.channel == self.client.get_channel(config['channels']['bank']):
-    #         kingdom = func.get_user_kingdom(ctx, ctx.author)
-    #         await dbutils.simple_update('user', 'kingdom', kingdom, 'user_id', ctx.author.id)
-    #
-    #         if user == ctx.author:
-    #             await ctx.respond(embed=errors.Pay.self_error, ephemeral=True)
-    #         elif amount is None:
-    #             await ctx.respond(embed=errors.Pay.amount_error, ephemeral=True)
-    #         elif str(ctx.author.id) not in json_profile:
-    #             await ctx.respond(embed=errors.Pay.self_register_error, ephemeral=True)
-    #         elif json_kingdoms[kingdom] - int(amount) < 0:
-    #             await ctx.respond(embed=errors.Pay.lack_nugs_error)
-    #
-    #         elif str(ctx.author.id) in json_profile:
-    #             if json_kingdoms[kingdom] - int(amount) >= 0:
-    #                 json_kingdoms[kingdom] = json_kingdoms[kingdom] - int(amount)
-    #                 file_kingdoms.truncate(0)
-    #                 file_kingdoms.seek(0)
-    #                 json.dump(json_kingdoms, file_kingdoms, indent=3)
-    #
-    #                 user_amount = json_profile[f'{user.id}']['balance'] + int(amount)
-    #                 func.profile_update(user, user_amount, 'balance')
-    #
-    #                 pay_embed = discord.Embed(color=0xE49B0F)
-    #                 pay_embed.set_author(name=f'{ctx.author}', icon_url=f'{ctx.author.avatar}')
-    #                 pay_embed.add_field(name='<:Nug:884320353202081833> Treasury Payment Successful!',
-    #                                     value=f'From the **{kingdom.upper()} TREASURY**\n'
-    #                                           f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
-    #                                           f'Paid to: **{user.mention}**\n'
-    #                                           f'\n**Reason: {" ".join(str(x) for x in reason)}**\n')
-    #                 await ctx.send(embed=pay_embed)
-    #     else:
-    #         await ctx.send(embed=errors.Pay.channel_error)
-    #
-    # @spend.error
-    # async def spend_error(self, ctx, error):
-    #     if isinstance(error, commands.CheckFailure):
-    #         await ctx.respond(embed=errors.Treasury.ruler_error, ephemeral=True)

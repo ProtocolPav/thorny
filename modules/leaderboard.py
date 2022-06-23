@@ -112,4 +112,3 @@ class Leaderboard(commands.Cog):
                 self.pages.append(lb_embed)
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
-

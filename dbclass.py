@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import json
 import discord
-import errors
+from thorny_core import errors
 from dataclasses import dataclass, field
 from connection_pool import pool
 
@@ -13,6 +13,7 @@ from connection_pool import pool
 class ThornyUserProfile:
     id: int = field(repr=False)
     pool: pg.Pool = field(repr=False)
+    column_data: pg.Record = field(repr=False)
     level: int
     xp: int
     required_xp: int
@@ -34,13 +35,13 @@ class ThornyUserProfile:
         self.pool = master_datalayer.connection_pool
         profile = master_datalayer.profile
         self.id = profile['thorny_user_id']
-        self.slogan = profile['slogan']
-        self.gamertag = profile['gamertag']
+        self.slogan = profile['slogan'] or "My Very Cool Slogan (max. 5 words)"
+        self.gamertag = profile['gamertag'] or "No Gamertag"
         self.town = profile['town']
-        self.role = profile['role']
+        self.role = profile['role'] or "Average Thorny Enjoyer"
         self.wiki = profile['wiki']
-        self.aboutme = profile['aboutme']
-        self.lore = profile['lore']
+        self.aboutme = profile['aboutme'] or "I'm pretty cool, what about you?"
+        self.lore = profile['lore'] or "Thorny brought me here"
         self.information_shown = profile['information_shown']
         self.activity_shown = profile['activity_shown']
         self.lore_shown = profile['lore_shown']
@@ -51,12 +52,23 @@ class ThornyUserProfile:
         self.required_xp = profile['required_xp']
         self.last_message = profile['last_message']
 
+        self.column_data = master_datalayer.column_data
+
     def update(self, attribute, value=None, toggle=False):
         if toggle:
             toggler = self.__getattribute__(attribute)
             self.__setattr__(attribute, not toggler)
         else:
-            self.__setattr__(attribute, value)
+            updated = False
+            data_copy = None
+            for data in self.column_data:
+                if data["column_name"] == str(attribute) and data["character_maximum_length"] >= len(value):
+                    updated = True
+                    self.__setattr__(attribute, value)
+                elif data["column_name"] == str(attribute):
+                    data_copy = data
+            if not updated:
+                raise errors.DataTooLongError(len(value), data_copy["character_maximum_length"])
 
 
 @dataclass
@@ -117,7 +129,7 @@ class ThornyUserInventory:
     id: int = field(repr=False)
     pool: pg.Pool = field(repr=False)
     original_slots: list[ThornyUserSlot] = field(repr=False)
-    all_item_metadata: list = field(repr=False)
+    all_item_metadata: list[ThornyUserSlot] = field(repr=False)
     slots: list[ThornyUserSlot]
 
     def __init__(self, master_datalayer):
@@ -130,37 +142,61 @@ class ThornyUserInventory:
             self.slots.append(ThornyUserSlot(self.id, self.pool, slot))
             self.original_slots.append(ThornyUserSlot(self.id, self.pool, slot))
         for item in master_datalayer.item_data:
-            self.all_item_metadata.append(item)
-
-    def append(self, item_id, count):
-        error = False
-        added = False
-        for item_data in self.all_item_metadata:
-            if item_data["friendly_id"] == item_id and count <= item_data["max_item_count"]:
-                item = {
-                    "inventory_id": 0,
-                    "item_id": item_id,
-                    "item_count": count,
-                    "display_name": item_data["display_name"],
-                    "max_item_count": item_data["max_item_count"],
-                    "item_cost": item_data["item_cost"],
-                    "redeemable": item_data["redeemable"]
-                }
-                self.slots.append(ThornyUserSlot(self.id, self.pool, item))
-                error = False
-                added = True
-                return error, added
-            else:
-                error = True
-                added = False
-        return error, added
+            item_data = {
+                "inventory_id": None,
+                "item_id": item["friendly_id"],
+                "item_count": None,
+                "display_name": item["display_name"],
+                "max_item_count": item["max_item_count"],
+                "item_cost": item["item_cost"],
+                "redeemable": item["redeemable"]
+            }
+            self.all_item_metadata.append(ThornyUserSlot(self.id, self.pool, item_data))
 
     def fetch(self, item_id):
         for item in self.slots:
             if item.item_id == item_id:
                 return item
+
+    def data(self, item_id):
+        for item_data in self.all_item_metadata:
+            if item_data.item_id == item_id:
+                return item_data
+
+    def add_item(self, item_id, count):
+        item = self.fetch(item_id)
+
+        if item is None:
+            for item_data in self.all_item_metadata:
+                if item_data.item_id == item_id and count <= item_data.item_max_count:
+                    item_to_add = {
+                        "inventory_id": 0,
+                        "item_id": item_id,
+                        "item_count": count,
+                        "display_name": item_data.item_display_name,
+                        "max_item_count": item_data.item_max_count,
+                        "item_cost": item_data.item_cost,
+                        "redeemable": item_data.redeemable
+                    }
+                    self.slots.append(ThornyUserSlot(self.id, self.pool, item_to_add))
+                elif count > item_data.item_max_count:
+                    raise errors.ItemMaxCountError
+        else:
+            if item.item_count + count <= item.item_max_count:
+                item.item_count += count
             else:
-                return None
+                raise errors.ItemMaxCountError
+
+    def remove_item(self, item_id, count):
+        item = self.fetch(item_id)
+
+        if item is None:
+            raise errors.MissingItemError
+        else:
+            if count is None or item.item_count - count < 0:
+                self.slots.remove(item)
+            elif item.item_count - count >= 0:
+                item.item_count -= count
 
 
 @dataclass
@@ -194,13 +230,25 @@ class ThornyUserStrikes:
             self.strikes.append(ThornyUserStrike(self.id, self.pool, strike))
         self.original_strikes = self.strikes
 
-    async def append(self, manager_id, reason):
+    def append(self, manager_id, reason):
         strike = {
             "strike_id": 0,
             "manager_id": manager_id,
             "reason": reason
         }
         self.strikes.append(ThornyUserStrike(self.id, self.pool, strike))
+
+    def soft_remove(self, strike_id):
+        strike_found = True
+        for strike in self.strikes:
+            if strike.strike_id == strike_id:
+                strike.reason = f"[FORGIVEN] {strike.reason}"
+                strike_found = True
+                break
+            else:
+                strike_found = False
+        if not strike_found:
+            raise errors.IncorrectStrikeID()
 
 
 @dataclass
