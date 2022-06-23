@@ -12,6 +12,7 @@ from thorny_core.dbcommit import commit
 from discord import utils
 from datetime import datetime, timedelta
 from thorny_core import dbevent as ev
+from thorny_core.modules import redeemingfuncs
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 vers = json.load(open('version.json', 'r'))
@@ -25,10 +26,10 @@ class Inventory(commands.Cog):
     @staticmethod
     async def get_items(ctx):
         selector = dbutils.Base()
-        item_types = await selector.select("*", "item_type")
+        item_data_list = await selector.select("*", "item_type")
         item_list = []
-        for item in item_types:
-            item_list.append(item['friendly_id'])
+        for item_data in item_data_list:
+            item_list.append(item_data["friendly_id"])
         return item_list
 
     inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
@@ -65,22 +66,72 @@ class Inventory(commands.Cog):
         inventory_embed.set_footer(text="Use /redeem to redeem Roles & Tickets!")
         await ctx.respond(embed=inventory_embed)
 
+    @inventory.command(description="CM Only | Add an item to a user's inventory")
+    @commands.has_permissions(administrator=True)
+    async def add(self, ctx, user: discord.Member,
+                  item_id: discord.Option(str, "Select an item to add",
+                                          autocomplete=utils.basic_autocomplete(get_items)), count: int = 1):
+        thorny_user = await ThornyFactory.build(user)
+
+        try:
+            thorny_user.inventory.add_item(item_id, count)
+        except errors.ItemMaxCountError:
+            item = thorny_user.inventory.data(item_id)
+            raise errors.ItemMaxCountError(item.item_max_count)
+        else:
+            item = thorny_user.inventory.fetch(item_id)
+            inv_edit_embed = discord.Embed(colour=ctx.author.colour)
+            inv_edit_embed.add_field(name="**Added Item Successfully**",
+                                     value=f"Added {count}x `{item.item_display_name}` to {user}'s Inventory")
+            await ctx.respond(embed=inv_edit_embed)
+            await commit(thorny_user)
+
+    @inventory.command(description="CM Only | Remove or clear an item from a user's inventory")
+    @commands.has_permissions(administrator=True)
+    async def remove(self, ctx, user: discord.Member,
+                     item_id: discord.Option(str, "Select an item to redeem",
+                                             autocomplete=utils.basic_autocomplete(get_items)), count: int = None):
+        thorny_user = await ThornyFactory.build(user)
+        item = thorny_user.inventory.fetch(item_id)
+
+        try:
+            thorny_user.inventory.remove_item(item_id, count)
+        except errors.MissingItemError:
+            raise errors.MissingItemError()
+        else:
+            inv_edit_embed = discord.Embed(colour=ctx.author.colour)
+            inv_edit_embed.add_field(name="**Inventory Removed Successfully**",
+                                     value=f"Removed {count}x `{item.item_display_name}` "
+                                           f"from {user}'s Inventory")
+            await ctx.respond(embed=inv_edit_embed)
+            await commit(thorny_user)
+
     store = discord.SlashCommandGroup("store", "Store Commands")
+
+    @store.command(description="CM Only | Edit prices of items (0 to remove from the store)")
+    @commands.has_permissions(administrator=True)
+    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
+                                                          autocomplete=utils.basic_autocomplete(get_items)),
+                       price: int):
+        selector = dbutils.Base()
+        updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
+        if updated:
+            await ctx.respond(f"Done! {item_id} is now {price} Nugs", ephemeral=True)
 
     @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
-        selector = dbutils.Base()
-        item_types = await selector.select("*", "item_type")
-        store_embed = discord.Embed(colour=ctx.author.colour)
+        thorny_user = await ThornyFactory.build(ctx.author)
         item_text = ""
-        for item in item_types:
-            if item['item_cost'] > 0:
-                item_text = f"{item_text}\n**{item['display_name']}** |" \
-                            f" <:Nug:884320353202081833>{item['item_cost']}\n" \
-                            f"**Item ID:** {item['friendly_id']}\n"
+        for item_data in thorny_user.inventory.all_item_metadata:
+            if item_data.item_cost > 0:
+                item_text = f"{item_text}\n**{item_data.item_display_name}** |" \
+                            f" <:Nug:884320353202081833>{item_data.item_cost}\n" \
+                            f"**Item ID:** {item_data.item_id}\n"
+
+        store_embed = discord.Embed(colour=ctx.author.colour)
         store_embed.add_field(name=f'**Items Available:**',
                               value=f"{item_text}", inline=False)
-        store_embed.set_footer(text=f"{v} | Use /store buy <item_id> to purchase!")
+        store_embed.set_footer(text=f"{v} | Use /store buy to purchase!")
         await ctx.respond(embed=store_embed)
 
     @store.command(description="Purchase an item from the store")
@@ -88,120 +139,66 @@ class Inventory(commands.Cog):
                                                      autocomplete=utils.basic_autocomplete(get_items)),
                   amount: int = 1):
         thorny_user = await ThornyFactory.build(ctx.author)
-        item = None
+        try:
+            item = thorny_user.inventory.data(item_id)
+            if item.item_cost != 0:
+                thorny_user.inventory.add_item(item_id, amount)
+            elif item.item_cost == 0:
+                raise errors.ItemNotAvailableError()
 
-        for item_data in thorny_user.inventory.all_item_metadata:
-            if item_data['friendly_id'] == item_id:
-                item = item_data
+        except errors.ItemMaxCountError:
+            item = thorny_user.inventory.fetch(item_id)
+            raise errors.ItemMaxCountError(item.item_max_count)
 
-        if item["item_cost"] != 0 and thorny_user.balance - item["item_cost"] * amount >= 0:
-            if await Inventory.add(self, ctx, ctx.author, item_id, amount):
-                thorny_user.balance -= item['item_cost'] * amount
+        else:
+            item = thorny_user.inventory.fetch(item_id)
+
+            if item.item_cost != 0 and thorny_user.balance - item.item_cost * amount >= 0:
+                thorny_user.balance -= item.item_cost * amount
                 inv_edit_embed = discord.Embed(colour=ctx.author.colour)
                 inv_edit_embed.add_field(name="**Cha-Ching!**",
-                                         value=f"Bought {amount}x `{item['display_name']}`")
+                                         value=f"Bought {amount}x `{item.item_display_name}`")
                 inv_edit_embed.set_footer(text=f"{v} | Use /redeem to redeem this item!")
                 await ctx.respond(embed=inv_edit_embed)
-                event: ev.StoreTransaction = await ev.fetch(ev.StoreTransaction, thorny_user, self.client)
-                event.metadata.nugs_amount = item['item_cost'] * amount
-                event.metadata.sender_user = ctx.author
-                event.metadata.event_comment = f"Purchase of {amount}x {item['display_name']}"
+                event: ev.Event = await ev.fetch(ev.StoreTransaction, thorny_user, self.client)
+                event.edit_metadata("nugs_amount", item.item_cost * amount)
+                event.edit_metadata("sender_user", ctx.author)
+                event.edit_metadata("event_comment", f"Purchase of {amount}x {item.item_display_name}")
                 await event.log_event_in_discord()
-        elif thorny_user.balance - item['item_cost'] * amount < 0:
-            await ctx.respond(embed=errors.Pay.lack_nugs_error, ephemeral=True)
-        elif item['item_cost'] == 0:
-            await ctx.respond(embed=errors.Shop.item_error, ephemeral=True)
-        await commit(thorny_user)
+                await commit(thorny_user)
+            elif thorny_user.balance - item.item_cost * amount < 0:
+                raise errors.BrokeError()
 
     @commands.slash_command(description="Redeem an item from your inventory")
     async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                         autocomplete=utils.basic_autocomplete(get_items))):
-        def check(message):
-            return message.author == ctx.author and message.channel == ctx.channel
-
-        redeemable_id = ['role', 'ticket', 'gift']
-        ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],
-                         ["<:goldenE:857714717153689610>", 7], [":dragon_face:", 64]]
 
         thorny_user = await ThornyFactory.build(ctx.author)
         item = thorny_user.inventory.fetch(item_id)
 
-        if item.item_id in redeemable_id:
-            removed = await Inventory.remove(self, ctx, ctx.author, item.item_id, 1)
+        if item is not None and item.redeemable:
+            try:
+                thorny_user.inventory.remove_item(item_id, 1)
 
-            if removed and item.item_id == 'role':
-                customization_embed = discord.Embed(color=ctx.author.color)
-                customization_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
-                                              value=f"Congrats on your sweet new role! Now it's time to customize it.\n"
-                                                    f"What name do you want your custom role to have?\nPlease don't"
-                                                    f" make it too long, discord has limitations too!")
-                customization_embed.set_footer(text="Customization 1/2 | 60 seconds left to reply")
+            except errors.MissingItemError:
+                raise errors.MissingItemError()
 
-                customization2_embed = discord.Embed(color=ctx.author.color)
-                customization2_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
-                                               value="Nice! That sounds like a great role name!"
-                                                     f"\nNow, what colour? Please use a `#hex code` with the #")
-                customization2_embed.set_footer(text="Customization 2/2 | 60 seconds left to reply")
-                try:
-                    await ctx.respond(embed=customization_embed)
-                    name = await self.client.wait_for('message', check=check, timeout=60.0)
-                    role_name = name.content.capitalize()
+            else:
+                if item.item_id == 'role':
+                    await redeemingfuncs.redeem_role(ctx, thorny_user, self.client)
+                    await commit(thorny_user)
 
-                    await ctx.respond(embed=customization2_embed)
-                    colour = await self.client.wait_for('message', check=check, timeout=60.0)
-                    if '#' in colour.content:
-                        role = await ctx.guild.create_role(name=role_name,
-                                                           color=int(f'0x{colour.content[1:7]}', 16))
-                        await role.edit(position=discord.utils.get(ctx.guild.roles,
-                                                                   name="Donator").position)
-                        await ctx.author.add_roles(role)
+                elif item.item_id == 'ticket':
+                    await redeemingfuncs.redeem_ticket(ctx, thorny_user)
+                    await commit(thorny_user)
 
-                        customization3_embed = discord.Embed(color=int(f'0x{colour.content[1:7]}', 16))
-                        customization3_embed.add_field(name="**You have redeemed a Custom Role for 1 Month!**",
-                                                       value=f"Done! {role_name} has been added to your roles!")
-                        customization3_embed.set_footer(text="Complete! | roleredeem")
-                        await ctx.respond(embed=customization3_embed)
-                except asyncio.TimeoutError:
-                    await ctx.send("You took too long to answer! Use `/redeem role` again to restart")
-                    await Inventory.add(self, ctx, ctx.author, item.item_id, 1)
+                elif item.item_id == "gift":
+                    pass
 
-            elif removed and item.item_id == 'ticket':
-                able_to_redeem = True
-                if random.choices([True, False], weights=(2, 98), k=1)[0]:
-                    await ctx.respond(embed=errors.Shop.faulty_ticket_error)
-                else:
-                    prizes = []
-                    winnings = []
-                    for i in range(4):
-                        random_icon = random.choices(ticket_prizes, weights=(2.99, 4, 5, 3, 1, 0.01), k=1)
-                        prizes.append(random_icon[0])
-                        winnings.append(f"||{random_icon[0][0]}||")
-
-                    selector = dbutils.Base()
-                    counter = await selector.select("count", "counter", "counter_name", "ticket_count")
-                    ticket_embed = discord.Embed(color=ctx.author.color)
-                    ticket_embed.add_field(name="**Scratch Ticket**",
-                                           value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
-                    ticket_embed.set_footer(text=f"Ticket #{counter[0][0] + 1} "
-                                                 f"| Use /tickets to see how Prizes work!")
-                    if thorny_user.counters.ticket_count >= 4:
-                        if datetime.now() - thorny_user.counters.ticket_last_purchase <= timedelta(hours=23):
-                            time = datetime.now() - thorny_user.counters.ticket_last_purchase
-                            able_to_redeem = False
-                            await Inventory.add(self, ctx, ctx.author, item.item_id, 1)
-                            await ctx.respond(f"You already redeemed 4 tickets! Next time you can redeem is in "
-                                              f"{timedelta(hours=23) - time}")
-                        else:
-                            await thorny_user.counters.update("ticket_count", 0)
-                    if able_to_redeem:
-                        await ctx.respond(embed=ticket_embed)
-                        thorny_user.balance += thorny_user.calculate_ticket_reward(prizes, ticket_prizes)
-                        thorny_user.counters.ticket_count += 1
-                        thorny_user.counters.ticket_last_purchase = datetime.now().replace(microsecond=0)
         elif item.item_id is None:
-            await ctx.respond(embed=errors.Shop.empty_inventory_error)
+            raise errors.MissingItemError()
         else:
-            await ctx.respond(embed=errors.Shop.item_error)
+            raise errors.ItemNotAvailableError()
 
     @commands.slash_command(description="See how tickets work!")
     async def tickets(self, ctx):
