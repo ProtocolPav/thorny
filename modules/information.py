@@ -73,7 +73,7 @@ class Information(commands.Cog):
         await ctx.respond(embed=tip_embed)
 
     @commands.slash_command(description="Search the database for gamertags")
-    async def gtsearch(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
+    async def gamertag(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
         selector = dbutils.Base()
         gamertags = await selector.select_gamertags(ctx.guild.id, gamertag)
         send_text = []
@@ -87,14 +87,11 @@ class Information(commands.Cog):
                                  value="\n".join(send_text))
         await ctx.respond(embed=gamertag_embed)
 
-    @commands.slash_command(description="See all current events and attendees")
-    async def events(self, ctx):
-        events = ctx.guild.scheduled_events
-        events_embed = discord.Embed(colour=0xa35de)
-        for item in events:
-            print(item)
-            events_embed.add_field(name=f"**{item.name}**",
-                                   value=f"'*{item.description}*'\n"
-                                         f"Starts on: {item.start_time}\n"
-                                         f"[Click Here To Reserve A Space](www.google.com)", inline=False)
-        await ctx.respond(embed=events_embed)
+    # @commands.slash_command(description="See all upcoming birthdays!")
+    # async def birthdays(self, ctx):
+    #     list = await dbutils.User().select_birthdays()
+    #     birthdays = []
+    #     for user in list:
+    #         if user["guild_id"] == ctx.guild.id:
+    #
+    #     await ctx.respond(embed=events_embed)

@@ -19,12 +19,13 @@ async def update_profile(thorny_user: ThornyUser):
         await conn.execute("""
                                         UPDATE thorny.profile
                                         SET slogan = $1, gamertag = $2, town = $3, wiki = $4, aboutme = $5, lore = $6,
-                                        aboutme_shown = $7, activity_shown = $8, wiki_shown = $9, lore_shown = $10
+                                        role = $12, aboutme_shown = $7, activity_shown = $8, wiki_shown = $9,
+                                        lore_shown = $10
                                         WHERE thorny_user_id = $11
                                        """,
                            profile.slogan, profile.gamertag, profile.town, profile.wiki, profile.aboutme,
                            profile.lore, profile.aboutme_shown, profile.activity_shown, profile.wiki_shown,
-                           profile.lore_shown, thorny_user.id)
+                           profile.lore_shown, thorny_user.id, profile.role)
 
 
 async def update_levels(thorny_user: ThornyUser):

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from connection_pool import pool
 from dbclass import ThornyUser
 
+from discord.utils import get
+
 
 class ThornyFactory:
     @classmethod
@@ -14,17 +16,23 @@ class ThornyFactory:
             user_id = member.id
             guild_id = member.guild.id
             now = datetime.now()
-            current_month = now.replace(day=1, hour=0, minute=0)
-            previous_month = now.replace(day=1, hour=0, minute=0) - relativedelta(months=1)
-            expiring_month = now.replace(day=1, hour=0, minute=0) - relativedelta(months=2)
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
             thorny_id = thorny_user['thorny_user_id']
+
+            current_month = now.replace(day=1, hour=0, minute=0)
+            previous_month = now.replace(day=1, hour=0, minute=0) - relativedelta(months=1)
+            expiring_month = now.replace(day=1, hour=0, minute=0) - relativedelta(months=2)
 
             user_profile = await conn.fetchrow("""SELECT * FROM thorny.profile
                                                   INNER JOIN thorny.levels
                                                   ON thorny.levels.thorny_user_id = thorny.profile.thorny_user_id
                                                   WHERE thorny.profile.thorny_user_id = $1""", thorny_id)
+            profile_column_data = await conn.fetch("""
+                                                        SELECT column_name, data_type, character_maximum_length
+                                                        FROM INFORMATION_SCHEMA.COLUMNS
+                                                        WHERE TABLE_SCHEMA = 'thorny' AND TABLE_NAME   = 'profile'
+                                                      """)
             user_activity = await conn.fetchrow("""SELECT * FROM thorny.user_activity
                                                    WHERE thorny_user_id = $1""", thorny_id)
             user_playtime_stats = await conn.fetchrow("""SELECT SUM(playtime) as total_playtime, 
@@ -60,10 +68,12 @@ class ThornyFactory:
                                          """)
             user_counters = await conn.fetch("""SELECT * from thorny.counter
                                                 WHERE thorny_user_id = $1""", thorny_id)
+
             master_datalayer = DataLayer(discord_member=member,
                                          connection_pool=pool.pool,
                                          thorny_user=thorny_user,
                                          profile=user_profile,
+                                         column_data=profile_column_data,
                                          playtime=user_activity,
                                          playtime_stats=user_playtime_stats,
                                          daily_average=user_daily_average,
@@ -130,6 +140,7 @@ class DataLayer:
     connection_pool: pg.Pool
     thorny_user: pg.Record
     profile: pg.Record
+    column_data: pg.Record
     playtime: pg.Record
     playtime_stats: pg.Record
     daily_average: pg.Record
