@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import giphy_client
 import json
 import discord
+import errors
 from dataclasses import dataclass
 from dbclass import ThornyUser
 from dbcommit import commit
@@ -38,7 +39,7 @@ class EventMetadata:
     level_up: bool = False
     xp_multiplier: int = 1
     xp_gained: int = 0
-    level_up_message: discord.Message = None
+    level_up_message = None
 
     message_before: discord.Message = None
     message_after: discord.Message = None
@@ -54,7 +55,7 @@ class Event:
         self.client = metadata.client
         self.config = json.load(open("../thorny_data/config.json", "r"))
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         """
         Every class must have this method, but it is different for each.
         The Database Log must always be run first, and depending on the boolean value of database_log,
@@ -67,7 +68,7 @@ class Event:
         """
 
     def edit_metadata(self, attribute, new_val):
-        self.__setattr__(str(attribute), new_val)
+        self.metadata.__setattr__(attribute, new_val)
 
 
 class ConnectEvent(Event):
@@ -77,12 +78,12 @@ class ConnectEvent(Event):
 
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'CONNECTION', colour=0x44ef56)
-        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_footer(text=f"Event Time: {self.time}")
         log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         data = self.metadata
         async with self.pool.acquire() as conn:
             if self.recent_connection is None or self.recent_connection['disconnect_time'] is not None:
@@ -108,6 +109,7 @@ class ConnectEvent(Event):
                 data.database_log = True
                 data.playtime_overtime = True
                 data.playtime = playtime
+            print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.user.id}")
             return data
 
 
@@ -118,12 +120,12 @@ class DisconnectEvent(Event):
 
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'DISCONNECTION', colour=0x44ef56)
-        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_footer(text=f"Event Time: {self.time}")
         log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         data = self.metadata
         async with self.pool.acquire() as conn:
             if self.recent_connection is None or self.recent_connection['disconnect_time'] is not None:
@@ -141,6 +143,7 @@ class DisconnectEvent(Event):
                                    data.event_comment)
                 data.database_log = True
                 data.playtime = playtime
+            print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.user.id}")
             return data
 
 
@@ -151,12 +154,12 @@ class AdjustEvent(Event):
 
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'PLAYTIME ADJUSTED', colour=0x44ef56)
-        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_footer(text=f"Event Time: {self.time}")
         log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         async with self.pool.acquire() as conn:
             if self.recent_connection is None or self.recent_connection['disconnect_time'] is None:
                 self.metadata.database_log = False
@@ -178,7 +181,7 @@ class PlayerTransaction(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         """
         I will need to add this function later when I create the logs table in the database
         """
@@ -191,7 +194,7 @@ class PlayerTransaction(Event):
                             value=f"<@{data.sender_user.id}> paid <@{data.receiver_user.id}> "
                                   f"**<:Nug:884320353202081833>{data.nugs_amount}**\n"
                                   f"Reason: {data.event_comment}")
-        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_footer(text=f"Event Time: {self.time}")
         logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
         await logs_channel.send(embed=log_embed)
 
@@ -200,7 +203,7 @@ class StoreTransaction(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         """
         I will need to add this function later when I create the logs table in the database
         """
@@ -213,7 +216,7 @@ class StoreTransaction(Event):
                             value=f"<@{data.sender_user.id}> paid the Store "
                                   f"**<:Nug:884320353202081833>{data.nugs_amount}**\n"
                                   f"Reason: {data.event_comment}")
-        log_embed.set_footer(text=f"Event Time: `{self.time}`")
+        log_embed.set_footer(text=f"Event Time: {self.time}")
         logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
         await logs_channel.send(embed=log_embed)
 
@@ -222,7 +225,7 @@ class GainXP(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         thorny_user = self.metadata.user
         thorny_user.counters.level_last_message = datetime.now()
         multiplier = self.metadata.xp_multiplier
@@ -266,7 +269,7 @@ class MessageEdit(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         pass
 
     async def log_event_in_discord(self):
@@ -277,7 +280,7 @@ class MessageEdit(Event):
                                       f"<#{self.metadata.message_before.channel.id}>:\n"
                                       f"**BEFORE:**\n{self.metadata.message_before.content}\n"
                                       f"**AFTER:**\n{self.metadata.message_after.content}")
-            log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+            log_embed.set_footer(text=f'Event Time: {self.time}')
             logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
             await logs_channel.send(embed=log_embed)
 
@@ -286,7 +289,7 @@ class MessageDelete(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         pass
 
     async def log_event_in_discord(self):
@@ -296,7 +299,7 @@ class MessageDelete(Event):
                                 value=f"{self.user.member_object.mention} deleted a message in "
                                       f"<#{self.metadata.deleted_message.channel.id}>:"
                                       f"\n{self.metadata.deleted_message.content}")
-            log_embed.set_footer(text=f'{datetime.now().replace(microsecond=0)}')
+            log_embed.set_footer(text=f'Event Time: {self.time}')
             logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
             await logs_channel.send(embed=log_embed)
 
@@ -305,7 +308,7 @@ class UserJoin(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         pass
 
     async def log_event_in_discord(self):
@@ -341,7 +344,7 @@ class UserLeave(Event):
     def __init__(self, metadata):
         super().__init__(metadata)
 
-    async def log_event_in_database(self) -> EventMetadata:
+    async def log_event_in_database(self):
         pass
 
     async def log_event_in_discord(self):
@@ -353,6 +356,38 @@ class UserLeave(Event):
 
         join_channel = self.client.get_channel(self.config['channels']['join_channel'])
         await join_channel.send(embed=join_embed)
+
+
+class Birthday(Event):
+    def __init__(self, metadata):
+        super().__init__(metadata)
+
+    async def log_event_in_database(self):
+        user = self.metadata.user
+        try:
+            user.inventory.add_item("gift", 1)
+        except errors.ItemMaxCountError:
+            pass
+        await commit(user)
+
+    async def log_event_in_discord(self):
+        user = self.metadata.user
+        birthday = user.birthday
+
+        age = datetime.now().year - birthday.year
+        if str(age)[-1] == "1":
+            suffix = "st"
+        elif str(age)[-1] == "2":
+            suffix = "nd"
+        elif str(age)[-1] == "3":
+            suffix = "rd"
+        else:
+            suffix = "th"
+
+        birthday_message = f"Wohoo!! It is {user.member_object.mention}'s {age}{suffix} birthday today! " \
+                           f"Happy Birthday, {user.username}! :partying_face: :partying_face: :partying_face: "
+        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
+        await join_channel.send(birthday_message)
 
 
 async def fetch(event, thorny_user: ThornyUser, client, metadata: EventMetadata = None):

@@ -38,13 +38,15 @@ class Base:
                                              "AND thorny.user.guild_id = $2", f'%{gamertag[0:3].lower()}%', guild_id)
             return self.returned
 
-    async def select_online(self):
+    async def select_online(self, guild_id):
         async with pool.pool.acquire() as conn:
             self.returned = await conn.fetch("SELECT * FROM thorny.activity "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
                                              "WHERE disconnect_time is NULL AND connect_time > $1 "
-                                             "ORDER BY connect_time DESC", datetime.now().replace(day=1))
+                                             "AND thorny.user.guild_id = $2"
+                                             "ORDER BY connect_time DESC", datetime.now().replace(day=1),
+                                             guild_id)
             return self.returned
 
     async def update(self, item, item_new_value, table, where_condition=None, condition_is=None):
@@ -160,6 +162,34 @@ class Kingdom:
                                    f'WHERE kingdom = $2', value, kingdom)
             except asyncpg.StringDataRightTruncationError:
                 return "length_error"
+
+
+class User:
+    def __init__(self):
+        self.list = None
+
+    async def select_birthdays(self):
+        async with pool.pool.acquire() as conn:
+            self.list = await conn.fetch("""SELECT user_id, birthday, guild_id
+                                            FROM thorny.user
+                                            WHERE active = True AND birthday IS NOT NULL""")
+            return self.list
+
+
+class Update:
+    @staticmethod
+    async def update_v1_7_4():
+        async with pool.pool.acquire() as conn:
+            await conn.execute("""
+                                CREATE TABLE thorny.guilds (
+                                guild_id int8,
+                                welcome_channel_id int8,
+                                logs_channel_id int8,
+                                xp_gain bool,
+                                timeout_role_id int8,
+                                timeout_channel_id int8,
+                                thorny_update_channel_id int8,
+                                PRIMARY KEY(guild_id))""")
 
 
 """Select Online Members

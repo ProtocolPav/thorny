@@ -1,89 +1,171 @@
 import discord
 
 
-class Activity:
-    connect_error = discord.Embed(color=0xD70040)
-    connect_error.add_field(name="<:_no:921840417362804777> Aww... Shucks",
-                            value="I don't recall you connecting actually...")
+class UnexpectedError1(discord.ApplicationCommandError):
+    """ Raised when something unexpected happens """
+    def __init__(self, tb: str):
+        self.error: discord.Embed = discord.Embed(color=0xD70040)
+        self.traceback = tb
 
-    already_connected_error = discord.Embed(color=0xD70040)
-    already_connected_error.add_field(name="<:_no:921840417362804777> It's all good!",
-                                      value="No need to connect now, you're already connected!")
-
-
-class Pay:
-    self_error = discord.Embed(color=0xD70040)
-    self_error.add_field(name='<:_no:921840417362804777> Poops...',
-                         value='>You tried to pay yourself.\n>It did not work.\n>You feel stupid.')
-
-    amount_error = discord.Embed(color=0xD70040)
-    amount_error.add_field(name="<:_no:921840417362804777> There's nothing there.",
-                           value='You forgot to actually say *how* much to pay!')
-
-    self_register_error = discord.Embed(color=0xD70040)
-    self_register_error.add_field(name='<:_no:921840417362804777> Oh, you ARE new!',
-                                  value="I don't see you in the database :(\nIt's okay, just use `/balance view`")
-
-    lack_nugs_error = discord.Embed(color=0xD70040)
-    lack_nugs_error.add_field(name='<:_no:921840417362804777> Broke boiii :grimacing:',
-                              value='You do not have enough nugs!')
-
-    negative_nugs_error = discord.Embed(color=0xD70040)
-    negative_nugs_error.add_field(name='<:_no:921840417362804777> Poops...',
-                                  value='>You tried to pay a negative amount.\n>It did not work.\n>You feel stupid.')
-
-    channel_error = discord.Embed(color=0xD70040)
-    channel_error.add_field(name='<:_no:921840417362804777> Something aint right!',
-                            value='Use this command in <#700293298652315648> please!')
-
-    balance_error = discord.Embed(color=0xD70040)
-    balance_error.add_field(name='<:_no:921840417362804777> I know whats wrong!',
-                            value="Yeah. It seems like you don't have a kingdom role!")
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> I have NEVER seen this before...",
+                             value=f"This is something that I didn't expect to happen. Here's the issue: "
+                                   f"{self.traceback}")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
 
 
-class Treasury:
-    ruler_error = discord.Embed(color=0xD70040)
-    ruler_error.add_field(name=f'<:_no:921840417362804777> Could not access the Treasury!',
-                          value='Reason: You are not a Ruler!')
+class UnexpectedError2(discord.ApplicationCommandError):
+    """ Raised when something unexpected happend, but is a bit more expected than UnexpectedError1 """
+    def __init__(self, tb: str):
+        self.error: discord.Embed = discord.Embed(color=0xD70040)
+        self.traceback = tb.split(": ")[2]
 
-    kingdom_error = discord.Embed(color=0xD70040)
-    kingdom_error.add_field(name=f'<:_no:921840417362804777> Well well well',
-                            value="Seems like you're trying to donate to your kingdom.\nIssue is... You're not in one!")
-
-
-class Shop:
-    item_error = discord.Embed(color=0xD70040)
-    item_error.add_field(name=f'<:_no:921840417362804777> Hey...',
-                         value="This item doesn't exist! To see what items DO exist, use `/store catalogue`")
-
-    faulty_ticket_error = discord.Embed(color=0xD70040)
-    faulty_ticket_error.add_field(name="<:_no:921840417362804777> Oh No!",
-                                  value="You try to scratch the ticket, and realise they sold you a fake!")
-
-    empty_inventory_error = discord.Embed(color=0xD70040)
-    empty_inventory_error.add_field(name="<:_no:921840417362804777> Cheeky.",
-                                    value="You tried redeeming something that you don't even own!")
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Sorry for this...",
+                             value="This is something that I didn't expect to happen. Here's the issue:\n"
+                                   f"{self.traceback}")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
 
 
-class Inventory:
-    item_missing_error = discord.Embed(color=0xD70040)
-    item_missing_error.add_field(name="<:_no:921840417362804777> Cheeky.",
-                                 value="The user does not have this item to remove")
+class ThornyError(discord.ApplicationCommandError):
+    def __init__(self):
+        self.error: discord.Embed = discord.Embed(color=0xD70040)
+
+    def return_embed(self) -> discord.Embed:
+        pass
 
 
-class Leaderboard:
-    page_error = discord.Embed(color=0xD70040)
-    page_error.add_field(name="<:_no:921840417362804777> Not so fast!",
-                         value="You're trying to get to a page that doesn't exist!")
+class NotConnectedError(ThornyError):
+    """ Raised when somebody tries disconnecting when they are not connected """
 
-    month_syntax_error = discord.Embed(color=0xD70040)
-    month_syntax_error.add_field(name="<:_no:921840417362804777> Oh",
-                                 value="This command is **/lb activity <month> <page>**, means you need to "
-                                       "write the month first and then flip the pages!")
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Oh, bother.",
+                             value="Either you haven't connected, or someone's hacked me!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
 
 
-class Profile:
-    length_error = discord.Embed(color=0xD70040)
-    length_error.add_field(name="<:_no:921840417362804777> Damn that's long",
-                           value="Sorry, you gotta shorten that. The database can't hold such long prose!\n"
-                                 "Use `/profile sections` to get some help on the max lengths")
+class AlreadyConnectedError(ThornyError):
+    """ Raised when somebody tries connecting when they've already connected """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Not so fast!",
+                             value="You're already connected. If you are really *that* keen on connecting, you gotta "
+                                   "`/disconnect` first!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class SelfPaymentError(ThornyError):
+    """ Raised when somebody attempts to pay themselves """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Lmao what a L0$3R!",
+                             value="You **really** thought that you could... pay YOURSELF? Damn.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class BrokeError(ThornyError):
+    """ Raised when somebody does not have enough funds in their balance for a transaction """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> I don't know how to tell you this...",
+                             value="You're broke. You can't pay, because you're too broke for that. "
+                                   "Maybe try buying something you can afford?")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class NegativeAmountError(ThornyError):
+    """ Raised when somebody tries to enter a negative amount in places where they can't """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Okay, did you really think that would work?",
+                             value="Seriously debating whether to publicly announce this to everyone. "
+                                   "Of course you can't put a negative number there...")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class StoreError(ThornyError):
+    """ Raised when somebody tries storing money but is not in a kingdom """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Well, well, well...",
+                             value="You tried donating to your kingdom... But you're not in one!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class ItemNotAvailableError(ThornyError):
+    """ Raised when somebody tries buying / redeeming an item that does not exist or is not available """
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> This item seems funky.",
+                             value="This item isn't available to purchase or redeem.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class FaultyTicketError(ThornyError):
+    """ Raised only when the ticket redeeming chances happens """
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Uh oh",
+                             value="Seems like you were sold a fake ticket!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class MissingItemError(ThornyError):
+    """ Raised when the item that is redeemed or removed does not exist"""
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Uh oh",
+                             value="This item does not exist in the user's inventory!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class DataTooLongError(ThornyError):
+    """ Raised when the data entered is too long for the database to hold"""
+    def __init__(self, length: int, database_length: int):
+        super().__init__()
+        self.length = length
+        self.db_length = database_length
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Welp. I guess shorten this",
+                             value="I checked the database, whatever you just tried writing in is too long.\n"
+                                   f"Your input's length: {self.length}\nDatabase max. length: {self.db_length}")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class ItemMaxCountError(ThornyError):
+    """ Raised when the item in question has reached its maximum count"""
+
+    def __init__(self, max_count: int = 0):
+        super().__init__()
+        self.max_count = max_count
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Too much man... Too. Much.",
+                             value="You can't have this much stuff!\n"
+                                   f"You can only have maximum {self.max_count} of this item.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class IncorrectStrikeID(ThornyError):
+    """Raised when a wrong strike ID was entered"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Darn",
+                             value="Seems to me like you entered a Strike ID that doesn't exist!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
