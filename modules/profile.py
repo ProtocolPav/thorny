@@ -53,7 +53,7 @@ class Profile(commands.Cog):
                                 value=f"{is_donator}**Gamertag:** {thorny_user.profile.gamertag}\n"
                                       f"**Level:** {thorny_user.profile.level}\n"
                                       f"**Balance:** <:Nug:884320353202081833>"
-                                      f"{thorny_user.balance}\n\n"
+                                      f"{thorny_user.balance}\n"
                                       f"**Birthday:** {user_birthday}\n"
                                       f"**Joined on:** {date_joined}")
         if thorny_user.profile.activity_shown:
