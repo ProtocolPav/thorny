@@ -4,7 +4,6 @@ from discord.ext import commands
 import json
 from thorny_core import errors
 from thorny_core.dbfactory import ThornyFactory
-from thorny_core import logs
 from thorny_core import functions as func
 from thorny_core import dbutils
 from thorny_core.dbcommit import commit
