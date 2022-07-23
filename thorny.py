@@ -35,7 +35,7 @@ print(
 TOKEN = config["token"]
 
 api_instance = giphy_client.DefaultApi()
-giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
+giphy_token = config["giphy_token"]
 
 intents = discord.Intents.all()
 thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
