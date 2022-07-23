@@ -1,7 +1,9 @@
 FROM python:latest
 
-RUN pip install asyncpg
-RUN pip install sanic
+COPY requirements.txt /thorny/thorny_core/requirements.txt
 
-EXPOSE 8000
+RUN pip install -r /thorny/thorny_core/requirements.txt
 
+ENV PYTHONPATH "${PYTHONPATH}:/thorny/"
+
+WORKDIR /thorny/thorny_core
