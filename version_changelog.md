@@ -1,8 +1,7 @@
 ### Version Info
-Version: v1.7.4  
-Nickname: Revival 
+Version: v1.8 
 
-### Changelog - Errors Update
+### Changelog - Class Update
 * Changed Errors
 * Added Birthday Events
 * Fixed bug where you would not get a level up message upon leveling up through disconnecting
