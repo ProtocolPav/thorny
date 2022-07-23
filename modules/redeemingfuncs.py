@@ -14,6 +14,8 @@ from discord import utils
 from datetime import datetime, timedelta
 from thorny_core import dbevent as ev
 
+#  Perhaps for this, I can include the entire piece of code here, all the way from removing the item and checking
+#  if it has been
 
 async def redeem_ticket(ctx, thorny_user: ThornyUser):
     ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],

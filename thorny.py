@@ -1,43 +1,41 @@
 from datetime import datetime, timedelta
-import time
-from dateutil.relativedelta import relativedelta
 
 import discord
 from discord.ext import commands, tasks
-from discord.utils import get
 
 import giphy_client
 from dbfactory import ThornyFactory
 from dbutils import User
 import dbevent as ev
 from dbevent import Event
-from thorny_core import errors
+import errors
 import json
 import random
+import sys
 from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level, setup
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
-api_instance = giphy_client.DefaultApi()
-giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
-
 print(
     """
- _____ _                            
-/__   \ |__   ___  _ __ _ __  _   _ 
-  / /\/ '_ \ / _ \| '__| '_ \| | | |
- / /  | | | | (_) | |  | | | | |_| |
- \/   |_| |_|\___/|_|  |_| |_|\__, |
-                              |___/ 
-    """)
+     _____ _
+    /__   \ |__   ___  _ __ _ __  _   _
+      / /\/ '_ \ / _ \| '__| '_ \| | | |
+     / /  | | | | (_) | |  | | | | |_| |
+     \/   |_| |_|\___/|_|  |_| |_|\__, |
+                                  |___/
+        """)
+# ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
+# if ans == 't':
+#     TOKEN = config["token"]
+# else:
+#     TOKEN = config["dev_token"]
+TOKEN = config["token"]
 
-ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
-if ans == 't':
-    TOKEN = config["token"]
-else:
-    TOKEN = config["dev_token"]
+api_instance = giphy_client.DefaultApi()
+giphy_token = config["giphy_token"]
 
 intents = discord.Intents.all()
 thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
@@ -74,6 +72,7 @@ async def birthday_checker():
 async def before_check():
     await thorny.wait_until_ready()
 
+
 birthday_checker.start()
 
 
@@ -86,8 +85,7 @@ birthday_checker.start()
 
 @thorny.slash_command()
 async def ping(ctx):
-    await ctx.respond(f"I am Thorny. I'm currently on {v}! I love travelling around the world and right now I'm at "
-                      f"{vers['nickname']}\n**Ping:** {round(thorny.latency, 3)}s")
+    await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
 
 
 @thorny.event
@@ -237,4 +235,5 @@ thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
 # thorny.add_cog(setup.Configurations(thorny))
 thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
+
 thorny.run(TOKEN)

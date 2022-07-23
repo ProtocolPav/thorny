@@ -169,3 +169,16 @@ class IncorrectStrikeID(ThornyError):
                              value="Seems to me like you entered a Strike ID that doesn't exist!")
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error
+
+
+class AccessDenied(ThornyError):
+    """Raised when command is disabled"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Darn",
+                             value="This command has been disabled for this server!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error

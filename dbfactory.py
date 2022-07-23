@@ -12,7 +12,7 @@ from discord.utils import get
 class ThornyFactory:
     @classmethod
     async def build(cls, member: discord.Member):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             user_id = member.id
             guild_id = member.guild.id
             now = datetime.now()
@@ -70,7 +70,7 @@ class ThornyFactory:
                                                 WHERE thorny_user_id = $1""", thorny_id)
 
             master_datalayer = DataLayer(discord_member=member,
-                                         connection_pool=pool.pool,
+                                         connection_pool=pool,
                                          thorny_user=thorny_user,
                                          profile=user_profile,
                                          column_data=profile_column_data,
@@ -86,7 +86,7 @@ class ThornyFactory:
 
     @classmethod
     async def create(cls, member_list: list[discord.Member]):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             for member in member_list:
                 if not member.bot:
                     user_id = member.id
@@ -120,7 +120,7 @@ class ThornyFactory:
 
     @classmethod
     async def deactivate(cls, member_list: list[discord.Member]):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             for member in member_list:
                 if not member.bot:
                     thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user

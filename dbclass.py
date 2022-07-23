@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import json
 import discord
-from thorny_core import errors
+import errors
 from dataclasses import dataclass, field
 from connection_pool import pool
 
@@ -37,7 +37,6 @@ class ThornyUserProfile:
         self.id = profile['thorny_user_id']
         self.slogan = profile['slogan'] or "My Very Cool Slogan (max. 5 words)"
         self.gamertag = profile['gamertag'] or "No Gamertag"
-        self.town = profile['town']
         self.role = profile['role'] or "Average Thorny Enjoyer"
         self.wiki = profile['wiki']
         self.aboutme = profile['aboutme'] or "I'm pretty cool, what about you?"
@@ -62,7 +61,8 @@ class ThornyUserProfile:
             updated = False
             data_copy = None
             for data in self.column_data:
-                if data["column_name"] == str(attribute) and data["character_maximum_length"] >= len(value):
+                if data["column_name"] == str(attribute) and (data["character_maximum_length"] is None
+                                                              or data["character_maximum_length"] >= len(value)):
                     updated = True
                     self.__setattr__(attribute, value)
                 elif data["column_name"] == str(attribute):
