@@ -15,7 +15,7 @@ class Base:
         self.returned = None
 
     async def select(self, item, table, where_condition=None, condition_is=None):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             if where_condition is not None:
                 self.returned = await conn.fetch(f"""
                                                  SELECT {item} FROM thorny.{table}
@@ -30,7 +30,7 @@ class Base:
                 return self.returned
 
     async def select_gamertags(self, guild_id, gamertag):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.returned = await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
@@ -39,7 +39,7 @@ class Base:
             return self.returned
 
     async def select_online(self, guild_id):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.returned = await conn.fetch("SELECT * FROM thorny.activity "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
@@ -51,7 +51,7 @@ class Base:
 
     async def update(self, item, item_new_value, table, where_condition=None, condition_is=None):
         self.returned = None  # just to make it a method
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             if where_condition is not None:
                 await conn.execute(f"""
                                     UPDATE thorny.{table}
@@ -80,7 +80,7 @@ class Leaderboard:
         self.levels_list = None
 
     async def select_activity(self, ctx, month: datetime):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             if datetime.now() < month:
                 month = month.replace(day=1) - relativedelta(years=1, days=1)
             else:
@@ -105,7 +105,7 @@ class Leaderboard:
                     self.user_rank = self.activity_list.index(user) + 1
 
     async def select_nugs(self, ctx):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.nugs_list = await conn.fetch(f"SELECT user_id, thorny_user_id, balance FROM thorny.user "
                                               f"WHERE thorny.user.guild_id = $1 "
                                               f"AND thorny.user.active = True "
@@ -117,12 +117,12 @@ class Leaderboard:
                     self.user_rank = self.nugs_list.index(user) + 1
 
     async def select_treasury(self):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.treasury_list = await conn.fetch(f"SELECT kingdom, treasury FROM thorny.kingdoms "
                                                   f"ORDER BY treasury DESC")
 
     async def select_levels(self, ctx, member: discord.Member = None):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.levels_list = await conn.fetch("""
                                                 SELECT thorny.user.user_id, thorny.levels.thorny_user_id, user_level
                                                 FROM thorny.user 
@@ -147,7 +147,7 @@ class Leaderboard:
 class Kingdom:
     @staticmethod
     async def select_kingdom(kingdom):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             kingdom_dict = await conn.fetchrow("SELECT * "
                                                "FROM thorny.kingdoms "
                                                "WHERE kingdom = $1", kingdom)
@@ -155,7 +155,7 @@ class Kingdom:
 
     @staticmethod
     async def update_kingdom(kingdom, section, value):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             try:
                 await conn.execute('UPDATE thorny.kingdoms '
                                    f'SET {section} = $1 '
@@ -169,7 +169,7 @@ class User:
         self.list = None
 
     async def select_birthdays(self):
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             self.list = await conn.fetch("""SELECT user_id, birthday, guild_id
                                             FROM thorny.user
                                             WHERE active = True AND birthday IS NOT NULL""")
@@ -179,7 +179,7 @@ class User:
 class Update:
     @staticmethod
     async def update_v1_7_4():
-        async with pool.pool.acquire() as conn:
+        async with pool.acquire() as conn:
             await conn.execute("""
                                 CREATE TABLE thorny.guilds (
                                 guild_id int8,
@@ -192,9 +192,47 @@ class Update:
                                 PRIMARY KEY(guild_id))""")
 
 
-"""Select Online Members
-Get User Kingdom
-Update item type
+class WebserverUpdates:
+    @staticmethod
+    async def connect(gamertag: str, event_time: datetime, connection):
+        thorny_user = await connection.fetchrow("""
+                                                SELECT thorny.user.thorny_user_id
+                                                FROM thorny.profile
+                                                INNER JOIN thorny.user ON 
+                                                thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                                WHERE gamertag = $1
+                                                AND thorny.user.guild_id = 733716450774351933
+                                                """,
+                                                gamertag)
+        await connection.execute("""
+                                 INSERT INTO thorny.activity(thorny_user_id, connect_time) 
+                                 VALUES($1, $2)
+                                 """,
+                                 thorny_user[0], event_time)
+        print(f"[{event_time}] [CONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has connected to Everthorn")
 
-Select Statements
-Update statements"""
+    @staticmethod
+    async def disconnect(gamertag: str, event_time: datetime, connection):
+        thorny_user = await connection.fetchrow("""
+                                                SELECT thorny.user.thorny_user_id
+                                                FROM thorny.profile
+                                                INNER JOIN thorny.user ON 
+                                                thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                                WHERE gamertag = $1
+                                                AND thorny.user.guild_id = 733716450774351933
+                                                """,
+                                                gamertag)
+        recent_connection = await connection.fetchrow("""
+                                                      SELECT * FROM thorny.activity
+                                                      WHERE thorny_user_id = $1
+                                                      ORDER BY connect_time DESC
+                                                      """,
+                                                      thorny_user[0])
+        playtime = event_time - recent_connection['connect_time']
+        await connection.execute("""
+                                 UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                 WHERE thorny_user_id = $3 and connect_time = $4
+                                 """,
+                                 event_time, playtime, thorny_user[0], recent_connection['connect_time'],
+                                 'Automatic Disconnect From Webserver (Thorny)')
+        print(f"[{event_time}] [DISCONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has disconnected")
