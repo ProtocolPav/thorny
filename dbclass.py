@@ -85,10 +85,9 @@ class ThornyUserPlaytime:
 
     def __init__(self, master_datalayer):
         self.pool = master_datalayer.connection_pool
-        playtime = master_datalayer.playtime
         stats = master_datalayer.playtime_stats
-        self.id = playtime['thorny_user_id']
-        self.session_average = playtime['session_average']
+        user = master_datalayer.thorny_user
+        self.id = user['thorny_user_id']
         if stats is not None:
             self.total_playtime = stats['total_playtime']
             self.current_playtime = stats['current_playtime']
@@ -193,7 +192,7 @@ class ThornyUserInventory:
         if item is None:
             raise errors.MissingItemError
         else:
-            if count is None or item.item_count - count < 0:
+            if count is None or item.item_count - count <= 0:
                 self.slots.remove(item)
             elif item.item_count - count >= 0:
                 item.item_count -= count

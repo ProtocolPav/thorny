@@ -43,9 +43,9 @@ class Base:
             self.returned = await conn.fetch("SELECT * FROM thorny.activity "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
-                                             "WHERE disconnect_time is NULL AND connect_time > $1 "
-                                             "AND thorny.user.guild_id = $2"
-                                             "ORDER BY connect_time DESC", datetime.now().replace(day=1),
+                                             "WHERE disconnect_time is NULL "
+                                             "AND thorny.user.guild_id = $1"
+                                             "ORDER BY connect_time DESC",
                                              guild_id)
             return self.returned
 
@@ -82,10 +82,13 @@ class Leaderboard:
     async def select_activity(self, ctx, month: datetime):
         async with pool.acquire() as conn:
             if datetime.now() < month:
-                month = month.replace(day=1) - relativedelta(years=1, days=1)
+                month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
             else:
-                month = month.replace(day=1) - relativedelta(days=1)
+                print(month)
+                month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                print(month)
             next_month = month + relativedelta(months=1)
+            print(next_month)
             self.activity_list = await conn.fetch(f"""
                                                   SELECT SUM(playtime), thorny.user.thorny_user_id, thorny.user.user_id
                                                   FROM thorny.activity 
@@ -201,9 +204,25 @@ class WebserverUpdates:
                                                 INNER JOIN thorny.user ON 
                                                 thorny.user.thorny_user_id = thorny.profile.thorny_user_id
                                                 WHERE gamertag = $1
-                                                AND thorny.user.guild_id = 733716450774351933
+                                                AND thorny.user.guild_id = 611008530077712395
                                                 """,
                                                 gamertag)
+        recent_connection = await connection.fetchrow("""
+                                                      SELECT * FROM thorny.activity
+                                                      WHERE thorny_user_id = $1
+                                                      ORDER BY connect_time DESC
+                                                      """,
+                                                      thorny_user[0])
+        if recent_connection['disconnect_time'] is None:
+            playtime = event_time - recent_connection['connect_time']
+            await connection.execute("""
+                                     UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                     WHERE thorny_user_id = $3 and connect_time = $4
+                                     """,
+                                     event_time, playtime, thorny_user[0], recent_connection['connect_time'],
+                                     'Automatic Disconnect')
+            print(f"[{event_time}] [DISCONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has disconnected")
+
         await connection.execute("""
                                  INSERT INTO thorny.activity(thorny_user_id, connect_time) 
                                  VALUES($1, $2)
@@ -219,7 +238,7 @@ class WebserverUpdates:
                                                 INNER JOIN thorny.user ON 
                                                 thorny.user.thorny_user_id = thorny.profile.thorny_user_id
                                                 WHERE gamertag = $1
-                                                AND thorny.user.guild_id = 733716450774351933
+                                                AND thorny.user.guild_id = 611008530077712395
                                                 """,
                                                 gamertag)
         recent_connection = await connection.fetchrow("""
@@ -234,5 +253,5 @@ class WebserverUpdates:
                                  WHERE thorny_user_id = $3 and connect_time = $4
                                  """,
                                  event_time, playtime, thorny_user[0], recent_connection['connect_time'],
-                                 'Automatic Disconnect From Webserver (Thorny)')
+                                 'Automatic Disconnect')
         print(f"[{event_time}] [DISCONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has disconnected")
