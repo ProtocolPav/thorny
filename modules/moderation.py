@@ -5,7 +5,9 @@ import httpx
 
 import json
 from thorny_core.dbfactory import ThornyFactory
+import thorny_core.dbevent as ev
 from thorny_core.dbcommit import commit
+from thorny_core.dbutils import Base
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -47,28 +49,52 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command()
+    @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
         async with httpx.AsyncClient() as client:
             r = await client.get("http://bds_webserver:8000/start")
-            if r.json()["accept"]:
-                await ctx.respond(f"Started the server")
+            if r.json()["server_started"]:
+                await ctx.respond(f"The server started successfully")
+            else:
+                await ctx.respond(f"Could not start the server, as it is already running!")
 
     @commands.slash_command()
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         async with httpx.AsyncClient() as client:
             r: httpx.Response = await client.get("http://bds_webserver:8000/stop")
-            if r.json()["accept"]:
-                await ctx.respond(f"Stopped the server")
+            online_users = await Base.select_online(Base(), ctx.guild.id)
+            for user in online_users:
+                thorny_user = await ThornyFactory.get(ctx.guild, user['thorny_user_id'])
+                connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
+                await connection.log_event_in_database()
 
-    @commands.slash_command()
+            if r.json()["server_stopped"]:
+                await ctx.respond(f"The server stopped successfully")
+            else:
+                await ctx.respond(f"The server is already stopped!")
+
+    @commands.slash_command(guild_ids=[611008530077712395,])
+    @commands.has_permissions(administrator=True)
+    async def kick(self, ctx, user: discord.Member):
+        thorny_user = await ThornyFactory.build(user)
+        async with httpx.AsyncClient() as client:
+            r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
+            if r.json()["kicked"]:
+                await ctx.respond(f"Kicked {thorny_user.profile.gamertag}")
+            else:
+                await ctx.respond(f"Couldn't Kick")
+
+    @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await ThornyFactory.build(user)
         async with httpx.AsyncClient() as client:
             r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
-            if r.json()["accept"]:
+            if r.json()["gamertag_added"]:
                 await ctx.respond(f"Whitelisted {thorny_user.profile.gamertag}")
+            else:
+                await ctx.respond(f"Could not whitelist {thorny_user.profile.gamertag}. "
+                                  f"Either you have already whitelisted this gamertag or it does not exist.")
 
