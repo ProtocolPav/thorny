@@ -195,13 +195,16 @@ class Playtime(commands.Cog):
                            f"connected {time[0]}h{time[1]}m ago"
 
         online_embed = discord.Embed(color=0x6495ED)
+        if ctx.guild.id == 611008530077712395:
+            days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+            online_embed.title = f"Day {days_since_start.days + 1}"
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
-                                   value="The Server is Empty! Nobody is connected!")
+                                   value="*All you can hear are the sounds of the crickets chirping in the silent "
+                                         "night...*", inline=False)
         elif online_text != "":
-            online_embed.add_field(name="**Connected Players (Connected less than 12h ago)**\n"
-                                        "*Playtime: As seen here*",
-                                   value=online_text)
+            online_embed.add_field(name="**Connected Players**\n",
+                                   value=online_text, inline=False)
         if afk_text != "":
             online_embed.add_field(name="**AFK Players (Connected over 12h ago)**\n"
                                         "*Playtime: Defaults to 1h05m*",
