@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+import asyncio
+from datetime import datetime, timedelta, time, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -32,7 +33,7 @@ print(
 #     TOKEN = config["token"]
 # else:
 #     TOKEN = config["dev_token"]
-TOKEN = config["token"]
+TOKEN = config["dev_token"]
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
@@ -68,12 +69,21 @@ async def birthday_checker():
                         await event.log_event_in_discord()
 
 
+@tasks.loop(time=time(hour=16))
+async def day_counter():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
+    days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+    channel = thorny.get_channel(805722487261888522)
+    await channel.send(f"*Rise and shine, Everthorn!*\n"
+                       f"**Day {days_since_start.days}** has dawned upon us.")
+
+
 @birthday_checker.before_loop
 async def before_check():
     await thorny.wait_until_ready()
 
-
 birthday_checker.start()
+day_counter.start()
 
 
 # @thorny.slash_command(guild_ids=[723951903725060136,])
@@ -160,11 +170,18 @@ async def on_message_edit(before, after):
 
 
 @thorny.event
-async def on_raw_reaction_add(payload):
+async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     guild = thorny.get_guild(payload.guild_id)
     male = discord.utils.get(guild.roles, name="He/Him")
     female = discord.utils.get(guild.roles, name="She/Her")
     other = discord.utils.get(guild.roles, name="They/Them")
+
+    knight = discord.utils.get(guild.roles, name="Knight")
+    builder = discord.utils.get(guild.roles, name="Builder")
+    redstoner = discord.utils.get(guild.roles, name="Stoner")
+    merchant = discord.utils.get(guild.roles, name="Merchant")
+    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+
     if payload.message_id == config['channels']['pronoun_message_id']:
         if payload.emoji.name == '👱':
             member = guild.get_member(payload.user_id)
@@ -176,6 +193,23 @@ async def on_raw_reaction_add(payload):
             member = guild.get_member(payload.user_id)
             await member.add_roles(female)
 
+    elif payload.message_id == 989073514315264070:
+        if payload.emoji.name == "Knight":
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(knight)
+        elif payload.emoji.name == "Builder":
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(builder)
+        elif payload.emoji.name == "Stoner":
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(redstoner)
+        elif payload.emoji.name == "Merchant":
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(merchant)
+        elif payload.emoji.name == "Gatherer":
+            member = guild.get_member(payload.user_id)
+            await member.add_roles(gatherer)
+
 
 @thorny.event
 async def on_raw_reaction_remove(payload):
@@ -183,6 +217,13 @@ async def on_raw_reaction_remove(payload):
     male = discord.utils.get(guild.roles, name="He/Him")
     female = discord.utils.get(guild.roles, name="She/Her")
     other = discord.utils.get(guild.roles, name="They/Them")
+
+    knight = discord.utils.get(guild.roles, name="Knight")
+    builder = discord.utils.get(guild.roles, name="Builder")
+    redstoner = discord.utils.get(guild.roles, name="Stoner")
+    merchant = discord.utils.get(guild.roles, name="Merchant")
+    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+
     if payload.message_id == config['channels']['pronoun_message_id']:
         if payload.emoji.name == '👱':
             member = guild.get_member(payload.user_id)
@@ -193,6 +234,23 @@ async def on_raw_reaction_remove(payload):
         elif payload.emoji.name == '👩‍🦰':
             member = guild.get_member(payload.user_id)
             await member.remove_roles(female)
+
+    elif payload.message_id == 997595962933522482:
+        if payload.emoji.name == "Knight":
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(knight)
+        elif payload.emoji.name == "Builder":
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(builder)
+        elif payload.emoji.name == "Stoner":
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(redstoner)
+        elif payload.emoji.name == "Merchant":
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(merchant)
+        elif payload.emoji.name == "Gatherer":
+            member = guild.get_member(payload.user_id)
+            await member.remove_roles(gatherer)
 
 
 @thorny.event
@@ -233,7 +291,6 @@ thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-# thorny.add_cog(setup.Configurations(thorny))
 thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
 
 thorny.run(TOKEN)

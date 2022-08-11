@@ -1,5 +1,5 @@
 ### Version Info
-Version: v1.8 
+Version: v1.8.1
 
 ### Changelog - Class Update
 * Changed Errors

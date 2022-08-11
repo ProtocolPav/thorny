@@ -2,7 +2,7 @@ import discord
 
 
 class UnexpectedError1(discord.ApplicationCommandError):
-    """ Raised when something unexpected happens """
+    """ Raised when something truly unexpected happens """
     def __init__(self, tb: str):
         self.error: discord.Embed = discord.Embed(color=0xD70040)
         self.traceback = tb
@@ -16,14 +16,14 @@ class UnexpectedError1(discord.ApplicationCommandError):
 
 
 class UnexpectedError2(discord.ApplicationCommandError):
-    """ Raised when something unexpected happend, but is a bit more expected than UnexpectedError1 """
+    """ Raised when something unexpected happens """
     def __init__(self, tb: str):
         self.error: discord.Embed = discord.Embed(color=0xD70040)
-        self.traceback = tb.split(": ")[2]
+        self.traceback = tb
 
     def return_embed(self) -> discord.Embed:
         self.error.add_field(name="<:_no:921840417362804777> Sorry for this...",
-                             value="This is something that I didn't expect to happen. Here's the issue:\n"
+                             value="I had a bit of a glitch in my code. Here's the issue:\n"
                                    f"{self.traceback}")
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error

@@ -13,9 +13,9 @@ class ThornyFactory:
     @classmethod
     async def build(cls, member: discord.Member):
         async with pool.acquire() as conn:
+            now = datetime.now()
             user_id = member.id
             guild_id = member.guild.id
-            now = datetime.now()
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE user_id = $1 AND guild_id = $2""", user_id, guild_id)
             thorny_id = thorny_user['thorny_user_id']
@@ -33,8 +33,6 @@ class ThornyFactory:
                                                         FROM INFORMATION_SCHEMA.COLUMNS
                                                         WHERE TABLE_SCHEMA = 'thorny' AND TABLE_NAME   = 'profile'
                                                       """)
-            user_activity = await conn.fetchrow("""SELECT * FROM thorny.user_activity
-                                                   WHERE thorny_user_id = $1""", thorny_id)
             user_playtime_stats = await conn.fetchrow("""SELECT SUM(playtime) as total_playtime, 
                                                          SUM(case when connect_time
                                                          between $3 and $2 then playtime end) as current_playtime,
@@ -74,7 +72,6 @@ class ThornyFactory:
                                          thorny_user=thorny_user,
                                          profile=user_profile,
                                          column_data=profile_column_data,
-                                         playtime=user_activity,
                                          playtime_stats=user_playtime_stats,
                                          daily_average=user_daily_average,
                                          recent_playtime=user_recent_playtime,
@@ -119,6 +116,14 @@ class ThornyFactory:
                               f"{user['username']}, Thorny ID {user['thorny_user_id']}")
 
     @classmethod
+    async def get(cls, guild: discord.Guild, thorny_id: int):
+        async with pool.acquire() as conn:
+            thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
+                                                 WHERE thorny_user_id = $1""", thorny_id)
+            member = guild.get_member(thorny_user['user_id'])
+        return await ThornyFactory.build(member)
+
+    @classmethod
     async def deactivate(cls, member_list: list[discord.Member]):
         async with pool.acquire() as conn:
             for member in member_list:
@@ -141,7 +146,6 @@ class DataLayer:
     thorny_user: pg.Record
     profile: pg.Record
     column_data: pg.Record
-    playtime: pg.Record
     playtime_stats: pg.Record
     daily_average: pg.Record
     recent_playtime: pg.Record
