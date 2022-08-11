@@ -27,9 +27,7 @@ class Profile(commands.Cog):
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        kingdom = func.get_user_kingdom(ctx, user)
         thorny_user = await ThornyFactory.build(user)
-        thorny_user.kingdom = kingdom
         await commit(thorny_user)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
@@ -86,11 +84,11 @@ class Profile(commands.Cog):
     async def edit(self, ctx,
                    section: discord.Option(str, "Pick a section of your profile to edit",
                                            autocomplete=utils.basic_autocomplete(profile_edit_sections)),
-                   value):
+                   text: discord.Option(str, "Put the text you want to appear in the section")):
         thorny_user = await ThornyFactory.build(ctx.author)
-        thorny_user.profile.update(section, value)
+        thorny_user.profile.update(section, text)
         await commit(thorny_user)
-        await Profile.view(self, ctx)
+        await Profile.view(ctx)
 
     @profile.command(description="Toggle visibility of a category on your profile")
     async def toggle(self, ctx,

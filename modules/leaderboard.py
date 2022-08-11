@@ -28,8 +28,8 @@ class Leaderboard(commands.Cog):
 
         total_pages = math.ceil(len(playtime) / 10)
         for page in range(1, total_pages+1):
-            start = page*20 - 20
-            stop = page*20
+            start = page*10 - 10
+            stop = page*10
             playtime_text = []
             for user in playtime[start:stop]:
                 time = f"{user['sum']}".split(":")

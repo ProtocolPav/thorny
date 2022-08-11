@@ -11,6 +11,20 @@ from thorny_core.dbcommit import commit
 from thorny_core import dbevent as ev
 
 
+class MyModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.add_item(discord.ui.InputText(label="Short Input"))
+        self.add_item(discord.ui.InputText(label="Long Input", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(title="Modal Results")
+        embed.add_field(name="Short Input", value=self.children[0].value)
+        embed.add_field(name="Long Input", value=self.children[1].value)
+        await interaction.response.send_message(embeds=[embed])
+
+
 class Configurations(commands.Cog):
     def __init__(self, client):
         self.client: discord.Bot = client
@@ -32,8 +46,8 @@ class Configurations(commands.Cog):
         setup_embed.add_field(name="Let's get started",
                               value="There's a few things we should set up, these are needed so I can work exactly "
                                     "like you want me to work! Here's an overview of what we will be doing:\n"
-                                    "- User Joins, Leaves and Birthday channel setup\n"
-                                    "- Enable/Disable Levels\n"
+                                    "- User channel setup (Where Joins, Leaves and Birthday messages show up)\n"
+                                    "- Thorny Levels\n"
                                     "- Thorny Logs channel\n"
                                     "- Timeout role and Timeout Channel (Coming in a future update)\n"
                                     "- Channel for Thorny Update messages")
@@ -150,3 +164,8 @@ class Configurations(commands.Cog):
                                     f"**Updates Channel**: {updates_channel.content}\n\n"
                                     f"You can delete this channel now if you want!")
         await channel.send(embed=setup_embed)
+
+    @commands.slash_command()
+    async def modal_test(self, ctx: discord.ApplicationContext):
+        modal = MyModal(title="Modal via Slash Command")
+        await ctx.send_modal(modal)
