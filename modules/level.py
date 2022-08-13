@@ -1,9 +1,8 @@
 import discord
 from discord.ext import commands
 
-from thorny_core.dbfactory import ThornyFactory
+from thorny_core.db import UserFactory, commit
 from thorny_core import dbutils
-from thorny_core.dbcommit import commit
 
 
 class Level(commands.Cog):
@@ -14,16 +13,16 @@ class Level(commands.Cog):
     async def level(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         last_required_xp = 100
-        if thorny_user.profile.level == 0:
-            total_xp_to_gain = thorny_user.profile.required_xp
-            xp_gained = thorny_user.profile.xp
+        if thorny_user.level.level == 0:
+            total_xp_to_gain = thorny_user.level.required_xp
+            xp_gained = thorny_user.level.xp
         else:
-            for lvl in range(1, thorny_user.profile.level):
+            for lvl in range(1, thorny_user.level.level):
                 last_required_xp += (lvl ** 2) * 4 + (50 * lvl) + 100
-            total_xp_to_gain = thorny_user.profile.required_xp - last_required_xp
-            xp_gained = thorny_user.profile.xp - last_required_xp
+            total_xp_to_gain = thorny_user.level.required_xp - last_required_xp
+            xp_gained = thorny_user.level.xp - last_required_xp
         percentage = round(xp_gained / total_xp_to_gain, 2)
         percentage *= 100
 
@@ -41,23 +40,23 @@ class Level(commands.Cog):
         await levels_leaderboard.select_levels(ctx, user)
         user_rank = levels_leaderboard.user_rank
 
-        rank_embed.add_field(name=f"You are Level {thorny_user.profile.level}!",
+        rank_embed.add_field(name=f"You are Level {thorny_user.level.level}!",
                              value=f"**Your Rank:** #{user_rank} on the Leaderboard\n"
-                                   f"**Lv.{thorny_user.profile.level}** {progressbar} "
-                                   f"**Lv.{thorny_user.profile.level + 1}**\n\n"
-                                   f"Level {thorny_user.profile.level} is {int(percentage)}% Complete")
+                                   f"**Lv.{thorny_user.level.level}** {progressbar} "
+                                   f"**Lv.{thorny_user.level.level + 1}**\n\n"
+                                   f"Level {thorny_user.level.level} is {int(percentage)}% Complete")
         await ctx.respond(embed=rank_embed)
 
     @commands.slash_command(description="Level up a user")
     @commands.has_permissions(administrator=True)
     async def levelup(self, ctx, user: discord.Member, level: int):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         required_xp = 100
         for lvl in range(1, level):
             required_xp += (lvl ** 2) * 4 + (50 * lvl) + 100
 
-        thorny_user.profile.required_xp = required_xp
-        thorny_user.profile.level = level - 1
-        thorny_user.profile.xp = required_xp - 1
+        thorny_user.level.required_xp = required_xp
+        thorny_user.level.level = level - 1
+        thorny_user.level.xp = required_xp - 1
         await ctx.respond(f"{thorny_user.username} is now at Level {level}")
         await commit(thorny_user)
