@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 
 import discord
 
-from connection_pool import pool
-from dbfactory import ThornyFactory
+from db import UserFactory, pool
 from dateutil.relativedelta import relativedelta
 
 
@@ -102,9 +101,9 @@ class Leaderboard:
                                                   ORDER BY SUM(playtime) DESC
                                                   """,
                                                   month, next_month, ctx.guild.id)
-            thorny_user = await ThornyFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.author)
             for user in self.activity_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.activity_list.index(user) + 1
 
     async def select_nugs(self, ctx):
@@ -114,9 +113,9 @@ class Leaderboard:
                                               f"AND thorny.user.active = True "
                                               f"GROUP BY user_id, thorny_user_id, balance "
                                               f"ORDER BY balance DESC", ctx.guild.id)
-            thorny_user = await ThornyFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.author)
             for user in self.nugs_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.nugs_list.index(user) + 1
 
     async def select_treasury(self):
@@ -139,11 +138,11 @@ class Leaderboard:
                                                 """,
                                                 ctx.guild.id)
             if member is None:
-                thorny_user = await ThornyFactory.build(ctx.author)
+                thorny_user = await UserFactory.build(ctx.author)
             else:
-                thorny_user = await ThornyFactory.build(member)
+                thorny_user = await UserFactory.build(member)
             for user in self.levels_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.levels_list.index(user) + 1
 
 

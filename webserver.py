@@ -36,3 +36,5 @@ async def disconnect(request: Request, gamertag: str):
     async with pool.acquire() as conn:
         await WebserverUpdates.disconnect(gamertag, datetime_object, conn)
     return sanicjson({"Accept": True})
+
+app.run(host="0.0.0.0")

@@ -6,8 +6,7 @@ import json
 import discord
 import errors
 from dataclasses import dataclass
-from dbclass import ThornyUser
-from dbcommit import commit
+from db import User, commit
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
@@ -19,7 +18,7 @@ class EventMetadata:
     Always initialize the Event Metadata, and then pass it on to the Event Class as needed
     """
 
-    user: ThornyUser
+    user: User
     client: discord.Client
     pool: pg.Pool
     event_time: datetime
@@ -32,8 +31,8 @@ class EventMetadata:
     adjusting_hour = None
     adjusting_minute = None
 
-    sender_user: ThornyUser = None
-    receiver_user: ThornyUser = None
+    sender_user: User = None
+    receiver_user: User = None
     nugs_amount: int = None
 
     level_up: bool = False
@@ -79,7 +78,7 @@ class ConnectEvent(Event):
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'CONNECTION', colour=0x44ef56)
         log_embed.set_footer(text=f"Event Time: {self.time}")
-        log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
+        log_embed.set_author(name=self.user.username, icon_url=self.user.discord_member.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
@@ -91,7 +90,7 @@ class ConnectEvent(Event):
                                    INSERT INTO thorny.activity(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
-                                   self.user.id, self.time)
+                                   self.user.thorny_id, self.time)
                 data.database_log = True
             elif datetime.now() - self.recent_connection['connect_time'] > timedelta(hours=12):
                 playtime = timedelta(hours=1, minutes=5)
@@ -99,17 +98,17 @@ class ConnectEvent(Event):
                                    UPDATE thorny.activity SET disconnect_time = $1, playtime = $2 
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, playtime, self.user.id, self.recent_connection['connect_time'])
+                                   self.time, playtime, self.user.thorny_id, self.recent_connection['connect_time'])
 
                 await conn.execute("""
                                    INSERT INTO thorny.activity(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
-                                   self.user.id, self.time)
+                                   self.user.thorny_id, self.time)
                 data.database_log = True
                 data.playtime_overtime = True
                 data.playtime = playtime
-            print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.user.id}")
+            print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.user.thorny_id}")
             return data
 
 
@@ -121,7 +120,7 @@ class DisconnectEvent(Event):
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'DISCONNECTION', colour=0x44ef56)
         log_embed.set_footer(text=f"Event Time: {self.time}")
-        log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
+        log_embed.set_author(name=self.user.username, icon_url=self.user.discord_member.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
@@ -139,11 +138,11 @@ class DisconnectEvent(Event):
                                    UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, playtime, self.user.id, self.recent_connection['connect_time'],
+                                   self.time, playtime, self.user.thorny_id, self.recent_connection['connect_time'],
                                    data.event_comment)
                 data.database_log = True
                 data.playtime = playtime
-            print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.user.id}")
+            print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.user.thorny_id}")
             return data
 
 
@@ -155,7 +154,7 @@ class AdjustEvent(Event):
     async def log_event_in_discord(self):
         log_embed = discord.Embed(title=f'PLAYTIME ADJUSTED', colour=0x44ef56)
         log_embed.set_footer(text=f"Event Time: {self.time}")
-        log_embed.set_author(name=self.user.username, icon_url=self.user.member_object.display_avatar.url)
+        log_embed.set_author(name=self.user.username, icon_url=self.user.discord_member.display_avatar.url)
         activity_channel = self.client.get_channel(self.config['channels']['activity_logs'])
         await activity_channel.send(embed=log_embed)
 
@@ -172,7 +171,7 @@ class AdjustEvent(Event):
                                     UPDATE thorny.activity SET playtime = $1, description = $2
                                     WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   playtime, desc, self.user.id, self.recent_connection['connect_time'])
+                                   playtime, desc, self.user.thorny_id, self.recent_connection['connect_time'])
                 self.metadata.database_log = True
         return self.metadata
 
@@ -191,7 +190,7 @@ class PlayerTransaction(Event):
 
         log_embed = discord.Embed(color=0xF4C430)
         log_embed.add_field(name="**Transaction**",
-                            value=f"<@{data.sender_user.id}> paid <@{data.receiver_user.id}> "
+                            value=f"<@{data.sender_user.thorny_id}> paid <@{data.receiver_user.thorny_id}> "
                                   f"**<:Nug:884320353202081833>{data.nugs_amount}**\n"
                                   f"Reason: {data.event_comment}")
         log_embed.set_footer(text=f"Event Time: {self.time}")
@@ -213,7 +212,7 @@ class StoreTransaction(Event):
 
         log_embed = discord.Embed(color=0xF4C430)
         log_embed.add_field(name="**Transaction**",
-                            value=f"<@{data.sender_user.id}> paid the Store "
+                            value=f"<@{data.sender_user.thorny_id}> paid the Store "
                                   f"**<:Nug:884320353202081833>{data.nugs_amount}**\n"
                                   f"Reason: {data.event_comment}")
         log_embed.set_footer(text=f"Event Time: {self.time}")
@@ -229,37 +228,37 @@ class GainXP(Event):
         thorny_user = self.metadata.user
         thorny_user.counters.level_last_message = datetime.now()
         multiplier = self.metadata.xp_multiplier
-        xp_at_first = thorny_user.profile.xp
+        xp_at_first = thorny_user.level.xp
 
         if self.metadata.playtime is None:
-            thorny_user.profile.xp += random.randint(5 * multiplier, 16 * multiplier)
+            thorny_user.level.xp += random.randint(5 * multiplier, 16 * multiplier)
         else:
             if not self.metadata.playtime_overtime:
                 time_in_minutes = self.metadata.playtime.total_seconds() / 60
-                thorny_user.profile.xp += (1 * time_in_minutes) * multiplier
+                thorny_user.level.xp += (1 * time_in_minutes) * multiplier
 
-        if thorny_user.profile.xp >= thorny_user.profile.required_xp:
-            thorny_user.profile.level += 1
-            lv = thorny_user.profile.level
-            thorny_user.profile.required_xp += (lv ** 2) * 4 + (50 * lv) + 100
+        if thorny_user.level.xp >= thorny_user.level.required_xp:
+            thorny_user.level.level += 1
+            lv = thorny_user.level.level
+            thorny_user.level.required_xp += (lv ** 2) * 4 + (50 * lv) + 100
             self.metadata.level_up = True
         await commit(thorny_user)
-        xp_gain = thorny_user.profile.xp - xp_at_first
+        xp_gain = thorny_user.level.xp - xp_at_first
         self.metadata.xp_gained = int(xp_gain)
         self.metadata.user = thorny_user
         self.metadata.database_log = True
         return self.metadata
 
     async def log_event_in_discord(self):
-        api_response = api_instance.gifs_search_get(giphy_token, f"{self.metadata.user.profile.level}", limit=10)
+        api_response = api_instance.gifs_search_get(giphy_token, f"{self.metadata.user.level.level}", limit=10)
         gifs_list = list(api_response.data)
         gif = random.choice(gifs_list)
 
-        level_up_embed = discord.Embed(colour=self.metadata.user.member_object.colour)
+        level_up_embed = discord.Embed(colour=self.metadata.user.discord_member.colour)
         level_up_embed.set_author(name=self.metadata.user.username,
-                                  icon_url=self.metadata.user.member_object.display_avatar.url)
+                                  icon_url=self.metadata.user.discord_member.display_avatar.url)
         level_up_embed.add_field(name=f":partying_face: Congrats!",
-                                 value=f"You leveled up to **Level {self.metadata.user.profile.level}!**\n"
+                                 value=f"You leveled up to **Level {self.metadata.user.level.level}!**\n"
                                        f"Keep chatting and maybe, just maybe, you'll beat the #1")
         level_up_embed.set_image(url=gif.images.original.url)
         await self.metadata.level_up_message.channel.send(embed=level_up_embed)
@@ -276,7 +275,7 @@ class MessageEdit(Event):
         if self.metadata.message_before.content != self.metadata.message_after.content:
             log_embed = discord.Embed(color=0xF4C430)
             log_embed.add_field(name="**Message Edited**",
-                                value=f"{self.user.member_object.mention} edited a message in "
+                                value=f"{self.user.discord_member.mention} edited a message in "
                                       f"<#{self.metadata.message_before.channel.id}>:\n"
                                       f"**BEFORE:**\n{self.metadata.message_before.content}\n"
                                       f"**AFTER:**\n{self.metadata.message_after.content}")
@@ -296,7 +295,7 @@ class MessageDelete(Event):
         if self.metadata.deleted_message is not None:
             log_embed = discord.Embed(color=0xF4C430)
             log_embed.add_field(name="**Message Deleted**",
-                                value=f"{self.user.member_object.mention} deleted a message in "
+                                value=f"{self.user.discord_member.mention} deleted a message in "
                                       f"<#{self.metadata.deleted_message.channel.id}>:"
                                       f"\n{self.metadata.deleted_message.content}")
             log_embed.set_footer(text=f'Event Time: {self.time}')
@@ -313,7 +312,7 @@ class UserJoin(Event):
 
     async def log_event_in_discord(self):
         user = self.metadata.user
-        guild = user.member_object.guild
+        guild = user.discord_member.guild
 
         if str(guild.member_count)[-1] == "1":
             suffix = "st"
@@ -333,7 +332,7 @@ class UserJoin(Event):
         join_embed.add_field(name=f"**Welcome to {guild.name}, {user.username}!**",
                              value=f"You are the **{guild.member_count}{suffix}** member!\n\n"
                                    f"Have fun here, and remember to follow the Rules.")
-        join_embed.set_thumbnail(url=user.member_object.display_avatar.url)
+        join_embed.set_thumbnail(url=user.discord_member.display_avatar.url)
         join_embed.set_image(url=gif.images.original.url)
 
         join_channel = self.client.get_channel(self.config['channels']['join_channel'])
@@ -384,20 +383,21 @@ class Birthday(Event):
         else:
             suffix = "th"
 
-        birthday_message = f"Wohoo!! It is {user.member_object.mention}'s {age}{suffix} birthday today! " \
+        birthday_message = f"Wohoo!! It is {user.discord_member.mention}'s {age}{suffix} birthday today! " \
                            f"Happy Birthday, {user.username}! :partying_face: :partying_face: :partying_face: "
         join_channel = self.client.get_channel(self.config['channels']['join_channel'])
         await join_channel.send(birthday_message)
 
 
-async def fetch(event, thorny_user: ThornyUser, client, metadata: EventMetadata = None):
+async def fetch(event, thorny_user: User, client, metadata: EventMetadata = None):
     if metadata is None:
-        metadata = EventMetadata(thorny_user, client, thorny_user.pool, datetime.now().replace(microsecond=0))
-    async with thorny_user.pool.acquire() as connection:
+        metadata = EventMetadata(thorny_user, client, thorny_user.connection_pool,
+                                 datetime.now().replace(microsecond=0))
+    async with thorny_user.connection_pool.acquire() as connection:
         metadata.recent_connection = await connection.fetchrow("""
                                                                SELECT * FROM thorny.activity
                                                                WHERE thorny_user_id = $1
                                                                ORDER BY connect_time DESC
                                                                """,
-                                                               thorny_user.id)
+                                                               thorny_user.thorny_id)
         return event(metadata)
