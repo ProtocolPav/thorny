@@ -53,6 +53,8 @@ def profile_lore_embed(thorny_user: user.User) -> discord.Embed:
                                icon_url=thorny_user.discord_member.display_avatar.url)
     lore_page_embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
 
+    emoji = "⦿"
+
     lore_page_embed.add_field(name="My Character",
                               value=f"**Name:** Captain Paul Easton\n"
                                     f"**Age:** 32\n"
@@ -63,12 +65,12 @@ def profile_lore_embed(thorny_user: user.User) -> discord.Embed:
                               )
 
     lore_page_embed.add_field(name="Skills",
-                              value=f"**Agility:** 🎴🎴\n"
-                                    f"**Valor:** 🎴🎴🎴🎴🎴\n"
-                                    f"**Strength:** 🎴\n"
-                                    f"**Charisma:** 🎴🎴🎴\n"
-                                    f"**Creativity:** 🎴🎴\n"
-                                    f"**Ingenuity:** 🎴🎴🎴🎴\n"
+                              value=f"**Agility:** {emoji*2}\n"
+                                    f"**Valor:** {emoji*6}\n"
+                                    f"**Strength:** {emoji*1}\n"
+                                    f"**Charisma:** {emoji*3}\n"
+                                    f"**Creativity:** {emoji*2}\n"
+                                    f"**Ingenuity:** {emoji*4}\n"
                               )
 
     lore_page_embed.add_field(name=f"**:dart: Character Backstory**",
