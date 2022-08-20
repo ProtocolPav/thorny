@@ -10,6 +10,7 @@ from dbutils import User
 import dbevent as ev
 from dbevent import Event
 import errors
+import traceback
 import json
 import random
 import sys
@@ -92,20 +93,31 @@ async def ping(ctx):
 
 
 @thorny.event
-async def on_application_command_error(context: discord.ApplicationContext, exception):
+async def on_application_command_error(context: discord.ApplicationContext, exception: Exception):
+    command = context.command
+    if command and command.has_error_handler():
+        return
+
+    cog = context.cog
+    if cog and cog.has_error_handler():
+        return
+
+    print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
+    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
     if isinstance(exception, errors.ThornyError):
         try:
             await context.respond(embed=exception.return_embed(), ephemeral=True)
         except discord.NotFound:
             await context.channel.send(embed=exception.return_embed())
     elif isinstance(exception, discord.ApplicationCommandInvokeError):
-        error = errors.UnexpectedError2(str(exception.with_traceback(None)))
+        error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         try:
             await context.respond(embed=error.return_embed(), ephemeral=True)
         except discord.NotFound:
             await context.channel.send(embed=error.return_embed())
     else:
-        error = errors.UnexpectedError1(str(exception.with_traceback(None)))
+        error = errors.UnexpectedError1(str(exception.with_traceback(exception.__traceback__)))
         try:
             await context.respond(embed=error.return_embed())
         except discord.NotFound:
