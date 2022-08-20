@@ -2,10 +2,10 @@ from datetime import datetime
 import discord
 from discord.ext import commands, pages
 from discord.utils import basic_autocomplete
-import json
 import math
 
 from thorny_core import dbutils
+from thorny_core.db.factory import UserFactory
 from thorny_core.uikit import slashoptions
 
 
@@ -24,8 +24,10 @@ class Leaderboard(commands.Cog):
         self.pages = []
         month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
 
+        thorny_user = await UserFactory.build(ctx.author)
+
         playtime_leaderboard = dbutils.Leaderboard()
-        await playtime_leaderboard.select_activity(ctx, month)
+        await playtime_leaderboard.select_activity(thorny_user, month)
         playtime = playtime_leaderboard.activity_list
 
         total_pages = math.ceil(len(playtime) / 10)

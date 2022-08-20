@@ -21,7 +21,6 @@ class Profile(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
-        await commit(thorny_user)
 
         if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
             is_donator = f'I donated to Everthorn!'
@@ -32,9 +31,9 @@ class Profile(commands.Cog):
                                             color=user.color)
         playtime_page_embed.set_footer(text=f"{v} | Playtime")
 
-        pages = [embeds.profile_main_embed(thorny_user, is_donator),
-                 embeds.profile_lore_embed(thorny_user),
-                 embeds.profile_stats_ember(thorny_user)]
+        pages = [await embeds.profile_main_embed(thorny_user, is_donator),
+                 await embeds.profile_lore_embed(thorny_user),
+                 await embeds.profile_stats_embed(thorny_user)]
         await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
 
     @commands.user_command(name="Thorny Profile", description="See this user's profile")
@@ -53,7 +52,7 @@ class Profile(commands.Cog):
 
         pages = [embeds.profile_main_embed(thorny_user, is_donator),
                  embeds.profile_lore_embed(thorny_user),
-                 embeds.profile_stats_ember(thorny_user)]
+                 embeds.profile_stats_embed(thorny_user)]
         await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
@@ -73,14 +72,14 @@ class Profile(commands.Cog):
             date_system = datetime.strptime(date, "%B %d")
 
         thorny_user = await UserFactory.build(ctx.author)
-        thorny_user.birthday = date_system
+        thorny_user.birthday.time = date_system
         await commit(thorny_user)
-        await ctx.respond(f"Your Birthday is set to: **{date}**", ephemeral=True)
+        await ctx.respond(f"Your Birthday is set to: **{thorny_user.birthday}**", ephemeral=True)
 
     @birthday.command(description="Remove your birthday")
     async def remove(self, ctx):
         thorny_user = await UserFactory.build(ctx.author)
-        thorny_user.birthday = None
+        thorny_user.birthday.time = None
         await commit(thorny_user)
         await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages and gifts though :(",
                           ephemeral=True)
