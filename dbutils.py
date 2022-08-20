@@ -1,12 +1,9 @@
 import asyncpg
-import asyncpg as pg
-import asyncio
 from datetime import datetime, timedelta
 
 import discord
 
-from connection_pool import pool
-from dbfactory import ThornyFactory
+from db import UserFactory, pool, User
 from dateutil.relativedelta import relativedelta
 
 
@@ -79,16 +76,13 @@ class Leaderboard:
         self.treasury_list = None
         self.levels_list = None
 
-    async def select_activity(self, ctx, month: datetime):
+    async def select_activity(self, thorny_user: User, month: datetime):
         async with pool.acquire() as conn:
             if datetime.now() < month:
                 month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
             else:
-                print(month)
                 month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                print(month)
             next_month = month + relativedelta(months=1)
-            print(next_month)
             self.activity_list = await conn.fetch(f"""
                                                   SELECT SUM(playtime), thorny.user.thorny_user_id, thorny.user.user_id
                                                   FROM thorny.activity 
@@ -101,10 +95,9 @@ class Leaderboard:
                                                   GROUP BY thorny.user.user_id, thorny.user.thorny_user_id
                                                   ORDER BY SUM(playtime) DESC
                                                   """,
-                                                  month, next_month, ctx.guild.id)
-            thorny_user = await ThornyFactory.build(ctx.author)
+                                                  month, next_month, thorny_user.guild_id)
             for user in self.activity_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.activity_list.index(user) + 1
 
     async def select_nugs(self, ctx):
@@ -114,9 +107,9 @@ class Leaderboard:
                                               f"AND thorny.user.active = True "
                                               f"GROUP BY user_id, thorny_user_id, balance "
                                               f"ORDER BY balance DESC", ctx.guild.id)
-            thorny_user = await ThornyFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.author)
             for user in self.nugs_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.nugs_list.index(user) + 1
 
     async def select_treasury(self):
@@ -139,11 +132,11 @@ class Leaderboard:
                                                 """,
                                                 ctx.guild.id)
             if member is None:
-                thorny_user = await ThornyFactory.build(ctx.author)
+                thorny_user = await UserFactory.build(ctx.author)
             else:
-                thorny_user = await ThornyFactory.build(member)
+                thorny_user = await UserFactory.build(member)
             for user in self.levels_list:
-                if user['thorny_user_id'] == thorny_user.id:
+                if user['thorny_user_id'] == thorny_user.thorny_id:
                     self.user_rank = self.levels_list.index(user) + 1
 
 

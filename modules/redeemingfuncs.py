@@ -7,17 +7,13 @@ from thorny_core import functions as func
 from thorny_core import errors
 import random
 from thorny_core import dbutils
-from thorny_core.dbclass import ThornyUser
-from thorny_core.dbfactory import ThornyFactory
-from thorny_core.dbcommit import commit
+from thorny_core.db import User
 from discord import utils
 from datetime import datetime, timedelta
 from thorny_core import dbevent as ev
 
-#  Perhaps for this, I can include the entire piece of code here, all the way from removing the item and checking
-#  if it has been
 
-async def redeem_ticket(ctx, thorny_user: ThornyUser):
+async def redeem_ticket(ctx, thorny_user: User):
     ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],
                      ["<:goldenE:857714717153689610>", 7], [":dragon_face:", 64]]
 
@@ -50,12 +46,12 @@ async def redeem_ticket(ctx, thorny_user: ThornyUser):
                 thorny_user.counters.ticket_count = 0
         if able_to_redeem:
             await ctx.respond(embed=ticket_embed)
-            thorny_user.balance += thorny_user.calculate_ticket_reward(prizes, ticket_prizes)
+            thorny_user.balance += func.calculate_reward(prizes, ticket_prizes)
             thorny_user.counters.ticket_count += 1
             thorny_user.counters.ticket_last_purchase = datetime.now().replace(microsecond=0)
 
 
-async def redeem_role(ctx, thorny_user: ThornyUser, client):
+async def redeem_role(ctx, thorny_user: User, client):
     def check(message):
         return message.author == ctx.author and message.channel == ctx.channel
 

@@ -1,15 +1,6 @@
 import discord
 from discord.ext import commands
 
-import json
-from thorny_core import errors
-from thorny_core.dbfactory import ThornyFactory
-from thorny_core import logs
-from thorny_core import functions as func
-from thorny_core import dbutils
-from thorny_core.dbcommit import commit
-from thorny_core import dbevent as ev
-
 
 class MyModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:

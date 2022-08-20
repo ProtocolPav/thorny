@@ -7,8 +7,7 @@ from thorny_core import functions as func
 from thorny_core import errors
 import random
 from thorny_core import dbutils
-from thorny_core.dbfactory import ThornyFactory
-from thorny_core.dbcommit import commit
+from thorny_core.db import UserFactory, commit
 from discord import utils
 from datetime import datetime, timedelta
 from thorny_core import dbevent as ev
@@ -39,7 +38,7 @@ class Inventory(commands.Cog):
         if user is None:
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         thorny_user.kingdom = kingdom
         await commit(thorny_user)
 
@@ -71,7 +70,7 @@ class Inventory(commands.Cog):
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
                                           autocomplete=utils.basic_autocomplete(get_items)), count: int = 1):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
 
         try:
             thorny_user.inventory.add_item(item_id, count)
@@ -91,7 +90,7 @@ class Inventory(commands.Cog):
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
                                              autocomplete=utils.basic_autocomplete(get_items)), count: int = None):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         item = thorny_user.inventory.fetch(item_id)
 
         try:
@@ -120,9 +119,9 @@ class Inventory(commands.Cog):
 
     @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
-        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.author)
         item_text = ""
-        for item_data in thorny_user.inventory.all_item_metadata:
+        for item_data in thorny_user.inventory.all_items:
             if item_data.item_cost > 0:
                 item_text = f"{item_text}\n**{item_data.item_display_name}** |" \
                             f" <:Nug:884320353202081833>{item_data.item_cost}\n" \
@@ -138,7 +137,7 @@ class Inventory(commands.Cog):
     async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                      autocomplete=utils.basic_autocomplete(get_items)),
                   amount: int = 1):
-        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.author)
         try:
             item = thorny_user.inventory.data(item_id)
             if item.item_cost != 0:
@@ -173,7 +172,7 @@ class Inventory(commands.Cog):
     async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
                                                         autocomplete=utils.basic_autocomplete(get_items))):
 
-        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.author)
         item = thorny_user.inventory.fetch(item_id)
 
         if item is not None and item.redeemable:

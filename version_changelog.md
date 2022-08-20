@@ -1,19 +1,13 @@
 ### Version Info
 Version: v1.8.1
 
-### Changelog - Class Update
-* Changed Errors
-* Added Birthday Events
-* Fixed bug where you would not get a level up message upon leveling up through disconnecting
-* Separated item redeeming functions in their own file, NEEDS WORK
-* Fixed bug where online shows other servers
-* Removed /profile sections
-* Fixed bug where you could not edit role
-* Added /birthday remove
-* MAJOR FEATURE: /setup command
-* Made the /level command appear differently for mobile users
-* Removed /kingdoms and associated commands
-* Disabled /setup for v1.7.4
+### Changelog - Profile Update
+* Separated dbclass into the db package
+* Created the uikit package
+* The all-new profile is now here:
+  * Multiple pages, and an edit button
+  * When editing, a modal text pops up
+  * 
 
 ### Future Plans
 * Separate dbclass into a directory with multiple files
