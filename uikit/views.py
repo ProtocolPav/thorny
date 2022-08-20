@@ -1,19 +1,34 @@
 import discord
 from discord.ui import View, Select, Button
-from thorny_core.uikit.modals import ProfileEditModal
-from thorny_core.uikit.slashoptions import profile_sections_select
+from thorny_core.uikit.modals import ProfileEditMain, ProfileEditLore
+from thorny_core.uikit.embeds import profile_edit_embed
+from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select, profile_stats_select
 from thorny_core.db import User
 
 
 class ProfileEdit(View):
-    def __init__(self, thorny_user: User):
+    def __init__(self, thorny_user: User, embed: discord.Embed):
         super().__init__(timeout=None)
         self.profile_owner = thorny_user
+        self.edit_embed = embed
 
-    @discord.ui.select(placeholder="Choose a section of your profile to edit",
-                       options=profile_sections_select)
-    async def menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(ProfileEditModal(select_menu.values[0]))
+    @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
+                       options=profile_main_select)
+    async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
+        await interaction.response.send_modal(ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                              self.edit_embed))
+
+    @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
+                       options=profile_lore_select)
+    async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
+        await interaction.response.send_modal(ProfileEditLore(select_menu.values[0], self.profile_owner,
+                                                              self.edit_embed))
+
+    @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
+                       options=profile_stats_select)
+    async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
+        await interaction.response.send_modal(ProfileEditLore(select_menu.values[0], self.profile_owner,
+                                                              self.edit_embed))
 
 
 class Profile(View):
@@ -62,11 +77,15 @@ class Profile(View):
         await interaction.response.edit_message(embed=self.pages[self.page], view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.blurple,
-                       label="Edit",
+                       label="Edit Profile",
                        custom_id="edit_profile")
     async def edit_profile_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.profile_owner.discord_member:
-            await interaction.response.send_message(view=ProfileEdit(self.profile_owner),
+            edit_embed = discord.Embed(title="Here's what you edited this session:",
+                                       colour=self.profile_owner.discord_member.colour)
+
+            await interaction.response.send_message(embed=await profile_edit_embed(self.profile_owner),
+                                                    view=ProfileEdit(self.profile_owner, edit_embed),
                                                     ephemeral=True)
         else:
             await interaction.response.send_message(f"{interaction.user.mention} You can't edit someone elses profile.",
