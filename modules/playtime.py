@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
-from thorny_core import dbutils, db as db
+from thorny_core import dbutils
 from datetime import datetime, timedelta
 import json
 from thorny_core import errors
 from thorny_core import dbevent as ev
-from thorny_core.dbfactory import ThornyFactory
+from thorny_core.db import UserFactory
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
@@ -22,7 +22,7 @@ class Playtime(commands.Cog):
         if ctx.guild.id == 611008530077712395:
             raise errors.AccessDenied()
         else:
-            thorny_user = await ThornyFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.author)
 
             connection: ev.Event = await ev.fetch(ev.ConnectEvent, thorny_user, self.client)
             await connection.log_event_in_database()
@@ -49,7 +49,7 @@ class Playtime(commands.Cog):
         if ctx.guild.id == 611008530077712395:
             raise errors.AccessDenied()
         else:
-            thorny_user = await ThornyFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.author)
 
             connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
             connection.edit_metadata("event_comment", journal)
@@ -86,7 +86,7 @@ class Playtime(commands.Cog):
     @commands.slash_command(description='Adjust your recent playtime')
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
-        thorny_user = await ThornyFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.author)
         event: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client)
         event.metadata.adjusting_hour = abs(hours)
         event.metadata.adjusting_minute = abs(minutes)
@@ -102,7 +102,7 @@ class Playtime(commands.Cog):
     @mod.command(description="Connect a user")
     @commands.has_permissions(administrator=True)
     async def con(self, ctx, user: discord.Member):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
 
         connection: ev.ConnectEvent = await ev.fetch(ev.ConnectEvent, thorny_user, self.client)
         metadata = await connection.log_event_in_database()
@@ -126,7 +126,7 @@ class Playtime(commands.Cog):
     @mod.command(description="Disconnect a user")
     @commands.has_permissions(administrator=True)
     async def dis(self, ctx, user: discord.Member):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
 
         connection: ev.DisconnectEvent = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
         connection.metadata.event_comment = f"Force disconnect by {ctx.author}"
@@ -159,7 +159,7 @@ class Playtime(commands.Cog):
     async def adj(self, ctx, user: discord.Member,
                   hours: discord.Option(int, "Put a - if you want to add hours") = None,
                   minutes: discord.Option(int, "Put a - if you want to add minutes") = None):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         event: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client)
         event.metadata.adjusting_hour = hours
         event.metadata.adjusting_minute = minutes
@@ -170,10 +170,6 @@ class Playtime(commands.Cog):
                               f'{hours or 0}h{minutes or 0}m.')
         else:
             raise errors.AlreadyConnectedError()
-
-    @commands.command(description='View your journal entries and some stats')
-    async def journal(self, ctx):
-        await ctx.send("This command is coming very soon to Thorny!")
 
     @commands.slash_command(description="See connected and AFK players and how much time they played for")
     async def online(self, ctx):

@@ -5,11 +5,12 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from dbfactory import ThornyFactory
+from db import UserFactory
 from dbutils import User
 import dbevent as ev
 from dbevent import Event
 import errors
+import traceback
 import json
 import random
 import sys
@@ -63,7 +64,7 @@ async def birthday_checker():
                 for guild in thorny.guilds:
                     if guild.id == user["guild_id"]:
                         member = guild.get_member(user["user_id"])
-                        thorny_user = await ThornyFactory.build(member)
+                        thorny_user = await UserFactory.build(member)
 
                         event: Event = await ev.fetch(ev.Birthday, thorny_user, thorny)
                         await event.log_event_in_discord()
@@ -86,33 +87,37 @@ birthday_checker.start()
 day_counter.start()
 
 
-# @thorny.slash_command(guild_ids=[723951903725060136,])
-# async def update(ctx: discord.ApplicationContext):
-#     await ctx.trigger_typing()
-#     await ctx.defer()
-# When the time comes add this code in!
-
-
 @thorny.slash_command()
 async def ping(ctx):
     await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
 
 
 @thorny.event
-async def on_application_command_error(context: discord.ApplicationContext, exception):
+async def on_application_command_error(context: discord.ApplicationContext, exception: Exception):
+    command = context.command
+    if command and command.has_error_handler():
+        return
+
+    cog = context.cog
+    if cog and cog.has_error_handler():
+        return
+
+    print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
+    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
     if isinstance(exception, errors.ThornyError):
         try:
             await context.respond(embed=exception.return_embed(), ephemeral=True)
         except discord.NotFound:
             await context.channel.send(embed=exception.return_embed())
     elif isinstance(exception, discord.ApplicationCommandInvokeError):
-        error = errors.UnexpectedError2(str(exception.with_traceback(None)))
+        error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         try:
             await context.respond(embed=error.return_embed(), ephemeral=True)
         except discord.NotFound:
             await context.channel.send(embed=error.return_embed())
     else:
-        error = errors.UnexpectedError1(str(exception.with_traceback(None)))
+        error = errors.UnexpectedError1(str(exception.with_traceback(exception.__traceback__)))
         try:
             await context.respond(embed=error.return_embed())
         except discord.NotFound:
@@ -141,7 +146,7 @@ async def on_message(message):
 async def on_message(message: discord.Message):
     # This event listens for messages and gives the user XP
     if message.author != thorny.user:
-        thorny_user = await ThornyFactory.build(message.author)
+        thorny_user = await UserFactory.build(message.author)
         if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
             event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
             data = await event.log_event_in_database()
@@ -153,7 +158,7 @@ async def on_message(message: discord.Message):
 @thorny.event
 async def on_message_delete(message: discord.Message):
     if message.author != thorny.user:
-        thorny_user = await ThornyFactory.build(message.author)
+        thorny_user = await UserFactory.build(message.author)
         event: Event = await ev.fetch(ev.MessageDelete, thorny_user, thorny)
         event.metadata.deleted_message = message
         await event.log_event_in_discord()
@@ -162,7 +167,7 @@ async def on_message_delete(message: discord.Message):
 @thorny.event
 async def on_message_edit(before, after):
     if before.author != thorny.user:
-        thorny_user = await ThornyFactory.build(before.author)
+        thorny_user = await UserFactory.build(before.author)
         event: Event = await ev.fetch(ev.MessageEdit, thorny_user, thorny)
         event.metadata.message_before = before
         event.metadata.message_after = after
@@ -255,8 +260,8 @@ async def on_raw_reaction_remove(payload):
 
 @thorny.event
 async def on_member_join(member: discord.Member):
-    await ThornyFactory.create([member])
-    thorny_user = await ThornyFactory.build(member)
+    await UserFactory.create([member])
+    thorny_user = await UserFactory.build(member)
     event: Event = await ev.fetch(ev.UserJoin, thorny_user, thorny)
     if member.guild.id == 611008530077712395:
         await event.log_event_in_discord()
@@ -264,23 +269,23 @@ async def on_member_join(member: discord.Member):
 
 @thorny.event
 async def on_member_remove(member):
-    thorny_user = await ThornyFactory.build(member)
+    thorny_user = await UserFactory.build(member)
     event: Event = await ev.fetch(ev.UserLeave, thorny_user, thorny)
     if member.guild.id == 611008530077712395:
         await event.log_event_in_discord()
-    await ThornyFactory.deactivate([member])
+    await UserFactory.deactivate([member])
 
 
 @thorny.event
 async def on_guild_join(guild):
     member_list = await guild.fetch_members().flatten()
-    await ThornyFactory.create(member_list)
+    await UserFactory.create(member_list)
 
 
 @thorny.event
 async def on_guild_remove(guild):
     member_list = guild.members
-    await ThornyFactory.deactivate(member_list)
+    await UserFactory.deactivate(member_list)
 
 
 thorny.add_cog(bank.Bank(thorny))

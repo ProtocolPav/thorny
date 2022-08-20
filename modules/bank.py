@@ -3,10 +3,9 @@ from discord.ext import commands
 
 import json
 from thorny_core import errors
-from thorny_core.dbfactory import ThornyFactory
+from thorny_core.db import UserFactory, commit
 from thorny_core import functions as func
 from thorny_core import dbutils
-from thorny_core.dbcommit import commit
 from thorny_core import dbevent as ev
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -23,7 +22,7 @@ class Bank(commands.Cog):
         if user is None:
             user = ctx.author
         kingdom = func.get_user_kingdom(ctx, user)
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         thorny_user.kingdom = kingdom
         await commit(thorny_user)
 
@@ -61,7 +60,7 @@ class Bank(commands.Cog):
         # bank_log = self.client.get_channel(config['channels']['bank_logs'])
         # await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
 
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         thorny_user.balance += amount
 
         if 'edit' in ctx.command.qualified_name.lower():
@@ -70,96 +69,34 @@ class Bank(commands.Cog):
 
     @commands.slash_command(description="Pay a player using nugs")
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
-        if ctx.channel == self.client.get_channel(config['channels']['bank']):
-            receivable_user = await ThornyFactory.build(user)
-            payable_user = await ThornyFactory.build(ctx.author)
+        receivable_user = await UserFactory.build(user)
+        payable_user = await UserFactory.build(ctx.author)
 
-            if user == ctx.author:
-                raise errors.SelfPaymentError
-            elif payable_user.balance - amount < 0:
-                raise errors.BrokeError
-            elif amount > 0:
-                payable_user.balance -= amount
-                receivable_user.balance += amount
-
-                pay_embed = discord.Embed(color=0xF4C430)
-                pay_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
-                pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
-                                    value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
-                                          f'Paid to: **{user.mention}**\n'
-                                          f'\n**Reason: {reason}**')
-                await ctx.respond(f"{user.mention} You've been paid!")
-                await ctx.edit(content=None, embed=pay_embed)
-
-                event: ev.Event = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
-                event.metadata.sender_user = payable_user
-                event.metadata.receiver_user = receivable_user
-                event.metadata.nugs_amount = amount
-                event.metadata.event_comment = reason
-
-                await event.log_event_in_discord()
-                await commit(payable_user)
-                await commit(receivable_user)
-            elif amount < 0:
-                raise errors.NegativeAmountError
-        else:
-            raise errors.ItemNotAvailableError
-
-    treasury = discord.SlashCommandGroup("treasury", "Treasury Commands")
-
-    @treasury.command(description="Store money in your kingdom's treasury")
-    async def store(self, ctx, amount: int):
-        user = ctx.author
-        kingdom = func.get_user_kingdom(ctx, user)
-        thorny_user = await ThornyFactory.build(user)
-        thorny_user.kingdom = kingdom
-
-        if kingdom is not None:
-            selector = dbutils.Base()
-            receivable = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
-            receivable = receivable[0][0]
-
-            if thorny_user.balance - amount < 0:
-                raise errors.BrokeError
-            else:
-                thorny_user.balance -= amount
-                selector = dbutils.Base()
-                await selector.update("treasury", receivable + int(amount), "kingdoms", "kingdom", kingdom)
-
-                pay_embed = discord.Embed(color=0xE49B0F)
-                pay_embed.set_author(name=f'{user}', icon_url=user.display_avatar.url)
-                pay_embed.add_field(name='<:Nug:884320353202081833> Storage Successful!',
-                                    value=f'Amount stored: **<:Nug:884320353202081833>{amount}**\n'
-                                          f'Stored in: **{kingdom} Treasury**\n')
-                await ctx.respond(embed=pay_embed)
-                await commit(thorny_user)
-        else:
-            raise errors.StoreError
-
-    @treasury.command(description="Ruler Only | Take money from the treasury")
-    @commands.has_role('Ruler')
-    async def take(self, ctx, amount: int):
-        user = ctx.author
-        kingdom = func.get_user_kingdom(ctx, user)
-        thorny_user = await ThornyFactory.build(user)
-        thorny_user.kingdom = kingdom
-
-        selector = dbutils.Base()
-        payable = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
-        payable = payable[0][0]
-
-        if amount < 0:
-            raise errors.NegativeAmountError
-        elif payable - amount < 0:
+        if user == ctx.author:
+            raise errors.SelfPaymentError
+        elif payable_user.balance - amount < 0:
             raise errors.BrokeError
-        else:
-            thorny_user.balance += amount
-            await selector.update("treasury", payable - int(amount), "kingdoms", "kingdom", kingdom)
+        elif amount > 0:
+            payable_user.balance -= amount
+            receivable_user.balance += amount
 
-            pay_embed = discord.Embed(color=0xE49B0F)
-            pay_embed.set_author(name=f'{ctx.author}', icon_url=user.display_avatar.url)
-            pay_embed.add_field(name='<:Nug:884320353202081833> Taking Successful!',
-                                value=f'Amount taken: **<:Nug:884320353202081833>{amount}**\n'
-                                      f'Taken from: **{kingdom} Treasury**\n')
-            await ctx.respond(embed=pay_embed)
-            await commit(thorny_user)
+            pay_embed = discord.Embed(color=0xF4C430)
+            pay_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
+            pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
+                                value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
+                                      f'Paid to: **{user.mention}**\n'
+                                      f'\n**Reason: {reason}**')
+            await ctx.respond(f"{user.mention} You've been paid!")
+            await ctx.edit(content=None, embed=pay_embed)
+
+            event: ev.Event = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
+            event.metadata.sender_user = payable_user
+            event.metadata.receiver_user = receivable_user
+            event.metadata.nugs_amount = amount
+            event.metadata.event_comment = reason
+
+            await event.log_event_in_discord()
+            await commit(payable_user)
+            await commit(receivable_user)
+        elif amount < 0:
+            raise errors.NegativeAmountError

@@ -4,9 +4,8 @@ from discord import utils
 import httpx
 
 import json
-from thorny_core.dbfactory import ThornyFactory
+from thorny_core.db import UserFactory, commit
 import thorny_core.dbevent as ev
-from thorny_core.dbcommit import commit
 from thorny_core.dbutils import Base
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -19,13 +18,13 @@ class Moderation(commands.Cog):
     @commands.slash_command(description='CM Only | Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)
     async def strike(self, ctx, user: discord.Member, reason):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         await thorny_user.strikes.append(ctx.author.id, reason)
         strike_embed = discord.Embed(color=0xCD853F)
         strike_embed.add_field(name=f"**{user} Got Striked!**",
                                value=f"From: {ctx.author.mention}\n"
                                      f"Reason: {reason}")
-        strike_embed.set_footer(text=f"Strike ID: {thorny_user.strikes.strike_list[-1]['id']}")
+        strike_embed.set_footer(text=f"Strike ID: {thorny_user.strikes.strikes[-1].strike_id}")
         await ctx.respond(embed=strike_embed)
         await commit(thorny_user)
 
@@ -59,14 +58,14 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
-    @commands.slash_command()
+    @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         async with httpx.AsyncClient() as client:
             r: httpx.Response = await client.get("http://bds_webserver:8000/stop")
             online_users = await Base.select_online(Base(), ctx.guild.id)
             for user in online_users:
-                thorny_user = await ThornyFactory.get(ctx.guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
                 connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
                 await connection.log_event_in_database()
 
@@ -78,7 +77,7 @@ class Moderation(commands.Cog):
     @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
             r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
             if r.json()["kicked"]:
@@ -89,7 +88,7 @@ class Moderation(commands.Cog):
     @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
-        thorny_user = await ThornyFactory.build(user)
+        thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
             r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
             if r.json()["gamertag_added"]:
