@@ -62,6 +62,7 @@ class UserFactory:
                                          thorny_id)
 
             today = datetime.now()
+            today_hour_zero = today.replace(hour=0, minute=0)
             current_month = today.replace(day=1, hour=0, minute=0)
             previous_month = today.replace(day=1, hour=0, minute=0) - relativedelta(months=1)
             expiring_month = today.replace(day=1, hour=0, minute=0) - relativedelta(months=2)
@@ -69,6 +70,8 @@ class UserFactory:
             playtime = await conn.fetchrow("""
                                            SELECT SUM(playtime)
                                            AS total_playtime,
+                                           SUM(case when connect_time > $6 then playtime end)
+                                           AS todays_playtime,
                                            SUM(case when connect_time between $3 and $2 then playtime end)
                                            AS current_playtime,
                                            SUM(case when connect_time between $4 and $3 then playtime end)
@@ -79,7 +82,8 @@ class UserFactory:
                                            WHERE thorny_user_id = $1
                                            GROUP BY thorny_user_id
                                            """,
-                                           thorny_id, today, current_month, previous_month, expiring_month)
+                                           thorny_id, today, current_month, previous_month, expiring_month,
+                                           today_hour_zero)
 
             daily_average = await conn.fetchrow("""
                                                 SELECT thorny_user_id, AVG(sums) AS averages 

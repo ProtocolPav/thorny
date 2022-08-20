@@ -9,8 +9,8 @@ async def update_user(thorny_user: User):
                            SET username = $1, balance = $2, join_date = $3, birthday = $4
                            WHERE thorny_user_id = $5
                            """,
-                           thorny_user.username, thorny_user.balance, thorny_user.join_date, thorny_user.birthday,
-                           thorny_user.thorny_id)
+                           thorny_user.username, thorny_user.balance, thorny_user.join_date.time,
+                           thorny_user.birthday.time, thorny_user.thorny_id)
 
 
 async def update_profile(thorny_user: User):
@@ -18,12 +18,18 @@ async def update_profile(thorny_user: User):
     async with thorny_user.connection_pool.acquire() as conn:
         await conn.execute("""
                            UPDATE thorny.profile
-                           SET slogan = $1, gamertag = $2, aboutme = $3, lore = $4, role = $5,
-                           aboutme_shown = $6, activity_shown = $7, lore_shown = $8
-                           WHERE thorny_user_id = $9
+                           SET slogan = $1, gamertag = $2, aboutme = $3, lore = $4, 
+                           character_name = $5, character_age = $6, character_race = $7,
+                           character_role = $8, character_origin = $9, character_beliefs = $10,
+                           agility = $11, valor = $12, strength = $13, charisma = $14, 
+                           creativity = $15, ingenuity = $16
+                           WHERE thorny_user_id = $17
                            """,
-                           profile.slogan, profile.gamertag, profile.aboutme, profile.lore, profile.role,
-                           profile.aboutme_shown, profile.activity_shown, profile.lore_shown,
+                           profile.slogan, profile.gamertag, profile.aboutme, profile.lore,
+                           profile.character_name, profile.character_age, profile.character_race,
+                           profile.character_role, profile.character_origin, profile.character_beliefs,
+                           profile.agility, profile.valor, profile.strength,
+                           profile.charisma, profile.creativity, profile.ingenuity,
                            thorny_user.thorny_id)
 
 

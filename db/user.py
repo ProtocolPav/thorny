@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import discord
 from thorny_core import errors
 from dataclasses import dataclass, field
+from thorny_core.uikit.datetime_class import Time
 
 
 @dataclass
@@ -15,8 +16,19 @@ class Profile:
     default_lore: str = field(repr=False, default="I came from a distant land, far, far away...")
     slogan: str = None
     gamertag: str = None
-    role: str = None
     aboutme: str = None
+    character_name: str = None
+    character_age: int = None
+    character_race: str = None
+    character_role: str = None
+    character_origin: str = None
+    character_beliefs: str = None
+    stats_agility: int = None
+    stats_valor: int = None
+    stats_strength: int = None
+    stats_charisma: int = None
+    stats_creativity: int = None
+    stats_ingenuity: int = None
     lore: str = None
     information_shown: bool = True
     aboutme_shown: bool = True
@@ -27,25 +39,30 @@ class Profile:
         self.column_data = column_data
         self.slogan = profile_data['slogan']
         self.gamertag = profile_data['gamertag']
-        self.role = profile_data['role']
+        self.role = None
         self.aboutme = profile_data['aboutme']
+        self.character_name = profile_data['character_name']
+        self.character_age = profile_data['character_age']
+        self.character_race = profile_data['character_race']
+        self.character_role = profile_data['character_role']
+        self.character_origin = profile_data['character_origin']
+        self.character_beliefs = profile_data['character_beliefs']
+        self.agility = profile_data['agility'] if profile_data['agility'] <= 6 else 6
+        self.valor = profile_data['valor'] if profile_data['valor'] <= 6 else 6
+        self.strength = profile_data['strength'] if profile_data['strength'] <= 6 else 6
+        self.charisma = profile_data['charisma'] if profile_data['charisma'] <= 6 else 6
+        self.creativity = profile_data['creativity'] if profile_data['creativity'] <= 6 else 6
+        self.ingenuity = profile_data['ingenuity'] if profile_data['ingenuity'] <= 6 else 6
         self.lore = profile_data['lore']
-        self.information_shown = profile_data['information_shown']
-        self.activity_shown = profile_data['activity_shown']
-        self.lore_shown = profile_data['lore_shown']
 
-    def update(self, attribute, value=None, toggle=False):
-        if toggle:
-            attr_to_toggle = self.__getattribute__(attribute)
-            self.__setattr__(attribute, not attr_to_toggle)
-        else:
-            for data in self.column_data:
-                if data["column_name"] == str(attribute) and (data["character_maximum_length"] is None or
-                                                              data["character_maximum_length"] >= len(value)):
-                    self.__setattr__(attribute, value)
-                    break
-                elif data["column_name"] == str(attribute) and data["character_maximum_length"] < len(value):
-                    raise errors.DataTooLongError(len(value), data["character_maximum_length"])
+    def update(self, attribute, value=None):
+        for data in self.column_data:
+            if data["column_name"] == str(attribute) and (data["character_maximum_length"] is None or
+                                                          data["character_maximum_length"] >= len(value)):
+                self.__setattr__(attribute, value)
+                break
+            elif data["column_name"] == str(attribute) and data["character_maximum_length"] < len(value):
+                raise errors.DataTooLongError(len(value), data["character_maximum_length"])
 
 
 @dataclass
@@ -62,21 +79,22 @@ class Level:
 
 @dataclass
 class Playtime:
-    total_playtime: timedelta = None
-    current_playtime: timedelta = None
-    previous_playtime: timedelta = None
-    expiring_playtime: timedelta = None
-    recent_session: timedelta = None
-    daily_average: timedelta = None
-    session_average: timedelta = None
+    total_playtime: Time
+    current_playtime: Time
+    previous_playtime: Time
+    expiring_playtime: Time
+    todays_playtime: Time
+    recent_session: Time
+    daily_average: Time
 
     def __init__(self, playtime_data, latest_playtime, daily_average):
-        self.total_playtime = playtime_data['total_playtime']
-        self.current_playtime = playtime_data['current_playtime']
-        self.previous_playtime = playtime_data['previous_playtime']
-        self.expiring_playtime = playtime_data['expiring_playtime']
-        self.recent_session = latest_playtime['playtime']
-        self.daily_average = daily_average['averages']
+        self.total_playtime = Time(playtime_data['total_playtime']) if playtime_data is not None else None
+        self.current_playtime = Time(playtime_data['current_playtime']) if playtime_data is not None else None
+        self.previous_playtime = Time(playtime_data['previous_playtime']) if playtime_data is not None else None
+        self.expiring_playtime = Time(playtime_data['expiring_playtime']) if playtime_data is not None else None
+        self.todays_playtime = Time(playtime_data['todays_playtime']) if playtime_data is not None else None
+        self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else None
+        self.daily_average = Time(daily_average['averages']) if daily_average is not None else None
 
 
 @dataclass
@@ -247,9 +265,9 @@ class User:
     guild_id: int
     username: str
     balance: int
-    join_date: datetime
+    join_date: Time
     join_date_display: str
-    birthday: datetime
+    birthday: Time
     birthday_display: str
     age: int
     profile: Profile
@@ -281,13 +299,10 @@ class User:
         self.guild_id = thorny_user['guild_id']
         self.user_id = thorny_user['user_id']
         self.balance = thorny_user['balance']
-        self.join_date = thorny_user['join_date']
-        self.join_date_display = datetime.strftime(self.join_date, "%B %d %Y") if self.join_date is not None \
-            else "DM Pav to set up"
-        self.birthday = thorny_user['birthday']
-        self.birthday_display = datetime.strftime(self.birthday, '%B %d %Y') if self.birthday is not None \
-            else "Use `/birthday` to set up!"
-        self.age = round((datetime.date(datetime.now()) - self.birthday).days / 365) or None
+        self.join_date = Time(thorny_user['join_date'])
+        self.birthday = Time(thorny_user['birthday'])
+        self.age = round((datetime.date(datetime.now()) - self.birthday.time).days / 365) \
+            if self.birthday.time is not None else None
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
         self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, daily_average=daily_average)
