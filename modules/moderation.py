@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord.ext import commands
 from discord import utils
@@ -51,10 +53,15 @@ class Moderation(commands.Cog):
     @commands.slash_command(guild_ids=[611008530077712395,])
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
+        await ctx.defer()
         async with httpx.AsyncClient() as client:
-            r = await client.get("http://bds_webserver:8000/start")
-            if r.json()["server_started"]:
-                await ctx.respond(f"The server started successfully")
+            r = await client.get("http://bds_webserver:8000/start", timeout=None)
+
+            if r.json()["update"]:
+                await ctx.respond(f"I have found an update (version {r.json()['new_version']})!\n"
+                                  f"The server has been updated and has started successfully.")
+            elif r.json()["server_started"]:
+                await ctx.respond(f"The server started successfully.")
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
