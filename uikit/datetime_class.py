@@ -6,7 +6,7 @@ class Time:
         self.time = time_object
 
     def __str__(self):
-        if type(self.time) == date:
+        if type(self.time) != timedelta:
             datetime_string = datetime.strftime(self.time, "%B %d, %Y")
             return datetime_string
         elif type(self.time) == timedelta:
