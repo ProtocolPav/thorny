@@ -1,9 +1,9 @@
 import discord
 from discord.ui import View, Select, Button
-from thorny_core.uikit.modals import ProfileEditMain, ProfileEditLore
-from thorny_core.uikit.embeds import profile_edit_embed
+import thorny_core.uikit.modals as modals
+from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
 from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select, profile_stats_select
-from thorny_core.db import User
+from thorny_core.db import User, UserFactory
 
 
 class ProfileEdit(View):
@@ -15,20 +15,20 @@ class ProfileEdit(View):
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
                        options=profile_main_select)
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(ProfileEditMain(select_menu.values[0], self.profile_owner,
-                                                              self.edit_embed))
+        await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                                     self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
                        options=profile_lore_select)
     async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(ProfileEditLore(select_menu.values[0], self.profile_owner,
-                                                              self.edit_embed))
+        await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
+                                                                     self.edit_embed))
 
     @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
                        options=profile_stats_select)
     async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(ProfileEditLore(select_menu.values[0], self.profile_owner,
-                                                              self.edit_embed))
+        await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
+                                                                     self.edit_embed))
 
 
 class Profile(View):
@@ -63,8 +63,7 @@ class Profile(View):
             next_arrow.disabled = True
 
     async def on_timeout(self):
-        for child in self.children:
-            child.disabled = True
+        self.disable_all_items()
         await self.ctx.edit(view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
@@ -98,3 +97,116 @@ class Profile(View):
         self.page += 1
         await self.update_buttons()
         await interaction.response.edit_message(embed=self.pages[self.page], view=self)
+
+
+class PersistentProjectAdminButtons(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(style=discord.ButtonStyle.green,
+                       label="Approve",
+                       custom_id="approve")
+    async def approve_callback(self, button: Button, interaction: discord.Interaction):
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+        if "Community Manager" in role_list:
+            interaction.message.embeds[0].colour = 0x50C878
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="**STATUS:**",
+                                                       value="APPROVED",
+                                                       inline=False)
+
+            self.disable_all_items()
+            await interaction.response.edit_message(view=None,
+                                                    embed=interaction.message.embeds[0])
+        else:
+            await interaction.response.send_message("Hey! You're not a CM...",
+                                                    ephemeral=True)
+
+    @discord.ui.button(style=discord.ButtonStyle.gray,
+                       label="Enter Extra Info",
+                       custom_id="enter_extra_info")
+    async def info_callback(self, button: Button, interaction: discord.Interaction):
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+        if "Community Manager" in role_list:
+            modal = modals.ProjectApplicationExtraInfo()
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
+            interaction.message.embeds[0].set_field_at(1,
+                                                       name="Extra Info:",
+                                                       value=f"{modal.children[0].value}",
+                                                       inline=False)
+
+            await interaction.followup.edit_message(message_id=interaction.message.id,
+                                                    embed=interaction.message.embeds[0])
+        else:
+            await interaction.response.send_message("Hey! You're not a CM...",
+                                                    ephemeral=True)
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple,
+                       label="Place On Waiting List",
+                       custom_id="waiting_list")
+    async def waiting_callback(self, button: Button, interaction: discord.Interaction):
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+        if "Community Manager" in role_list:
+            interaction.message.embeds[0].colour = 0x702963
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="**STATUS:**",
+                                                       value="ON WAITING LIST\n"
+                                                             "*Your application has been placed on a waiting list.\n"
+                                                             "Don't worry, it'll be approved eventually!*",
+                                                       inline=False)
+
+            await interaction.response.edit_message(embed=interaction.message.embeds[0])
+        else:
+            await interaction.response.send_message("Hey! You're not a CM...",
+                                                    ephemeral=True)
+
+    @discord.ui.button(style=discord.ButtonStyle.red,
+                       label="Deny",
+                       custom_id="deny")
+    async def deny_callback(self, button: Button, interaction: discord.Interaction):
+        role_list = []
+        for role in interaction.user.roles:
+            role_list.append(role.name)
+        if "Community Manager" in role_list:
+            interaction.message.embeds[0].colour = 0xD22B2B
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="**STATUS:**",
+                                                       value="DENIED",
+                                                       inline=False)
+
+            self.disable_all_items()
+            await interaction.response.edit_message(view=None,
+                                                    embed=interaction.message.embeds[0])
+        else:
+            await interaction.response.send_message("Hey! You're not a CM...",
+                                                    ephemeral=True)
+
+
+class ProjectApplicationForm(View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        super().__init__(timeout=60.0)
+        self.ctx = ctx
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.green,
+                       label="Fill In The Form!",
+                       custom_id="form")
+    async def form_callback(self, button: Button, interaction: discord.Interaction):
+        thorny_user = await UserFactory.build(self.ctx.author)
+        modal = modals.ProjectApplicationModal()
+        await interaction.response.send_modal(modal=modal)
+        await modal.wait()
+        channel = interaction.client.get_channel(973910577485344798)
+        await channel.send(embed=await application_info_embed(thorny_user, modal.children),
+                           view=PersistentProjectAdminButtons())

@@ -134,3 +134,27 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
                                f"**Now, just choose a section from the menus below and start editing!**")
 
     return edit_embed
+
+
+async def application_info_embed(thorny_user: user.User, modal_children: discord.ui.Modal.children):
+    info_embed = discord.Embed(title="Project Application",
+                               colour=0xFDDA0D)
+    info_embed.set_author(name=thorny_user.username,
+                          icon_url=thorny_user.discord_member.display_avatar.url)
+
+    info_embed.add_field(name="General Info:",
+                         value=f"**Name:** {modal_children[0].value}\n"
+                               f"**Coordinates:** {modal_children[1].value}\n"
+                               f"**Road Built:** {modal_children[2].value}\n"
+                               f"**General Idea:** {modal_children[3].value}\n"
+                               f"**Time Estimation:** {modal_children[4].value}")
+
+    info_embed.add_field(name="Extra Info:",
+                         value="A CM should add any extra info they find after asking more about the project.",
+                         inline=False)
+
+    info_embed.add_field(name="**STATUS**",
+                         value="IN REVIEW...",
+                         inline=False)
+
+    return info_embed
