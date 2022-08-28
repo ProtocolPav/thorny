@@ -30,7 +30,7 @@ print(
      \/   |_| |_|\___/|_|  |_| |_|\__, |
                                   |___/
         """)
-TOKEN = config["dev_token"]
+TOKEN = config["token"]
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
