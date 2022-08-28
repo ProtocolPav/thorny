@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, time, timezone
+from datetime import datetime, timedelta, time
 
 import discord
 from discord.ext import commands, tasks
@@ -14,7 +14,8 @@ import traceback
 import json
 import random
 import sys
-from modules import bank, help, information, inventory, leaderboard, moderation, playtime, profile, level, setup
+from thorny_core.uikit.views import PersistentProjectAdminButtons
+from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level, apply
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -29,11 +30,6 @@ print(
      \/   |_| |_|\___/|_|  |_| |_|\__, |
                                   |___/
         """)
-# ans = input("Are You Running Thorny (t) or Development Thorny (d)?\n")
-# if ans == 't':
-#     TOKEN = config["token"]
-# else:
-#     TOKEN = config["dev_token"]
 TOKEN = config["dev_token"]
 
 api_instance = giphy_client.DefaultApi()
@@ -46,12 +42,13 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Relaxing Thorns [1 HOUR] | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.playing,
+                                    name=f"Call of Thorny | {v}")
+    await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
-    await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
+    thorny.add_view(PersistentProjectAdminButtons())
 
 
 @tasks.loop(hours=24.0)
@@ -74,7 +71,7 @@ async def birthday_checker():
 async def day_counter():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
     days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-    channel = thorny.get_channel(805722487261888522)
+    channel = thorny.get_channel(932566162582167562)
     await channel.send(f"*Rise and shine, Everthorn!*\n"
                        f"**Day {days_since_start.days}** has dawned upon us.")
 
@@ -89,11 +86,13 @@ day_counter.start()
 
 @thorny.slash_command()
 async def ping(ctx):
+    await ctx.defer()
+    await asyncio.sleep(5)
     await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
 
 
 @thorny.event
-async def on_application_command_error(context: discord.ApplicationContext, exception: Exception):
+async def on_application_command_error(context: discord.ApplicationContext, exception: errors.ThornyError):
     command = context.command
     if command and command.has_error_handler():
         return
@@ -105,23 +104,14 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
     print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
     traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
-    if isinstance(exception, errors.ThornyError):
-        try:
-            await context.respond(embed=exception.return_embed(), ephemeral=True)
-        except discord.NotFound:
-            await context.channel.send(embed=exception.return_embed())
-    elif isinstance(exception, discord.ApplicationCommandInvokeError):
+    try:
+        await context.respond(embed=exception.return_embed(), ephemeral=True)
+    except discord.NotFound:
         error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
-        try:
-            await context.respond(embed=error.return_embed(), ephemeral=True)
-        except discord.NotFound:
-            await context.channel.send(embed=error.return_embed())
-    else:
-        error = errors.UnexpectedError1(str(exception.with_traceback(exception.__traceback__)))
-        try:
-            await context.respond(embed=error.return_embed())
-        except discord.NotFound:
-            await context.channel.send(embed=error.return_embed())
+        await context.respond(embed=error.return_embed())
+    except AttributeError:
+        error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
+        await context.respond(embed=error.return_embed())
 
 
 @thorny.event
@@ -291,11 +281,11 @@ async def on_guild_remove(guild):
 thorny.add_cog(bank.Bank(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
-thorny.add_cog(information.Information(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
+thorny.add_cog(apply.Applications(thorny))
 thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
 
 thorny.run(TOKEN)
