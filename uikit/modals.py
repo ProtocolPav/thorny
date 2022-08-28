@@ -1,6 +1,7 @@
 import discord
 from discord.ui import Modal, InputText
 from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select
+from thorny_core.uikit.embeds import application_info_embed
 from thorny_core.db.user import User
 from thorny_core.db.commit import commit
 import thorny_core.errors as errors
@@ -86,3 +87,38 @@ class ProfileEditLore(Modal):
         if isinstance(error, errors.ThornyError):
             await interaction.response.edit_message(embed=error.return_embed())
 
+
+class ProjectApplicationModal(Modal):
+    def __init__(self):
+        super().__init__(title="Project Application",
+                         timeout=200)
+
+        self.add_item(InputText(label="What is the project name?",
+                                placeholder="Eg. Tramonte, Pirate's Cove, Hobbitshire"))
+        self.add_item(InputText(label="Type in the coordinates of your project",
+                                placeholder="Eg. -400, 233"))
+        self.add_item(InputText(label="Have you built a road to your project?",
+                                placeholder="Yes or no?"))
+        self.add_item(InputText(label="What is the general idea of your project?",
+                                placeholder="Describe your project. Minimum 100 words please",
+                                style=discord.InputTextStyle.long,
+                                min_length=100))
+        self.add_item(InputText(label="How long do you estimate to be done?",
+                                placeholder="Eg. 2 months, 4-5 months, etc."))
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(view=None,
+                                                content="Thank you for filling in the form!")
+
+
+class ProjectApplicationExtraInfo(Modal):
+    def __init__(self):
+        super().__init__(title="Extra Info",
+                         timeout=200)
+
+        self.add_item(InputText(label="Add in extra info",
+                                placeholder="Stuff like the members of the project, and more stuff.",
+                                style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
