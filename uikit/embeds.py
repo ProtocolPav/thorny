@@ -96,7 +96,11 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
 
     playtime_leaderboard = dbutils.Leaderboard()
     await playtime_leaderboard.select_activity(thorny_user, datetime.now())
-    rank = [playtime_leaderboard.activity_list.index(x) + 1 for x in playtime_leaderboard.activity_list if x['user_id'] == thorny_user.user_id][0]
+
+    rank = None
+    for lb_user in playtime_leaderboard.activity_list:
+        if lb_user['user_id'] == thorny_user.user_id:
+            rank = playtime_leaderboard.activity_list.index(lb_user) + 1
 
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
@@ -138,6 +142,7 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
 
 async def application_info_embed(thorny_user: user.User, modal_children: discord.ui.Modal.children):
     info_embed = discord.Embed(title="Project Application",
+                               description=modal_children[0].value,
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
@@ -157,4 +162,5 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
                          value="IN REVIEW...",
                          inline=False)
 
+    info_embed.set_footer(text=f"{thorny_user.user_id}")
     return info_embed

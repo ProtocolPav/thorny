@@ -1,5 +1,6 @@
 import discord
 from discord.ui import View, Select, Button
+from datetime import datetime
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
 from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select, profile_stats_select
@@ -114,12 +115,21 @@ class PersistentProjectAdminButtons(View):
             interaction.message.embeds[0].colour = 0x50C878
             interaction.message.embeds[0].set_field_at(2,
                                                        name="**STATUS:**",
-                                                       value="APPROVED",
+                                                       value=f"APPROVED by {interaction.user.mention}\n"
+                                                             f"on {datetime.now()}",
                                                        inline=False)
 
             self.disable_all_items()
             await interaction.response.edit_message(view=None,
                                                     embed=interaction.message.embeds[0])
+            forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681)
+            thread = await forum_channel.create_thread(name=interaction.message.embeds[0].description,
+                                                       content=interaction.message.embeds[0].description,
+                                                       embed=interaction.message.embeds[0])
+            await thread.send("<@&668091613687316500> Please give this thread the 'Ongoing Project' tag.")
+            await thread.send(f"<@{interaction.message.embeds[0].footer.text}> Congrats on your project being accepted!"
+                              f"\nYou can now start sending updates for everyone to see the progress on your "
+                              f"amazing project! Good luck, and most importantly, have fun!")
         else:
             await interaction.response.send_message("Hey! You're not a CM...",
                                                     ephemeral=True)
@@ -207,6 +217,6 @@ class ProjectApplicationForm(View):
         modal = modals.ProjectApplicationModal()
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
-        channel = interaction.client.get_channel(973910577485344798)
+        channel = interaction.client.get_channel(1019959239713771680)
         await channel.send(embed=await application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
