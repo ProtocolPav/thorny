@@ -163,5 +163,4 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
                          inline=False)
 
     info_embed.set_footer(text=f"{thorny_user.user_id}")
-
     return info_embed
