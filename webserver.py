@@ -1,12 +1,12 @@
-import asyncpg
+import asyncpg as pg
+from db.factory import create_pool
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
-from connection_pool import create_pool
 from dbutils import WebserverUpdates
 
 app = Sanic("thorny_server_app")
-pool: asyncpg.Pool
+pool: pg.Pool
 
 
 @app.listener('after_server_start')
@@ -36,5 +36,11 @@ async def disconnect(request: Request, gamertag: str):
     async with pool.acquire() as conn:
         await WebserverUpdates.disconnect(gamertag, datetime_object, conn)
     return sanicjson({"Accept": True})
+
+
+# @app.listener('after_server_start')
+# async def start_bot(application, loop):
+#     print("starting bot...")
+#     loop.create_task(thorny_bot.start(TOKEN))
 
 app.run(host="0.0.0.0")
