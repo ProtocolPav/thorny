@@ -1,8 +1,8 @@
 import asyncpg as pg
 import asyncio
+import json
 from datetime import datetime
 import discord
-import json
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
 
@@ -17,15 +17,6 @@ async def create_pool(loop=None):
                                        max_inactive_connection_lifetime=10.0,
                                        max_size=300,
                                        loop=loop)
-    # pool_object = await asyncpg.create_pool(database="thorny",
-    #                                         user="thorny",
-    #                                         password="postgrespw",
-    #                                         host="postgres",
-    #                                         port=5432,
-    #                                         max_inactive_connection_lifetime=10.0,
-    #                                         max_size=300,
-    #                                         loop=loop
-    #                                         )
     return pool_object
 
 
@@ -169,11 +160,6 @@ class UserFactory:
                                                         """,
                                                         user_id, guild_id)
                         await conn.execute("""
-                                           INSERT INTO thorny.user_activity(thorny_user_id)
-                                           VALUES($1)
-                                           """,
-                                           thorny_id[0])
-                        await conn.execute("""
                                            INSERT INTO thorny.profile(thorny_user_id)
                                            VALUES($1)
                                            """,
@@ -230,4 +216,26 @@ class UserFactory:
 
 
 class GuildFactory:
-    ...
+    @classmethod
+    async def build(cls, guild: discord.Guild):
+        async with pool.acquire() as conn:
+            await conn.set_type_codec(
+                'json',
+                encoder=json.dumps,
+                decoder=json.loads,
+                schema='pg_catalog'
+            )
+
+            guild_channels = await conn.fetchrow("""
+                                                 SELECT channels::json FROM thorny.guild
+                                                 WHERE guild_id = $1
+                                                 """,
+                                                 guild.id)
+
+            guild_channels[0]['channel1'] = "channel TWO!!!"
+            await conn.execute("""
+                               UPDATE thorny.guild
+                               SET channels = $1
+                               WHERE guild_id = $2
+                               """,
+                               guild_channels[0], guild.id)

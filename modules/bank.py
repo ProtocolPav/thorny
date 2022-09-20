@@ -4,8 +4,6 @@ from discord.ext import commands
 import json
 from thorny_core import errors
 from thorny_core.db import UserFactory, commit
-from thorny_core import functions as func
-from thorny_core import dbutils
 from thorny_core import dbevent as ev
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -21,18 +19,9 @@ class Bank(commands.Cog):
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        kingdom = func.get_user_kingdom(ctx, user)
         thorny_user = await UserFactory.build(user)
-        thorny_user.kingdom = kingdom
-        await commit(thorny_user)
 
         personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
-        kingdom_bal = ''
-        if kingdom is not None:
-            selector = dbutils.Base()
-            treasury_list = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
-            kingdom_bal = f"**{kingdom.capitalize()} Treasury:** <:Nug:884320353202081833>" \
-                          f"{treasury_list[0][0]}"
         inventory_text = ''
         inventory_list = thorny_user.inventory.slots
         for item in inventory_list[0:2]:
@@ -45,21 +34,18 @@ class Bank(commands.Cog):
         balance_embed = discord.Embed(color=0xE0115F)
         balance_embed.set_author(name=user, icon_url=user.display_avatar.url)
         balance_embed.add_field(name=f'**Financials:**',
-                                value=f"{personal_bal}\n{kingdom_bal}")
+                                value=f"{personal_bal}")
         balance_embed.add_field(name=f'**Inventory:**',
                                 value=f"{inventory_text}<:_purple:921708790368309269> "
                                       f"**/inventory view to see more!**",
                                 inline=False)
-        balance_embed.set_footer(text="Donate to your kingdom with /treasury store")
+        balance_embed.set_footer(text="You can pay people! Just use /pay")
         await ctx.respond(embed=balance_embed)
 
     @balance.command(description="CM ONLY | Edit someone's balance")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.Member,
                    amount: discord.Option(int, "Put a - if you want to remove nugs")):
-        # bank_log = self.client.get_channel(config['channels']['bank_logs'])
-        # await bank_log.send(embed=logs.balance_edit(ctx.author.id, user.id, amount))
-
         thorny_user = await UserFactory.build(user)
         thorny_user.balance += amount
 

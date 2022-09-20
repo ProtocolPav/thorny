@@ -14,6 +14,7 @@ import traceback
 import json
 import random
 import sys
+from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
 from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level, apply
 
@@ -42,13 +43,14 @@ thorny.remove_command('help')
 
 @thorny.event
 async def on_ready():
-    bot_activity = discord.Activity(type=discord.ActivityType.playing,
-                                    name=f"Call of Thorny | {v}")
+    bot_activity = discord.Activity(type=discord.ActivityType.listening,
+                                    name=f"Thornenian Rhapsody | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
+    await GuildFactory.build(thorny.guilds[0])
 
 
 @tasks.loop(hours=24.0)
@@ -73,7 +75,7 @@ async def day_counter():
     days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
     channel = thorny.get_channel(932566162582167562)
     await channel.send(f"*Rise and shine, Everthorn!*\n"
-                       f"**Day {days_since_start.days}** has dawned upon us.")
+                       f"**Day {days_since_start.days + 1}** has dawned upon us.")
 
 
 @birthday_checker.before_loop

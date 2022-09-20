@@ -36,11 +36,11 @@ async def generate_help_dict(self, ctx):
                 for subcommand in command.walk_commands():
                     if isinstance(subcommand, discord.SlashCommand):
                         options = ''
-                        for item in subcommand.options:
-                            if item.required is True:
-                                options = f"{options} <{item.name}>"
+                        for option in subcommand.options:
+                            if option.required is True:
+                                options = f"{options} `{option.name}:required`"
                             else:
-                                options = f"{options} [{item.name}]"
+                                options = f"{options} {option.name}:optional"
                         if not subcommand.checks:
                             help_dict[f"{cog}"].append({"name": f"{subcommand}",
                                                         "desc": subcommand.description,
@@ -51,11 +51,11 @@ async def generate_help_dict(self, ctx):
                                                         "alias": None, 'usage': options, 'example': None})
             elif isinstance(command, discord.SlashCommand):
                 options = ''
-                for item in command.options:
-                    if item.required is True:
-                        options = f"{options} <{item.name}>"
+                for option in command.options:
+                    if option.required is True:
+                        options = f"{options} `{option.name}:required`"
                     else:
-                        options = f"{options} [{item.name}]"
+                        options = f"{options} {option.name}:optional"
                 if not command.checks:
                     help_dict[f"{cog}"].append({"name": command.name,
                                                 "desc": command.description,

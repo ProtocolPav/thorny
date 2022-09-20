@@ -88,13 +88,14 @@ class Playtime:
     daily_average: Time
 
     def __init__(self, playtime_data, latest_playtime, daily_average):
-        self.total_playtime = Time(playtime_data['total_playtime']) if playtime_data is not None else None
-        self.current_playtime = Time(playtime_data['current_playtime']) if playtime_data is not None else None
-        self.previous_playtime = Time(playtime_data['previous_playtime']) if playtime_data is not None else None
-        self.expiring_playtime = Time(playtime_data['expiring_playtime']) if playtime_data is not None else None
-        self.todays_playtime = Time(playtime_data['todays_playtime']) if playtime_data is not None else None
-        self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else None
-        self.daily_average = Time(daily_average['averages']) if daily_average is not None else None
+        default = Time(timedelta(hours=0))
+        self.total_playtime = Time(playtime_data['total_playtime']) if playtime_data['total_playtime'] is not None else default
+        self.current_playtime = Time(playtime_data['current_playtime']) if playtime_data['current_playtime'] is not None else default
+        self.previous_playtime = Time(playtime_data['previous_playtime']) if playtime_data['previous_playtime'] is not None else default
+        self.expiring_playtime = Time(playtime_data['expiring_playtime']) if playtime_data['expiring_playtime'] is not None else default
+        self.todays_playtime = Time(playtime_data['todays_playtime']) if playtime_data['todays_playtime'] is not None else default
+        self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
+        self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 
 
 @dataclass
