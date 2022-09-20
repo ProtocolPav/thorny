@@ -3,13 +3,10 @@ import discord
 from discord.ext import commands
 
 import json
-from thorny_core import functions as func
 from thorny_core import errors
-import random
 from thorny_core import dbutils
 from thorny_core.db import UserFactory, commit
 from discord import utils
-from datetime import datetime, timedelta
 from thorny_core import dbevent as ev
 from thorny_core.modules import redeemingfuncs
 
@@ -37,18 +34,9 @@ class Inventory(commands.Cog):
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        kingdom = func.get_user_kingdom(ctx, user)
         thorny_user = await UserFactory.build(user)
-        thorny_user.kingdom = kingdom
-        await commit(thorny_user)
 
         personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
-        kingdom_bal = ''
-        if kingdom is not None:
-            selector = dbutils.Base()
-            treasury_list = await selector.select("treasury", "kingdoms", "kingdom", kingdom)
-            kingdom_bal = f"**{kingdom.capitalize()} Treasury:** <:Nug:884320353202081833>" \
-                          f"{treasury_list[0][0]}"
         inventory_text = ''
         inventory_list = thorny_user.inventory.slots
         for item in inventory_list:
@@ -60,9 +48,9 @@ class Inventory(commands.Cog):
 
         inventory_embed = discord.Embed(colour=0xE0115F)
         inventory_embed.set_author(name=user, icon_url=user.display_avatar.url)
-        inventory_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}\n{kingdom_bal}")
+        inventory_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}")
         inventory_embed.add_field(name=f"**Inventory**", value=inventory_text, inline=False)
-        inventory_embed.set_footer(text="Use /redeem to redeem Roles & Tickets!")
+        inventory_embed.set_footer(text="Redeem your items using /redeem")
         await ctx.respond(embed=inventory_embed)
 
     @inventory.command(description="CM Only | Add an item to a user's inventory")

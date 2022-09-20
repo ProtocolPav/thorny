@@ -5,6 +5,7 @@ from discord import utils
 import json
 from thorny_core.uikit import slashoptions, views, embeds
 from thorny_core.db import UserFactory, commit
+from thorny_core import dbutils
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -83,3 +84,27 @@ class Profile(commands.Cog):
         await commit(thorny_user)
         await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages and gifts though :(",
                           ephemeral=True)
+
+    @commands.slash_command(description="Search the database for gamertags")
+    async def gamertag(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
+        selector = dbutils.Base()
+        gamertags = await selector.select_gamertags(ctx.guild.id, gamertag)
+        send_text = []
+        for tag in gamertags:
+            send_text.append(f"<@{tag['user_id']}> • {tag['gamertag']}")
+        if not send_text:
+            send_text.append("No matches found!")
+
+        gamertag_embed = discord.Embed(colour=0x64d5ac)
+        gamertag_embed.add_field(name=f"**Gamertags matching `{gamertag}`:**",
+                                 value="\n".join(send_text))
+        await ctx.respond(embed=gamertag_embed)
+
+    # @commands.slash_command(description="See all upcoming birthdays!")
+    # async def birthdays(self, ctx):
+    #     list = await dbutils.User().select_birthdays()
+    #     birthdays = []
+    #     for user in list:
+    #         if user["guild_id"] == ctx.guild.id:
+    #
+    #     await ctx.respond(embed=events_embed)
