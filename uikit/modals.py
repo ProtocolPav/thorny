@@ -91,7 +91,7 @@ class ProfileEditLore(Modal):
 class ProjectApplicationModal(Modal):
     def __init__(self):
         super().__init__(title="Project Application",
-                         timeout=200)
+                         timeout=None)
 
         self.add_item(InputText(label="What is the project name?",
                                 placeholder="Eg. Tramonte, Pirate's Cove, Hobbitshire"))
@@ -114,7 +114,7 @@ class ProjectApplicationModal(Modal):
 class ProjectApplicationExtraInfo(Modal):
     def __init__(self):
         super().__init__(title="Extra Info",
-                         timeout=200)
+                         timeout=None)
 
         self.add_item(InputText(label="Add in extra info",
                                 placeholder="Stuff like the members of the project, and more stuff.",
