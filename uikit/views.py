@@ -123,8 +123,8 @@ class PersistentProjectAdminButtons(View):
             await interaction.response.edit_message(view=None,
                                                     embed=interaction.message.embeds[0])
             forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681)
-            thread = await forum_channel.create_thread(name=interaction.message.embeds[0].description,
-                                                       content=interaction.message.embeds[0].description,
+            thread = await forum_channel.create_thread(name=interaction.message.embeds[0].title,
+                                                       content=interaction.message.embeds[0].title,
                                                        embed=interaction.message.embeds[0])
             await thread.send("<@&668091613687316500> Please give this thread the 'Ongoing Project' tag.")
             await thread.send(f"<@{interaction.message.embeds[0].footer.text}> Congrats on your project being accepted!"

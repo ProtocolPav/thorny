@@ -1,4 +1,4 @@
-import asyncio
+
 from datetime import datetime, timedelta, time
 
 import discord
@@ -31,7 +31,7 @@ print(
      \/   |_| |_|\___/|_|  |_| |_|\__, |
                                   |___/
         """)
-TOKEN = config["token"]
+TOKEN = config["dev_token"]
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
@@ -88,8 +88,6 @@ day_counter.start()
 
 @thorny.slash_command()
 async def ping(ctx):
-    await ctx.defer()
-    await asyncio.sleep(5)
     await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
 
 
