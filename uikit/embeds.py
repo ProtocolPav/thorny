@@ -141,8 +141,7 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
 
 
 async def application_info_embed(thorny_user: user.User, modal_children: discord.ui.Modal.children):
-    info_embed = discord.Embed(title="Project Application",
-                               description=modal_children[0].value,
+    info_embed = discord.Embed(title=modal_children[0].value,
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
@@ -163,4 +162,5 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
                          inline=False)
 
     info_embed.set_footer(text=f"{thorny_user.user_id}")
+
     return info_embed
