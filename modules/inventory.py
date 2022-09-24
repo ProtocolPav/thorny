@@ -5,7 +5,7 @@ from discord.ext import commands
 import json
 from thorny_core import errors
 from thorny_core import dbutils
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 from discord import utils
 from thorny_core import dbevent as ev
 from thorny_core.modules import redeemingfuncs
@@ -35,8 +35,9 @@ class Inventory(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(user.guild)
 
-        personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
+        personal_bal = f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}"
         inventory_text = ''
         inventory_list = thorny_user.inventory.slots
         for item in inventory_list:
@@ -103,16 +104,18 @@ class Inventory(commands.Cog):
         selector = dbutils.Base()
         updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
         if updated:
-            await ctx.respond(f"Done! {item_id} is now {price} Nugs", ephemeral=True)
+            await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
         thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.author.guild)
+
         item_text = ""
         for item_data in thorny_user.inventory.all_items:
             if item_data.item_cost > 0:
                 item_text = f"{item_text}\n**{item_data.item_display_name}** |" \
-                            f" <:Nug:884320353202081833>{item_data.item_cost}\n" \
+                            f" {thorny_guild.currency.emoji}{item_data.item_cost}\n" \
                             f"**Item ID:** {item_data.item_id}\n"
 
         store_embed = discord.Embed(colour=ctx.author.colour)

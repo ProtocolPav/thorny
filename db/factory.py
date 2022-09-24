@@ -269,13 +269,20 @@ class GuildFactory:
                              "admin": None
                              }
 
-            exact_default = {"secret": "You've found my secret exact response!"}
-            wildcard_default = {"super secret": "You've found my super secret wildcard response!"}
+            exact_default = {"secret": ["You've found my secret exact response!"]}
+            wildcard_default = {"super secret": ["You've found my super secret wildcard response!"]}
 
-            await conn.execute("""
-                               INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact, responses_wildcard)
-                               VALUES ($1, $2, $3, $4, $5)
-                               """,
-                               guild.id, channels_default, roles_default, exact_default, wildcard_default
-                               )
+            guild_exists = await conn.fetchrow("""
+                                               SELECT guild_id FROM thorny.guild
+                                               WHERE guild_id = $1
+                                               """,
+                                               guild.id)
 
+            if guild_exists[0] is None:
+                await conn.execute("""
+                                   INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact,
+                                                             responses_wildcard)
+                                   VALUES ($1, $2, $3, $4, $5)
+                                   """,
+                                   guild.id, channels_default, roles_default, exact_default, wildcard_default
+                                   )

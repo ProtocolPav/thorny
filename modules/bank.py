@@ -3,10 +3,8 @@ from discord.ext import commands
 
 import json
 from thorny_core import errors
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core import dbevent as ev
-
-config = json.load(open("./../thorny_data/config.json", "r"))
 
 
 class Bank(commands.Cog):
@@ -20,8 +18,9 @@ class Bank(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(user.guild)
 
-        personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
+        personal_bal = f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}"
         inventory_text = ''
         inventory_list = thorny_user.inventory.slots
         for item in inventory_list[0:2]:
@@ -45,7 +44,7 @@ class Bank(commands.Cog):
     @balance.command(description="CM ONLY | Edit someone's balance")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.Member,
-                   amount: discord.Option(int, "Put a - if you want to remove nugs")):
+                   amount: discord.Option(int, "Put a - if you want to remove currency")):
         thorny_user = await UserFactory.build(user)
         thorny_user.balance += amount
 
@@ -57,6 +56,7 @@ class Bank(commands.Cog):
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
         receivable_user = await UserFactory.build(user)
         payable_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(user.guild)
 
         if user == ctx.author:
             raise errors.SelfPaymentError
@@ -68,8 +68,8 @@ class Bank(commands.Cog):
 
             pay_embed = discord.Embed(color=0xF4C430)
             pay_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
-            pay_embed.add_field(name='<:Nug:884320353202081833> Payment Successful!',
-                                value=f'Amount paid: **<:Nug:884320353202081833>{amount}**\n'
+            pay_embed.add_field(name='{thorny_guild.currency.emoji} Payment Successful!',
+                                value=f'Amount paid: **{thorny_guild.currency.emoji}{amount}**\n'
                                       f'Paid to: **{user.mention}**\n'
                                       f'\n**Reason: {reason}**')
             await ctx.respond(f"{user.mention} You've been paid!")
