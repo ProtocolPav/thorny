@@ -239,3 +239,37 @@ class GuildFactory:
                                WHERE guild_id = $2
                                """,
                                guild_channels[0], guild.id)
+
+    @classmethod
+    async def create(cls, guild: discord.Guild):
+        async with pool.acquire() as conn:
+            await conn.set_type_codec(
+                'json',
+                encoder=json.dumps,
+                decoder=json.loads,
+                schema='pg_catalog'
+            )
+
+            channels_default = {
+                                "logs": None,
+                                "welcome": None,
+                                "gulag": None,
+                                "projects": None,
+                                "announcements": None,
+                                "thorny_updates": None
+                                }
+
+            roles_default = {
+                             "timeout": None,
+                             "role_on_join": None,
+                             "admin": None
+                             }
+
+            exact_default = {"secret": "You've found my secret exact response!"}
+            wildcard_default = {"super secret": "You've found my super secret wildcard response!"}
+
+            await conn.execute("""
+                               INSERT INTO thorny.guild (guild_id, channels, roles, response_exact, response_wildcard)
+                               VALUES ($1, $2, $3, $4, $5)
+                               """,
+                               guild.id, channels_default, roles_default, exact_default, wildcard_default)
