@@ -272,4 +272,6 @@ class GuildFactory:
                                INSERT INTO thorny.guild (guild_id, channels, roles, response_exact, response_wildcard)
                                VALUES ($1, $2, $3, $4, $5)
                                """,
-                               guild.id, channels_default, roles_default, exact_default, wildcard_default)
+                               guild.id, channels_default, roles_default, exact_default, wildcard_default
+                               )
+

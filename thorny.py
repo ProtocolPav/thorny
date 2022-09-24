@@ -50,7 +50,10 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
-    await GuildFactory.build(thorny.guilds[0])
+
+    for guild in thorny.guilds:
+        print(f"Build guild {guild.name}")
+        await GuildFactory.create(guild)
 
 
 @tasks.loop(hours=24.0)
