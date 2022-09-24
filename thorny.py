@@ -53,7 +53,8 @@ async def on_ready():
 
     for guild in thorny.guilds:
         print(f"Build guild {guild.name}")
-        await GuildFactory.create(guild)
+        guild2 = await GuildFactory.build(guild)
+        print(guild2)
 
 
 @tasks.loop(hours=24.0)

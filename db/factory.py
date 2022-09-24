@@ -5,6 +5,7 @@ from datetime import datetime
 import discord
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
+from thorny_core.db.guild import Guild
 
 
 async def create_pool(loop=None):
@@ -226,19 +227,22 @@ class GuildFactory:
                 schema='pg_catalog'
             )
 
-            guild_channels = await conn.fetchrow("""
-                                                 SELECT channels::json FROM thorny.guild
-                                                 WHERE guild_id = $1
+            total_currency = await conn.fetchrow("""
+                                                 SELECT SUM(balance) as total FROM thorny.user
+                                                 WHERE guild_id = $1 AND active = TRUE
                                                  """,
                                                  guild.id)
 
-            guild_channels[0]['channel1'] = "channel TWO!!!"
-            await conn.execute("""
-                               UPDATE thorny.guild
-                               SET channels = $1
-                               WHERE guild_id = $2
-                               """,
-                               guild_channels[0], guild.id)
+            guild_rec = await conn.fetchrow("""
+                                            SELECT * FROM thorny.guild
+                                            WHERE guild_id = $1
+                                            """,
+                                            guild.id)
+
+            return Guild(pool=pool,
+                         guild=guild,
+                         guild_record=guild_rec,
+                         currency_total=total_currency['total'])
 
     @classmethod
     async def create(cls, guild: discord.Guild):
@@ -269,7 +273,7 @@ class GuildFactory:
             wildcard_default = {"super secret": "You've found my super secret wildcard response!"}
 
             await conn.execute("""
-                               INSERT INTO thorny.guild (guild_id, channels, roles, response_exact, response_wildcard)
+                               INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact, responses_wildcard)
                                VALUES ($1, $2, $3, $4, $5)
                                """,
                                guild.id, channels_default, roles_default, exact_default, wildcard_default
