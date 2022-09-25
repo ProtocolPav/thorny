@@ -5,7 +5,7 @@ from discord.utils import basic_autocomplete
 import math
 
 from thorny_core import dbutils
-from thorny_core.db.factory import UserFactory
+from thorny_core.db.factory import UserFactory, GuildFactory
 from thorny_core.uikit import slashoptions
 
 
@@ -46,13 +46,15 @@ class Leaderboard(commands.Cog):
                                          color=0x6495ED)
                 lb_embed.add_field(name=f'**{rank}**',
                                    value='\n'.join(playtime_text), inline=False)
-                lb_embed.set_footer(text=f'Page {page}/{total_pages} | Use /connect and /disconnect')
+                lb_embed.set_footer(text=f'Page {page}/{total_pages}')
                 self.pages.append(lb_embed)
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
 
-    @leaderboard.command(description="See the Nugs Leaderboard")
-    async def nugs(self, ctx):
+    @leaderboard.command(description="See the Money Leaderboard")
+    async def money(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.author.guild)
+
         self.pages = []
         nugs_leaderboard = dbutils.Leaderboard()
         await nugs_leaderboard.select_nugs(ctx)
@@ -65,14 +67,18 @@ class Leaderboard(commands.Cog):
             balance_text = []
             for user in balances[start:stop]:
                 balance_text.append(f'**{balances.index(user) + 1}.** <@{user["user_id"]}> • '
-                                    f'<:Nug:884320353202081833> **{user["balance"]}**')
+                                    f'{thorny_guild.currency.emoji} **{user["balance"]}**')
             rank = f"You are #{nugs_leaderboard.user_rank} on the Leaderboard"
 
             if page != total_pages + 1:
-                lb_embed = discord.Embed(title=f'**Nugs Leaderboard**', color=0x6495ED)
+                lb_embed = discord.Embed(title=f'**{thorny_guild.currency.name.capitalize()} Leaderboard**',
+                                         color=0x6495ED,
+                                         description=f"**Total {thorny_guild.currency.name} in circulation:** "
+                                                     f"{thorny_guild.currency.emoji} "
+                                                     f"{thorny_guild.currency.total_in_circulation}")
                 lb_embed.add_field(name=f'**{rank}**',
                                    value='\n'.join(balance_text))
-                lb_embed.set_footer(text=f'Page {page}/{total_pages} | Gain Nugs by selling stuff')
+                lb_embed.set_footer(text=f'Page {page}/{total_pages}')
                 self.pages.append(lb_embed)
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)

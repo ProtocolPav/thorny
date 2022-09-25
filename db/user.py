@@ -1,9 +1,32 @@
 import asyncpg as pg
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import discord
 from thorny_core import errors
 from dataclasses import dataclass, field
-from thorny_core.uikit.datetime_class import Time
+
+
+class Time:
+    def __init__(self, time_object: datetime | timedelta | date):
+        self.time = time_object
+
+    def __str__(self):
+        if type(self.time) == (date or datetime):
+            datetime_string = datetime.strftime(self.time, "%B %d, %Y")
+            return datetime_string
+        elif type(self.time) == timedelta:
+            total_seconds = int(self.time.total_seconds())
+            days, remainder = divmod(total_seconds, 24 * 60 * 60)
+            hours, remainder = divmod(remainder, 60*60)
+            minutes, seconds = divmod(remainder, 60)
+
+            if days == 0:
+                return f"{hours}h{minutes}m"
+            elif days == 1:
+                return f"{days} day, {hours}h{minutes}m"
+            elif days > 1:
+                return f"{days} days, {hours}h{minutes}m"
+
+        return str(self.time)
 
 
 @dataclass
@@ -89,11 +112,19 @@ class Playtime:
 
     def __init__(self, playtime_data, latest_playtime, daily_average):
         default = Time(timedelta(hours=0))
-        self.total_playtime = Time(playtime_data['total_playtime']) if playtime_data['total_playtime'] is not None else default
-        self.current_playtime = Time(playtime_data['current_playtime']) if playtime_data['current_playtime'] is not None else default
-        self.previous_playtime = Time(playtime_data['previous_playtime']) if playtime_data['previous_playtime'] is not None else default
-        self.expiring_playtime = Time(playtime_data['expiring_playtime']) if playtime_data['expiring_playtime'] is not None else default
-        self.todays_playtime = Time(playtime_data['todays_playtime']) if playtime_data['todays_playtime'] is not None else default
+        set_default = False
+
+        if playtime_data is None:
+            set_default = True
+
+        def expression(data: str):
+            return default if set_default or playtime_data[data] is None else Time(playtime_data[data])
+
+        self.total_playtime = expression('total_playtime')
+        self.current_playtime = expression('current_playtime')
+        self.previous_playtime = expression('previous_playtime')
+        self.expiring_playtime = expression('expiring_playtime')
+        self.todays_playtime = expression('todays_playtime')
         self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
         self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 

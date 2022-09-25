@@ -5,7 +5,7 @@ from discord.ext import commands
 import json
 from thorny_core import errors
 from thorny_core import dbutils
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 from discord import utils
 from thorny_core import dbevent as ev
 from thorny_core.modules import redeemingfuncs
@@ -35,8 +35,9 @@ class Inventory(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(user.guild)
 
-        personal_bal = f"**Personal Balance:** <:Nug:884320353202081833>{thorny_user.balance}"
+        personal_bal = f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}"
         inventory_text = ''
         inventory_list = thorny_user.inventory.slots
         for item in inventory_list:
@@ -103,16 +104,18 @@ class Inventory(commands.Cog):
         selector = dbutils.Base()
         updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
         if updated:
-            await ctx.respond(f"Done! {item_id} is now {price} Nugs", ephemeral=True)
+            await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
         thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.author.guild)
+
         item_text = ""
         for item_data in thorny_user.inventory.all_items:
             if item_data.item_cost > 0:
                 item_text = f"{item_text}\n**{item_data.item_display_name}** |" \
-                            f" <:Nug:884320353202081833>{item_data.item_cost}\n" \
+                            f" {thorny_guild.currency.emoji}{item_data.item_cost}\n" \
                             f"**Item ID:** {item_data.item_id}\n"
 
         store_embed = discord.Embed(colour=ctx.author.colour)
@@ -189,15 +192,21 @@ class Inventory(commands.Cog):
 
     @commands.slash_command(description="See how tickets work!")
     async def tickets(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.author.guild)
+
         help_embed = discord.Embed(color=ctx.author.color)
         help_embed.add_field(name="**How Prizes Work**",
                              value="There are 2 types of prizes:\n\n"
                                    "**Normal Prize**\n"
-                                   ":yellow_heart: - 1 nug, :gem: - 2 nugs, :dagger: - 4 nugs, "
-                                   "<:grassyE:840170557508026368> - 6 nugs, <:goldenE:857714717153689610> - 7 nugs, "
-                                   ":dragon_face: - 64 nugs\n\n"
+                                   f":yellow_heart: - {thorny_guild.currency.emoji}1, "
+                                   f":gem: - {thorny_guild.currency.emoji}2, "
+                                   f":dagger: - {thorny_guild.currency.emoji}4, "
+                                   f"<:grassyE:840170557508026368> - {thorny_guild.currency.emoji}6, "
+                                   f"<:goldenE:857714717153689610> - {thorny_guild.currency.emoji}7, "
+                                   f":dragon_face: - {thorny_guild.currency.emoji}64\n\n"
                                    "**Jackpot Prize**\n"
                                    "When you get 4 different scratchables, you get double the prize! Except for when "
                                    "you get a :dragon_face:.\n\n"
-                                   "Nugs are added automatically!", inline=False)
+                                   f"**{thorny_guild.currency.name}** are added automatically to your balance!",
+                             inline=False)
         await ctx.respond(embed=help_embed, ephemeral=True)
