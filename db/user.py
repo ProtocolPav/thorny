@@ -89,11 +89,19 @@ class Playtime:
 
     def __init__(self, playtime_data, latest_playtime, daily_average):
         default = Time(timedelta(hours=0))
-        self.total_playtime = Time(playtime_data['total_playtime']) if playtime_data['total_playtime'] is not None else default
-        self.current_playtime = Time(playtime_data['current_playtime']) if playtime_data['current_playtime'] is not None else default
-        self.previous_playtime = Time(playtime_data['previous_playtime']) if playtime_data['previous_playtime'] is not None else default
-        self.expiring_playtime = Time(playtime_data['expiring_playtime']) if playtime_data['expiring_playtime'] is not None else default
-        self.todays_playtime = Time(playtime_data['todays_playtime']) if playtime_data['todays_playtime'] is not None else default
+        set_default = False
+
+        if playtime_data is None:
+            set_default = True
+
+        def expression(data: str):
+            return default if set_default or playtime_data[data] is None else Time(playtime_data[data])
+
+        self.total_playtime = expression('total_playtime')
+        self.current_playtime = expression('current_playtime')
+        self.previous_playtime = expression('previous_playtime')
+        self.expiring_playtime = expression('expiring_playtime')
+        self.todays_playtime = expression('todays_playtime')
         self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
         self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 
