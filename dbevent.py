@@ -12,6 +12,8 @@ from thorny_core.db import GuildFactory
 api_instance = giphy_client.DefaultApi()
 giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
+# TODO change the entire Events classes
+
 
 @dataclass
 class EventMetadata:

@@ -51,6 +51,10 @@ async def on_ready():
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
 
+    # TODO remove this in v1.8.5. This is temporary to create all the guilds in the db
+    for guild in thorny.guilds:
+        await GuildFactory.create(guild)
+
 
 @tasks.loop(hours=24.0)
 async def birthday_checker():
