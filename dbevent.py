@@ -7,6 +7,7 @@ import discord
 import errors
 from dataclasses import dataclass
 from db import User, commit
+from thorny_core.db import GuildFactory
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
@@ -226,8 +227,10 @@ class GainXP(Event):
 
     async def log_event_in_database(self):
         thorny_user = self.metadata.user
+        thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
+
         thorny_user.counters.level_last_message = datetime.now()
-        multiplier = self.metadata.xp_multiplier
+        multiplier = thorny_guild.xp_multiplier
         xp_at_first = thorny_user.level.xp
 
         if self.metadata.playtime is None:
@@ -254,12 +257,14 @@ class GainXP(Event):
         gifs_list = list(api_response.data)
         gif = random.choice(gifs_list)
 
+        thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
+
         level_up_embed = discord.Embed(colour=self.metadata.user.discord_member.colour)
         level_up_embed.set_author(name=self.metadata.user.username,
                                   icon_url=self.metadata.user.discord_member.display_avatar.url)
         level_up_embed.add_field(name=f":partying_face: Congrats!",
                                  value=f"You leveled up to **Level {self.metadata.user.level.level}!**\n"
-                                       f"Keep chatting and maybe, just maybe, you'll beat the #1")
+                                       f"{thorny_guild.level_message}")
         level_up_embed.set_image(url=gif.images.original.url)
         await self.metadata.level_up_message.channel.send(embed=level_up_embed)
 
@@ -280,8 +285,11 @@ class MessageEdit(Event):
                                       f"**BEFORE:**\n{self.metadata.message_before.content}\n"
                                       f"**AFTER:**\n{self.metadata.message_after.content}")
             log_embed.set_footer(text=f'Event Time: {self.time}')
-            logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
-            await logs_channel.send(embed=log_embed)
+
+            thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
+            if thorny_guild.channels.logs_channel is not None:
+                logs_channel = self.client.get_channel(thorny_guild.channels.logs_channel)
+                await logs_channel.send(embed=log_embed)
 
 
 class MessageDelete(Event):
@@ -299,8 +307,11 @@ class MessageDelete(Event):
                                       f"<#{self.metadata.deleted_message.channel.id}>:"
                                       f"\n{self.metadata.deleted_message.content}")
             log_embed.set_footer(text=f'Event Time: {self.time}')
-            logs_channel = self.client.get_channel(self.config['channels']['event_logs'])
-            await logs_channel.send(embed=log_embed)
+
+            thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
+            if thorny_guild.channels.logs_channel is not None:
+                logs_channel = self.client.get_channel(thorny_guild.channels.logs_channel)
+                await logs_channel.send(embed=log_embed)
 
 
 class UserJoin(Event):
@@ -312,13 +323,13 @@ class UserJoin(Event):
 
     async def log_event_in_discord(self):
         user = self.metadata.user
-        guild = user.discord_member.guild
+        thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
 
-        if str(guild.member_count)[-1] == "1":
+        if str(thorny_guild.discord_guild.member_count)[-1] == "1":
             suffix = "st"
-        elif str(guild.member_count)[-1] == "2":
+        elif str(thorny_guild.discord_guild.member_count)[-1] == "2":
             suffix = "nd"
-        elif str(guild.member_count)[-1] == "3":
+        elif str(thorny_guild.discord_guild.member_count)[-1] == "3":
             suffix = "rd"
         else:
             suffix = "th"
@@ -329,14 +340,15 @@ class UserJoin(Event):
         gif = random.choice(gifs_list)
 
         join_embed = discord.Embed(colour=0x57945c)
-        join_embed.add_field(name=f"**Welcome to {guild.name}, {user.username}!**",
-                             value=f"You are the **{guild.member_count}{suffix}** member!\n\n"
-                                   f"Have fun here, and remember to follow the Rules.")
+        join_embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {user.username}!**",
+                             value=f"You are the **{thorny_guild.discord_guild.member_count}{suffix}** member!\n\n"
+                                   f"{thorny_guild.join_message}")
         join_embed.set_thumbnail(url=user.discord_member.display_avatar.url)
         join_embed.set_image(url=gif.images.original.url)
 
-        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
-        await join_channel.send(embed=join_embed)
+        if thorny_guild.channels.welcome_channel is not None:
+            logs_channel = self.client.get_channel(thorny_guild.channels.welcome_channel)
+            await logs_channel.send(embed=join_embed)
 
 
 class UserLeave(Event):
@@ -348,13 +360,15 @@ class UserLeave(Event):
 
     async def log_event_in_discord(self):
         user = self.metadata.user
+        thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
 
         join_embed = discord.Embed(colour=0xc34184)
         join_embed.add_field(name=f"**{user.username} has left**",
-                             value=f"Always sad to see someone go :pensive:")
+                             value=f"{thorny_guild.leave_message}")
 
-        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
-        await join_channel.send(embed=join_embed)
+        if thorny_guild.channels.welcome_channel is not None:
+            logs_channel = self.client.get_channel(thorny_guild.channels.welcome_channel)
+            await logs_channel.send(embed=join_embed)
 
 
 class Birthday(Event):
@@ -373,7 +387,7 @@ class Birthday(Event):
         user = self.metadata.user
         birthday = user.birthday
 
-        age = datetime.now().year - birthday.year
+        age = datetime.now().year - birthday.time.year
         if str(age)[-1] == "1":
             suffix = "st"
         elif str(age)[-1] == "2":
@@ -385,8 +399,11 @@ class Birthday(Event):
 
         birthday_message = f"Wohoo!! It is {user.discord_member.mention}'s {age}{suffix} birthday today! " \
                            f"Happy Birthday, {user.username}! :partying_face: :partying_face: :partying_face: "
-        join_channel = self.client.get_channel(self.config['channels']['join_channel'])
-        await join_channel.send(birthday_message)
+
+        thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
+        if thorny_guild.channels.welcome_channel is not None:
+            logs_channel = self.client.get_channel(thorny_guild.channels.welcome_channel)
+            await logs_channel.send(birthday_message)
 
 
 async def fetch(event, thorny_user: User, client, metadata: EventMetadata = None):

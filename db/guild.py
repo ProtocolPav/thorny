@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import discord
 from thorny_core import errors
 from dataclasses import dataclass, field
-from thorny_core.uikit.datetime_class import Time
 
 
 @dataclass

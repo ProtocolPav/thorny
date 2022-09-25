@@ -3,6 +3,7 @@ import json
 
 from datetime import datetime, timedelta
 from thorny_core.db import user
+from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
 
 version_json = json.load(open('./version.json', 'r'))
@@ -10,6 +11,8 @@ v = version_json["version"]
 
 
 async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embed:
+    thorny_guild = await GuildFactory.build(thorny_user.discord_member.guild)
+
     main_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
                                     color=thorny_user.discord_member.color)
     main_page_embed.set_author(name=thorny_user.discord_member, icon_url=thorny_user.discord_member.display_avatar.url)
@@ -23,7 +26,7 @@ async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embe
                               value=f"{is_donator}\n"
                                     f"**Gamertag:** {profile.gamertag or profile.default_gamertag}\n"
                                     f"**Level:** {thorny_user.level.level}\n"
-                                    f"**Balance:** <:Nug:884320353202081833> {thorny_user.balance}\n"
+                                    f"**Balance:** {thorny_guild.currency.emoji} {thorny_user.balance}\n"
                                     f"**Birthday:** {thorny_user.birthday}\n"
                                     f"**Age:** {thorny_user.age}\n"
                                     f"**Joined on:** {thorny_user.join_date}"

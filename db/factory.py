@@ -278,7 +278,7 @@ class GuildFactory:
                                                """,
                                                guild.id)
 
-            if guild_exists[0] is None:
+            if guild_exists is None:
                 await conn.execute("""
                                    INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact,
                                                              responses_wildcard)

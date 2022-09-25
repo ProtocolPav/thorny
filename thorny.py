@@ -115,8 +115,9 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
 @thorny.event
 async def on_message(message: discord.Message):
-    thorny_guild = await GuildFactory.build(message.guild)
     if message.author != thorny.user:
+        thorny_guild = await GuildFactory.build(message.guild)
+
         if message.content.lower() in thorny_guild.exact_responses:
             response_list = thorny_guild.exact_responses[message.content.lower()]
             response = response_list[random.randint(0, len(response_list) - 1)]
@@ -283,6 +284,6 @@ thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
 thorny.add_cog(apply.Applications(thorny))
-thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.add_cog(help.Help(thorny))
 
 thorny.run(TOKEN)

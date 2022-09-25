@@ -35,7 +35,7 @@ class Playtime(commands.Cog):
                 response_embed.add_field(name=f"**One, Two, Thirty!**",
                                          value=f"I'm adding up your seconds, so when you stop playing, use `/disconnect`")
                 response_embed.add_field(name=f"**View Your Playtime:**",
-                                         value="`/profile view` - See your profile\n`/online` - See who else is on!",
+                                         value="`/profile` - See your profile\n`/online` - See who else is on!",
                                          inline=False)
                 response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar)
                 response_embed.set_footer(text=f'{v} | {connection.metadata.event_time}')
@@ -115,7 +115,7 @@ class Playtime(commands.Cog):
             response_embed.add_field(name=f"**One, Two, Thirty!**",
                                      value=f"I'm adding up your seconds, so when you stop playing, use `/disconnect`")
             response_embed.add_field(name=f"**View Your Playtime:**",
-                                     value="`/profile view` - See your profile\n`/online` - See who else is on!",
+                                     value="`/profile` - See your profile\n`/online` - See who else is on!",
                                      inline=False)
             response_embed.set_author(name=user.name, icon_url=user.display_avatar.url)
             response_embed.set_footer(text=f'{metadata.event_time}')

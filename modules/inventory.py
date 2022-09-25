@@ -192,15 +192,21 @@ class Inventory(commands.Cog):
 
     @commands.slash_command(description="See how tickets work!")
     async def tickets(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.author.guild)
+
         help_embed = discord.Embed(color=ctx.author.color)
         help_embed.add_field(name="**How Prizes Work**",
                              value="There are 2 types of prizes:\n\n"
                                    "**Normal Prize**\n"
-                                   ":yellow_heart: - 1 nug, :gem: - 2 nugs, :dagger: - 4 nugs, "
-                                   "<:grassyE:840170557508026368> - 6 nugs, <:goldenE:857714717153689610> - 7 nugs, "
-                                   ":dragon_face: - 64 nugs\n\n"
+                                   f":yellow_heart: - {thorny_guild.currency.emoji}1, "
+                                   f":gem: - {thorny_guild.currency.emoji}2, "
+                                   f":dagger: - {thorny_guild.currency.emoji}4, "
+                                   f"<:grassyE:840170557508026368> - {thorny_guild.currency.emoji}6, "
+                                   f"<:goldenE:857714717153689610> - {thorny_guild.currency.emoji}7, "
+                                   f":dragon_face: - {thorny_guild.currency.emoji}64\n\n"
                                    "**Jackpot Prize**\n"
                                    "When you get 4 different scratchables, you get double the prize! Except for when "
                                    "you get a :dragon_face:.\n\n"
-                                   "Nugs are added automatically!", inline=False)
+                                   f"**{thorny_guild.currency.name}** are added automatically to your balance!",
+                             inline=False)
         await ctx.respond(embed=help_embed, ephemeral=True)
