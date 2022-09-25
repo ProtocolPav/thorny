@@ -50,7 +50,10 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
-    await GuildFactory.build(thorny.guilds[0])
+
+    # TODO remove this in v1.8.5. This is temporary to create all the guilds in the db
+    for guild in thorny.guilds:
+        await GuildFactory.create(guild)
 
 
 @tasks.loop(hours=24.0)
@@ -73,9 +76,9 @@ async def birthday_checker():
 async def day_counter():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
     days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-    channel = thorny.get_channel(932566162582167562)
-    await channel.send(f"*Rise and shine, Everthorn!*\n"
-                       f"**Day {days_since_start.days + 1}** has dawned upon us.")
+    storyforge_channel = thorny.get_channel(932566162582167562)
+    await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
+                                  f"**Day {days_since_start.days + 1}** has dawned upon us.")
 
 
 @birthday_checker.before_loop
@@ -115,26 +118,24 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
 
 @thorny.event
-async def on_message(message):
-    # This event listens for keywords and responds with them
-    exact = config['exact_responses']
-    wildcard = config['wildcard_responses']
+async def on_message(message: discord.Message):
     if message.author != thorny.user:
-        if message.content.lower() in exact:
-            response_list = exact[message.content.lower()]
+        thorny_guild = await GuildFactory.build(message.guild)
+
+        if message.content.lower() in thorny_guild.exact_responses:
+            response_list = thorny_guild.exact_responses[message.content.lower()]
             response = response_list[random.randint(0, len(response_list) - 1)]
             await message.channel.send(response)
         else:
-            for invoker in wildcard:
+            for invoker in thorny_guild.wildcard_responses:
                 if invoker in message.content.lower():
-                    response_list = wildcard[invoker]
+                    response_list = thorny_guild.wildcard_responses[invoker]
                     response = response_list[random.randint(0, len(response_list) - 1)]
                     await message.channel.send(response)
 
 
 @thorny.listen()
 async def on_message(message: discord.Message):
-    # This event listens for messages and gives the user XP
     if message.author != thorny.user:
         thorny_user = await UserFactory.build(message.author)
         if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
@@ -270,6 +271,7 @@ async def on_member_remove(member):
 async def on_guild_join(guild):
     member_list = await guild.fetch_members().flatten()
     await UserFactory.create(member_list)
+    await GuildFactory.create(guild)
 
 
 @thorny.event
@@ -286,6 +288,6 @@ thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
 thorny.add_cog(apply.Applications(thorny))
-thorny.add_cog(help.Help(thorny))  # Do this for every cog. This can also be changed through commands.
+thorny.add_cog(help.Help(thorny))
 
 thorny.run(TOKEN)
