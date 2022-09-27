@@ -107,6 +107,7 @@ class Playtime:
     previous_playtime: Time
     expiring_playtime: Time
     todays_playtime: Time
+    recent_connection: pg.Record
     recent_session: Time
     daily_average: Time
 
@@ -125,6 +126,7 @@ class Playtime:
         self.previous_playtime = expression('previous_playtime')
         self.expiring_playtime = expression('expiring_playtime')
         self.todays_playtime = expression('todays_playtime')
+        self.recent_connection = latest_playtime if latest_playtime is not None else None
         self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
         self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 

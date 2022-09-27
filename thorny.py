@@ -44,16 +44,12 @@ thorny.remove_command('help')
 @thorny.event
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Thornenian Rhapsody | {v}")
+                                    name=f"Bound 2 Thorny | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
-
-    # TODO remove this in v1.8.5. This is temporary to create all the guilds in the db
-    for guild in thorny.guilds:
-        await GuildFactory.create(guild)
 
 
 @tasks.loop(hours=24.0)
@@ -167,86 +163,34 @@ async def on_message_edit(before, after):
 
 @thorny.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    guild = thorny.get_guild(payload.guild_id)
-    male = discord.utils.get(guild.roles, name="He/Him")
-    female = discord.utils.get(guild.roles, name="She/Her")
-    other = discord.utils.get(guild.roles, name="They/Them")
+    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
 
-    knight = discord.utils.get(guild.roles, name="Knight")
-    builder = discord.utils.get(guild.roles, name="Builder")
-    redstoner = discord.utils.get(guild.roles, name="Stoner")
-    merchant = discord.utils.get(guild.roles, name="Merchant")
-    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+    for reaction_role in thorny_guild.reactions:
+        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
+            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
+            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
-    if payload.message_id == config['channels']['pronoun_message_id']:
-        if payload.emoji.name == '👱':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(other)
-        elif payload.emoji.name == '👨‍🦱':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(male)
-        elif payload.emoji.name == '👩‍🦰':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(female)
+            member = thorny_guild.discord_guild.get_member(payload.user_id)
 
-    elif payload.message_id == 989073514315264070:
-        if payload.emoji.name == "Knight":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(knight)
-        elif payload.emoji.name == "Builder":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(builder)
-        elif payload.emoji.name == "Stoner":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(redstoner)
-        elif payload.emoji.name == "Merchant":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(merchant)
-        elif payload.emoji.name == "Gatherer":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(gatherer)
+            # Add functionality to edit the Guild's ReactionRole in case the ID or name of the actual role changes
+            if role_to_add is not None and member != thorny.user:
+                await member.add_roles(role_to_add)
 
 
 @thorny.event
-async def on_raw_reaction_remove(payload):
-    guild = thorny.get_guild(payload.guild_id)
-    male = discord.utils.get(guild.roles, name="He/Him")
-    female = discord.utils.get(guild.roles, name="She/Her")
-    other = discord.utils.get(guild.roles, name="They/Them")
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
+    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
 
-    knight = discord.utils.get(guild.roles, name="Knight")
-    builder = discord.utils.get(guild.roles, name="Builder")
-    redstoner = discord.utils.get(guild.roles, name="Stoner")
-    merchant = discord.utils.get(guild.roles, name="Merchant")
-    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+    for reaction_role in thorny_guild.reactions:
+        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
+            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
+            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
-    if payload.message_id == config['channels']['pronoun_message_id']:
-        if payload.emoji.name == '👱':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(other)
-        elif payload.emoji.name == '👨‍🦱':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(male)
-        elif payload.emoji.name == '👩‍🦰':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(female)
+            member = thorny_guild.discord_guild.get_member(payload.user_id)
 
-    elif payload.message_id == 997595962933522482:
-        if payload.emoji.name == "Knight":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(knight)
-        elif payload.emoji.name == "Builder":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(builder)
-        elif payload.emoji.name == "Stoner":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(redstoner)
-        elif payload.emoji.name == "Merchant":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(merchant)
-        elif payload.emoji.name == "Gatherer":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(gatherer)
+            # Add functionality to edit the Guild's ReactionRole in case the ID or name of the actual role changes
+            if role_to_add is not None and member != thorny.user:
+                await member.remove_roles(role_to_add)
 
 
 @thorny.event

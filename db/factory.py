@@ -21,7 +21,7 @@ async def create_pool(loop=None):
     return pool_object
 
 
-pool = asyncio.get_event_loop().run_until_complete(create_pool())
+pool: pg.Pool = asyncio.get_event_loop().run_until_complete(create_pool())
 
 
 class UserFactory:
@@ -90,7 +90,7 @@ class UserFactory:
                                                 """,
                                                 thorny_id)
             recent_session = await conn.fetchrow("""
-                                                 SELECT playtime FROM thorny.activity
+                                                 SELECT * FROM thorny.activity
                                                  WHERE thorny_user_id = $1 AND disconnect_time IS NOT NULL
                                                  ORDER BY connect_time DESC
                                                  """,
@@ -130,7 +130,7 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def get(cls, guild: discord.Guild, thorny_id: int):
+    async def get(cls, guild: discord.Guild, thorny_id: int) -> User:
         async with pool.acquire() as conn:
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE thorny_user_id = $1""", thorny_id)
@@ -218,7 +218,7 @@ class UserFactory:
 
 class GuildFactory:
     @classmethod
-    async def build(cls, guild: discord.Guild):
+    async def build(cls, guild: discord.Guild) -> Guild:
         async with pool.acquire() as conn:
             await conn.set_type_codec(
                 'json',
@@ -233,6 +233,12 @@ class GuildFactory:
                                                  """,
                                                  guild.id)
 
+            reaction_roles = await conn.fetch("""
+                                              SELECT * FROM thorny.reactions
+                                              WHERE guild_id = $1
+                                              """,
+                                              guild.id)
+
             guild_rec = await conn.fetchrow("""
                                             SELECT * FROM thorny.guild
                                             WHERE guild_id = $1
@@ -242,6 +248,7 @@ class GuildFactory:
             return Guild(pool=pool,
                          guild=guild,
                          guild_record=guild_rec,
+                         reaction_roles=reaction_roles,
                          currency_total=total_currency['total'])
 
     @classmethod

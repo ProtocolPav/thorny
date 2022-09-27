@@ -44,15 +44,14 @@ class Playtime(commands.Cog):
                 raise errors.AlreadyConnectedError()
 
     @commands.slash_command(description="Log your disconnect time as well as what you did")
-    async def disconnect(self, ctx: discord.ApplicationContext,
-                         journal: discord.Option(str, "Write a journal entry. Viewable in /journal") = None):
+    async def disconnect(self, ctx: discord.ApplicationContext):
         if ctx.guild.id == 611008530077712395:
             raise errors.AccessDenied()
         else:
             thorny_user = await UserFactory.build(ctx.author)
 
             connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-            connection.edit_metadata("event_comment", journal)
+            connection.edit_metadata("event_comment", None)
             connection.edit_metadata("level_up_message", ctx)
             await connection.log_event_in_database()
 

@@ -48,6 +48,22 @@ class Currency:
 
 
 @dataclass
+class Reaction:
+    reaction_id: int
+    message_id: int
+    emoji: str
+    role_id: int
+    role_name: int
+
+    def __init__(self, reaction_record: pg.Record):
+        self.reaction_id = reaction_record['reaction_id']
+        self.message_id = reaction_record['message_id']
+        self.emoji = reaction_record['emoji']
+        self.role_id = reaction_record['role_id']
+        self.role_name = reaction_record['role_name']
+
+
+@dataclass
 class Activity:
     ...
 
@@ -61,6 +77,7 @@ class Guild:
     channels: Channels
     roles: Roles
     currency: Currency
+    reactions: list[Reaction]
     exact_responses: dict
     wildcard_responses: dict
     join_message: str
@@ -73,6 +90,7 @@ class Guild:
                  pool: pg.Pool,
                  guild: discord.Guild,
                  guild_record: pg.Record,
+                 reaction_roles: list[pg.Record],
                  currency_total: int
                  ):
         self.connection_pool = pool
@@ -84,6 +102,7 @@ class Guild:
         self.currency = Currency(currency_name=guild_record['currency_name'],
                                  currency_emoji=guild_record['currency_emoji'],
                                  total=currency_total)
+        self.reactions = []
         self.exact_responses = guild_record['responses_exact']
         self.wildcard_responses = guild_record['responses_wildcard']
         self.join_message = guild_record['join_message']
@@ -91,3 +110,6 @@ class Guild:
         self.level_message = guild_record['level_up_message']
         self.xp_multiplier = guild_record['xp_multiplier']
         self.levels_enabled = guild_record['enable_levels']
+
+        for record in reaction_roles:
+            self.reactions.append(Reaction(reaction_record=record))
