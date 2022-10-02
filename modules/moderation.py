@@ -6,7 +6,7 @@ from discord import utils
 import httpx
 
 import json
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 import thorny_core.dbevent as ev
 from thorny_core.dbutils import Base
 
@@ -29,6 +29,18 @@ class Moderation(commands.Cog):
         strike_embed.set_footer(text=f"Strike ID: {thorny_user.strikes.strikes[-1].strike_id}")
         await ctx.respond(embed=strike_embed)
         await commit(thorny_user)
+
+    @commands.slash_command(description='Mod Only | Purge messages')
+    @commands.has_permissions(administrator=True)
+    async def purge(self, ctx: discord.ApplicationContext,
+                    amount: int = discord.Option(int, "The amount of messages to delete")):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        # Make this usable by everyone, but if a mod uses it, then it deletes messages sent by all
+        # if a normal user uses this, only their messages
+
+        messages = await ctx.channel.purge(limit=amount)
+        await ctx.respond(f"Deleted {len(messages)} messages.\n"
+                          f"Check Mod Logs (<#{thorny_guild.channels.logs_channel}>) for the list of deleted messages.")
 
     @commands.slash_command(description='CM Only | Send someone to the Gulag')
     @commands.has_permissions(administrator=True)
