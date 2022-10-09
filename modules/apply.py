@@ -1,6 +1,8 @@
 import discord
+import asyncio
 from discord.ext import commands
 from thorny_core.uikit.views import ProjectApplicationForm
+from thorny_core.db import GuildFactory
 
 
 class Applications(commands.Cog):
@@ -8,7 +10,7 @@ class Applications(commands.Cog):
         self.client = client
 
     @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=[1023300252805103626, 611008530077712395])
+                            guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
     async def apply(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=ProjectApplicationForm(ctx),
                           ephemeral=True)

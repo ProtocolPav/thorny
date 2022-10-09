@@ -62,7 +62,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(guild_ids=[1023300252805103626, 611008530077712395])
+    @commands.slash_command(guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
         await ctx.defer()
@@ -77,7 +77,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
-    @commands.slash_command(guild_ids=[1023300252805103626, 611008530077712395])
+    @commands.slash_command(guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         async with httpx.AsyncClient() as client:
@@ -93,7 +93,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"The server is already stopped!")
 
-    @commands.slash_command(guild_ids=[1023300252805103626, 611008530077712395])
+    @commands.slash_command(guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -104,7 +104,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @commands.slash_command(guild_ids=[1023300252805103626, 611008530077712395])
+    @commands.slash_command(guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
