@@ -261,21 +261,6 @@ class GuildFactory:
                 schema='pg_catalog'
             )
 
-            channels_default = {
-                                "logs": None,
-                                "welcome": None,
-                                "gulag": None,
-                                "projects": None,
-                                "announcements": None,
-                                "thorny_updates": None
-                                }
-
-            roles_default = {
-                             "timeout": None,
-                             "role_on_join": None,
-                             "admin": None
-                             }
-
             exact_default = {"secret": ["You've found my secret exact response!"]}
             wildcard_default = {"super secret": ["You've found my super secret wildcard response!"]}
 
@@ -287,9 +272,8 @@ class GuildFactory:
 
             if guild_exists is None:
                 await conn.execute("""
-                                   INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact,
-                                                             responses_wildcard)
-                                   VALUES ($1, $2, $3, $4, $5)
+                                   INSERT INTO thorny.guild (guild_id, responses_exact, responses_wildcard)
+                                   VALUES ($1, $2, $3)
                                    """,
-                                   guild.id, channels_default, roles_default, exact_default, wildcard_default
+                                   guild.id, exact_default, wildcard_default
                                    )

@@ -64,6 +64,20 @@ class Reaction:
 
 
 @dataclass
+class Features:
+    everthorn_exclusive: bool
+    beta_features: bool
+    premium: bool
+    basic: bool
+
+    def __init__(self, features_dict: dict):
+        self.everthorn_exclusive = bool(features_dict['everthorn_only'])
+        self.beta_features = bool(features_dict['beta'])
+        self.premium = bool(features_dict['premium'])
+        self.basic = bool(features_dict['basic'])
+
+
+@dataclass
 class Activity:
     ...
 
@@ -77,6 +91,7 @@ class Guild:
     channels: Channels
     roles: Roles
     currency: Currency
+    features: Features
     reactions: list[Reaction]
     exact_responses: dict
     wildcard_responses: dict
@@ -102,6 +117,8 @@ class Guild:
         self.currency = Currency(currency_name=guild_record['currency_name'],
                                  currency_emoji=guild_record['currency_emoji'],
                                  total=currency_total)
+        self.features = Features( features_dict=guild_record['features'])
+        print(self.features)
         self.reactions = []
         self.exact_responses = guild_record['responses_exact']
         self.wildcard_responses = guild_record['responses_wildcard']

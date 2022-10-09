@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta, time
 
 import discord
@@ -170,9 +169,16 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
             role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
+            if role_to_add is None and role_name_search is not None:
+                role_to_add = role_name_search
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+            elif role_name_search is None and role_to_add is not None:
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+
             member = thorny_guild.discord_guild.get_member(payload.user_id)
 
-            # Add functionality to edit the Guild's ReactionRole in case the ID or name of the actual role changes
             if role_to_add is not None and member != thorny.user:
                 await member.add_roles(role_to_add)
 
@@ -186,9 +192,16 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
             role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
             role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
+            if role_to_add is None and role_name_search is not None:
+                role_to_add = role_name_search
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+            elif role_name_search is None and role_to_add is not None:
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+
             member = thorny_guild.discord_guild.get_member(payload.user_id)
 
-            # Add functionality to edit the Guild's ReactionRole in case the ID or name of the actual role changes
             if role_to_add is not None and member != thorny.user:
                 await member.remove_roles(role_to_add)
 
