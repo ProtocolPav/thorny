@@ -279,17 +279,20 @@ class GuildFactory:
                                    )
 
     @classmethod
-    async def get_everthorn_exclusive_guilds(cls):
-        async with pool.acquire() as conn:
-            guild_ids = await conn.fetch("""
-                                        SELECT guild_id FROM thorny.guild
-                                        WHERE features->>'everthorn_only' = 'True'
-                                        AND active = True
-                                        """)
+    def get_everthorn_exclusive_guilds(cls):
+        async def get():
+            async with pool.acquire() as conn:
+                guild_ids = await conn.fetch("""
+                                            SELECT guild_id FROM thorny.guild
+                                            WHERE features->>'everthorn_only' = 'True'
+                                            AND active = True
+                                            """)
 
-            guilds = []
-            for i in guild_ids:
-                guilds.append(i['guild_id'])
+                guilds = []
+                for i in guild_ids:
+                    guilds.append(i['guild_id'])
 
-            return guilds
+                return guilds
+
+        return asyncio.get_event_loop().run_until_complete(get())
 

@@ -10,7 +10,7 @@ class Applications(commands.Cog):
         self.client = client
 
     @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=asyncio.get_event_loop().run_until_complete(GuildFactory.get_everthorn_exclusive_guilds()))
+                            guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
     async def apply(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=ProjectApplicationForm(ctx),
                           ephemeral=True)
