@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, time
 
 import discord
@@ -15,7 +16,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level, apply
+from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -225,7 +226,7 @@ async def on_member_remove(member):
 
 
 @thorny.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: discord.Guild):
     member_list = await guild.fetch_members().flatten()
     await UserFactory.create(member_list)
     await GuildFactory.create(guild)
@@ -244,7 +245,7 @@ thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-thorny.add_cog(apply.Applications(thorny))
 thorny.add_cog(help.Help(thorny))
 
+# asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)

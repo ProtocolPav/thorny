@@ -25,43 +25,36 @@ def calculate_reward(prize_list, prizes):
     return nugs_reward
 
 
-async def generate_help_dict(self, ctx):
+async def generate_help_dict(self, ctx: discord.ApplicationContext):
     help_dict = {}
     for cog in self.client.cogs:
         help_dict[f"{cog}"] = []
-        cmd_num = 0
         for command in self.client.get_cog(cog).get_commands():
-            cmd_num += 1
+
             if isinstance(command, discord.SlashCommandGroup):
                 for subcommand in command.walk_commands():
                     if isinstance(subcommand, discord.SlashCommand):
-                        options = ''
-                        for option in subcommand.options:
-                            if option.required is True:
-                                options = f"{options} `{option.name}:required`"
-                            else:
-                                options = f"{options} {option.name}:optional"
-                        if not subcommand.checks:
+                        if subcommand.guild_ids is None or ctx.guild.id in subcommand.guild_ids:
+                            options = ''
+                            for option in subcommand.options:
+                                if option.required is True:
+                                    options = f"{options} `{option.name}:required`"
+                                else:
+                                    options = f"{options} `{option.name}:optional`"
                             help_dict[f"{cog}"].append({"name": f"{subcommand}",
                                                         "desc": subcommand.description,
-                                                        "alias": None, 'usage': options, 'example': None})
-                        elif subcommand.checks and ctx.author.guild_permissions.administrator:
-                            help_dict[f"{cog}"].append({"name": f"{subcommand}",
-                                                        "desc": subcommand.description,
-                                                        "alias": None, 'usage': options, 'example': None})
+                                                        'usage': options})
+
             elif isinstance(command, discord.SlashCommand):
-                options = ''
-                for option in command.options:
-                    if option.required is True:
-                        options = f"{options} `{option.name}:required`"
-                    else:
-                        options = f"{options} {option.name}:optional"
-                if not command.checks:
+                if command.guild_ids is None or ctx.guild.id in command.guild_ids:
+                    options = ''
+                    for option in command.options:
+                        if option.required is True:
+                            options = f"{options} `{option.name}:required`"
+                        else:
+                            options = f"{options} `{option.name}:optional`"
                     help_dict[f"{cog}"].append({"name": command.name,
                                                 "desc": command.description,
-                                                "alias": None, 'usage': options, 'example': None})
-                elif command.checks and ctx.author.guild_permissions.administrator:
-                    help_dict[f"{cog}"].append({"name": command.name,
-                                                "desc": command.description,
-                                                "alias": None, 'usage': options, 'example': None})
+                                                'usage': options})
+
     return help_dict

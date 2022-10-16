@@ -39,8 +39,8 @@ async def disconnect(request: Request, gamertag: str):
 
 
 # @app.listener('after_server_start')
-# async def start_bot(application, loop):
+# async def start_bot(application, loop: asyncio.AbstractEventLoop):
 #     print("starting bot...")
-#     loop.create_task(thorny_bot.start(TOKEN))
+#     loop.create_task(thorny.start(TOKEN))
 
 app.run(host="0.0.0.0")

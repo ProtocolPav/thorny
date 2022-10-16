@@ -3,6 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands
 from discord import utils
+from thorny_core.uikit.views import ProjectApplicationForm
 import httpx
 
 import json
@@ -16,6 +17,12 @@ config = json.load(open("./../thorny_data/config.json", "r"))
 class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
+
+    @commands.slash_command(description="Apply for a Project!",
+                            guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+    async def apply(self, ctx: discord.ApplicationContext):
+        await ctx.respond(view=ProjectApplicationForm(ctx),
+                          ephemeral=True)
 
     @commands.slash_command(description='CM Only | Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)

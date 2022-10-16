@@ -283,10 +283,10 @@ class GuildFactory:
         async def get():
             async with pool.acquire() as conn:
                 guild_ids = await conn.fetch("""
-                                            SELECT guild_id FROM thorny.guild
-                                            WHERE features->>'everthorn_only' = 'True'
-                                            AND active = True
-                                            """)
+                                             SELECT guild_id FROM thorny.guild
+                                             WHERE features->>'everthorn_only' = 'True'
+                                             AND active = True
+                                             """)
 
                 guilds = []
                 for i in guild_ids:

@@ -67,7 +67,7 @@ class Help(commands.Cog):
         home_embed = discord.Embed(title="Home | Thorny Help Center",
                                    description="Scroll through the commands list to see all commands!",
                                    color=0x65b39b)
-        home_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
+        home_embed.set_footer(text=f"{v}")
         for cog in self.client.cogs:
             easy_view_text = []
             for command in help_dict[f'{cog}']:
