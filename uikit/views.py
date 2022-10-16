@@ -3,7 +3,7 @@ from discord.ui import View, Select, Button
 from datetime import datetime
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
-from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select, profile_stats_select
+from thorny_core.uikit import slashoptions
 from thorny_core.db import User, UserFactory
 
 
@@ -14,19 +14,19 @@ class ProfileEdit(View):
         self.edit_embed = embed
 
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
-                       options=profile_main_select)
+                       options=slashoptions.profile_main_select)
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
-                       options=profile_lore_select)
+                       options=slashoptions.profile_lore_select)
     async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=profile_stats_select)
+                       options=slashoptions.profile_stats_select)
     async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
@@ -220,3 +220,15 @@ class ProjectApplicationForm(View):
         channel = interaction.client.get_channel(1019959239713771680)
         await channel.send(embed=await application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
+
+
+class ServerSetup(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.select(placeholder="Configure your server settings",
+                       options=slashoptions.server_setup)
+    async def callback(self, select_menu: Select, interaction: discord.Interaction):
+
+
+

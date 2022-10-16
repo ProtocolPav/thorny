@@ -37,7 +37,7 @@ api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
 
 intents = discord.Intents.all()
-thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
+thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
 
 

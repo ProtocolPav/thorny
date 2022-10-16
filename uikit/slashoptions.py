@@ -83,3 +83,19 @@ profile_lore_select = [SelectOption(label="Character Data: Name",
 profile_stats_select = [SelectOption(label="Coming soon...",
                                      description="Just gotta wait a bit!",
                                      emoji=None), ]
+
+server_setup = [
+                SelectOption(label="Welcome Configuration",
+                             description="Edit join/leave and birthday messages & choose where they get sent"),
+                SelectOption(label="Level Configuration",
+                             description="Edit level up messages, XP multipliers or disable levels"),
+                SelectOption(label="Logs Configuration",
+                             description="Choose where logs get sent"),
+                SelectOption(label="Thorny Updates",
+                             description="Choose where Thorny Update messages are sent to"),
+                SelectOption(label="Gulag Configuration",
+                             description="Choose where to send troublemakers to"),
+                SelectOption(label="Thorny Responses Configuration",
+                             description="Configure wildcard & exact responses"),
+                SelectOption(label="Currency Configuration",
+                             description="Choose a name & emoji for your currency")]
