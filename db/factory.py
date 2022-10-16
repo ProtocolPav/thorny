@@ -277,6 +277,19 @@ class GuildFactory:
                                    """,
                                    guild.id, exact_default, wildcard_default
                                    )
+            print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Created guild "
+                  f"{guild.name}, ID {guild.id}")
+
+    @classmethod
+    async def deactivate(cls, guild: discord.Guild):
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                               UPDATE thorny.guild
+                               SET active = False WHERE guild_id = $1
+                               """,
+                               guild.id)
+            print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated guild "
+                  f"{guild.name}, ID {guild.id}")
 
     @classmethod
     def get_everthorn_exclusive_guilds(cls):

@@ -236,6 +236,7 @@ async def on_guild_join(guild: discord.Guild):
 async def on_guild_remove(guild):
     member_list = guild.members
     await UserFactory.deactivate(member_list)
+    await GuildFactory.deactivate(guild)
 
 
 thorny.add_cog(bank.Bank(thorny))
