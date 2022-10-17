@@ -4,7 +4,7 @@ from datetime import datetime
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
 from thorny_core.uikit import slashoptions
-from thorny_core.db import User, UserFactory
+from thorny_core.db import User, UserFactory, GuildFactory
 
 
 class ProfileEdit(View):
@@ -222,6 +222,46 @@ class ProjectApplicationForm(View):
                            view=PersistentProjectAdminButtons())
 
 
+class SetupWelcome(View):
+    def __init__(self, thorny_guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Join Message",
+                       custom_id="edit_join",
+                       style=discord.ButtonStyle.blurple)
+    async def join_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit Leave Message",
+                       custom_id="edit_leave",
+                       style=discord.ButtonStyle.blurple)
+    async def leave_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit Birthday Message",
+                       custom_id="edit_birthday",
+                       style=discord.ButtonStyle.blurple,
+                       disabled=True)
+    async def birthday_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Change Channel",
+                       custom_id="edit_channel",
+                       row=2,
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               view=ServerSetup())
+
+
 class ServerSetup(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -229,6 +269,14 @@ class ServerSetup(View):
     @discord.ui.select(placeholder="Configure your server settings",
                        options=slashoptions.server_setup)
     async def callback(self, select_menu: Select, interaction: discord.Interaction):
+        thorny_guild = await GuildFactory.build(interaction.guild)
 
+        if select_menu.values[0] == "welcome":
+            await interaction.response.edit_message(content=f"**Configuring Welcome Settings**\n"
+                                                            f"**Join Message**: {thorny_guild.join_message}\n"
+                                                            f"**Leave Message**: {thorny_guild.leave_message}\n"
+                                                            f"**Birthday Message:** Editing Not Available\n"
+                                                            f"**Welcome Channel:** <#{thorny_guild.channels.welcome_channel}>",
+                                                    view=SetupWelcome(thorny_guild))
 
 

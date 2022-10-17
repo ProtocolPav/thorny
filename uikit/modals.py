@@ -122,3 +122,7 @@ class ProjectApplicationExtraInfo(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
+
+
+class ServerEdit(Modal):
+    ...
