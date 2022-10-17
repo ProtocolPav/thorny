@@ -125,4 +125,14 @@ class ProjectApplicationExtraInfo(Modal):
 
 
 class ServerEdit(Modal):
-    ...
+    def __init__(self, texts: InputText | list[InputText]):
+        super().__init__(title="Configuring your Server")
+
+        if type(texts) == list:
+            for text in texts:
+                self.add_item(text)
+        else:
+            self.add_item(texts)
+
+    async def callback(self, interaction: discord.Interaction):
+        ...

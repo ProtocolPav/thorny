@@ -16,7 +16,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level, setup
+from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -212,16 +212,14 @@ async def on_member_join(member: discord.Member):
     await UserFactory.create([member])
     thorny_user = await UserFactory.build(member)
     event: Event = await ev.fetch(ev.UserJoin, thorny_user, thorny)
-    if member.guild.id == 611008530077712395:
-        await event.log_event_in_discord()
+    await event.log_event_in_discord()
 
 
 @thorny.event
 async def on_member_remove(member):
     thorny_user = await UserFactory.build(member)
     event: Event = await ev.fetch(ev.UserLeave, thorny_user, thorny)
-    if member.guild.id == 611008530077712395:
-        await event.log_event_in_discord()
+    await event.log_event_in_discord()
     await UserFactory.deactivate([member])
 
 
@@ -239,14 +237,14 @@ async def on_guild_remove(guild):
     await GuildFactory.deactivate(guild)
 
 
-thorny.add_cog(bank.Bank(thorny))
-thorny.add_cog(leaderboard.Leaderboard(thorny))
+thorny.add_cog(setup.Configuration(thorny))
+thorny.add_cog(moderation.Moderation(thorny))
+thorny.add_cog(money.Money(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(profile.Profile(thorny))
-thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-thorny.add_cog(setup.Configurations(thorny))
+thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))

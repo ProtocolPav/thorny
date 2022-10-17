@@ -1,10 +1,10 @@
 import discord
-from discord.ui import View, Select, Button
+from discord.ui import View, Select, Button, InputText
 from datetime import datetime
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
 from thorny_core.uikit import slashoptions
-from thorny_core.db import User, UserFactory, GuildFactory
+from thorny_core.db import User, UserFactory, GuildFactory, Guild
 
 
 class ProfileEdit(View):
@@ -223,7 +223,7 @@ class ProjectApplicationForm(View):
 
 
 class SetupWelcome(View):
-    def __init__(self, thorny_guild):
+    def __init__(self, thorny_guild: Guild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -231,26 +231,77 @@ class SetupWelcome(View):
                        custom_id="edit_join",
                        style=discord.ButtonStyle.blurple)
     async def join_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Join Message",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message}",
+                               style=discord.InputTextStyle.long)
+        await interation.response.send_modal(modals.ServerEdit(input_text))
 
     @discord.ui.button(label="Edit Leave Message",
                        custom_id="edit_leave",
                        style=discord.ButtonStyle.blurple)
     async def leave_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Leave Message",
+                               placeholder=f"Current Message: {self.thorny_guild.leave_message}",
+                               style=discord.InputTextStyle.long)
+        await interation.response.send_modal(modals.ServerEdit(input_text))
 
     @discord.ui.button(label="Edit Birthday Message",
                        custom_id="edit_birthday",
                        style=discord.ButtonStyle.blurple,
                        disabled=True)
     async def birthday_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Birthday Message",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message}",
+                               style=discord.InputTextStyle.long)
+        await interation.response.send_modal(modals.ServerEdit(input_text))
 
     @discord.ui.button(label="Change Channel",
                        custom_id="edit_channel",
                        row=2,
                        style=discord.ButtonStyle.gray)
     async def channel_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.welcome_channel}")
+        await interation.response.send_modal(modals.ServerEdit(input_text))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupLevels(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Level Up Message",
+                       custom_id="edit_level",
+                       style=discord.ButtonStyle.blurple)
+    async def level_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit XP Multiplier",
+                       custom_id="edit_xp",
+                       style=discord.ButtonStyle.blurple)
+    async def xp_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Enable/Disable Leveling",
+                       custom_id="toggle_levels",
+                       style=discord.ButtonStyle.green)
+    async def toggle_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit XP-Ban Channels",
+                       custom_id="edit_xp_ban",
+                       row=2,
+                       style=discord.ButtonStyle.blurple)
+    async def ban_callback(self, button: Button, interation: discord.Interaction):
         ...
 
     @discord.ui.button(label="Back",
@@ -259,6 +310,7 @@ class SetupWelcome(View):
                        style=discord.ButtonStyle.red)
     async def back_callback(self, button: Button, interation: discord.Interaction):
         await interation.response.edit_message(content=None,
+                                               embed=None,
                                                view=ServerSetup())
 
 
@@ -273,10 +325,18 @@ class ServerSetup(View):
 
         if select_menu.values[0] == "welcome":
             await interaction.response.edit_message(content=f"**Configuring Welcome Settings**\n"
-                                                            f"**Join Message**: {thorny_guild.join_message}\n"
-                                                            f"**Leave Message**: {thorny_guild.leave_message}\n"
+                                                            f"**Join Message:** {thorny_guild.join_message}\n"
+                                                            f"**Leave Message:** {thorny_guild.leave_message}\n"
                                                             f"**Birthday Message:** Editing Not Available\n"
                                                             f"**Welcome Channel:** <#{thorny_guild.channels.welcome_channel}>",
                                                     view=SetupWelcome(thorny_guild))
+        elif select_menu.values[0] == "levels":
+            text = "Enabled" if thorny_guild.levels_enabled else "Disabled"
+            await interaction.response.edit_message(content=f"**Configuring Level Settings**\n"
+                                                            f"**Level Up Message:** {thorny_guild.level_message}\n"
+                                                            f"**XP Banned Channels:** Not Available To Edit\n"
+                                                            f"**XP Multiplier:** {thorny_guild.xp_multiplier}\n\n"
+                                                            f"**Leveling:** `{text}`",
+                                                    view=SetupLevels(thorny_guild))
 
 
