@@ -2,7 +2,7 @@ import discord
 from discord.ui import View, Select, Button, InputText
 from datetime import datetime
 import thorny_core.uikit.modals as modals
-from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
+from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
 from thorny_core.db import User, UserFactory, GuildFactory, Guild
 
@@ -84,7 +84,7 @@ class Profile(View):
             edit_embed = discord.Embed(title="Here's what you edited this session:",
                                        colour=self.profile_owner.discord_member.colour)
 
-            await interaction.response.send_message(embed=await profile_edit_embed(self.profile_owner),
+            await interaction.response.send_message(embed=await embeds.profile_edit_embed(self.profile_owner),
                                                     view=ProfileEdit(self.profile_owner, edit_embed),
                                                     ephemeral=True)
         else:
@@ -218,7 +218,7 @@ class ProjectApplicationForm(View):
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
         channel = interaction.client.get_channel(1019959239713771680)
-        await channel.send(embed=await application_info_embed(thorny_user, modal.children),
+        await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
 
 
@@ -300,13 +300,126 @@ class SetupLevels(View):
     @discord.ui.button(label="Edit XP-Ban Channels",
                        custom_id="edit_xp_ban",
                        row=2,
-                       style=discord.ButtonStyle.blurple)
+                       disabled=True,
+                       style=discord.ButtonStyle.gray)
     async def ban_callback(self, button: Button, interation: discord.Interaction):
         ...
 
     @discord.ui.button(label="Back",
                        custom_id="back",
                        row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupLogs(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Choose Logs Channel",
+                       custom_id="edit_channel",
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupUpdates(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Choose Updates Channel",
+                       custom_id="edit_channel",
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupGulag(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Create Gulag Channel & Role",
+                       custom_id="create_channel",
+                       style=discord.ButtonStyle.green)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupResponses(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Exact Responses",
+                       custom_id="edit_exact",
+                       style=discord.ButtonStyle.blurple)
+    async def exact_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit Wildcard Responses",
+                       custom_id="edit_wildcard",
+                       style=discord.ButtonStyle.blurple)
+    async def wildcard_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupCurrency(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Currency Name",
+                       custom_id="edit_name",
+                       style=discord.ButtonStyle.blurple)
+    async def name_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit Currency Emoji",
+                       custom_id="edit_emoji",
+                       style=discord.ButtonStyle.blurple)
+    async def emoji_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
                        style=discord.ButtonStyle.red)
     async def back_callback(self, button: Button, interation: discord.Interaction):
         await interation.response.edit_message(content=None,
@@ -323,20 +436,27 @@ class ServerSetup(View):
     async def callback(self, select_menu: Select, interaction: discord.Interaction):
         thorny_guild = await GuildFactory.build(interaction.guild)
 
-        if select_menu.values[0] == "welcome":
-            await interaction.response.edit_message(content=f"**Configuring Welcome Settings**\n"
-                                                            f"**Join Message:** {thorny_guild.join_message}\n"
-                                                            f"**Leave Message:** {thorny_guild.leave_message}\n"
-                                                            f"**Birthday Message:** Editing Not Available\n"
-                                                            f"**Welcome Channel:** <#{thorny_guild.channels.welcome_channel}>",
-                                                    view=SetupWelcome(thorny_guild))
-        elif select_menu.values[0] == "levels":
-            text = "Enabled" if thorny_guild.levels_enabled else "Disabled"
-            await interaction.response.edit_message(content=f"**Configuring Level Settings**\n"
-                                                            f"**Level Up Message:** {thorny_guild.level_message}\n"
-                                                            f"**XP Banned Channels:** Not Available To Edit\n"
-                                                            f"**XP Multiplier:** {thorny_guild.xp_multiplier}\n\n"
-                                                            f"**Leveling:** `{text}`",
-                                                    view=SetupLevels(thorny_guild))
+        match select_menu.values[0]:
+            case "welcome":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['welcome'],
+                                                        view=SetupWelcome(thorny_guild))
+            case "levels":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['levels'],
+                                                        view=SetupLevels(thorny_guild))
+            case "logs":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['logs'],
+                                                        view=SetupLogs(thorny_guild))
+            case "updates":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['updates'],
+                                                        view=SetupUpdates(thorny_guild))
+            case "gulag":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['gulag'],
+                                                        view=SetupGulag(thorny_guild))
+            case "responses":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['responses'],
+                                                        view=SetupResponses(thorny_guild))
+            case "currency":
+                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['currency'],
+                                                        view=SetupCurrency(thorny_guild))
 
 

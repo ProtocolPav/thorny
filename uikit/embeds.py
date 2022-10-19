@@ -2,7 +2,7 @@ import discord
 import json
 
 from datetime import datetime, timedelta
-from thorny_core.db import user
+from thorny_core.db import user, guild
 from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
 
@@ -167,3 +167,97 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     info_embed.set_footer(text=f"{thorny_user.user_id}")
 
     return info_embed
+
+
+def send_configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+    welcome_embed = discord.Embed(title="Configuring Welcome Settings",
+                                  colour=0xD7E99A)
+    welcome_embed.add_field(name="Current Settings",
+                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.welcome_channel}>\n\n"
+                                  f"**Join Message:** {thorny_guild.join_message}\n"
+                                  f"**Leave Message:** {thorny_guild.leave_message}\n"
+                                  f"**Birthday Message:** Currently not available",
+                            inline=False)
+    welcome_embed.add_field(name="Note",
+                            value="When editing the **channel**, enter the channel ID!\n"
+                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                            inline=False)
+
+    levels_embed = discord.Embed(title="Configuring Levels",
+                                 colour=0xD7E99A)
+    enabled_disabled = "ENABLED" if thorny_guild.levels_enabled else "DISABLED"
+    levels_embed.add_field(name="Current Settings",
+                           value=f"**Leveling is currently** {enabled_disabled}\n\n"
+                                 f"**Level Up Message:** {thorny_guild.level_message}\n"
+                                 f"**XP Multiplier:** x{thorny_guild.xp_multiplier}\n"
+                                 f"**No XP Channels:** Currently not available")
+
+    logs_embed = discord.Embed(title="Configuring Logs",
+                               colour=0xD7E99A)
+    logs_embed.add_field(name="Current Settings",
+                         value=f"**Logs channel:** <#{thorny_guild.channels.logs_channel}>")
+    logs_embed.add_field(name="Note",
+                         value="When editing the **channel**, enter the channel ID!\n"
+                               "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                         inline=False)
+
+    updates_embed = discord.Embed(title="Configuring Updates",
+                                  colour=0xD7E99A)
+    updates_embed.add_field(name="About Updates",
+                            value=f"When Thorny receives new features, or updates to new features, you can choose to receive "
+                                  f"changelogs and tutorials for new features in a channel. You can make it private or "
+                                  f"public for people to see.")
+    updates_embed.add_field(name="Current Settings",
+                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.thorny_updates_channel}>",
+                            inline=False)
+    updates_embed.add_field(name="Note",
+                            value="When editing the **channel**, enter the channel ID!\n"
+                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                            inline=False)
+
+    gulag_embed = discord.Embed(title="Create the Gulag",
+                                colour=0xD7E99A)
+    gulag_embed.add_field(name="About The Gulag",
+                          value="When you have troublemakers in your server, you should do something about them.\n"
+                                "Thorny's Gulag is a perfect place to take these troublemakers to, so you can discuss and "
+                                "help dissolve any arguments they may be having. \n"
+                                "When a user is taken into the gulag, they cannot see any channel except for the gulag.")
+    gulag_embed.add_field(name="Current Settings",
+                          value=f"**Gulag Channel:** <#{thorny_guild.channels.gulag_channel}>\n"
+                                f"**Gulag Role:** <@{thorny_guild.roles.timeout_role}>",
+                          inline=False)
+    gulag_embed.add_field(name="Important Note",
+                          value="Before you press the **Create Channel & Role** button, you should know that Thorny will "
+                                "modify channel permissions in **all** channels. Thorny will require the **Manage Channel** "
+                                "permission in all of them. If it cannot manage permissions in some channels, there is a "
+                                "chance that the Gulag Role will not work properly.",
+                          inline=False)
+
+    response_embed = discord.Embed(title="Edit Responses",
+                                   description="Thorny picks one random response out of each list",
+                                   colour=0xD7E99A)
+    exact = ""
+    for key, val in thorny_guild.exact_responses.items():
+        exact = f"{exact}**{key}** = {','.join(val)}\n"
+    response_embed.add_field(name="Exact Responses",
+                             value=exact)
+    wildcard = ""
+    for key, val in thorny_guild.wildcard_responses.items():
+        wildcard = f"{wildcard}**{key}** = {','.join(val)}\n"
+    response_embed.add_field(name="Wildcard Responses",
+                             value=wildcard,
+                             inline=False)
+
+    currency_embed = discord.Embed(title="Configure Server Currency",
+                                   colour=0xD7E99A)
+    currency_embed.add_field(name="Current Settings",
+                             value=f"**Currency Name:** {thorny_guild.currency.name}\n"
+                                   f"**Currency Emoji:** {thorny_guild.currency.emoji}")
+
+    return {"welcome": welcome_embed,
+            "levels": levels_embed,
+            "logs": logs_embed,
+            "updates": updates_embed,
+            "gulag": gulag_embed,
+            "responses": response_embed,
+            "currency": currency_embed}

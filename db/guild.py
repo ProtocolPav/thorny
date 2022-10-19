@@ -93,8 +93,8 @@ class Guild:
     currency: Currency
     features: Features
     reactions: list[Reaction]
-    exact_responses: dict
-    wildcard_responses: dict
+    exact_responses: dict[str, list[str]]
+    wildcard_responses: dict[str, list[str]]
     join_message: str
     leave_message: str
     level_message: str
@@ -118,7 +118,6 @@ class Guild:
                                  currency_emoji=guild_record['currency_emoji'],
                                  total=currency_total)
         self.features = Features( features_dict=guild_record['features'])
-        print(self.features)
         self.reactions = []
         self.exact_responses = guild_record['responses_exact']
         self.wildcard_responses = guild_record['responses_wildcard']
