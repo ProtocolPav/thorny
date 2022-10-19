@@ -1,5 +1,9 @@
 from datetime import datetime
 from thorny_core.db.user import User, InventorySlot, Strike
+from thorny_core.db.guild import Guild
+
+import asyncpg as pg
+import json
 
 
 async def update_user(thorny_user: User):
@@ -113,38 +117,83 @@ async def delete_strike(thorny_user: User, strike: Strike):
                            strike.strike_id)
 
 
-async def commit(thorny_user: User):
-    async with thorny_user.connection_pool.acquire() as conn:
+async def update_guild(thorny_guild: Guild):
+    async with thorny_guild.connection_pool.acquire() as conn:
+        await conn.set_type_codec(
+            'json',
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema='pg_catalog'
+        )
+        await conn.execute("""
+                           UPDATE thorny.guild
+                           SET responses_exact = $1, responses_wildcard = $2, currency_name = $3, currency_emoji = $4, 
+                           level_up_message = $5, join_message = $6, leave_message = $7, xp_multiplier = $8, enable_levels = $9
+                           WHERE guild_id = $10
+                           """,
+                           thorny_guild.exact_responses, thorny_guild.wildcard_responses, thorny_guild.currency.name,
+                           thorny_guild.currency.emoji, thorny_guild.level_message, thorny_guild.join_message,
+                           thorny_guild.leave_message, thorny_guild.xp_multiplier, thorny_guild.levels_enabled,
+                           thorny_guild.guild_id)
+
+
+async def update_channels(thorny_guild: Guild):
+    async with thorny_guild.connection_pool.acquire() as conn:
+        await conn.execute("""
+                           UPDATE thorny.guild
+                           SET channels = $1
+                           WHERE guild_id = $2
+                           """,
+                           {"logs": thorny_guild.channels.logs_channel,
+                            "welcome": thorny_guild.channels.welcome_channel,
+                            "gulag": thorny_guild.channels.gulag_channel,
+                            "projects": thorny_guild.channels.projects_channel,
+                            "announcements": thorny_guild.channels.announcements_channel,
+                            "updates": thorny_guild.channels.thorny_updates_channel},
+                           thorny_guild.guild_id)
+
+
+async def commit(object_to_commit: User | Guild):
+    async with object_to_commit.connection_pool.acquire() as conn:
+
         async with conn.transaction():
-            await update_user(thorny_user)
-            await update_profile(thorny_user)
-            await update_levels(thorny_user)
-            await update_counters(thorny_user)
+            if type(object_to_commit) == User:
+                await update_user(object_to_commit)
+                await update_profile(object_to_commit)
+                await update_levels(object_to_commit)
+                await update_counters(object_to_commit)
 
-            original_slots = thorny_user.inventory.original_slots
-            slots = thorny_user.inventory.slots
-            if len(original_slots) > len(slots):
-                for slot in original_slots:
-                    if slot not in slots:
-                        await delete_inventory_slot(thorny_user, slot)
-            elif len(slots) > len(original_slots):
-                for slot in slots:
-                    if slot not in original_slots:
-                        await insert_inventory_slot(thorny_user, slot)
-            elif len(slots) == len(original_slots):
-                for slot in slots:
-                    await update_inventory_slot(thorny_user, slot)
+                original_slots = object_to_commit.inventory.original_slots
+                slots = object_to_commit.inventory.slots
+                if len(original_slots) > len(slots):
+                    for slot in original_slots:
+                        if slot not in slots:
+                            await delete_inventory_slot(object_to_commit, slot)
+                elif len(slots) > len(original_slots):
+                    for slot in slots:
+                        if slot not in original_slots:
+                            await insert_inventory_slot(object_to_commit, slot)
+                elif len(slots) == len(original_slots):
+                    for slot in slots:
+                        await update_inventory_slot(object_to_commit, slot)
 
-            original_strikes = thorny_user.strikes.original_strikes
-            strikes = thorny_user.strikes.strikes
-            if len(original_strikes) > len(strikes):
-                for strike in original_strikes:
-                    if strike not in strikes:
-                        await delete_strike(thorny_user, strike)
-            elif len(strikes) > len(original_strikes):
-                for strike in strikes:
-                    if strike not in original_strikes:
-                        await insert_strike(thorny_user, strike)
+                original_strikes = object_to_commit.strikes.original_strikes
+                strikes = object_to_commit.strikes.strikes
+                if len(original_strikes) > len(strikes):
+                    for strike in original_strikes:
+                        if strike not in strikes:
+                            await delete_strike(object_to_commit, strike)
+                elif len(strikes) > len(original_strikes):
+                    for strike in strikes:
+                        if strike not in original_strikes:
+                            await insert_strike(object_to_commit, strike)
 
-            print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed ThornyUser with "
-                  f"Thorny ID", thorny_user.thorny_id)
+                print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed ThornyUser with "
+                      f"Thorny ID", object_to_commit.thorny_id)
+
+            elif type(object_to_commit) == Guild:
+                await update_guild(object_to_commit)
+                await update_channels(object_to_commit)
+
+                print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Guild {object_to_commit.guild_name} with "
+                      f"ID", {object_to_commit.guild_id})

@@ -232,9 +232,14 @@ class SetupWelcome(View):
                        style=discord.ButtonStyle.blurple)
     async def join_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Join Message",
-                               placeholder=f"Current Message: {self.thorny_guild.join_message}",
+                               custom_id="join_message",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message[0:100]}",
                                style=discord.InputTextStyle.long)
-        await interation.response.send_modal(modals.ServerEdit(input_text))
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Leave Message",
                        custom_id="edit_leave",
@@ -243,7 +248,7 @@ class SetupWelcome(View):
         input_text = InputText(label="Edit Leave Message",
                                placeholder=f"Current Message: {self.thorny_guild.leave_message}",
                                style=discord.InputTextStyle.long)
-        await interation.response.send_modal(modals.ServerEdit(input_text))
+        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
 
     @discord.ui.button(label="Edit Birthday Message",
                        custom_id="edit_birthday",
@@ -253,7 +258,7 @@ class SetupWelcome(View):
         input_text = InputText(label="Edit Birthday Message",
                                placeholder=f"Current Message: {self.thorny_guild.join_message}",
                                style=discord.InputTextStyle.long)
-        await interation.response.send_modal(modals.ServerEdit(input_text))
+        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
 
     @discord.ui.button(label="Change Channel",
                        custom_id="edit_channel",
@@ -262,7 +267,7 @@ class SetupWelcome(View):
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Channel (Please enter Channel ID)",
                                placeholder=f"Current Channel ID: {self.thorny_guild.channels.welcome_channel}")
-        await interation.response.send_modal(modals.ServerEdit(input_text))
+        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
