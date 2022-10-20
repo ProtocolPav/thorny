@@ -133,12 +133,18 @@ async def update_guild(thorny_guild: Guild):
                            """,
                            thorny_guild.exact_responses, thorny_guild.wildcard_responses, thorny_guild.currency.name,
                            thorny_guild.currency.emoji, thorny_guild.level_message, thorny_guild.join_message,
-                           thorny_guild.leave_message, thorny_guild.xp_multiplier, thorny_guild.levels_enabled,
+                           thorny_guild.leave_message, float(thorny_guild.xp_multiplier), thorny_guild.levels_enabled,
                            thorny_guild.guild_id)
 
 
 async def update_channels(thorny_guild: Guild):
     async with thorny_guild.connection_pool.acquire() as conn:
+        await conn.set_type_codec(
+            'json',
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema='pg_catalog'
+        )
         await conn.execute("""
                            UPDATE thorny.guild
                            SET channels = $1
@@ -149,7 +155,7 @@ async def update_channels(thorny_guild: Guild):
                             "gulag": thorny_guild.channels.gulag_channel,
                             "projects": thorny_guild.channels.projects_channel,
                             "announcements": thorny_guild.channels.announcements_channel,
-                            "updates": thorny_guild.channels.thorny_updates_channel},
+                            "thorny_updates": thorny_guild.channels.thorny_updates_channel},
                            thorny_guild.guild_id)
 
 
@@ -196,4 +202,4 @@ async def commit(object_to_commit: User | Guild):
                 await update_channels(object_to_commit)
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Guild {object_to_commit.guild_name} with "
-                      f"ID", {object_to_commit.guild_id})
+                      f"ID", object_to_commit.guild_id)

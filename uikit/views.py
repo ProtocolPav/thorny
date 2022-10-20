@@ -233,7 +233,8 @@ class SetupWelcome(View):
     async def join_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Join Message",
                                custom_id="join_message",
-                               placeholder=f"Current Message: {self.thorny_guild.join_message[0:100]}",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.join_message) > 70 else ''}",
                                style=discord.InputTextStyle.long)
         modal = modals.ServerEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
@@ -246,9 +247,15 @@ class SetupWelcome(View):
                        style=discord.ButtonStyle.blurple)
     async def leave_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Leave Message",
-                               placeholder=f"Current Message: {self.thorny_guild.leave_message}",
+                               custom_id="leave_message",
+                               placeholder=f"Current Message: {self.thorny_guild.leave_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.leave_message) > 70 else ''}",
                                style=discord.InputTextStyle.long)
-        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Birthday Message",
                        custom_id="edit_birthday",
@@ -266,8 +273,13 @@ class SetupWelcome(View):
                        style=discord.ButtonStyle.gray)
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="welcome_channel",
                                placeholder=f"Current Channel ID: {self.thorny_guild.channels.welcome_channel}")
-        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
@@ -288,16 +300,33 @@ class SetupLevels(View):
                        custom_id="edit_level",
                        style=discord.ButtonStyle.blurple)
     async def level_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Level Up Message",
+                               custom_id="level_message",
+                               placeholder=f"Current Message: {self.thorny_guild.level_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.level_message) > 70 else ''}",
+                               style=discord.InputTextStyle.long)
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Edit XP Multiplier",
                        custom_id="edit_xp",
                        style=discord.ButtonStyle.blurple)
     async def xp_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit XP Multiplier",
+                               custom_id="xp_multiplier",
+                               placeholder=f"Current Multiplier: x{self.thorny_guild.xp_multiplier}")
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Enable/Disable Leveling",
                        custom_id="toggle_levels",
+                       disabled=True,
                        style=discord.ButtonStyle.green)
     async def toggle_callback(self, button: Button, interation: discord.Interaction):
         ...
@@ -329,7 +358,14 @@ class SetupLogs(View):
                        custom_id="edit_channel",
                        style=discord.ButtonStyle.gray)
     async def channel_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="logs_channel",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.logs_channel}")
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['logs'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
@@ -349,7 +385,14 @@ class SetupUpdates(View):
                        custom_id="edit_channel",
                        style=discord.ButtonStyle.gray)
     async def channel_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="thorny_updates_channel",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.thorny_updates_channel}")
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['updates'],
+                                               view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",

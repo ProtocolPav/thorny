@@ -31,7 +31,7 @@ class Level(commands.Cog):
         if not user.is_on_mobile():
             rank_embed.set_thumbnail(url=user.display_avatar.url)
         progressbar = ""
-        for i in range(int(percentage/10)):
+        for i in range(int(percentage/10) if int(percentage/10) <= 10 else 10):
             progressbar = f"{progressbar}:green_square:"
         for i in range(10 - int(percentage/10)):
             progressbar = f"{progressbar}:white_large_square:"
@@ -45,6 +45,7 @@ class Level(commands.Cog):
                                    f"**Lv.{thorny_user.level.level}** {progressbar} "
                                    f"**Lv.{thorny_user.level.level + 1}**\n\n"
                                    f"Level {thorny_user.level.level} is {int(percentage)}% Complete")
+
         await ctx.respond(embed=rank_embed)
 
     @commands.slash_command(description="Level up a user")

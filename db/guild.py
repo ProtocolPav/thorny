@@ -98,7 +98,7 @@ class Guild:
     join_message: str
     leave_message: str
     level_message: str
-    xp_multiplier: int
+    xp_multiplier: float
     levels_enabled: bool
 
     def __init__(self,
@@ -124,7 +124,7 @@ class Guild:
         self.join_message = guild_record['join_message']
         self.leave_message = guild_record['leave_message']
         self.level_message = guild_record['level_up_message']
-        self.xp_multiplier = guild_record['xp_multiplier']
+        self.xp_multiplier = round(guild_record['xp_multiplier'], 2)
         self.levels_enabled = guild_record['enable_levels']
 
         for record in reaction_roles:
