@@ -156,3 +156,20 @@ class ServerChannelEdit(Modal):
         self.thorny_guild.channels.__setattr__(self.children[0].custom_id, self.children[0].value)
         await commit(self.thorny_guild)
         await interaction.response.defer()
+
+
+class ServerCurrencyEdit(Modal):
+    def __init__(self, texts: InputText | list[InputText], thorny_guild: Guild):
+        super().__init__(title="Configuring Currency")
+        self.thorny_guild = thorny_guild
+
+        if type(texts) == list:
+            for text in texts:
+                self.add_item(text)
+        else:
+            self.add_item(texts)
+
+    async def callback(self, interaction: discord.Interaction):
+        self.thorny_guild.currency.__setattr__(self.children[0].custom_id, self.children[0].value)
+        await commit(self.thorny_guild)
+        await interaction.response.defer()

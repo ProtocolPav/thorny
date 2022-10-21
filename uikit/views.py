@@ -309,7 +309,7 @@ class SetupLevels(View):
         await interation.response.send_modal(modal)
         await modal.wait()
         await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
-                                               view=SetupWelcome(modal.thorny_guild))
+                                               view=SetupLevels(modal.thorny_guild))
 
     @discord.ui.button(label="Edit XP Multiplier",
                        custom_id="edit_xp",
@@ -322,7 +322,7 @@ class SetupLevels(View):
         await interation.response.send_modal(modal)
         await modal.wait()
         await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
-                                               view=SetupWelcome(modal.thorny_guild))
+                                               view=SetupLevels(modal.thorny_guild))
 
     @discord.ui.button(label="Enable/Disable Leveling",
                        custom_id="toggle_levels",
@@ -365,7 +365,7 @@ class SetupLogs(View):
         await interation.response.send_modal(modal)
         await modal.wait()
         await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['logs'],
-                                               view=SetupWelcome(modal.thorny_guild))
+                                               view=SetupLogs(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
@@ -392,7 +392,7 @@ class SetupUpdates(View):
         await interation.response.send_modal(modal)
         await modal.wait()
         await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['updates'],
-                                               view=SetupWelcome(modal.thorny_guild))
+                                               view=SetupUpdates(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
@@ -410,6 +410,7 @@ class SetupGulag(View):
 
     @discord.ui.button(label="Create Gulag Channel & Role",
                        custom_id="create_channel",
+                       disabled=True,
                        style=discord.ButtonStyle.green)
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         ...
@@ -430,12 +431,14 @@ class SetupResponses(View):
 
     @discord.ui.button(label="Edit Exact Responses",
                        custom_id="edit_exact",
+                       disabled=True,
                        style=discord.ButtonStyle.blurple)
     async def exact_callback(self, button: Button, interation: discord.Interaction):
         ...
 
     @discord.ui.button(label="Edit Wildcard Responses",
                        custom_id="edit_wildcard",
+                       disabled=True,
                        style=discord.ButtonStyle.blurple)
     async def wildcard_callback(self, button: Button, interation: discord.Interaction):
         ...
@@ -458,13 +461,24 @@ class SetupCurrency(View):
                        custom_id="edit_name",
                        style=discord.ButtonStyle.blurple)
     async def name_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Currency Name",
+                               custom_id="name",
+                               placeholder=f"Current Name: {self.thorny_guild.currency.name}")
+        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['currency'],
+                                               view=SetupCurrency(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Currency Emoji",
                        custom_id="edit_emoji",
+                       disabled=True,
                        style=discord.ButtonStyle.blurple)
     async def emoji_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        input_text = InputText(label="Edit Currency Emoji",
+                               custom_id="emoji",
+                               placeholder=f"Current Emoji: {self.thorny_guild.currency.emoji}")
+        ... # Need solution, as you can't enter custom emojis into modals
 
     @discord.ui.button(label="Back",
                        custom_id="back",
