@@ -5,9 +5,13 @@ from datetime import datetime, timedelta
 from thorny_core.db import user, guild
 from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
+import giphy_client
+import random
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
+api_instance = giphy_client.DefaultApi()
+giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
 
 
 async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embed:
@@ -266,3 +270,19 @@ def send_configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
             "gulag": gulag_embed,
             "responses": response_embed,
             "currency": currency_embed}
+
+
+def level_up_embed(thorny_user: user.User, thorny_guild: guild.Guild) -> discord.Embed:
+    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level.level}", limit=10)
+    gifs_list = list(api_response.data)
+    gif = random.choice(gifs_list)
+
+    embed = discord.Embed(colour=thorny_user.discord_member.colour)
+    embed.set_author(name=thorny_user.username,
+                     icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f":partying_face: Congrats!",
+                    value=f"You leveled up to **Level {thorny_user.level.level}!**\n"
+                          f"{thorny_guild.level_message}")
+    embed.set_image(url=gif.images.original.url)
+
+    return embed

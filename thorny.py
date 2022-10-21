@@ -9,6 +9,7 @@ from db import UserFactory
 from dbutils import User
 import dbevent as ev
 from dbevent import Event
+from thorny_core.db import event as new_event
 import errors
 import traceback
 import json
@@ -134,12 +135,12 @@ async def on_message(message: discord.Message):
 async def on_message(message: discord.Message):
     if message.author != thorny.user:
         thorny_user = await UserFactory.build(message.author)
-        if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
-            event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
-            data = await event.log_event_in_database()
-            if data.level_up:
-                event.edit_metadata("level_up_message", message)
-                await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(message.guild)
+
+        if thorny_guild.levels_enabled:
+            gain_xp_event = new_event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
+
+            await gain_xp_event.log()
 
 
 @thorny.event

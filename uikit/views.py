@@ -2,6 +2,7 @@ import discord
 from discord.ui import View, Select, Button, InputText
 from datetime import datetime
 import thorny_core.uikit.modals as modals
+from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
 from thorny_core.db import User, UserFactory, GuildFactory, Guild
@@ -326,10 +327,12 @@ class SetupLevels(View):
 
     @discord.ui.button(label="Enable/Disable Leveling",
                        custom_id="toggle_levels",
-                       disabled=True,
                        style=discord.ButtonStyle.green)
     async def toggle_callback(self, button: Button, interation: discord.Interaction):
-        ...
+        self.thorny_guild.levels_enabled = not self.thorny_guild.levels_enabled
+        await commit(self.thorny_guild)
+        await interation.response.edit_message(embed=embeds.send_configure_embed(self.thorny_guild)['levels'],
+                                               view=SetupLevels(self.thorny_guild))
 
     @discord.ui.button(label="Edit XP-Ban Channels",
                        custom_id="edit_xp_ban",

@@ -98,7 +98,7 @@ class Guild:
     join_message: str
     leave_message: str
     level_message: str
-    xp_multiplier: float
+    xp_multiplier: int
     levels_enabled: bool
 
     def __init__(self,
