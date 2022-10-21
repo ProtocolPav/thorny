@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from thorny_core.db import user, guild
 from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
+from thorny_core import functions
 import giphy_client
 import random
 
@@ -12,6 +13,22 @@ version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
 api_instance = giphy_client.DefaultApi()
 giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
+
+
+def ping_embed(client: discord.Bot, bot_started_on: datetime):
+    uptime = datetime.now().replace(microsecond=0) - bot_started_on
+
+    embed = discord.Embed(color=0x228B22)
+    embed.add_field(name="Hey! I'm Thorny!",
+                    value=f"*Always here to help!*\n\n"
+                          f"**Current Version:** {v}\n"
+                          f"**Ping:** {round(client.latency * 1000)}ms\n"
+                          f"**Uptime:** {uptime}\n"
+                          f"Operating on {len(client.guilds)} Guilds\n"
+                          f"Processing {round(len(client.application_commands))}+ slash commands")
+    embed.set_thumbnail(url=client.user.avatar.url)
+
+    return embed
 
 
 async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embed:
@@ -286,3 +303,49 @@ def level_up_embed(thorny_user: user.User, thorny_guild: guild.Guild) -> discord
     embed.set_image(url=gif.images.original.url)
 
     return embed
+
+
+def message_delete_embed(message: discord.Message, event_time: datetime):
+    embed = discord.Embed(color=0xE97451)
+    embed.add_field(name="**Message Deleted**",
+                    value=f"Message sent by {message.author.mention} was deleted in <#{message.channel.id}>.\n"
+                          f"**Contents:**\n{message.content}")
+    embed.set_footer(text=event_time)
+
+    return embed
+
+
+def message_edit_embed(message: discord.Message, message_after: discord.Message, event_time: datetime):
+    embed = discord.Embed(color=0x7393B3)
+    embed.add_field(name="**Message Edited**",
+                    value=f"Message sent by {message.author.mention} was edited.\n"
+                          f"**Before:**\n{message.content}\n\n"
+                          f"**After:**\n{message_after.content}")
+    embed.set_footer(text=event_time)
+
+    return embed
+
+
+def user_join(thorny_user: user.User, thorny_guild: guild.Guild):
+    def ordinaltg(n):
+        return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
+
+    searches = ["welcome", "hello", "heartfelt welcome", "join us", "greetings", "what's up"]
+    api_response = api_instance.gifs_search_get(giphy_token, random.choice(searches), limit=10)
+    gifs_list = list(api_response.data)
+    gif = random.choice(gifs_list)
+
+    embed = discord.Embed(colour=0x57945c)
+    embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {thorny_user.username}!**",
+                         value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
+                               f"{thorny_guild.join_message}")
+    embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
+    embed.set_image(url=gif.images.original.url)
+
+    return embed
+
+
+def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
+    embed = discord.Embed(colour=0xc34184)
+    embed.add_field(name=f"**{thorny_user.username} has left**",
+                    value=f"{thorny_guild.leave_message}")

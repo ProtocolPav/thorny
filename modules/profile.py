@@ -23,7 +23,7 @@ class Profile(commands.Cog):
             user = ctx.author
         thorny_user = await UserFactory.build(user)
 
-        if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in user.roles:
+        if discord.utils.find(lambda r: r.name == 'Legacy Donator Role', ctx.guild.roles) in user.roles:
             is_donator = f'I donated to Everthorn!'
         else:
             is_donator = ''

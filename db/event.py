@@ -129,6 +129,3 @@ class GainXP(Event):
 
         if level_up:
             await self.message.channel.send(embed=embeds.level_up_embed(self.thorny_user, self.thorny_guild))
-
-
-

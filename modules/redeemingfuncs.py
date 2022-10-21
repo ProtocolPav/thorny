@@ -78,7 +78,7 @@ async def redeem_role(ctx, thorny_user: User, client):
             role = await ctx.guild.create_role(name=role_name,
                                                color=int(f'0x{colour.content[1:7]}', 16))
             await role.edit(position=discord.utils.get(ctx.guild.roles,
-                                                       name="Donator").position)
+                                                       name="Legacy Donator Role").position)
             await ctx.author.add_roles(role)
 
             customization3_embed = discord.Embed(color=int(f'0x{colour.content[1:7]}', 16))

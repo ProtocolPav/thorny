@@ -10,6 +10,7 @@ from dbutils import User
 import dbevent as ev
 from dbevent import Event
 from thorny_core.db import event as new_event
+from thorny_core.uikit import embeds
 import errors
 import traceback
 import json
@@ -40,6 +41,7 @@ giphy_token = config["giphy_token"]
 intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
+bot_started = datetime.now().replace(microsecond=0)
 
 
 @thorny.event
@@ -82,13 +84,14 @@ async def day_counter():
 async def before_check():
     await thorny.wait_until_ready()
 
+
 birthday_checker.start()
 day_counter.start()
 
 
-@thorny.slash_command()
+@thorny.slash_command(description="Get bot stats")
 async def ping(ctx):
-    await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
+    await ctx.respond(embed=embeds.ping_embed(thorny, bot_started))
 
 
 @thorny.event
@@ -123,6 +126,7 @@ async def on_message(message: discord.Message):
             response_list = thorny_guild.exact_responses[message.content.lower()]
             response = response_list[random.randint(0, len(response_list) - 1)]
             await message.channel.send(response)
+
         else:
             for invoker in thorny_guild.wildcard_responses:
                 if invoker in message.content.lower():
@@ -146,20 +150,23 @@ async def on_message(message: discord.Message):
 @thorny.event
 async def on_message_delete(message: discord.Message):
     if message.author != thorny.user:
-        thorny_user = await UserFactory.build(message.author)
-        event: Event = await ev.fetch(ev.MessageDelete, thorny_user, thorny)
-        event.metadata.deleted_message = message
-        await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(message.guild)
+
+        if thorny_guild.channels.logs_channel is not None:
+            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+
+            await logs_channel.send(embed=embeds.message_delete_embed(message, datetime.now()))
 
 
 @thorny.event
-async def on_message_edit(before, after):
+async def on_message_edit(before: discord.Message, after: discord.Message):
     if before.author != thorny.user:
-        thorny_user = await UserFactory.build(before.author)
-        event: Event = await ev.fetch(ev.MessageEdit, thorny_user, thorny)
-        event.metadata.message_before = before
-        event.metadata.message_after = after
-        await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(before.guild)
+
+        if thorny_guild.channels.logs_channel is not None:
+            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+
+            await logs_channel.send(embed=embeds.message_edit_embed(before, after, datetime.now()))
 
 
 @thorny.event
@@ -212,16 +219,24 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 async def on_member_join(member: discord.Member):
     await UserFactory.create([member])
     thorny_user = await UserFactory.build(member)
-    event: Event = await ev.fetch(ev.UserJoin, thorny_user, thorny)
-    await event.log_event_in_discord()
+    thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_join(thorny_user, thorny_guild))
 
 
 @thorny.event
 async def on_member_remove(member):
-    thorny_user = await UserFactory.build(member)
-    event: Event = await ev.fetch(ev.UserLeave, thorny_user, thorny)
-    await event.log_event_in_discord()
     await UserFactory.deactivate([member])
+    thorny_user = await UserFactory.build(member)
+    thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
 
 @thorny.event

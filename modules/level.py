@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core import dbutils
 
 
@@ -14,6 +14,7 @@ class Level(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(ctx.guild)
         last_required_xp = 100
         if thorny_user.level.level == 0:
             total_xp_to_gain = thorny_user.level.required_xp
@@ -45,6 +46,11 @@ class Level(commands.Cog):
                                    f"**Lv.{thorny_user.level.level}** {progressbar} "
                                    f"**Lv.{thorny_user.level.level + 1}**\n\n"
                                    f"Level {thorny_user.level.level} is {int(percentage)}% Complete")
+
+        if not thorny_guild.levels_enabled:
+            rank_embed.add_field(name="Your Level is Frozen!",
+                                 value="Your server owner has disabled leveling on this server.",
+                                 inline=False)
 
         await ctx.respond(embed=rank_embed)
 

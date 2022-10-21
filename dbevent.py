@@ -327,23 +327,17 @@ class UserJoin(Event):
         user = self.metadata.user
         thorny_guild = await GuildFactory.build(self.metadata.user.discord_member.guild)
 
-        if str(thorny_guild.discord_guild.member_count)[-1] == "1":
-            suffix = "st"
-        elif str(thorny_guild.discord_guild.member_count)[-1] == "2":
-            suffix = "nd"
-        elif str(thorny_guild.discord_guild.member_count)[-1] == "3":
-            suffix = "rd"
-        else:
-            suffix = "th"
+        def ordinaltg(n):
+            return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
 
-        searches = ["welcome", "hello", "heartfelt welcome", "join us"]
+        searches = ["welcome", "hello", "heartfelt welcome", "join us", "greetings", "what's up"]
         api_response = api_instance.gifs_search_get(giphy_token, random.choice(searches), limit=10)
         gifs_list = list(api_response.data)
         gif = random.choice(gifs_list)
 
         join_embed = discord.Embed(colour=0x57945c)
         join_embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {user.username}!**",
-                             value=f"You are the **{thorny_guild.discord_guild.member_count}{suffix}** member!\n\n"
+                             value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
                                    f"{thorny_guild.join_message}")
         join_embed.set_thumbnail(url=user.discord_member.display_avatar.url)
         join_embed.set_image(url=gif.images.original.url)

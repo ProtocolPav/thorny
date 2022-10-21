@@ -153,7 +153,7 @@ class ServerChannelEdit(Modal):
             self.add_item(texts)
 
     async def callback(self, interaction: discord.Interaction):
-        self.thorny_guild.channels.__setattr__(self.children[0].custom_id, self.children[0].value)
+        self.thorny_guild.channels.__setattr__(self.children[0].custom_id, int(self.children[0].value))
         await commit(self.thorny_guild)
         await interaction.response.defer()
 
