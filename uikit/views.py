@@ -472,13 +472,16 @@ class SetupCurrency(View):
 
     @discord.ui.button(label="Edit Currency Emoji",
                        custom_id="edit_emoji",
-                       disabled=True,
                        style=discord.ButtonStyle.blurple)
     async def emoji_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Currency Emoji",
                                custom_id="emoji",
                                placeholder=f"Current Emoji: {self.thorny_guild.currency.emoji}")
-        ... # Need solution, as you can't enter custom emojis into modals
+        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['currency'],
+                                               view=SetupCurrency(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",

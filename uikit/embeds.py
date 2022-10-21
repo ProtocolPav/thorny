@@ -253,6 +253,11 @@ def send_configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     currency_embed.add_field(name="Current Settings",
                              value=f"**Currency Name:** {thorny_guild.currency.name}\n"
                                    f"**Currency Emoji:** {thorny_guild.currency.emoji}")
+    currency_embed.add_field(name="Setting Custom Emoji",
+                             value="If you want to set a custom server emoji, it is a bit tricky. You must give it in this form: "
+                                   "**<:EmojiName:ID>**. Luckily, discord provides a quick and easy way to get this.\n"
+                                   "Simply put a backslash and then write your emoji. Press send and then copy it.\n",
+                             inline=False)
 
     return {"welcome": welcome_embed,
             "levels": levels_embed,
