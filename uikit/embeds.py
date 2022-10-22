@@ -5,14 +5,14 @@ from datetime import datetime, timedelta
 from thorny_core.db import user, guild
 from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
-from thorny_core import functions
 import giphy_client
 import random
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
+config = json.load(open('../thorny_data/config.json', 'r+'))
 api_instance = giphy_client.DefaultApi()
-giphy_token = "PYTVyPc9klW4Ej3ClWz9XFCo1TQOp72b"
+giphy_token = config["giphy_token"]
 
 
 def ping_embed(client: discord.Bot, bot_started_on: datetime):

@@ -6,6 +6,7 @@ import discord
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
 from thorny_core.db.guild import Guild
+from typing import Literal
 
 
 async def create_pool(loop=None):
@@ -217,6 +218,8 @@ class UserFactory:
 
 
 class GuildFactory:
+    _types = Literal['everthorn_only', 'beta', 'premium', 'basic']
+
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
         async with pool.acquire() as conn:
@@ -292,14 +295,15 @@ class GuildFactory:
                   f"{guild.name}, ID {guild.id}")
 
     @classmethod
-    def get_everthorn_exclusive_guilds(cls):
+    def get_guilds_by_feature(cls, feature: _types):
         async def get():
             async with pool.acquire() as conn:
                 guild_ids = await conn.fetch("""
                                              SELECT guild_id FROM thorny.guild
-                                             WHERE features->>'everthorn_only' = 'True'
+                                             WHERE features->>$1 = 'True'
                                              AND active = True
-                                             """)
+                                             """,
+                                             feature)
 
                 guilds = []
                 for i in guild_ids:

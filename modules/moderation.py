@@ -19,7 +19,7 @@ class Moderation(commands.Cog):
         self.client = client
 
     @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     async def apply(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=ProjectApplicationForm(ctx),
                           ephemeral=True)
@@ -69,7 +69,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
         await ctx.defer()
@@ -84,7 +84,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         async with httpx.AsyncClient() as client:
@@ -100,7 +100,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"The server is already stopped!")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -111,7 +111,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_everthorn_exclusive_guilds())
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
