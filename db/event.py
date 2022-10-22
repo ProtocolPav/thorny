@@ -18,7 +18,7 @@ giphy_token = config["giphy_token"]
 class Event:
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
         self.client = client
-        self.time = event_time
+        self.time = event_time.replace(microsecond=0)
         self.thorny_user = user
         self.thorny_guild = guild
 
@@ -29,31 +29,29 @@ class Event:
 class ConnectEvent(Event):
     async def log(self):
         async with self.thorny_user.connection_pool.acquire() as conn:
-            recent_connection = self.thorny_user.playtime.recent_connection
+            current_connection = self.thorny_user.playtime.current_connection
 
-            if recent_connection is None or recent_connection['disconnect_time'] is not None:
+            if current_connection is None or current_connection['disconnect_time'] is not None:
                 await conn.execute("""
                                    INSERT INTO thorny.activity(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
                                    self.thorny_user.thorny_id, self.time)
-                database_log = True
-            elif datetime.now() - recent_connection['connect_time'] > timedelta(hours=12):
+            elif datetime.now() - current_connection['connect_time'] > timedelta(hours=12):
                 playtime = timedelta(hours=1, minutes=5)
                 await conn.execute("""
                                    UPDATE thorny.activity SET disconnect_time = $1, playtime = $2 
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, playtime, self.thorny_user.thorny_id, recent_connection['connect_time'])
+                                   self.time, playtime, self.thorny_user.thorny_id, current_connection['connect_time'])
 
                 await conn.execute("""
                                    INSERT INTO thorny.activity(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
                                    self.thorny_user.thorny_id, self.time)
-                database_log = True
             else:
-                database_log = False
+                raise errors.AlreadyConnectedError()
             print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.thorny_user.thorny_id}")
 
         log_embed = discord.Embed(title=f'CONNECTION', colour=0x44ef56)
@@ -64,31 +62,31 @@ class ConnectEvent(Event):
             activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
             await activity_channel.send(embed=log_embed)
 
-        return database_log
-
 
 class DisconnectEvent(Event):
+    def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
+        super().__init__(client, event_time, user, guild)
+        self.playtime: timedelta = timedelta(hours=0)
+        self.playtime_overtime = False
+
     async def log(self):
         async with self.thorny_user.connection_pool.acquire() as conn:
-            recent_connection = self.thorny_user.playtime.recent_connection
-            playtime_overtime = False
+            current_connection = self.thorny_user.playtime.current_connection
 
-            if recent_connection is None or recent_connection['disconnect_time'] is not None:
-                database_log = False
+            if current_connection is None or current_connection['disconnect_time'] is not None:
+                raise errors.NotConnectedError()
             else:
-                playtime = self.time - recent_connection['connect_time']
+                self.playtime = self.time - current_connection['connect_time']
 
-                if playtime > timedelta(hours=12):
-                    playtime_overtime = True
-                    playtime = timedelta(hours=1, minutes=5)
+                if self.playtime > timedelta(hours=12):
+                    self.playtime_overtime = True
+                    self.playtime = timedelta(hours=1, minutes=5)
 
                 await conn.execute("""
-                                   UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                   UPDATE thorny.activity SET disconnect_time = $1, playtime = $2
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, playtime, self.thorny_user.thorny_id, recent_connection['connect_time'])
-
-                database_log = True
+                                   self.time, self.playtime, self.thorny_user.thorny_id, current_connection['connect_time'])
 
             print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 
@@ -100,8 +98,6 @@ class DisconnectEvent(Event):
         if self.thorny_guild.channels.logs_channel is not None:
             activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
             await activity_channel.send(embed=log_embed)
-
-        return database_log, playtime_overtime
 
 
 class GainXP(Event):

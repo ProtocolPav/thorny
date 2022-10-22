@@ -107,11 +107,12 @@ class Playtime:
     previous_playtime: Time
     expiring_playtime: Time
     todays_playtime: Time
-    recent_connection: pg.Record
+    recent_playtime: pg.Record
     recent_session: Time
+    current_connection: pg.Record
     daily_average: Time
 
-    def __init__(self, playtime_data, latest_playtime, daily_average):
+    def __init__(self, playtime_data, latest_playtime, current_connection, daily_average):
         default = Time(timedelta(hours=0))
         set_default = False
 
@@ -126,7 +127,8 @@ class Playtime:
         self.previous_playtime = expression('previous_playtime')
         self.expiring_playtime = expression('expiring_playtime')
         self.todays_playtime = expression('todays_playtime')
-        self.recent_connection = latest_playtime if latest_playtime is not None else None
+        self.recent_playtime = latest_playtime if latest_playtime is not None else None
+        self.current_connection = current_connection
         self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
         self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 
@@ -320,6 +322,7 @@ class User:
                  levels: pg.Record,
                  playtime: pg.Record,
                  recent_playtime: pg.Record,
+                 current_connection: pg.Record,
                  daily_average: pg.Record,
                  inventory: pg.Record,
                  item_data: pg.Record,
@@ -339,7 +342,8 @@ class User:
             if self.birthday.time is not None else None
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
-        self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, daily_average=daily_average)
+        self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, current_connection=current_connection,
+                                 daily_average=daily_average)
         self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)

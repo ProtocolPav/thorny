@@ -96,6 +96,12 @@ class UserFactory:
                                                  ORDER BY connect_time DESC
                                                  """,
                                                  thorny_id)
+            current_connection = await conn.fetchrow("""
+                                                     SELECT * FROM thorny.activity
+                                                     WHERE thorny_user_id = $1
+                                                     ORDER BY connect_time DESC
+                                                     """,
+                                                     thorny_id)
             inventory = await conn.fetch("""
                                          SELECT * FROM thorny.inventory
                                          INNER JOIN thorny.item_type
@@ -124,6 +130,7 @@ class UserFactory:
                         levels=levels,
                         playtime=playtime,
                         recent_playtime=recent_session,
+                        current_connection=current_connection,
                         daily_average=daily_average,
                         inventory=inventory,
                         item_data=item_data,
