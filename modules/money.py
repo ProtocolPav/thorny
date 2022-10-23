@@ -26,12 +26,15 @@ class Money(commands.Cog):
     @balance.command(description="CM ONLY | Edit someone's balance")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.Member,
-                   amount: discord.Option(int, "Put a - if you want to remove currency")):
+                   amount: discord.Option(int, "Negative number to remove money")):
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(user.guild)
         thorny_user.balance += amount
 
         if 'edit' in ctx.command.qualified_name.lower():
-            await ctx.respond(f"{user}'s balance is now **{thorny_user.balance}**! (Added/Removed: {amount})")
+            await ctx.respond(embed=embeds.balance_edit_embed(thorny_user, thorny_guild, amount),
+                              ephemeral=True)
+
         await commit(thorny_user)
 
     @commands.slash_command(description="Pay a player using nugs")
@@ -48,14 +51,8 @@ class Money(commands.Cog):
             payable_user.balance -= amount
             receivable_user.balance += amount
 
-            pay_embed = discord.Embed(color=0xF4C430)
-            pay_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
-            pay_embed.add_field(name=f'{thorny_guild.currency.emoji} Payment Successful!',
-                                value=f'Amount paid: **{thorny_guild.currency.emoji}{amount}**\n'
-                                      f'Paid to: **{user.mention}**\n'
-                                      f'\n**Reason: {reason}**')
             await ctx.respond(f"{user.mention} You've been paid!")
-            await ctx.edit(content=None, embed=pay_embed)
+            await ctx.edit(content=None, embed=embeds.payment_embed(payable_user, receivable_user, thorny_guild, amount, reason))
 
             event: ev.Event = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
             event.metadata.sender_user = payable_user

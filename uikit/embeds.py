@@ -359,6 +359,27 @@ def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
     embed.add_field(name=f'**Inventory:**',
                     value=f"{thorny_user.inventory}",
                     inline=False)
-    embed.set_footer(text="You can pay people! Just use /pay")
+
+    return embed
+
+
+def balance_edit_embed(thorny_user: user.User, thorny_guild: guild.Guild, amount: int):
+    embed = discord.Embed(color=0x7CFC00)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f"Successfully {'Added' if amount > 0 else 'Removed'} {abs(amount)} {thorny_guild.currency.name}",
+                    value=f"Balance was **{thorny_guild.currency.emoji}{thorny_user.balance - amount}**\n"
+                          f"Balance is now **{thorny_guild.currency.emoji}{thorny_user.balance}**")
+
+    return embed
+
+
+def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: guild.Guild, amount: int, reason: str):
+    embed = discord.Embed(color=0xF4C430)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f'{thorny_guild.currency.emoji} Payment Successful!',
+                    value=f'**Amount paid:** {thorny_guild.currency.emoji}{amount}\n'
+                          f'**Paid to:** {receivable.discord_member.mention}\n\n'
+                          f'**Reason:** {reason}')
+    embed.set_footer(text=f"Your balance: {thorny_user.balance} | Payee's balance: {receivable.balance}")
 
     return embed
