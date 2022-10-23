@@ -5,6 +5,7 @@ import json
 from thorny_core import errors
 from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core import dbevent as ev
+from thorny_core.uikit import embeds
 
 
 class Money(commands.Cog):
@@ -20,26 +21,7 @@ class Money(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(user.guild)
 
-        personal_bal = f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}"
-        inventory_text = ''
-        inventory_list = thorny_user.inventory.slots
-        for item in inventory_list[0:2]:
-            inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
-                             f'{item.item_count} **|** {item.item_display_name}\n'
-        if len(inventory_list) < 2:
-            for item in range(0, 2 - len(inventory_list)):
-                inventory_text = f'{inventory_text}<:_pink:921708790322192396> Empty\n'
-
-        balance_embed = discord.Embed(color=0xE0115F)
-        balance_embed.set_author(name=user, icon_url=user.display_avatar.url)
-        balance_embed.add_field(name=f'**Financials:**',
-                                value=f"{personal_bal}")
-        balance_embed.add_field(name=f'**Inventory:**',
-                                value=f"{inventory_text}<:_purple:921708790368309269> "
-                                      f"**/inventory view to see more!**",
-                                inline=False)
-        balance_embed.set_footer(text="You can pay people! Just use /pay")
-        await ctx.respond(embed=balance_embed)
+        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
 
     @balance.command(description="CM ONLY | Edit someone's balance")
     @commands.has_permissions(administrator=True)

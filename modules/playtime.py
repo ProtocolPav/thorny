@@ -64,7 +64,7 @@ class Playtime(commands.Cog):
                                      value=f'{stats}')
 
             response_embed.add_field(name=f"**Adjust Your Hours:**",
-                                     value="Did you forget to disconnect for many hours? Use the `/adjust` command "
+                                     value="Did you forget to disconnect for many hours? Use the </adjust:1> command "
                                            "to bring your hours down!", inline=False)
             response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
             response_embed.set_footer(text=f'{v}')

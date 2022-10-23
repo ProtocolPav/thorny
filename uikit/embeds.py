@@ -190,7 +190,7 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     return info_embed
 
 
-def send_configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     welcome_embed = discord.Embed(title="Configuring Welcome Settings",
                                   colour=0xD7E99A)
     welcome_embed.add_field(name="Current Settings",
@@ -337,8 +337,8 @@ def user_join(thorny_user: user.User, thorny_guild: guild.Guild):
 
     embed = discord.Embed(colour=0x57945c)
     embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {thorny_user.username}!**",
-                         value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
-                               f"{thorny_guild.join_message}")
+                    value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
+                          f"{thorny_guild.join_message}")
     embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
     embed.set_image(url=gif.images.original.url)
 
@@ -349,3 +349,16 @@ def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
     embed = discord.Embed(colour=0xc34184)
     embed.add_field(name=f"**{thorny_user.username} has left**",
                     value=f"{thorny_guild.leave_message}")
+
+
+def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
+    embed = discord.Embed(color=0xE0115F)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f'**Financials:**',
+                    value=f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}")
+    embed.add_field(name=f'**Inventory:**',
+                    value=f"{thorny_user.inventory}",
+                    inline=False)
+    embed.set_footer(text="You can pay people! Just use /pay")
+
+    return embed

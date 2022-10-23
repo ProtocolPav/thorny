@@ -179,18 +179,17 @@ class Inventory:
             self.all_items.append(InventorySlot(slot))
 
     def fetch(self, item_id):
-        item_in_inventory = False
         for item in self.slots:
             if item.item_id == item_id:
-                item_in_inventory = True
                 return item
-        if not item_in_inventory:
-            for item_data in self.all_items:
-                if item_data.item_id == item_id:
-                    return item_data
+
+        for item_data in self.all_items:
+            if item_data.item_id == item_id:
+                return item_data
 
     def data(self, item_id):
         # Delete this soon. I will keep just for the sake of ease for now
+        # Replaced with .fetch() which fetches either the item in the inventory, or its data if it does not exist.
         for item_data in self.all_items:
             if item_data.item_id == item_id:
                 return item_data
@@ -229,6 +228,13 @@ class Inventory:
                 self.slots.remove(item)
             elif item.item_count - count > 0:
                 item.item_count -= count
+
+    def __str__(self):
+        string = [f"<:_pink:921708790322192396> Empty\n" * 9]
+        for item in self.slots:
+            string[self.slots.index(item)] = f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n"
+
+        return "".join(string)
 
 
 @dataclass

@@ -240,7 +240,7 @@ class SetupWelcome(View):
         modal = modals.ServerEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
                                                view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Leave Message",
@@ -255,7 +255,7 @@ class SetupWelcome(View):
         modal = modals.ServerEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
                                                view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Birthday Message",
@@ -279,7 +279,7 @@ class SetupWelcome(View):
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['welcome'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
                                                view=SetupWelcome(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
@@ -309,7 +309,7 @@ class SetupLevels(View):
         modal = modals.ServerEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
                                                view=SetupLevels(modal.thorny_guild))
 
     @discord.ui.button(label="Edit XP Multiplier",
@@ -322,7 +322,7 @@ class SetupLevels(View):
         modal = modals.ServerEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['levels'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
                                                view=SetupLevels(modal.thorny_guild))
 
     @discord.ui.button(label="Enable/Disable Leveling",
@@ -331,7 +331,7 @@ class SetupLevels(View):
     async def toggle_callback(self, button: Button, interation: discord.Interaction):
         self.thorny_guild.levels_enabled = not self.thorny_guild.levels_enabled
         await commit(self.thorny_guild)
-        await interation.response.edit_message(embed=embeds.send_configure_embed(self.thorny_guild)['levels'],
+        await interation.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['levels'],
                                                view=SetupLevels(self.thorny_guild))
 
     @discord.ui.button(label="Edit XP-Ban Channels",
@@ -367,7 +367,7 @@ class SetupLogs(View):
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['logs'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['logs'],
                                                view=SetupLogs(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
@@ -394,7 +394,7 @@ class SetupUpdates(View):
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['updates'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['updates'],
                                                view=SetupUpdates(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
@@ -470,7 +470,7 @@ class SetupCurrency(View):
         modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['currency'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
                                                view=SetupCurrency(modal.thorny_guild))
 
     @discord.ui.button(label="Edit Currency Emoji",
@@ -483,7 +483,7 @@ class SetupCurrency(View):
         modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
-        await interation.edit_original_message(embed=embeds.send_configure_embed(modal.thorny_guild)['currency'],
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
                                                view=SetupCurrency(modal.thorny_guild))
 
     @discord.ui.button(label="Back",
@@ -506,25 +506,25 @@ class ServerSetup(View):
 
         match select_menu.values[0]:
             case "welcome":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['welcome'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['welcome'],
                                                         view=SetupWelcome(thorny_guild))
             case "levels":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['levels'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['levels'],
                                                         view=SetupLevels(thorny_guild))
             case "logs":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['logs'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['logs'],
                                                         view=SetupLogs(thorny_guild))
             case "updates":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['updates'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['updates'],
                                                         view=SetupUpdates(thorny_guild))
             case "gulag":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['gulag'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['gulag'],
                                                         view=SetupGulag(thorny_guild))
             case "responses":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['responses'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['responses'],
                                                         view=SetupResponses(thorny_guild))
             case "currency":
-                await interaction.response.edit_message(embed=embeds.send_configure_embed(thorny_guild)['currency'],
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
                                                         view=SetupCurrency(thorny_guild))
 
 
