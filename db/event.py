@@ -125,3 +125,13 @@ class GainXP(Event):
 
         if level_up:
             await self.message.channel.send(embed=embeds.level_up_embed(self.thorny_user, self.thorny_guild))
+
+
+class Transaction(Event):
+    def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
+        super().__init__(client, event_time, user, guild)
+
+    async def log(self):
+
+        logs_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
+        await logs_channel.send(embed=log_embed)
