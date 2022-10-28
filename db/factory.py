@@ -225,7 +225,7 @@ class UserFactory:
 
 
 class GuildFactory:
-    _types = Literal['everthorn_only', 'beta', 'premium', 'basic']
+    features = Literal['everthorn_only', 'beta', 'premium', 'basic']
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
@@ -302,7 +302,7 @@ class GuildFactory:
                   f"{guild.name}, ID {guild.id}")
 
     @classmethod
-    def get_guilds_by_feature(cls, feature: _types):
+    def get_guilds_by_feature(cls, feature: features):
         async def get():
             async with pool.acquire() as conn:
                 guild_ids = await conn.fetch("""
@@ -312,11 +312,8 @@ class GuildFactory:
                                              """,
                                              feature)
 
-                guilds = []
-                for i in guild_ids:
-                    guilds.append(i['guild_id'])
+                guilds = [i['guild_id'] for i in guild_ids]
 
                 return guilds
 
         return asyncio.get_event_loop().run_until_complete(get())
-

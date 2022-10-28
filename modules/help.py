@@ -65,13 +65,16 @@ class Help(commands.Cog):
         home_embed.set_footer(text=f"{v}")
         for cog in self.client.cogs:
             easy_view_text = []
+
             for command in help_dict[f'{cog}']:
                 easy_view_text.append(command['name'])
+
             if len(easy_view_text) > 3:
                 easy_view_text = f"{'**,** '.join(easy_view_text[0:3])}**, `and more`**"
-            else:
+            elif len(easy_view_text) <= 3:
                 easy_view_text = f"{'**,** '.join(easy_view_text)}"
-            if cog != "Help":
+
+            if cog != "Help" and easy_view_text != "":
                 home_embed.add_field(name=f"**{cog} Commands**",
                                      value=f"{easy_view_text}",
                                      inline=False)
