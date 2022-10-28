@@ -35,16 +35,16 @@ class Dropdown(discord.ui.View):
             help_embed = home_embed
         else:
             help_embed = discord.Embed(title=f"{category} | Thorny Help Center",
-                                       description="Scroll through the commands list to see all commands!",
+                                       description="Click on a command to use it!",
                                        color=0x65b39b)
             text = ''
             category = category.capitalize()
             for command in help_dict[f'{category}']:
                 if command['usage'] == "":
-                    text = f"{text}</{command['name']}:1>\n```{command['desc']}```\n"
+                    text = f"{text}{command['name']}\n```{command['desc']}```\n"
                 else:
-                    text = f"{text}</{command['name']}:1> **{command['usage']}**\n```{command['desc']}```\n"
-            help_embed.set_footer(text=f"{v} | I add fun little messages here, always check down here!")
+                    text = f"{text}{command['name']} **{command['usage']}**\n```{command['desc']}```\n"
+            help_embed.set_footer(text=f"{v}")
             help_embed.add_field(name=f"**{category} Commands**",
                                  value=f"{text}")
         await interaction.response.edit_message(embed=help_embed, view=select.view)
@@ -60,20 +60,20 @@ class Help(commands.Cog):
         help_dict = await func.generate_help_dict(self, ctx)
 
         home_embed = discord.Embed(title="Home | Thorny Help Center",
-                                   description="Scroll through the commands list to see all commands!",
+                                   description="Use the **Select Menu** to see more about commands!",
                                    color=0x65b39b)
         home_embed.set_footer(text=f"{v}")
         for cog in self.client.cogs:
             easy_view_text = []
             for command in help_dict[f'{cog}']:
                 easy_view_text.append(command['name'])
-            if len(' '.join(easy_view_text)) >= 50:
-                easy_view_text = f"/{', /'.join(easy_view_text)[0:50]}..."
+            if len(easy_view_text) > 3:
+                easy_view_text = f"{'**,** '.join(easy_view_text[0:3])}**, `and more`**"
             else:
-                easy_view_text = f"/{', /'.join(easy_view_text)}"
+                easy_view_text = f"{'**,** '.join(easy_view_text)}"
             if cog != "Help":
                 home_embed.add_field(name=f"**{cog} Commands**",
-                                     value=f"```{easy_view_text}```",
+                                     value=f"{easy_view_text}",
                                      inline=False)
 
         view = Dropdown()
