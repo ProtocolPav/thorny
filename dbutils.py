@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 import discord
 
-from db import UserFactory, pool, User
+from db import UserFactory, pool
+from db import user
 from dateutil.relativedelta import relativedelta
 
 
@@ -69,6 +70,7 @@ class Base:
 
 
 class Leaderboard:
+    """This is needed"""
     def __init__(self):
         self.user_rank = None
         self.activity_list = None
@@ -76,7 +78,7 @@ class Leaderboard:
         self.treasury_list = None
         self.levels_list = None
 
-    async def select_activity(self, thorny_user: User, month: datetime):
+    async def select_activity(self, thorny_user: user.User, month: datetime):
         async with pool.acquire() as conn:
             if datetime.now() < month:
                 month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
@@ -140,27 +142,8 @@ class Leaderboard:
                     self.user_rank = self.levels_list.index(user) + 1
 
 
-class Kingdom:
-    @staticmethod
-    async def select_kingdom(kingdom):
-        async with pool.acquire() as conn:
-            kingdom_dict = await conn.fetchrow("SELECT * "
-                                               "FROM thorny.kingdoms "
-                                               "WHERE kingdom = $1", kingdom)
-            return kingdom_dict
-
-    @staticmethod
-    async def update_kingdom(kingdom, section, value):
-        async with pool.acquire() as conn:
-            try:
-                await conn.execute('UPDATE thorny.kingdoms '
-                                   f'SET {section} = $1 '
-                                   f'WHERE kingdom = $2', value, kingdom)
-            except asyncpg.StringDataRightTruncationError:
-                return "length_error"
-
-
 class User:
+    """I could probably change this, but it is needed"""
     def __init__(self):
         self.list = None
 
@@ -170,22 +153,6 @@ class User:
                                             FROM thorny.user
                                             WHERE active = True AND birthday IS NOT NULL""")
             return self.list
-
-
-class Update:
-    @staticmethod
-    async def update_v1_7_4():
-        async with pool.acquire() as conn:
-            await conn.execute("""
-                                CREATE TABLE thorny.guilds (
-                                guild_id int8,
-                                welcome_channel_id int8,
-                                logs_channel_id int8,
-                                xp_gain bool,
-                                timeout_role_id int8,
-                                timeout_channel_id int8,
-                                thorny_update_channel_id int8,
-                                PRIMARY KEY(guild_id))""")
 
 
 class WebserverUpdates:

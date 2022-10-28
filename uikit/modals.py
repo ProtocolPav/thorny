@@ -2,7 +2,7 @@ import discord
 from discord.ui import Modal, InputText
 from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select
 from thorny_core.uikit.embeds import application_info_embed
-from thorny_core.db.user import User
+from thorny_core.db import User, Guild
 from thorny_core.db.commit import commit
 import thorny_core.errors as errors
 
@@ -121,4 +121,55 @@ class ProjectApplicationExtraInfo(Modal):
                                 style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+
+class ServerEdit(Modal):
+    def __init__(self, texts: InputText | list[InputText], thorny_guild: Guild):
+        super().__init__(title="Configuring your Server")
+        self.thorny_guild = thorny_guild
+
+        if type(texts) == list:
+            for text in texts:
+                self.add_item(text)
+        else:
+            self.add_item(texts)
+
+    async def callback(self, interaction: discord.Interaction):
+        self.thorny_guild.__setattr__(self.children[0].custom_id, self.children[0].value)
+        await commit(self.thorny_guild)
+        await interaction.response.defer()
+
+
+class ServerChannelEdit(Modal):
+    def __init__(self, texts: InputText | list[InputText], thorny_guild: Guild):
+        super().__init__(title="Editing Channel")
+        self.thorny_guild = thorny_guild
+
+        if type(texts) == list:
+            for text in texts:
+                self.add_item(text)
+        else:
+            self.add_item(texts)
+
+    async def callback(self, interaction: discord.Interaction):
+        self.thorny_guild.channels.__setattr__(self.children[0].custom_id, int(self.children[0].value))
+        await commit(self.thorny_guild)
+        await interaction.response.defer()
+
+
+class ServerCurrencyEdit(Modal):
+    def __init__(self, texts: InputText | list[InputText], thorny_guild: Guild):
+        super().__init__(title="Configuring Currency")
+        self.thorny_guild = thorny_guild
+
+        if type(texts) == list:
+            for text in texts:
+                self.add_item(text)
+        else:
+            self.add_item(texts)
+
+    async def callback(self, interaction: discord.Interaction):
+        self.thorny_guild.currency.__setattr__(self.children[0].custom_id, self.children[0].value)
+        await commit(self.thorny_guild)
         await interaction.response.defer()

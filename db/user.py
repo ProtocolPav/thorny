@@ -107,10 +107,12 @@ class Playtime:
     previous_playtime: Time
     expiring_playtime: Time
     todays_playtime: Time
+    recent_playtime: pg.Record
     recent_session: Time
+    current_connection: pg.Record
     daily_average: Time
 
-    def __init__(self, playtime_data, latest_playtime, daily_average):
+    def __init__(self, playtime_data, latest_playtime, current_connection, daily_average):
         default = Time(timedelta(hours=0))
         set_default = False
 
@@ -125,6 +127,8 @@ class Playtime:
         self.previous_playtime = expression('previous_playtime')
         self.expiring_playtime = expression('expiring_playtime')
         self.todays_playtime = expression('todays_playtime')
+        self.recent_playtime = latest_playtime if latest_playtime is not None else None
+        self.current_connection = current_connection
         self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
         self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 
@@ -175,18 +179,17 @@ class Inventory:
             self.all_items.append(InventorySlot(slot))
 
     def fetch(self, item_id):
-        item_in_inventory = False
         for item in self.slots:
             if item.item_id == item_id:
-                item_in_inventory = True
                 return item
-        if not item_in_inventory:
-            for item_data in self.all_items:
-                if item_data.item_id == item_id:
-                    return item_data
+
+        for item_data in self.all_items:
+            if item_data.item_id == item_id:
+                return item_data
 
     def data(self, item_id):
         # Delete this soon. I will keep just for the sake of ease for now
+        # Replaced with .fetch() which fetches either the item in the inventory, or its data if it does not exist.
         for item_data in self.all_items:
             if item_data.item_id == item_id:
                 return item_data
@@ -225,6 +228,13 @@ class Inventory:
                 self.slots.remove(item)
             elif item.item_count - count > 0:
                 item.item_count -= count
+
+    def __str__(self):
+        string = [f"<:_pink:921708790322192396> Empty\n" * 9]
+        for item in self.slots:
+            string[self.slots.index(item)] = f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n"
+
+        return "".join(string)
 
 
 @dataclass
@@ -318,6 +328,7 @@ class User:
                  levels: pg.Record,
                  playtime: pg.Record,
                  recent_playtime: pg.Record,
+                 current_connection: pg.Record,
                  daily_average: pg.Record,
                  inventory: pg.Record,
                  item_data: pg.Record,
@@ -337,7 +348,8 @@ class User:
             if self.birthday.time is not None else None
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
-        self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, daily_average=daily_average)
+        self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, current_connection=current_connection,
+                                 daily_average=daily_average)
         self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)
