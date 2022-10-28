@@ -1,10 +1,11 @@
 import discord
-from discord.ui import View, Select, Button
+from discord.ui import View, Select, Button, InputText
 from datetime import datetime
 import thorny_core.uikit.modals as modals
-from thorny_core.uikit.embeds import profile_edit_embed, application_info_embed
-from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select, profile_stats_select
-from thorny_core.db import User, UserFactory
+from thorny_core.db.commit import commit
+from thorny_core.uikit import embeds
+from thorny_core.uikit import slashoptions
+from thorny_core.db import User, UserFactory, GuildFactory, Guild
 
 
 class ProfileEdit(View):
@@ -14,19 +15,19 @@ class ProfileEdit(View):
         self.edit_embed = embed
 
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
-                       options=profile_main_select)
+                       options=slashoptions.profile_main_select)
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
-                       options=profile_lore_select)
+                       options=slashoptions.profile_lore_select)
     async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=profile_stats_select)
+                       options=slashoptions.profile_stats_select)
     async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
@@ -84,7 +85,7 @@ class Profile(View):
             edit_embed = discord.Embed(title="Here's what you edited this session:",
                                        colour=self.profile_owner.discord_member.colour)
 
-            await interaction.response.send_message(embed=await profile_edit_embed(self.profile_owner),
+            await interaction.response.send_message(embed=await embeds.profile_edit_embed(self.profile_owner),
                                                     view=ProfileEdit(self.profile_owner, edit_embed),
                                                     ephemeral=True)
         else:
@@ -218,5 +219,312 @@ class ProjectApplicationForm(View):
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
         channel = interaction.client.get_channel(1019959239713771680)
-        await channel.send(embed=await application_info_embed(thorny_user, modal.children),
+        await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
+
+
+class SetupWelcome(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Join Message",
+                       custom_id="edit_join",
+                       style=discord.ButtonStyle.blurple)
+    async def join_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Join Message",
+                               custom_id="join_message",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.join_message) > 70 else ''}",
+                               style=discord.InputTextStyle.long)
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
+
+    @discord.ui.button(label="Edit Leave Message",
+                       custom_id="edit_leave",
+                       style=discord.ButtonStyle.blurple)
+    async def leave_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Leave Message",
+                               custom_id="leave_message",
+                               placeholder=f"Current Message: {self.thorny_guild.leave_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.leave_message) > 70 else ''}",
+                               style=discord.InputTextStyle.long)
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
+
+    @discord.ui.button(label="Edit Birthday Message",
+                       custom_id="edit_birthday",
+                       style=discord.ButtonStyle.blurple,
+                       disabled=True)
+    async def birthday_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Birthday Message",
+                               placeholder=f"Current Message: {self.thorny_guild.join_message}",
+                               style=discord.InputTextStyle.long)
+        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
+
+    @discord.ui.button(label="Change Channel",
+                       custom_id="edit_channel",
+                       row=2,
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="welcome_channel",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.welcome_channel}")
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
+                                               view=SetupWelcome(modal.thorny_guild))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupLevels(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Level Up Message",
+                       custom_id="edit_level",
+                       style=discord.ButtonStyle.blurple)
+    async def level_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Level Up Message",
+                               custom_id="level_message",
+                               placeholder=f"Current Message: {self.thorny_guild.level_message[0:70]}"
+                                           f"{'...' if len(self.thorny_guild.level_message) > 70 else ''}",
+                               style=discord.InputTextStyle.long)
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
+                                               view=SetupLevels(modal.thorny_guild))
+
+    @discord.ui.button(label="Edit XP Multiplier",
+                       custom_id="edit_xp",
+                       style=discord.ButtonStyle.blurple)
+    async def xp_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit XP Multiplier",
+                               custom_id="xp_multiplier",
+                               placeholder=f"Current Multiplier: x{self.thorny_guild.xp_multiplier}")
+        modal = modals.ServerEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
+                                               view=SetupLevels(modal.thorny_guild))
+
+    @discord.ui.button(label="Enable/Disable Leveling",
+                       custom_id="toggle_levels",
+                       style=discord.ButtonStyle.green)
+    async def toggle_callback(self, button: Button, interation: discord.Interaction):
+        self.thorny_guild.levels_enabled = not self.thorny_guild.levels_enabled
+        await commit(self.thorny_guild)
+        await interation.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['levels'],
+                                               view=SetupLevels(self.thorny_guild))
+
+    @discord.ui.button(label="Edit XP-Ban Channels",
+                       custom_id="edit_xp_ban",
+                       row=2,
+                       disabled=True,
+                       style=discord.ButtonStyle.gray)
+    async def ban_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupLogs(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Choose Logs Channel",
+                       custom_id="edit_channel",
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="logs_channel",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.logs_channel}")
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['logs'],
+                                               view=SetupLogs(modal.thorny_guild))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupUpdates(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Choose Updates Channel",
+                       custom_id="edit_channel",
+                       style=discord.ButtonStyle.gray)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
+                               custom_id="thorny_updates_channel",
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.thorny_updates_channel}")
+        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['updates'],
+                                               view=SetupUpdates(modal.thorny_guild))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupGulag(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Create Gulag Channel & Role",
+                       custom_id="create_channel",
+                       disabled=True,
+                       style=discord.ButtonStyle.green)
+    async def channel_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupResponses(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Exact Responses",
+                       custom_id="edit_exact",
+                       disabled=True,
+                       style=discord.ButtonStyle.blurple)
+    async def exact_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Edit Wildcard Responses",
+                       custom_id="edit_wildcard",
+                       disabled=True,
+                       style=discord.ButtonStyle.blurple)
+    async def wildcard_callback(self, button: Button, interation: discord.Interaction):
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class SetupCurrency(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.button(label="Edit Currency Name",
+                       custom_id="edit_name",
+                       style=discord.ButtonStyle.blurple)
+    async def name_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Currency Name",
+                               custom_id="name",
+                               placeholder=f"Current Name: {self.thorny_guild.currency.name}")
+        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
+                                               view=SetupCurrency(modal.thorny_guild))
+
+    @discord.ui.button(label="Edit Currency Emoji",
+                       custom_id="edit_emoji",
+                       style=discord.ButtonStyle.blurple)
+    async def emoji_callback(self, button: Button, interation: discord.Interaction):
+        input_text = InputText(label="Edit Currency Emoji",
+                               custom_id="emoji",
+                               placeholder=f"Current Emoji: {self.thorny_guild.currency.emoji}")
+        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
+        await interation.response.send_modal(modal)
+        await modal.wait()
+        await interation.edit_original_message(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
+                                               view=SetupCurrency(modal.thorny_guild))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
+class ServerSetup(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.select(placeholder="Configure your server settings",
+                       options=slashoptions.server_setup)
+    async def callback(self, select_menu: Select, interaction: discord.Interaction):
+        thorny_guild = await GuildFactory.build(interaction.guild)
+
+        match select_menu.values[0]:
+            case "welcome":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['welcome'],
+                                                        view=SetupWelcome(thorny_guild))
+            case "levels":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['levels'],
+                                                        view=SetupLevels(thorny_guild))
+            case "logs":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['logs'],
+                                                        view=SetupLogs(thorny_guild))
+            case "updates":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['updates'],
+                                                        view=SetupUpdates(thorny_guild))
+            case "gulag":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['gulag'],
+                                                        view=SetupGulag(thorny_guild))
+            case "responses":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['responses'],
+                                                        view=SetupResponses(thorny_guild))
+            case "currency":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
+                                                        view=SetupCurrency(thorny_guild))
+
+

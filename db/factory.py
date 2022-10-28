@@ -6,6 +6,7 @@ import discord
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
 from thorny_core.db.guild import Guild
+from typing import Literal
 
 
 async def create_pool(loop=None):
@@ -21,7 +22,7 @@ async def create_pool(loop=None):
     return pool_object
 
 
-pool = asyncio.get_event_loop().run_until_complete(create_pool())
+pool: pg.Pool = asyncio.get_event_loop().run_until_complete(create_pool())
 
 
 class UserFactory:
@@ -90,11 +91,17 @@ class UserFactory:
                                                 """,
                                                 thorny_id)
             recent_session = await conn.fetchrow("""
-                                                 SELECT playtime FROM thorny.activity
+                                                 SELECT * FROM thorny.activity
                                                  WHERE thorny_user_id = $1 AND disconnect_time IS NOT NULL
                                                  ORDER BY connect_time DESC
                                                  """,
                                                  thorny_id)
+            current_connection = await conn.fetchrow("""
+                                                     SELECT * FROM thorny.activity
+                                                     WHERE thorny_user_id = $1
+                                                     ORDER BY connect_time DESC
+                                                     """,
+                                                     thorny_id)
             inventory = await conn.fetch("""
                                          SELECT * FROM thorny.inventory
                                          INNER JOIN thorny.item_type
@@ -123,6 +130,7 @@ class UserFactory:
                         levels=levels,
                         playtime=playtime,
                         recent_playtime=recent_session,
+                        current_connection=current_connection,
                         daily_average=daily_average,
                         inventory=inventory,
                         item_data=item_data,
@@ -130,7 +138,7 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def get(cls, guild: discord.Guild, thorny_id: int):
+    async def get(cls, guild: discord.Guild, thorny_id: int) -> User:
         async with pool.acquire() as conn:
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE thorny_user_id = $1""", thorny_id)
@@ -217,8 +225,10 @@ class UserFactory:
 
 
 class GuildFactory:
+    _types = Literal['everthorn_only', 'beta', 'premium', 'basic']
+
     @classmethod
-    async def build(cls, guild: discord.Guild):
+    async def build(cls, guild: discord.Guild) -> Guild:
         async with pool.acquire() as conn:
             await conn.set_type_codec(
                 'json',
@@ -233,6 +243,12 @@ class GuildFactory:
                                                  """,
                                                  guild.id)
 
+            reaction_roles = await conn.fetch("""
+                                              SELECT * FROM thorny.reactions
+                                              WHERE guild_id = $1
+                                              """,
+                                              guild.id)
+
             guild_rec = await conn.fetchrow("""
                                             SELECT * FROM thorny.guild
                                             WHERE guild_id = $1
@@ -242,6 +258,7 @@ class GuildFactory:
             return Guild(pool=pool,
                          guild=guild,
                          guild_record=guild_rec,
+                         reaction_roles=reaction_roles,
                          currency_total=total_currency['total'])
 
     @classmethod
@@ -254,21 +271,6 @@ class GuildFactory:
                 schema='pg_catalog'
             )
 
-            channels_default = {
-                                "logs": None,
-                                "welcome": None,
-                                "gulag": None,
-                                "projects": None,
-                                "announcements": None,
-                                "thorny_updates": None
-                                }
-
-            roles_default = {
-                             "timeout": None,
-                             "role_on_join": None,
-                             "admin": None
-                             }
-
             exact_default = {"secret": ["You've found my secret exact response!"]}
             wildcard_default = {"super secret": ["You've found my super secret wildcard response!"]}
 
@@ -280,9 +282,41 @@ class GuildFactory:
 
             if guild_exists is None:
                 await conn.execute("""
-                                   INSERT INTO thorny.guild (guild_id, channels, roles, responses_exact,
-                                                             responses_wildcard)
-                                   VALUES ($1, $2, $3, $4, $5)
+                                   INSERT INTO thorny.guild (guild_id, responses_exact, responses_wildcard)
+                                   VALUES ($1, $2, $3)
                                    """,
-                                   guild.id, channels_default, roles_default, exact_default, wildcard_default
+                                   guild.id, exact_default, wildcard_default
                                    )
+            print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Created guild "
+                  f"{guild.name}, ID {guild.id}")
+
+    @classmethod
+    async def deactivate(cls, guild: discord.Guild):
+        async with pool.acquire() as conn:
+            await conn.execute("""
+                               UPDATE thorny.guild
+                               SET active = False WHERE guild_id = $1
+                               """,
+                               guild.id)
+            print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated guild "
+                  f"{guild.name}, ID {guild.id}")
+
+    @classmethod
+    def get_guilds_by_feature(cls, feature: _types):
+        async def get():
+            async with pool.acquire() as conn:
+                guild_ids = await conn.fetch("""
+                                             SELECT guild_id FROM thorny.guild
+                                             WHERE features->>$1 = 'True'
+                                             AND active = True
+                                             """,
+                                             feature)
+
+                guilds = []
+                for i in guild_ids:
+                    guilds.append(i['guild_id'])
+
+                return guilds
+
+        return asyncio.get_event_loop().run_until_complete(get())
+

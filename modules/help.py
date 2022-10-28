@@ -10,20 +10,15 @@ help_dict = {}
 
 
 class Dropdown(discord.ui.View):
-    options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡",
-                                    default=True),
-               discord.SelectOption(label="Bank",
-                                    description="Money Commands",
-                                    emoji="💳"),
-               discord.SelectOption(label="Leaderboard",
-                                    description="All Leaderboards", emoji="🏅"),
-               discord.SelectOption(label="Inventory",
-                                    description="Inventory and Store Commands",
-                                    emoji="🎒"),
-               discord.SelectOption(label="Profile", description="Everything to do with your profile", emoji="📝"),
-               discord.SelectOption(label="Moderation", description="All Moderation Commands", emoji="📢"),
-               discord.SelectOption(label="Playtime", description="All Playtime Commands", emoji="⌛"),
-               discord.SelectOption(label="Level", description="Level commands", emoji="✨")]
+    options = [discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡", default=True),
+               discord.SelectOption(label="Configuration", description="Commands to configure Thorny", emoji="⚙️"),
+               discord.SelectOption(label="Moderation", description="Commands to moderate your server", emoji="🔎"),
+               discord.SelectOption(label="Money", description="Commands to do with money", emoji="💳"),
+               discord.SelectOption(label="Inventory", description="Commands to do with the Inventory and Shop", emoji="🎒"),
+               discord.SelectOption(label="Profile", description="Commands to do with your profile", emoji="📝"),
+               discord.SelectOption(label="Playtime", description="Commands to do with playtime", emoji="⏰"),
+               discord.SelectOption(label="Level", description="Commands to do with levels", emoji="🌟"),
+               discord.SelectOption(label="Leaderboard", description="Leaderboards... Self explanatory", emoji="🥇")]
 
     @discord.ui.select(placeholder="Click on a category to see its commands",
                        min_values=1, max_values=1, options=options)
@@ -46,9 +41,9 @@ class Dropdown(discord.ui.View):
             category = category.capitalize()
             for command in help_dict[f'{category}']:
                 if command['usage'] == "":
-                    text = f"{text}**/{command['name']}**\n```{command['desc']}```\n"
+                    text = f"{text}</{command['name']}:1>\n```{command['desc']}```\n"
                 else:
-                    text = f"{text}**/{command['name']} {command['usage']}**\n```{command['desc']}```\n"
+                    text = f"{text}</{command['name']}:1> **{command['usage']}**\n```{command['desc']}```\n"
             help_embed.set_footer(text=f"{v} | I add fun little messages here, always check down here!")
             help_embed.add_field(name=f"**{category} Commands**",
                                  value=f"{text}")
@@ -67,7 +62,7 @@ class Help(commands.Cog):
         home_embed = discord.Embed(title="Home | Thorny Help Center",
                                    description="Scroll through the commands list to see all commands!",
                                    color=0x65b39b)
-        home_embed.set_footer(text=f"{v} | Always read these bottom parts, they have useful info!")
+        home_embed.set_footer(text=f"{v}")
         for cog in self.client.cogs:
             easy_view_text = []
             for command in help_dict[f'{cog}']:

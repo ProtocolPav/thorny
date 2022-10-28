@@ -2,12 +2,33 @@ import discord
 import json
 
 from datetime import datetime, timedelta
-from thorny_core.db import user
+from thorny_core.db import user, guild
 from thorny_core.db import GuildFactory
 import thorny_core.dbutils as dbutils
+import giphy_client
+import random
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
+config = json.load(open('../thorny_data/config.json', 'r+'))
+api_instance = giphy_client.DefaultApi()
+giphy_token = config["giphy_token"]
+
+
+def ping_embed(client: discord.Bot, bot_started_on: datetime):
+    uptime = datetime.now().replace(microsecond=0) - bot_started_on
+
+    embed = discord.Embed(color=0x228B22)
+    embed.add_field(name="Hey! I'm Thorny!",
+                    value=f"*Always here to help!*\n\n"
+                          f"**Current Version:** {v}\n"
+                          f"**Ping:** {round(client.latency * 1000)}ms\n"
+                          f"**Uptime:** {uptime}\n"
+                          f"Operating on {len(client.guilds)} Guilds\n"
+                          f"Processing {round(len(client.application_commands))}+ slash commands")
+    embed.set_thumbnail(url=client.user.avatar.url)
+
+    return embed
 
 
 async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embed:
@@ -167,3 +188,208 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     info_embed.set_footer(text=f"{thorny_user.user_id}")
 
     return info_embed
+
+
+def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+    welcome_embed = discord.Embed(title="Configuring Welcome Settings",
+                                  colour=0xD7E99A)
+    welcome_embed.add_field(name="Current Settings",
+                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.welcome_channel}>\n\n"
+                                  f"**Join Message:** {thorny_guild.join_message}\n"
+                                  f"**Leave Message:** {thorny_guild.leave_message}\n"
+                                  f"**Birthday Message:** Currently not available",
+                            inline=False)
+    welcome_embed.add_field(name="Note",
+                            value="When editing the **channel**, enter the channel ID!\n"
+                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                            inline=False)
+
+    levels_embed = discord.Embed(title="Configuring Levels",
+                                 colour=0xD7E99A)
+    enabled_disabled = "ENABLED" if thorny_guild.levels_enabled else "DISABLED"
+    levels_embed.add_field(name="Current Settings",
+                           value=f"**Leveling is currently** {enabled_disabled}\n\n"
+                                 f"**Level Up Message:** {thorny_guild.level_message}\n"
+                                 f"**XP Multiplier:** x{thorny_guild.xp_multiplier}\n"
+                                 f"**No XP Channels:** Currently not available")
+
+    logs_embed = discord.Embed(title="Configuring Logs",
+                               colour=0xD7E99A)
+    logs_embed.add_field(name="Current Settings",
+                         value=f"**Logs channel:** <#{thorny_guild.channels.logs_channel}>")
+    logs_embed.add_field(name="Note",
+                         value="When editing the **channel**, enter the channel ID!\n"
+                               "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                         inline=False)
+
+    updates_embed = discord.Embed(title="Configuring Updates",
+                                  colour=0xD7E99A)
+    updates_embed.add_field(name="About Updates",
+                            value=f"When Thorny receives new features, or updates to new features, you can choose to receive "
+                                  f"changelogs and tutorials for new features in a channel. You can make it private or "
+                                  f"public for people to see.")
+    updates_embed.add_field(name="Current Settings",
+                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.thorny_updates_channel}>",
+                            inline=False)
+    updates_embed.add_field(name="Note",
+                            value="When editing the **channel**, enter the channel ID!\n"
+                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
+                            inline=False)
+
+    gulag_embed = discord.Embed(title="Create the Gulag",
+                                colour=0xD7E99A)
+    gulag_embed.add_field(name="About The Gulag",
+                          value="When you have troublemakers in your server, you should do something about them.\n"
+                                "Thorny's Gulag is a perfect place to take these troublemakers to, so you can discuss and "
+                                "help dissolve any arguments they may be having. \n"
+                                "When a user is taken into the gulag, they cannot see any channel except for the gulag.")
+    gulag_embed.add_field(name="Current Settings",
+                          value=f"**Gulag Channel:** <#{thorny_guild.channels.gulag_channel}>\n"
+                                f"**Gulag Role:** <@{thorny_guild.roles.timeout_role}>",
+                          inline=False)
+    gulag_embed.add_field(name="Important Note",
+                          value="Before you press the **Create Channel & Role** button, you should know that Thorny will "
+                                "modify channel permissions in **all** channels. Thorny will require the **Manage Channel** "
+                                "permission in all of them. If it cannot manage permissions in some channels, there is a "
+                                "chance that the Gulag Role will not work properly.",
+                          inline=False)
+
+    response_embed = discord.Embed(title="Edit Responses",
+                                   description="Thorny picks one random response out of each list",
+                                   colour=0xD7E99A)
+    exact = ""
+    for key, val in thorny_guild.exact_responses.items():
+        exact = f"{exact}**{key}** = {','.join(val)}\n"
+    response_embed.add_field(name="Exact Responses",
+                             value=exact)
+    wildcard = ""
+    for key, val in thorny_guild.wildcard_responses.items():
+        wildcard = f"{wildcard}**{key}** = {','.join(val)}\n"
+    response_embed.add_field(name="Wildcard Responses",
+                             value=wildcard,
+                             inline=False)
+
+    currency_embed = discord.Embed(title="Configure Server Currency",
+                                   colour=0xD7E99A)
+    currency_embed.add_field(name="Current Settings",
+                             value=f"**Currency Name:** {thorny_guild.currency.name}\n"
+                                   f"**Currency Emoji:** {thorny_guild.currency.emoji}")
+    currency_embed.add_field(name="Setting Custom Emoji",
+                             value="If you want to set a custom server emoji, it is a bit tricky. You must give it in this form: "
+                                   "**<:EmojiName:ID>**. Luckily, discord provides a quick and easy way to get this.\n"
+                                   "Simply put a backslash and then write your emoji. Press send and then copy it.\n",
+                             inline=False)
+
+    return {"welcome": welcome_embed,
+            "levels": levels_embed,
+            "logs": logs_embed,
+            "updates": updates_embed,
+            "gulag": gulag_embed,
+            "responses": response_embed,
+            "currency": currency_embed}
+
+
+def level_up_embed(thorny_user: user.User, thorny_guild: guild.Guild) -> discord.Embed:
+    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level.level}", limit=10)
+    gifs_list = list(api_response.data)
+    gif = random.choice(gifs_list)
+
+    embed = discord.Embed(colour=thorny_user.discord_member.colour)
+    embed.set_author(name=thorny_user.username,
+                     icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f":partying_face: Congrats!",
+                    value=f"You leveled up to **Level {thorny_user.level.level}!**\n"
+                          f"{thorny_guild.level_message}")
+    embed.set_image(url=gif.images.original.url)
+
+    return embed
+
+
+def message_delete_embed(message: discord.Message, event_time: datetime):
+    embed = discord.Embed(color=0xE97451)
+    embed.add_field(name="**Message Deleted**",
+                    value=f"Message sent by {message.author.mention} was deleted in <#{message.channel.id}>.\n"
+                          f"**Contents:**\n{message.content}")
+    embed.set_footer(text=event_time)
+
+    return embed
+
+
+def message_edit_embed(message: discord.Message, message_after: discord.Message, event_time: datetime):
+    embed = discord.Embed(color=0x7393B3)
+    embed.add_field(name="**Message Edited**",
+                    value=f"Message sent by {message.author.mention} was edited.\n"
+                          f"**Before:**\n{message.content}\n\n"
+                          f"**After:**\n{message_after.content}")
+    embed.set_footer(text=event_time)
+
+    return embed
+
+
+def user_join(thorny_user: user.User, thorny_guild: guild.Guild):
+    def ordinaltg(n):
+        return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
+
+    searches = ["welcome", "hello", "heartfelt welcome", "join us", "greetings", "what's up"]
+    api_response = api_instance.gifs_search_get(giphy_token, random.choice(searches), limit=10)
+    gifs_list = list(api_response.data)
+    gif = random.choice(gifs_list)
+
+    embed = discord.Embed(colour=0x57945c)
+    embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {thorny_user.username}!**",
+                    value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
+                          f"{thorny_guild.join_message}")
+    embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
+    embed.set_image(url=gif.images.original.url)
+
+    return embed
+
+
+def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
+    embed = discord.Embed(colour=0xc34184)
+    embed.add_field(name=f"**{thorny_user.username} has left**",
+                    value=f"{thorny_guild.leave_message}")
+
+
+def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
+    embed = discord.Embed(color=0xE0115F)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f'**Financials:**',
+                    value=f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}")
+    embed.add_field(name=f'**Inventory:**',
+                    value=f"{thorny_user.inventory}",
+                    inline=False)
+
+    return embed
+
+
+def balance_edit_embed(thorny_user: user.User, thorny_guild: guild.Guild, amount: int):
+    embed = discord.Embed(color=0x7CFC00)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f"Successfully {'Added' if amount > 0 else 'Removed'} {abs(amount)} {thorny_guild.currency.name}",
+                    value=f"Balance was **{thorny_guild.currency.emoji}{thorny_user.balance - amount}**\n"
+                          f"Balance is now **{thorny_guild.currency.emoji}{thorny_user.balance}**")
+
+    return embed
+
+
+def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: guild.Guild, amount: int, reason: str):
+    embed = discord.Embed(color=0xF4C430)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+    embed.add_field(name=f'{thorny_guild.currency.emoji} Payment Successful!',
+                    value=f'**Amount paid:** {thorny_guild.currency.emoji}{amount}\n'
+                          f'**Paid to:** {receivable.discord_member.mention}\n\n'
+                          f'**Reason:** {reason}')
+    embed.set_footer(text=f"Your balance: {thorny_user.balance} | {receivable.username}'s balance: {receivable.balance}")
+
+    return embed
+
+
+def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: guild.Guild, amount: int, reason: str):
+    embed = discord.Embed(color=0xF4C430)
+    embed.add_field(name="**Transaction**",
+                    value=f"<@{thorny_user.discord_member.id}> paid <@{receivable.discord_member.id}> "
+                          f"**{thorny_guild.currency.emoji}{amount}**\n"
+                          f"**Reason:** {reason}")
+
+    return embed

@@ -1,5 +1,4 @@
-
-from datetime import datetime, timedelta, time
+from datetime import datetime, time
 
 import discord
 from discord.ext import commands, tasks
@@ -9,6 +8,8 @@ from db import UserFactory
 from dbutils import User
 import dbevent as ev
 from dbevent import Event
+from thorny_core.db import event as new_event
+from thorny_core.uikit import embeds
 import errors
 import traceback
 import json
@@ -16,7 +17,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import bank, help, inventory, leaderboard, moderation, playtime, profile, level, apply
+from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -37,23 +38,20 @@ api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
 
 intents = discord.Intents.all()
-thorny = commands.Bot(command_prefix='!', case_insensitive=True, intents=intents)
+thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
+bot_started = datetime.now().replace(microsecond=0)
 
 
 @thorny.event
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Thornenian Rhapsody | {v}")
+                                    name=f"Bound 2 Thorny | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
-
-    # TODO remove this in v1.8.5. This is temporary to create all the guilds in the db
-    for guild in thorny.guilds:
-        await GuildFactory.create(guild)
 
 
 @tasks.loop(hours=24.0)
@@ -85,13 +83,14 @@ async def day_counter():
 async def before_check():
     await thorny.wait_until_ready()
 
+
 birthday_checker.start()
 day_counter.start()
 
 
-@thorny.slash_command()
+@thorny.slash_command(description="Get bot stats")
 async def ping(ctx):
-    await ctx.respond(f"I am Thorny. I'm currently on {v}! **Ping:** {round(thorny.latency, 3)}s")
+    await ctx.respond(embed=embeds.ping_embed(thorny, bot_started))
 
 
 @thorny.event
@@ -126,6 +125,7 @@ async def on_message(message: discord.Message):
             response_list = thorny_guild.exact_responses[message.content.lower()]
             response = response_list[random.randint(0, len(response_list) - 1)]
             await message.channel.send(response)
+
         else:
             for invoker in thorny_guild.wildcard_responses:
                 if invoker in message.content.lower():
@@ -138,137 +138,108 @@ async def on_message(message: discord.Message):
 async def on_message(message: discord.Message):
     if message.author != thorny.user:
         thorny_user = await UserFactory.build(message.author)
-        if datetime.now() - thorny_user.counters.level_last_message > timedelta(minutes=1):
-            event: Event = await ev.fetch(ev.GainXP, thorny_user, thorny)
-            data = await event.log_event_in_database()
-            if data.level_up:
-                event.edit_metadata("level_up_message", message)
-                await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(message.guild)
+
+        if thorny_guild.levels_enabled:
+            gain_xp_event = new_event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
+
+            await gain_xp_event.log()
 
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
     if message.author != thorny.user:
-        thorny_user = await UserFactory.build(message.author)
-        event: Event = await ev.fetch(ev.MessageDelete, thorny_user, thorny)
-        event.metadata.deleted_message = message
-        await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(message.guild)
+
+        if thorny_guild.channels.logs_channel is not None:
+            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+
+            await logs_channel.send(embed=embeds.message_delete_embed(message, datetime.now()))
 
 
 @thorny.event
-async def on_message_edit(before, after):
+async def on_message_edit(before: discord.Message, after: discord.Message):
     if before.author != thorny.user:
-        thorny_user = await UserFactory.build(before.author)
-        event: Event = await ev.fetch(ev.MessageEdit, thorny_user, thorny)
-        event.metadata.message_before = before
-        event.metadata.message_after = after
-        await event.log_event_in_discord()
+        thorny_guild = await GuildFactory.build(before.guild)
+
+        if thorny_guild.channels.logs_channel is not None:
+            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+
+            await logs_channel.send(embed=embeds.message_edit_embed(before, after, datetime.now()))
 
 
 @thorny.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    guild = thorny.get_guild(payload.guild_id)
-    male = discord.utils.get(guild.roles, name="He/Him")
-    female = discord.utils.get(guild.roles, name="She/Her")
-    other = discord.utils.get(guild.roles, name="They/Them")
+    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
 
-    knight = discord.utils.get(guild.roles, name="Knight")
-    builder = discord.utils.get(guild.roles, name="Builder")
-    redstoner = discord.utils.get(guild.roles, name="Stoner")
-    merchant = discord.utils.get(guild.roles, name="Merchant")
-    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+    for reaction_role in thorny_guild.reactions:
+        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
+            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
+            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
-    if payload.message_id == config['channels']['pronoun_message_id']:
-        if payload.emoji.name == '👱':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(other)
-        elif payload.emoji.name == '👨‍🦱':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(male)
-        elif payload.emoji.name == '👩‍🦰':
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(female)
+            if role_to_add is None and role_name_search is not None:
+                role_to_add = role_name_search
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+            elif role_name_search is None and role_to_add is not None:
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
 
-    elif payload.message_id == 989073514315264070:
-        if payload.emoji.name == "Knight":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(knight)
-        elif payload.emoji.name == "Builder":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(builder)
-        elif payload.emoji.name == "Stoner":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(redstoner)
-        elif payload.emoji.name == "Merchant":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(merchant)
-        elif payload.emoji.name == "Gatherer":
-            member = guild.get_member(payload.user_id)
-            await member.add_roles(gatherer)
+            member = thorny_guild.discord_guild.get_member(payload.user_id)
+
+            if role_to_add is not None and member != thorny.user:
+                await member.add_roles(role_to_add)
 
 
 @thorny.event
-async def on_raw_reaction_remove(payload):
-    guild = thorny.get_guild(payload.guild_id)
-    male = discord.utils.get(guild.roles, name="He/Him")
-    female = discord.utils.get(guild.roles, name="She/Her")
-    other = discord.utils.get(guild.roles, name="They/Them")
+async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
+    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
 
-    knight = discord.utils.get(guild.roles, name="Knight")
-    builder = discord.utils.get(guild.roles, name="Builder")
-    redstoner = discord.utils.get(guild.roles, name="Stoner")
-    merchant = discord.utils.get(guild.roles, name="Merchant")
-    gatherer = discord.utils.get(guild.roles, name="Gatherer")
+    for reaction_role in thorny_guild.reactions:
+        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
+            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
+            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
 
-    if payload.message_id == config['channels']['pronoun_message_id']:
-        if payload.emoji.name == '👱':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(other)
-        elif payload.emoji.name == '👨‍🦱':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(male)
-        elif payload.emoji.name == '👩‍🦰':
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(female)
+            if role_to_add is None and role_name_search is not None:
+                role_to_add = role_name_search
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
+            elif role_name_search is None and role_to_add is not None:
+                reaction_role.role_id = role_to_add.id
+                reaction_role.role_name = role_to_add.name
 
-    elif payload.message_id == 997595962933522482:
-        if payload.emoji.name == "Knight":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(knight)
-        elif payload.emoji.name == "Builder":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(builder)
-        elif payload.emoji.name == "Stoner":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(redstoner)
-        elif payload.emoji.name == "Merchant":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(merchant)
-        elif payload.emoji.name == "Gatherer":
-            member = guild.get_member(payload.user_id)
-            await member.remove_roles(gatherer)
+            member = thorny_guild.discord_guild.get_member(payload.user_id)
+
+            if role_to_add is not None and member != thorny.user:
+                await member.remove_roles(role_to_add)
 
 
 @thorny.event
 async def on_member_join(member: discord.Member):
     await UserFactory.create([member])
     thorny_user = await UserFactory.build(member)
-    event: Event = await ev.fetch(ev.UserJoin, thorny_user, thorny)
-    if member.guild.id == 611008530077712395:
-        await event.log_event_in_discord()
+    thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_join(thorny_user, thorny_guild))
 
 
 @thorny.event
 async def on_member_remove(member):
-    thorny_user = await UserFactory.build(member)
-    event: Event = await ev.fetch(ev.UserLeave, thorny_user, thorny)
-    if member.guild.id == 611008530077712395:
-        await event.log_event_in_discord()
     await UserFactory.deactivate([member])
+    thorny_user = await UserFactory.build(member)
+    thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
 
 @thorny.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: discord.Guild):
     member_list = await guild.fetch_members().flatten()
     await UserFactory.create(member_list)
     await GuildFactory.create(guild)
@@ -278,16 +249,18 @@ async def on_guild_join(guild):
 async def on_guild_remove(guild):
     member_list = guild.members
     await UserFactory.deactivate(member_list)
+    await GuildFactory.deactivate(guild)
 
 
-thorny.add_cog(bank.Bank(thorny))
-thorny.add_cog(leaderboard.Leaderboard(thorny))
+thorny.add_cog(setup.Configuration(thorny))
+thorny.add_cog(moderation.Moderation(thorny))
+thorny.add_cog(money.Money(thorny))
 thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(profile.Profile(thorny))
-thorny.add_cog(moderation.Moderation(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-thorny.add_cog(apply.Applications(thorny))
+thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
+# asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)
