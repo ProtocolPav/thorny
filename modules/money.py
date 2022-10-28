@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
+from datetime import datetime
 
-import json
 from thorny_core import errors
 from thorny_core.db import UserFactory, commit, GuildFactory
-from thorny_core import dbevent as ev
+from thorny_core.db import event as new_event
 from thorny_core.uikit import embeds
 
 
@@ -40,28 +40,25 @@ class Money(commands.Cog):
     @commands.slash_command(description="Pay a player using nugs")
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
         receivable_user = await UserFactory.build(user)
-        payable_user = await UserFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(user.guild)
 
         if user == ctx.author:
             raise errors.SelfPaymentError
-        elif payable_user.balance - amount < 0:
+        elif thorny_user.balance - amount < 0:
             raise errors.BrokeError
         elif amount > 0:
-            payable_user.balance -= amount
+            thorny_user.balance -= amount
             receivable_user.balance += amount
 
             await ctx.respond(f"{user.mention} You've been paid!")
-            await ctx.edit(content=None, embed=embeds.payment_embed(payable_user, receivable_user, thorny_guild, amount, reason))
+            await ctx.edit(content=None, embed=embeds.payment_embed(thorny_user, receivable_user, thorny_guild, amount, reason))
 
-            event: ev.Event = await ev.fetch(ev.PlayerTransaction, payable_user, self.client)
-            event.metadata.sender_user = payable_user
-            event.metadata.receiver_user = receivable_user
-            event.metadata.nugs_amount = amount
-            event.metadata.event_comment = reason
+            transaction = new_event.Transaction(self.client, datetime.now(), thorny_user, thorny_guild,
+                                                receivable_user, amount, reason)
 
-            await event.log_event_in_discord()
-            await commit(payable_user)
+            await transaction.log()
+            await commit(thorny_user)
             await commit(receivable_user)
         elif amount < 0:
             raise errors.NegativeAmountError

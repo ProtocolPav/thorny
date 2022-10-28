@@ -380,7 +380,7 @@ def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: g
                     value=f'**Amount paid:** {thorny_guild.currency.emoji}{amount}\n'
                           f'**Paid to:** {receivable.discord_member.mention}\n\n'
                           f'**Reason:** {reason}')
-    embed.set_footer(text=f"Your balance: {thorny_user.balance} | Payee's balance: {receivable.balance}")
+    embed.set_footer(text=f"Your balance: {thorny_user.balance} | {receivable.username}'s balance: {receivable.balance}")
 
     return embed
 

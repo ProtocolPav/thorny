@@ -128,10 +128,15 @@ class GainXP(Event):
 
 
 class Transaction(Event):
-    def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
+    def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild,
+                 receivable: User, amount: int, reason: str):
         super().__init__(client, event_time, user, guild)
 
-    async def log(self):
+        self.receivable_user = receivable
+        self.amount = amount
+        self.reason = reason
 
+    async def log(self):
         logs_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-        await logs_channel.send(embed=log_embed)
+        await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild, self.amount,
+                                                         self.reason))
