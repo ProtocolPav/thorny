@@ -5,7 +5,8 @@ import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
-from thorny_core.db import User, UserFactory, GuildFactory, Guild
+from thorny_core.db import User, UserFactory, GuildFactory, Guild, event as new_event
+from thorny_core import errors
 
 
 class ProfileEdit(View):
@@ -528,3 +529,48 @@ class ServerSetup(View):
                                                         view=SetupCurrency(thorny_guild))
 
 
+class Store(View):
+    def __init__(self, thorny_user: User, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.user = thorny_user
+        self.guild = thorny_guild
+        self.item_id = None
+
+    @discord.ui.select(placeholder="Select an item to buy",
+                       options=slashoptions.shop_items())
+    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
+        self.item_id = select_menu.values[0]
+        await interaction.response.edit_message(embed=embeds.store_items(self.user, self.guild))
+
+    @discord.ui.button(label="Buy x1",
+                       custom_id="buy_1",
+                       style=discord.ButtonStyle.green)
+    async def buy_one_callback(self, button: Button, interation: discord.Interaction):
+        try:
+            self.user.inventory.add_item(self.item_id, 1)
+
+        except errors.ItemMaxCountError:
+            item = self.user.inventory.fetch(self.item_id)
+            raise errors.ItemMaxCountError(item.item_max_count)
+
+        else:
+            item = self.user.inventory.fetch(self.item_id)
+
+            if self.user.balance - item.item_cost >= 0:
+                self.user.balance -= item.item_cost
+
+                await commit(self.user)
+
+    @discord.ui.button(label="Buy x3",
+                       custom_id="buy_3",
+                       style=discord.ButtonStyle.green)
+    async def buy_three_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None)
+
+    @discord.ui.button(label="Buy Max",
+                       custom_id="buy_max",
+                       style=discord.ButtonStyle.blurple)
+    async def buy_max_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None)

@@ -7,7 +7,7 @@ from thorny_core import errors
 from thorny_core import dbutils
 from thorny_core.db import UserFactory, commit, GuildFactory
 from discord import utils
-from thorny_core import dbevent as ev
+from thorny_core.uikit import embeds, views
 from thorny_core.modules import redeemingfuncs
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -105,8 +105,12 @@ class Inventory(commands.Cog):
             await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @commands.slash_command(description="Purchase items from the shop!")
-    async def shop(self, ctx):
-        ...
+    async def shop(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+
+        await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
+                          view=views.Store(thorny_user, thorny_guild))
 
     # store = discord.SlashCommandGroup("store", "Store Commands")
 

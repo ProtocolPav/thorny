@@ -393,3 +393,19 @@ def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: gui
                           f"**Reason:** {reason}")
 
     return embed
+
+
+def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
+
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Shop Catalogue",
+                          description="Select an item from the menu to buy!")
+
+    for item in thorny_user.inventory.all_items:
+        if item.item_cost != 0:
+            embed.add_field(name=f"**{item.item_display_name}** | {thorny_guild.currency.emoji}{item.item_cost}\n",
+                            value=f"```{item.description} You can hold a maximum of "
+                                  f"{item.item_max_count} {item.item_display_name}s```",
+                            inline=False)
+
+    return embed
