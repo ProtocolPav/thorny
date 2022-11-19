@@ -108,9 +108,11 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
     try:
         await context.respond(embed=exception.return_embed(), ephemeral=True)
+
     except discord.NotFound:
         error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())
+
     except AttributeError:
         error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())

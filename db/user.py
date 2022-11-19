@@ -209,7 +209,8 @@ class Inventory:
                     "display_name": item.item_display_name,
                     "max_item_count": item.item_max_count,
                     "item_cost": item.item_cost,
-                    "redeemable": item.redeemable
+                    "redeemable": item.redeemable,
+                    "description": item.description
                 }
                 self.slots.append(InventorySlot(item_to_add))
             elif count > item.item_max_count:
