@@ -350,6 +350,8 @@ def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
     embed.add_field(name=f"**{thorny_user.username} has left**",
                     value=f"{thorny_guild.leave_message}")
 
+    return embed
+
 
 def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
     embed = discord.Embed(color=0xE0115F)
