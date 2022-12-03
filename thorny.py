@@ -263,8 +263,10 @@ thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
-thorny.add_cog(secret_santa.SecretSanta(thorny))
 thorny.add_cog(help.Help(thorny))
+
+# Uncomment only during Christmastime
+thorny.add_cog(secret_santa.SecretSanta(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)
