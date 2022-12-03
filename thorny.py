@@ -17,7 +17,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup
+from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup, secret_santa
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -138,7 +138,7 @@ async def on_message(message: discord.Message):
 
 @thorny.listen()
 async def on_message(message: discord.Message):
-    if message.author != thorny.user:
+    if message.author != thorny.user or not message.author.bot:
         thorny_user = await UserFactory.build(message.author)
         thorny_guild = await GuildFactory.build(message.guild)
 
@@ -230,9 +230,10 @@ async def on_member_join(member: discord.Member):
 
 @thorny.event
 async def on_member_remove(member):
-    await UserFactory.deactivate([member])
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
+
+    await UserFactory.deactivate([member])
 
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
@@ -262,6 +263,7 @@ thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
+thorny.add_cog(secret_santa.SecretSanta(thorny))
 thorny.add_cog(help.Help(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
