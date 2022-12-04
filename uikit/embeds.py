@@ -411,3 +411,20 @@ def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
                             inline=False)
 
     return embed
+
+
+def secret_santa_message(gift_receiver: user.User, request: str):
+    embed = discord.Embed(color=0xD70040)
+
+    embed.add_field(name="**Secret Santa**",
+                    value=f"Thank you for participating in this year's Secret Santa!\n"
+                          f"You are to give a gift to {gift_receiver.discord_member.mention}! "
+                          f"(That's `{gift_receiver.username}` in case you can't see the user's @)\n\n"
+                          f"To help you pick the perfect gift, here is what they asked for: **{request}.** "
+                          f"You don't have to get them exactly that, it just serves as an idea of what you *could* get :))\n\n"
+                          f"`Delivery date:` by <t:1672441140:f>\n"
+                          f"`Delivery location:` At the spawn Christmas Tree\n"
+                          f"`Instructions:` Label the chest with the person's name. Run </delivered:0> in discord when you "
+                          f"deliver the gift.")
+
+    return embed
