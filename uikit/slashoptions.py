@@ -7,12 +7,15 @@ from datetime import datetime
 from discord import SelectOption
 from thorny_core.db.factory import pool
 
+
+def current_month():
+    return datetime.now().strftime("%B")
+
+
 days = [i for i in range(1, 31)]
 
 months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
-
-current_month = datetime.now().strftime("%B")
 
 years = [i for i in range(1980, datetime.now().year)]
 
