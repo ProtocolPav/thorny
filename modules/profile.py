@@ -28,10 +28,6 @@ class Profile(commands.Cog):
         else:
             is_donator = ''
 
-        playtime_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
-                                            color=user.color)
-        playtime_page_embed.set_footer(text=f"{v} | Playtime")
-
         pages = [await embeds.profile_main_embed(thorny_user, is_donator),
                  await embeds.profile_lore_embed(thorny_user),
                  await embeds.profile_stats_embed(thorny_user)]
@@ -47,13 +43,9 @@ class Profile(commands.Cog):
         else:
             is_donator = ''
 
-        playtime_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
-                                            color=member.color)
-        playtime_page_embed.set_footer(text=f"{v} | Playtime")
-
-        pages = [embeds.profile_main_embed(thorny_user, is_donator),
-                 embeds.profile_lore_embed(thorny_user),
-                 embeds.profile_stats_embed(thorny_user)]
+        pages = [await embeds.profile_main_embed(thorny_user, is_donator),
+                 await embeds.profile_lore_embed(thorny_user),
+                 await embeds.profile_stats_embed(thorny_user)]
         await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
@@ -82,11 +74,13 @@ class Profile(commands.Cog):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_user.birthday.time = None
         await commit(thorny_user)
-        await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages and gifts though :(",
+        await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages :(",
                           ephemeral=True)
 
-    @commands.slash_command(description="Search the database for gamertags")
-    async def gamertag(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
+    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands")
+
+    @gamertag.command(description="Search the database for gamertags")
+    async def search(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
         selector = dbutils.Base()
         gamertags = await selector.select_gamertags(ctx.guild.id, gamertag)
         send_text = []

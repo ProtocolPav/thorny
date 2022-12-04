@@ -2,17 +2,22 @@
 Here are the lists or functions that are used in Thorny slash command options or
 Thorny slash command autocomplete
 """
+import asyncio
 from datetime import datetime
 from discord import SelectOption
+from thorny_core.db.factory import pool
+
+
+def current_month():
+    return datetime.now().strftime("%B")
+
 
 days = [i for i in range(1, 31)]
 
 months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
 
-current_month = datetime.now().strftime("%B")
-
-years = [i for i in range(1980, 2016)]
+years = [i for i in range(1980, datetime.now().year)]
 
 profile_main_select = [SelectOption(label="Slogan",
                                     value="slogan",
@@ -82,10 +87,9 @@ profile_lore_select = [SelectOption(label="Character Data: Name",
 
 profile_stats_select = [SelectOption(label="Coming soon...",
                                      description="Just gotta wait a bit!",
-                                     emoji=None), ]
+                                     emoji=None)]
 
-server_setup = [
-                SelectOption(label="Welcome Configuration",
+server_setup = [SelectOption(label="Welcome Configuration",
                              value="welcome",
                              description="Edit join/leave and birthday messages & choose where they get sent"),
                 SelectOption(label="Level Configuration",
@@ -106,3 +110,23 @@ server_setup = [
                 SelectOption(label="Currency Configuration",
                              value="currency",
                              description="Choose a name & emoji for your currency")]
+
+
+def shop_items():
+    async def get():
+        async with pool.acquire() as conn:
+            items = await conn.fetch("""
+                                     SELECT * FROM thorny.item_type
+                                     WHERE item_cost > 0
+                                     """)
+            return items
+
+    item_rec = asyncio.get_event_loop().run_until_complete(get())
+
+    return_list = []
+    for item in item_rec:
+        return_list.append(SelectOption(label=item['display_name'],
+                                        value=item['friendly_id'],
+                                        description=item['description']))
+
+    return return_list

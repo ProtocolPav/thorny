@@ -17,7 +17,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup
+from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup, secret_santa
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -46,7 +46,7 @@ bot_started = datetime.now().replace(microsecond=0)
 @thorny.event
 async def on_ready():
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Bound 2 Thorny | {v}")
+                                    name=f"Smells Like Thorn Spirit | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
@@ -108,9 +108,11 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
     try:
         await context.respond(embed=exception.return_embed(), ephemeral=True)
+
     except discord.NotFound:
         error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())
+
     except AttributeError:
         error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())
@@ -136,7 +138,7 @@ async def on_message(message: discord.Message):
 
 @thorny.listen()
 async def on_message(message: discord.Message):
-    if message.author != thorny.user:
+    if message.author != thorny.user or not message.author.bot:
         thorny_user = await UserFactory.build(message.author)
         thorny_guild = await GuildFactory.build(message.guild)
 
@@ -228,9 +230,17 @@ async def on_member_join(member: discord.Member):
 
 @thorny.event
 async def on_member_remove(member):
+    thorny_user = await UserFactory.build(member)
+    thorny_guild = await GuildFactory.build(member.guild)
+
     await UserFactory.deactivate([member])
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
@@ -262,5 +272,7 @@ thorny.add_cog(level.Level(thorny))
 thorny.add_cog(leaderboard.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
+# Uncomment only during Christmastime
+thorny.add_cog(secret_santa.SecretSanta(thorny))
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)

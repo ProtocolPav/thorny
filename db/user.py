@@ -142,6 +142,7 @@ class InventorySlot:
     item_max_count: int
     item_cost: int
     redeemable: bool
+    description: str
 
     def __init__(self, slot):
         self.inventory_id = slot['inventory_id']
@@ -151,6 +152,7 @@ class InventorySlot:
         self.item_max_count = slot['max_item_count']
         self.item_cost = slot['item_cost']
         self.redeemable = slot['redeemable']
+        self.description = slot['description']
 
 
 @dataclass
@@ -174,7 +176,8 @@ class Inventory:
                 "display_name": item["display_name"],
                 "max_item_count": item["max_item_count"],
                 "item_cost": item["item_cost"],
-                "redeemable": item["redeemable"]
+                "redeemable": item["redeemable"],
+                "description": item["description"]
             }
             self.all_items.append(InventorySlot(slot))
 
@@ -188,8 +191,8 @@ class Inventory:
                 return item_data
 
     def data(self, item_id):
-        # Delete this soon. I will keep just for the sake of ease for now
-        # Replaced with .fetch() which fetches either the item in the inventory, or its data if it does not exist.
+        """Delete this soon. I will keep just for the sake of ease for now
+        Replaced with `.fetch()` which fetches either the item in the inventory, or its data if it does not exist."""
         for item_data in self.all_items:
             if item_data.item_id == item_id:
                 return item_data
@@ -206,7 +209,8 @@ class Inventory:
                     "display_name": item.item_display_name,
                     "max_item_count": item.item_max_count,
                     "item_cost": item.item_cost,
-                    "redeemable": item.redeemable
+                    "redeemable": item.redeemable,
+                    "description": item.description
                 }
                 self.slots.append(InventorySlot(item_to_add))
             elif count > item.item_max_count:
