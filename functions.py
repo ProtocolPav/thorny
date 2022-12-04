@@ -41,7 +41,7 @@ async def generate_help_dict(self, ctx: discord.ApplicationContext):
                                     options = f"{options} `{option.name}:required`"
                                 else:
                                     options = f"{options} `{option.name}:optional`"
-                            help_dict[f"{cog}"].append({"name": f"{subcommand}",
+                            help_dict[f"{cog}"].append({"name": subcommand.mention,
                                                         "desc": subcommand.description,
                                                         'usage': options})
 
@@ -53,7 +53,7 @@ async def generate_help_dict(self, ctx: discord.ApplicationContext):
                             options = f"{options} `{option.name}:required`"
                         else:
                             options = f"{options} `{option.name}:optional`"
-                    help_dict[f"{cog}"].append({"name": command.name,
+                    help_dict[f"{cog}"].append({"name": command.mention,
                                                 "desc": command.description,
                                                 'usage': options})
 

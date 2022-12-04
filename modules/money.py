@@ -23,7 +23,7 @@ class Money(commands.Cog):
 
         await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
 
-    @balance.command(description="CM ONLY | Edit someone's balance")
+    @balance.command(description="Mod Only | Edit someone's balance")
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.Member,
                    amount: discord.Option(int, "Negative number to remove money")):
@@ -62,3 +62,8 @@ class Money(commands.Cog):
             await commit(receivable_user)
         elif amount < 0:
             raise errors.NegativeAmountError
+
+    @commands.slash_command(description="Work for some money",
+                            guild_ids=GuildFactory.get_guilds_by_feature('beta'))
+    async def work(self, ctx: discord.ApplicationContext):
+        await ctx.respond("Nothing happened...")

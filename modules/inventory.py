@@ -7,7 +7,7 @@ from thorny_core import errors
 from thorny_core import dbutils
 from thorny_core.db import UserFactory, commit, GuildFactory
 from discord import utils
-from thorny_core import dbevent as ev
+from thorny_core.uikit import embeds, views
 from thorny_core.modules import redeemingfuncs
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -26,7 +26,7 @@ class Inventory(commands.Cog):
         item_list = []
         for item_data in item_data_list:
             item_list.append(item_data["friendly_id"])
-        return item_list
+        return utils.basic_autocomplete(item_list)
 
     inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
 
@@ -58,7 +58,7 @@ class Inventory(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
-                                          autocomplete=utils.basic_autocomplete(get_items)), count: int = 1):
+                                          autocomplete=get_items), count: int = 1):
         thorny_user = await UserFactory.build(user)
 
         try:
@@ -78,7 +78,7 @@ class Inventory(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
-                                             autocomplete=utils.basic_autocomplete(get_items)), count: int = None):
+                                             autocomplete=get_items), count: int = None):
         thorny_user = await UserFactory.build(user)
         item = thorny_user.inventory.fetch(item_id)
 
@@ -94,17 +94,26 @@ class Inventory(commands.Cog):
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
 
-    store = discord.SlashCommandGroup("store", "Store Commands")
-
-    @store.command(description="CM Only | Edit prices of items (0 to remove from the store)")
+    @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
+                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
-    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                          autocomplete=utils.basic_autocomplete(get_items)),
+    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items),
                        price: int):
         selector = dbutils.Base()
         updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
         if updated:
             await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
+
+    @commands.slash_command(description="Purchase items from the shop!",
+                            guild_ids=GuildFactory.get_guilds_by_feature('beta'))
+    async def shop(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+
+        await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
+                          view=views.Store(thorny_user, thorny_guild))
+
+    store = discord.SlashCommandGroup("store", "Store Commands")
 
     @store.command(description="Get a list of all items available in the store")
     async def catalogue(self, ctx):
@@ -125,8 +134,7 @@ class Inventory(commands.Cog):
         await ctx.respond(embed=store_embed)
 
     @store.command(description="Purchase an item from the store")
-    async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                     autocomplete=utils.basic_autocomplete(get_items)),
+    async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items),
                   amount: int = 1):
         thorny_user = await UserFactory.build(ctx.author)
         try:
@@ -160,9 +168,7 @@ class Inventory(commands.Cog):
                 raise errors.BrokeError()
 
     @commands.slash_command(description="Redeem an item from your inventory")
-    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                        autocomplete=utils.basic_autocomplete(get_items))):
-
+    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items)):
         thorny_user = await UserFactory.build(ctx.author)
         item = thorny_user.inventory.fetch(item_id)
 

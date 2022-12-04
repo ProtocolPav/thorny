@@ -20,7 +20,7 @@ class Leaderboard(commands.Cog):
     async def activity(self, ctx, month: discord.Option(str, "Pick a month to view activity for. Leave blank "
                                                              "to see the current month.",
                                                         autocomplete=basic_autocomplete(slashoptions.months),
-                                                        default=slashoptions.current_month)):
+                                                        default=slashoptions.current_month())):
         self.pages = []
         month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
 

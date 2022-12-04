@@ -1,4 +1,4 @@
-FROM python:latest
+FROM python:3.10.8-buster
 
 COPY requirements.txt /thorny/thorny_core/requirements.txt
 

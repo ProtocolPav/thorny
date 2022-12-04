@@ -350,6 +350,8 @@ def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
     embed.add_field(name=f"**{thorny_user.username} has left**",
                     value=f"{thorny_guild.leave_message}")
 
+    return embed
+
 
 def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
     embed = discord.Embed(color=0xE0115F)
@@ -391,5 +393,38 @@ def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: gui
                     value=f"<@{thorny_user.discord_member.id}> paid <@{receivable.discord_member.id}> "
                           f"**{thorny_guild.currency.emoji}{amount}**\n"
                           f"**Reason:** {reason}")
+
+    return embed
+
+
+def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
+
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Shop Catalogue",
+                          description="Select an item from the menu to buy!")
+
+    for item in thorny_user.inventory.all_items:
+        if item.item_cost != 0:
+            embed.add_field(name=f"**{item.item_display_name}** | {thorny_guild.currency.emoji}{item.item_cost}\n",
+                            value=f"```{item.description} You can hold a maximum of "
+                                  f"{item.item_max_count} {item.item_display_name}s```",
+                            inline=False)
+
+    return embed
+
+
+def secret_santa_message(gift_receiver: user.User, request: str):
+    embed = discord.Embed(color=0xD70040)
+
+    embed.add_field(name="**Secret Santa**",
+                    value=f"Thank you for participating in this year's Secret Santa!\n"
+                          f"You are to give a gift to {gift_receiver.discord_member.mention}! "
+                          f"(That's `{gift_receiver.username}` in case you can't see the user's @)\n\n"
+                          f"To help you pick the perfect gift, here is what they asked for: **{request}.** "
+                          f"You don't have to get them exactly that, it just serves as an idea of what you *could* get :))\n\n"
+                          f"`Delivery date:` by <t:1672441140:f>\n"
+                          f"`Delivery location:` At the spawn Christmas Tree\n"
+                          f"`Instructions:` Label the chest with the person's name. Run </delivered:0> in discord when you "
+                          f"deliver the gift.")
 
     return embed
