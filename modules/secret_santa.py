@@ -36,7 +36,7 @@ class SecretSanta(commands.Cog):
         json.dump(file_json, file, indent=1, default=str)
         file.close()
 
-    @commands.slash_command(description='CANNOT UNDO! Generate and send out Secret Santas.',
+    @commands.slash_command(description='CANNOT UNDO! Generate and send out Secret Santa DMs',
                             guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
     async def generatesanta(self, ctx: discord.ApplicationContext, password: str):

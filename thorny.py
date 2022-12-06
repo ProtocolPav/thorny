@@ -23,16 +23,7 @@ config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
-print(
-    """
-     _____ _
-    /__   \ |__   ___  _ __ _ __  _   _
-      / /\/ '_ \ / _ \| '__| '_ \| | | |
-     / /  | | | | (_) | |  | | | | |_| |
-     \/   |_| |_|\___/|_|  |_| |_|\__, |
-                                  |___/
-        """)
-TOKEN = config["dev_token"]
+TOKEN = config["token"]
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
@@ -45,6 +36,7 @@ bot_started = datetime.now().replace(microsecond=0)
 
 @thorny.event
 async def on_ready():
+    print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
                                     name=f"Smells Like Thorn Spirit | {v}")
     await thorny.change_presence(activity=bot_activity)
