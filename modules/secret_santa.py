@@ -8,7 +8,7 @@ from thorny_core.uikit import embeds
 
 
 class SecretSanta(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, client: discord.Client):
         self.client = client
 
     @commands.slash_command(description='Participate in Secret Santa by sending in your request!',
@@ -28,7 +28,7 @@ class SecretSanta(commands.Cog):
         else:
             file_json[str(thorny_user.thorny_id)]['request'] = request
 
-        await ctx.respond(file_json)
+        await ctx.respond("You are now participating in Secret Santa. Thank you! Ho Ho Ho.")
 
         file.truncate(0)
         file.seek(0)
@@ -71,3 +71,24 @@ class SecretSanta(commands.Cog):
 
         else:
             await ctx.respond("Wrong password.")
+
+    @commands.slash_command(description="Mark your gift as delivered",
+                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    async def delivered(self, ctx: discord.ApplicationContext):
+        file = open('../thorny_data/secret_santa.json', 'r+')
+        file_json: dict = json.load(file)
+
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        file_json[str(thorny_user.thorny_id)]['delivered'] = True
+
+        await ctx.respond("Your gift is marked as delivered! Remember to mark the gift with the person's name.")
+
+        log_channel = self.client.get_channel(thorny_guild.channels.logs_channel)
+        await log_channel.send(f"@everyone {thorny_user.discord_member.mention} has delivered their gift")
+
+        file.truncate(0)
+        file.seek(0)
+
+        json.dump(file_json, file, indent=1, default=str)
+        file.close()

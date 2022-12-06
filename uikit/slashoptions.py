@@ -1,6 +1,9 @@
 """
 Here are the lists or functions that are used in Thorny slash command options or
 Thorny slash command autocomplete
+
+UPDATE TO THIS:
+Make everything a function which returns the things needed, and rename the file to generators.py
 """
 import asyncio
 from datetime import datetime
