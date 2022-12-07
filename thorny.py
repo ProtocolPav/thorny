@@ -112,7 +112,7 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
 @thorny.event
 async def on_message(message: discord.Message):
-    if message.author != thorny.user:
+    if not message.author.bot:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if message.content.lower() in thorny_guild.exact_responses:
@@ -130,7 +130,7 @@ async def on_message(message: discord.Message):
 
 @thorny.listen()
 async def on_message(message: discord.Message):
-    if message.author != thorny.user or not message.author.bot:
+    if not message.author.bot:
         thorny_user = await UserFactory.build(message.author)
         thorny_guild = await GuildFactory.build(message.guild)
 
@@ -142,7 +142,7 @@ async def on_message(message: discord.Message):
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
-    if message.author != thorny.user:
+    if not message.author.bot:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -153,7 +153,7 @@ async def on_message_delete(message: discord.Message):
 
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if before.author != thorny.user:
+    if not message.author.bot and before.content != after.content:
         thorny_guild = await GuildFactory.build(before.guild)
 
         if thorny_guild.channels.logs_channel is not None:
