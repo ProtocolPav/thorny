@@ -348,8 +348,11 @@ class User:
         self.balance = thorny_user['balance']
         self.join_date = Time(thorny_user['join_date'])
         self.birthday = Time(thorny_user['birthday'])
-        self.age = round((datetime.date(datetime.now()) - self.birthday.time).days / 365) \
-            if self.birthday.time is not None else None
+        if self.birthday.time is not None:
+            today = datetime.now()
+            self.age = today.year - self.birthday.time.year - ((today.month, today.day) < (self.birthday.time.month, self.birthday.time.day))
+        else:
+            self.age = 0
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
         self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, current_connection=current_connection,

@@ -215,3 +215,25 @@ class WebserverUpdates:
                                  event_time, playtime, thorny_user[0], recent_connection['connect_time'],
                                  'Automatic Disconnect')
         print(f"[{event_time}] [DISCONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has disconnected")
+
+    @staticmethod
+    async def disconnect_all(guild_id: int, event_time: datetime, connection):
+        all_online = await Base.select_online(Base(), guild_id)
+
+        for person in all_online:
+            recent_connection = await connection.fetchrow("""
+                                                          SELECT * FROM thorny.activity
+                                                          WHERE thorny_user_id = $1
+                                                          ORDER BY connect_time DESC
+                                                          """,
+                                                          person['thorny_user_id'])
+
+            playtime = event_time - recent_connection['connect_time']
+            await connection.execute("""
+                                     UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                     WHERE thorny_user_id = $3 and connect_time = $4
+                                     """,
+                                     event_time, playtime, person['thorny_user_id'], recent_connection['connect_time'],
+                                     'Disconnect All')
+            print(f"[{event_time}] [DISCONNECT ALL] User with Thorny ID {person['thorny_user_id']} has disconnected")
+
