@@ -226,6 +226,18 @@ async def on_member_remove(member):
     thorny_guild = await GuildFactory.build(member.guild)
 
     await UserFactory.deactivate([member])
+    thorny_user = await UserFactory.build(member)
+    thorny_guild = await GuildFactory.build(member.guild)
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
+
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
