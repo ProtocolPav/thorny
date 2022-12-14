@@ -89,3 +89,4 @@ async def redeem_role(ctx, thorny_user: User, client):
     except asyncio.TimeoutError:
         await ctx.send("You took too long to answer! Use `/redeem role` again to restart")
         thorny_user.inventory.add_item("role", 1)
+
