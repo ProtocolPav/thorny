@@ -6,8 +6,6 @@ from discord.ext import commands, tasks
 import giphy_client
 from db import UserFactory
 from dbutils import User
-import dbevent as ev
-from dbevent import Event
 from thorny_core.db import event as new_event
 from thorny_core.uikit import embeds
 import errors
@@ -57,9 +55,10 @@ async def birthday_checker():
                     if guild.id == user["guild_id"]:
                         member = guild.get_member(user["user_id"])
                         thorny_user = await UserFactory.build(member)
+                        thorny_guild = await GuildFactory.build(guild)
 
-                        event: Event = await ev.fetch(ev.Birthday, thorny_user, thorny)
-                        await event.log_event_in_discord()
+                        birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                        await birthday_event.log()
 
 
 @tasks.loop(time=time(hour=16))
@@ -153,7 +152,7 @@ async def on_message_delete(message: discord.Message):
 
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if not message.author.bot and before.content != after.content:
+    if not before.author.bot and before.content != after.content:
         thorny_guild = await GuildFactory.build(before.guild)
 
         if thorny_guild.channels.logs_channel is not None:

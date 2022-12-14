@@ -2,13 +2,12 @@ import asyncio
 
 import discord
 from discord.ext import commands
-from discord import utils
+from datetime import datetime
 from thorny_core.uikit.views import ProjectApplicationForm
 import httpx
 
 import json
-from thorny_core.db import UserFactory, commit, GuildFactory
-import thorny_core.dbevent as ev
+from thorny_core.db import UserFactory, commit, GuildFactory, event as new_event
 from thorny_core.dbutils import Base
 
 config = json.load(open("./../thorny_data/config.json", "r"))
@@ -83,15 +82,20 @@ class Moderation(commands.Cog):
 
                 for user in online_users:
                     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-                    await connection.log_event_in_database()
+                    thorny_guild = await GuildFactory.build(ctx.guild)
+
+                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    await disconnection.log()
+
             elif r.json()["server_started"]:
                 await ctx.respond(f"The server started successfully.")
 
                 for user in online_users:
                     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-                    await connection.log_event_in_database()
+                    thorny_guild = await GuildFactory.build(ctx.guild)
+
+                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    await disconnection.log()
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
@@ -103,8 +107,10 @@ class Moderation(commands.Cog):
             online_users = await Base.select_online(Base(), ctx.guild.id)
             for user in online_users:
                 thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-                await connection.log_event_in_database()
+                thorny_guild = await GuildFactory.build(ctx.guild)
+
+                disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                await disconnection.log()
 
             if r.json()["server_stopped"]:
                 await ctx.respond(f"The server stopped successfully")

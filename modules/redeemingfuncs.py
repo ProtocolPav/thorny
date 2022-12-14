@@ -10,7 +10,6 @@ from thorny_core import dbutils
 from thorny_core.db import User
 from discord import utils
 from datetime import datetime, timedelta
-from thorny_core import dbevent as ev
 
 
 async def redeem_ticket(ctx, thorny_user: User):

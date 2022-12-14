@@ -158,11 +158,7 @@ class Inventory(commands.Cog):
                                          value=f"Bought {amount}x `{item.item_display_name}`")
                 inv_edit_embed.set_footer(text=f"{v} | Use /redeem to redeem this item!")
                 await ctx.respond(embed=inv_edit_embed)
-                event: ev.Event = await ev.fetch(ev.StoreTransaction, thorny_user, self.client)
-                event.edit_metadata("nugs_amount", item.item_cost * amount)
-                event.edit_metadata("sender_user", ctx.author)
-                event.edit_metadata("event_comment", f"Purchase of {amount}x {item.item_display_name}")
-                await event.log_event_in_discord()
+                # Add code for transactions
                 await commit(thorny_user)
             elif thorny_user.balance - item.item_cost * amount < 0:
                 raise errors.BrokeError()
