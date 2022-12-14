@@ -23,16 +23,7 @@ config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
-print(
-    """
-     _____ _
-    /__   \ |__   ___  _ __ _ __  _   _
-      / /\/ '_ \ / _ \| '__| '_ \| | | |
-     / /  | | | | (_) | |  | | | | |_| |
-     \/   |_| |_|\___/|_|  |_| |_|\__, |
-                                  |___/
-        """)
-TOKEN = config["dev_token"]
+TOKEN = config["token"]
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
@@ -45,6 +36,7 @@ bot_started = datetime.now().replace(microsecond=0)
 
 @thorny.event
 async def on_ready():
+    print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
                                     name=f"Smells Like Thorn Spirit | {v}")
     await thorny.change_presence(activity=bot_activity)
@@ -120,7 +112,7 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 
 @thorny.event
 async def on_message(message: discord.Message):
-    if message.author != thorny.user:
+    if not message.author.bot:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if message.content.lower() in thorny_guild.exact_responses:
@@ -138,7 +130,7 @@ async def on_message(message: discord.Message):
 
 @thorny.listen()
 async def on_message(message: discord.Message):
-    if message.author != thorny.user or not message.author.bot:
+    if not message.author.bot:
         thorny_user = await UserFactory.build(message.author)
         thorny_guild = await GuildFactory.build(message.guild)
 
@@ -150,7 +142,7 @@ async def on_message(message: discord.Message):
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
-    if message.author != thorny.user:
+    if not message.author.bot:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -161,7 +153,7 @@ async def on_message_delete(message: discord.Message):
 
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if before.author != thorny.user:
+    if not message.author.bot and before.content != after.content:
         thorny_guild = await GuildFactory.build(before.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -247,6 +239,11 @@ async def on_member_remove(member):
 
         await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
+    if thorny_guild.channels.welcome_channel is not None:
+        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+
+        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
+
 
 @thorny.event
 async def on_guild_join(guild: discord.Guild):
@@ -274,5 +271,6 @@ thorny.add_cog(help.Help(thorny))
 
 # Uncomment only during Christmastime
 thorny.add_cog(secret_santa.SecretSanta(thorny))
+
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)
