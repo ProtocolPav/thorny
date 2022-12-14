@@ -75,12 +75,23 @@ class Moderation(commands.Cog):
         await ctx.defer()
         async with httpx.AsyncClient() as client:
             r = await client.get("http://bds_webserver:8000/start", timeout=None)
+            online_users = await Base.select_online(Base(), ctx.guild.id)
 
             if r.json()["update"]:
                 await ctx.respond(f"I have found an update (version {r.json()['new_version']})!\n"
                                   f"The server has been updated and has started successfully.")
+
+                for user in online_users:
+                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+                    connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
+                    await connection.log_event_in_database()
             elif r.json()["server_started"]:
                 await ctx.respond(f"The server started successfully.")
+
+                for user in online_users:
+                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+                    connection: ev.Event = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
+                    await connection.log_event_in_database()
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
