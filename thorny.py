@@ -15,7 +15,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup, secret_santa
+from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -36,7 +36,7 @@ bot_started = datetime.now().replace(microsecond=0)
 async def on_ready():
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Smells Like Thorn Spirit | {v}")
+                                    name=f"Rockin' Around Thorny | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
@@ -265,7 +265,7 @@ thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-thorny.add_cog(leaderboard.Leaderboard(thorny))
+thorny.add_cog(leaderboards.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
 # Uncomment only during Christmastime
