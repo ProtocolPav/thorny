@@ -39,7 +39,7 @@ class Inventory(commands.Cog):
 
         await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
 
-    @inventory.command(description="CM Only | Add an item to a user's inventory")
+    @inventory.command(description="Mod Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
@@ -60,7 +60,7 @@ class Inventory(commands.Cog):
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
 
-    @inventory.command(description="CM Only | Remove or clear an item from a user's inventory")
+    @inventory.command(description="Mod Only | Remove or clear an item from a user's inventory")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
@@ -176,7 +176,8 @@ class Inventory(commands.Cog):
                     await commit(thorny_user)
 
                 elif item.item_id == 'xmas_gift_2022':
-                    pass
+                    await ctx.respond("You open the gift. To your surprise, laying within the box is something special. "
+                                      "It's a **Shulker Shell!**")
 
         elif item.item_id is None:
             raise errors.MissingItemError()

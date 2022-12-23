@@ -5,7 +5,7 @@ from discord.utils import basic_autocomplete
 import math
 
 from thorny_core.db.factory import UserFactory, GuildFactory
-from thorny_core.db import leaderboard
+from thorny_core.db import lbgen
 from thorny_core.uikit import slashoptions
 
 
