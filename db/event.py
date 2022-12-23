@@ -26,7 +26,7 @@ class Event:
         ...
 
 
-class ConnectEvent(Event):
+class Connect(Event):
     async def log(self):
         async with self.thorny_user.connection_pool.acquire() as conn:
             current_connection = self.thorny_user.playtime.current_connection
@@ -63,7 +63,7 @@ class ConnectEvent(Event):
             await activity_channel.send(embed=log_embed)
 
 
-class DisconnectEvent(Event):
+class Disconnect(Event):
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
         super().__init__(client, event_time, user, guild)
         self.playtime: timedelta = timedelta(hours=0)
@@ -98,6 +98,29 @@ class DisconnectEvent(Event):
         if self.thorny_guild.channels.logs_channel is not None:
             activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
             await activity_channel.send(embed=log_embed)
+
+
+class AdjustPlaytime(Event):
+    def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild, hour: int, minute: int):
+        super().__init__(client, event_time, user, guild)
+        self.hour = hour
+        self.minute = minute
+
+    async def log(self):
+        async with self.thorny_user.connection_pool.acquire() as conn:
+            current_connection = self.thorny_user.playtime.current_connection
+
+            if current_connection is None or current_connection['disconnect_time'] is None:
+                raise errors.AlreadyConnectedError()
+
+            else:
+                playtime = current_connection['playtime'] - timedelta(hours=self.hour or 0, minutes=self.minute or 0)
+                desc = f"Adjusted by {self.hour or 0}h{self.minute or 0}m | {current_connection['description']}"
+                await conn.execute("""
+                                   UPDATE thorny.activity SET playtime = $1, description = $2
+                                   WHERE thorny_user_id = $3 and connect_time = $4
+                                   """,
+                                   playtime, desc, self.thorny_user.thorny_id, current_connection['connect_time'])
 
 
 class GainXP(Event):
@@ -140,3 +163,22 @@ class Transaction(Event):
         logs_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
         await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild, self.amount,
                                                          self.reason))
+
+class Birthday(Event):
+    async def log(self):
+        if str(self.thorny_user.age)[-1] == "1":
+            suffix = "st"
+        elif str(self.thorny_user.age)[-1] == "2":
+            suffix = "nd"
+        elif str(self.thorny_user.age)[-1] == "3":
+            suffix = "rd"
+        else:
+            suffix = "th"
+
+        birthday_message = f"Wohoo!! It is {self.thorny_user.discord_member.mention}'s {self.thorny_user.age}{suffix} birthday " \
+                           f"today! Happy Birthday, {self.thorny_user.username}! :partying_face: :partying_face: :partying_face:"
+
+        if self.thorny_guild.channels.welcome_channel is not None:
+            logs_channel = self.client.get_channel(self.thorny_guild.channels.welcome_channel)
+            await logs_channel.send(birthday_message)
+

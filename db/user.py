@@ -234,9 +234,9 @@ class Inventory:
                 item.item_count -= count
 
     def __str__(self):
-        string = [f"<:_pink:921708790322192396> Empty\n" * 9]
+        string = []
         for item in self.slots:
-            string[self.slots.index(item)] = f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n"
+            string.append(f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n")
 
         return "".join(string)
 
@@ -348,8 +348,11 @@ class User:
         self.balance = thorny_user['balance']
         self.join_date = Time(thorny_user['join_date'])
         self.birthday = Time(thorny_user['birthday'])
-        self.age = round((datetime.date(datetime.now()) - self.birthday.time).days / 365) \
-            if self.birthday.time is not None else None
+        if self.birthday.time is not None:
+            today = datetime.now()
+            self.age = today.year - self.birthday.time.year - ((today.month, today.day) < (self.birthday.time.month, self.birthday.time.day))
+        else:
+            self.age = 0
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
         self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, current_connection=current_connection,

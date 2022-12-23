@@ -6,8 +6,6 @@ from discord.ext import commands, tasks
 import giphy_client
 from db import UserFactory
 from dbutils import User
-import dbevent as ev
-from dbevent import Event
 from thorny_core.db import event as new_event
 from thorny_core.uikit import embeds
 import errors
@@ -17,7 +15,7 @@ import random
 import sys
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
-from modules import money, help, inventory, leaderboard, moderation, playtime, profile, level, setup, secret_santa
+from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -38,7 +36,7 @@ bot_started = datetime.now().replace(microsecond=0)
 async def on_ready():
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Smells Like Thorn Spirit | {v}")
+                                    name=f"Rockin' Around Thorny | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
@@ -57,9 +55,10 @@ async def birthday_checker():
                     if guild.id == user["guild_id"]:
                         member = guild.get_member(user["user_id"])
                         thorny_user = await UserFactory.build(member)
+                        thorny_guild = await GuildFactory.build(guild)
 
-                        event: Event = await ev.fetch(ev.Birthday, thorny_user, thorny)
-                        await event.log_event_in_discord()
+                        birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                        await birthday_event.log()
 
 
 @tasks.loop(time=time(hour=16))
@@ -142,7 +141,7 @@ async def on_message(message: discord.Message):
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
-    if not message.author.bot:
+    if not message.author.bot and message.content is not None:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -153,7 +152,7 @@ async def on_message_delete(message: discord.Message):
 
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
-    if not message.author.bot and before.content != after.content:
+    if not before.author.bot and before.content != after.content:
         thorny_guild = await GuildFactory.build(before.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -222,22 +221,9 @@ async def on_member_join(member: discord.Member):
 
 @thorny.event
 async def on_member_remove(member):
-    thorny_user = await UserFactory.build(member)
-    thorny_guild = await GuildFactory.build(member.guild)
-
     await UserFactory.deactivate([member])
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
-
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
-
-        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
-
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
-
-        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
@@ -266,7 +252,7 @@ thorny.add_cog(inventory.Inventory(thorny))
 thorny.add_cog(profile.Profile(thorny))
 thorny.add_cog(playtime.Playtime(thorny))
 thorny.add_cog(level.Level(thorny))
-thorny.add_cog(leaderboard.Leaderboard(thorny))
+thorny.add_cog(leaderboards.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
 # Uncomment only during Christmastime

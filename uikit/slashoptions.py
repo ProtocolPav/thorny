@@ -7,7 +7,7 @@ Make everything a function which returns the things needed, and rename the file 
 """
 import asyncio
 from datetime import datetime
-from discord import SelectOption
+from discord import SelectOption, OptionChoice
 from thorny_core.db.factory import pool
 
 
@@ -131,5 +131,23 @@ def shop_items():
         return_list.append(SelectOption(label=item['display_name'],
                                         value=item['friendly_id'],
                                         description=item['description']))
+
+    return return_list
+
+
+def slash_command_all_items():
+    async def get():
+        async with pool.acquire() as conn:
+            items = await conn.fetch("""
+                                     SELECT * FROM thorny.item_type
+                                     """)
+            return items
+
+    item_rec = asyncio.get_event_loop().run_until_complete(get())
+
+    return_list = []
+    for item in item_rec:
+        return_list.append(OptionChoice(name=item['display_name'],
+                                        value=item['friendly_id']))
 
     return return_list

@@ -4,7 +4,6 @@ from thorny_core import dbutils
 from datetime import datetime, timedelta
 import json
 from thorny_core import errors
-from thorny_core import dbevent as ev
 from thorny_core.db import event as new_event
 from thorny_core.db import UserFactory, GuildFactory
 
@@ -26,7 +25,7 @@ class Playtime(commands.Cog):
             thorny_user = await UserFactory.build(ctx.author)
             thorny_guild = await GuildFactory.build(ctx.guild)
 
-            connection = new_event.ConnectEvent(self.client, datetime.now(), thorny_user, thorny_guild)
+            connection = new_event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
             await connection.log()
 
             response_embed = discord.Embed(title="OOOH! You're playing! :smile:",
@@ -48,7 +47,7 @@ class Playtime(commands.Cog):
             thorny_user = await UserFactory.build(ctx.author)
             thorny_guild = await GuildFactory.build(ctx.guild)
 
-            disconnection = new_event.DisconnectEvent(self.client, datetime.now(), thorny_user, thorny_guild)
+            disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
             await disconnection.log()
 
             response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
@@ -74,15 +73,13 @@ class Playtime(commands.Cog):
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
         thorny_user = await UserFactory.build(ctx.author)
-        event: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client)
-        event.metadata.adjusting_hour = abs(hours)
-        event.metadata.adjusting_minute = abs(minutes)
-        metadata = await event.log_event_in_database()
+        thorny_guild = await GuildFactory.build(ctx.guild)
 
-        if metadata.database_log:
-            await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
-        else:
-            raise errors.AlreadyConnectedError()
+        adjust = new_event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours or 0),
+                                          abs(minutes or 0))
+        await adjust.log()
+
+        await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
 
     mod = discord.SlashCommandGroup("mod", "Mod-Only commands")
 
@@ -90,73 +87,64 @@ class Playtime(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def con(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
+        thorny_guild = await GuildFactory.build(ctx.guild)
 
-        connection: ev.ConnectEvent = await ev.fetch(ev.ConnectEvent, thorny_user, self.client)
-        metadata = await connection.log_event_in_database()
+        connection = new_event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
+        await connection.log()
 
-        if metadata.database_log:
-            await connection.log_event_in_discord()
-
-            response_embed = discord.Embed(title="Playing? On Everthorn?! :smile:",
-                                           color=0x00FF7F)
-            response_embed.add_field(name=f"**One, Two, Thirty!**",
-                                     value=f"I'm adding up your seconds, so when you stop playing, use `/disconnect`")
-            response_embed.add_field(name=f"**View Your Playtime:**",
-                                     value="`/profile` - See your profile\n`/online` - See who else is on!",
-                                     inline=False)
-            response_embed.set_author(name=user.name, icon_url=user.display_avatar.url)
-            response_embed.set_footer(text=f'{metadata.event_time}')
-            await ctx.respond(f"{user.mention}, you have been connected by {ctx.author}", embed=response_embed)
-        else:
-            raise errors.AlreadyConnectedError()
+        response_embed = discord.Embed(title="Playing? On Everthorn?! :smile:",
+                                       color=0x00FF7F)
+        response_embed.add_field(name=f"**One, Two, Thirty!**",
+                                 value=f"I'm adding up your seconds, so when you stop playing, use `/disconnect`")
+        response_embed.add_field(name=f"**View Your Playtime:**",
+                                 value="`/profile` - See your profile\n`/online` - See who else is on!",
+                                 inline=False)
+        response_embed.set_author(name=user.name, icon_url=user.display_avatar.url)
+        response_embed.set_footer(text=f'{v}')
+        await ctx.respond(f"{user.mention}, you have been connected by {ctx.author}", embed=response_embed)
 
     @mod.command(description="Disconnect a user")
     @commands.has_permissions(administrator=True)
     async def dis(self, ctx, user: discord.Member):
-        thorny_user = await UserFactory.build(user)
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
 
-        connection: ev.DisconnectEvent = await ev.fetch(ev.DisconnectEvent, thorny_user, self.client)
-        connection.metadata.event_comment = f"Force disconnect by {ctx.author}"
-        metadata = await connection.log_event_in_database()
+        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+        await disconnection.log()
 
-        if metadata.database_log:
-            playtime = str(metadata.playtime).split(":")
-            await connection.log_event_in_discord()
+        response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
 
-            response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
-            if metadata.playtime_overtime:
-                stats = f'You were connected for over 12 hours, so I brought your playtime down.' \
-                        f'I set it to **1h05m**.'
-            else:
-                stats = f'You played for a total of **{playtime[0]}h{playtime[1]}m** this session. Nice!'
-            response_embed.add_field(name=f"**Here's your stats:**",
-                                     value=f'{stats}')
-            response_embed.add_field(name=f"**Adjust Your Hours:**",
-                                     value="Did you forget to disconnect for many hours? Use the `/adjust` command "
-                                           "to bring your hours down!\n**Example:** `/adjust 2h34m` | Brings "
-                                           "it down by 2 hours and 34 minutes", inline=False)
-            response_embed.set_author(name=user.name, icon_url=user.display_avatar.url)
-            response_embed.set_footer(text=f'{metadata.event_time}')
-            await ctx.respond(f"{user.mention}, you have been disconnected by {ctx.author}", embed=response_embed)
+        if disconnection.playtime_overtime:
+            stats = f'You were connected for over 12 hours, so I brought your playtime down.' \
+                    f' I set it to **1h05m**.\n'
         else:
-            raise errors.NotConnectedError()
+            playtime = str(disconnection.playtime).split(":")
+            stats = f'You played for a total of **{playtime[0]}h{playtime[1]}m** this session. Nice!\n'
+
+        response_embed.add_field(name=f"**Here's your stats:**",
+                                 value=f'{stats}')
+
+        response_embed.add_field(name=f"**Adjust Your Hours:**",
+                                 value="Did you forget to disconnect for many hours? Use the </adjust:1> command "
+                                       "to bring your hours down!", inline=False)
+        response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
+        response_embed.set_footer(text=f'{v}')
+        await ctx.respond(f"{user.mention}, you have been disconnected by {ctx.author}", embed=response_embed)
+
 
     @mod.command(description="Adjust a user's playtime")
     @commands.has_permissions(administrator=True)
     async def adj(self, ctx, user: discord.Member,
                   hours: discord.Option(int, "Put a - if you want to add hours") = None,
                   minutes: discord.Option(int, "Put a - if you want to add minutes") = None):
-        thorny_user = await UserFactory.build(user)
-        event: ev.AdjustEvent = await ev.fetch(ev.AdjustEvent, thorny_user, self.client)
-        event.metadata.adjusting_hour = hours
-        event.metadata.adjusting_minute = minutes
-        metadata = await event.log_event_in_database()
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
 
-        if metadata.database_log:
-            await ctx.respond(f'{user.mention}, your most recent playtime has been reduced by '
-                              f'{hours or 0}h{minutes or 0}m.')
-        else:
-            raise errors.AlreadyConnectedError()
+        adjust = new_event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours), abs(minutes))
+        await adjust.log()
+
+        await ctx.respond(f'{thorny_user.discord_member.mention}, your most recent playtime has been reduced by '
+                          f'{hours or 0}h{minutes or 0}m.')
 
     @commands.slash_command(description="See connected and AFK players and how much time they played for")
     async def online(self, ctx):
@@ -180,6 +168,7 @@ class Playtime(commands.Cog):
         online_embed = discord.Embed(color=0x6495ED)
         if ctx.guild.id == 611008530077712395:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+            # Add Server Status
             online_embed.title = f"Day {days_since_start.days + 1}"
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
