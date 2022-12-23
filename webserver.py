@@ -3,7 +3,8 @@ from db.factory import create_pool
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
-from dbutils import WebserverUpdates
+from dbutils import WebserverUpdates, Base
+from thorny_core.db.factory import UserFactory
 
 app = Sanic("thorny_server_app")
 pool: pg.Pool
@@ -35,6 +36,17 @@ async def disconnect(request: Request, gamertag: str):
     datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
     async with pool.acquire() as conn:
         await WebserverUpdates.disconnect(gamertag, datetime_object, conn)
+    return sanicjson({"Accept": True})
+
+
+@app.post('/<guild_id:str>/disconnect/all')
+async def disconnect(request: Request, guild_id: str):
+    print("Disconnecting all")
+    guild_id = int(guild_id[12:-3])
+    datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
+    async with pool.acquire() as conn:
+        await WebserverUpdates.disconnect_all(guild_id, datetime_object, conn)
+
     return sanicjson({"Accept": True})
 
 

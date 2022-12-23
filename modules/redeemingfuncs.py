@@ -10,7 +10,6 @@ from thorny_core import dbutils
 from thorny_core.db import User
 from discord import utils
 from datetime import datetime, timedelta
-from thorny_core import dbevent as ev
 
 
 async def redeem_ticket(ctx, thorny_user: User):
@@ -89,4 +88,3 @@ async def redeem_role(ctx, thorny_user: User, client):
     except asyncio.TimeoutError:
         await ctx.send("You took too long to answer! Use `/redeem role` again to restart")
         thorny_user.inventory.add_item("role", 1)
-
