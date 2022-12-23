@@ -141,7 +141,7 @@ async def on_message(message: discord.Message):
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
-    if not message.author.bot:
+    if not message.author.bot and message.content is not None:
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.channels.logs_channel is not None:
@@ -221,22 +221,9 @@ async def on_member_join(member: discord.Member):
 
 @thorny.event
 async def on_member_remove(member):
-    thorny_user = await UserFactory.build(member)
-    thorny_guild = await GuildFactory.build(member.guild)
-
     await UserFactory.deactivate([member])
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
-
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
-
-        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
-
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
-
-        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
 
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)

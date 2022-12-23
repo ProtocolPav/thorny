@@ -9,6 +9,7 @@ from thorny_core.db import UserFactory, commit, GuildFactory
 from discord import utils
 from thorny_core.uikit import embeds, views
 from thorny_core.modules import redeemingfuncs
+from thorny_core.uikit import slashoptions
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 vers = json.load(open('version.json', 'r'))
@@ -20,7 +21,7 @@ class Inventory(commands.Cog):
         self.client = client
 
     @staticmethod
-    async def get_items(ctx):
+    async def get_items():
         selector = dbutils.Base()
         item_data_list = await selector.select("*", "item_type")
         item_list = []
@@ -32,33 +33,18 @@ class Inventory(commands.Cog):
 
     @inventory.command(description="See you or a person's Inventory")
     async def view(self, ctx, user: discord.Member = None):
-        if user is None:
-            user = ctx.author
+        user = user or ctx.author
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(user.guild)
 
-        personal_bal = f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}"
-        inventory_text = ''
-        inventory_list = thorny_user.inventory.slots
-        for item in inventory_list:
-            inventory_text = f'{inventory_text}<:_pink:921708790322192396> ' \
-                             f'{item.item_count} **|** {item.item_display_name}\n'
-        if len(inventory_list) < 9:
-            for item in range(0, 9 - len(inventory_list)):
-                inventory_text = f'{inventory_text}<:_pink:921708790322192396> Empty\n'
-
-        inventory_embed = discord.Embed(colour=0xE0115F)
-        inventory_embed.set_author(name=user, icon_url=user.display_avatar.url)
-        inventory_embed.add_field(name=f'**Financials:**', value=f"{personal_bal}")
-        inventory_embed.add_field(name=f"**Inventory**", value=inventory_text, inline=False)
-        inventory_embed.set_footer(text="Redeem your items using /redeem")
-        await ctx.respond(embed=inventory_embed)
+        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
 
     @inventory.command(description="CM Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
-                                          autocomplete=get_items), count: int = 1):
+                                          choices=slashoptions.slash_command_all_items()),
+                  count: int = 1):
         thorny_user = await UserFactory.build(user)
 
         try:
@@ -78,7 +64,8 @@ class Inventory(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
-                                             autocomplete=get_items), count: int = None):
+                                             choices=slashoptions.slash_command_all_items()),
+                     count: int = None):
         thorny_user = await UserFactory.build(user)
         item = thorny_user.inventory.fetch(item_id)
 
@@ -97,7 +84,8 @@ class Inventory(commands.Cog):
     @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
                             guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
-    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items),
+    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
+                                                          choices=slashoptions.slash_command_all_items()),
                        price: int):
         selector = dbutils.Base()
         updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
@@ -134,9 +122,11 @@ class Inventory(commands.Cog):
         await ctx.respond(embed=store_embed)
 
     @store.command(description="Purchase an item from the store")
-    async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items),
+    async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
+                                                     choices=slashoptions.slash_command_all_items()),
                   amount: int = 1):
         thorny_user = await UserFactory.build(ctx.author)
+
         try:
             item = thorny_user.inventory.data(item_id)
             if item.item_cost != 0:
@@ -164,7 +154,8 @@ class Inventory(commands.Cog):
                 raise errors.BrokeError()
 
     @commands.slash_command(description="Redeem an item from your inventory")
-    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem", autocomplete=get_items)):
+    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
+                                                        choices=slashoptions.slash_command_all_items())):
         thorny_user = await UserFactory.build(ctx.author)
         item = thorny_user.inventory.fetch(item_id)
 
@@ -184,7 +175,7 @@ class Inventory(commands.Cog):
                     await redeemingfuncs.redeem_ticket(ctx, thorny_user)
                     await commit(thorny_user)
 
-                elif item.item_id == "gift":
+                elif item.item_id == 'xmas_gift_2022':
                     pass
 
         elif item.item_id is None:

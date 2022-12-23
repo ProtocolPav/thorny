@@ -234,9 +234,9 @@ class Inventory:
                 item.item_count -= count
 
     def __str__(self):
-        string = [f"<:_pink:921708790322192396> Empty\n" * 9]
+        string = []
         for item in self.slots:
-            string[self.slots.index(item)] = f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n"
+            string.append(f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n")
 
         return "".join(string)
 
