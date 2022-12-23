@@ -168,6 +168,7 @@ class Playtime(commands.Cog):
         online_embed = discord.Embed(color=0x6495ED)
         if ctx.guild.id == 611008530077712395:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+            # Add Server Status
             online_embed.title = f"Day {days_since_start.days + 1}"
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
