@@ -20,15 +20,6 @@ class Inventory(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @staticmethod
-    async def get_items():
-        selector = dbutils.Base()
-        item_data_list = await selector.select("*", "item_type")
-        item_list = []
-        for item_data in item_data_list:
-            item_list.append(item_data["friendly_id"])
-        return utils.basic_autocomplete(item_list)
-
     inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
 
     @inventory.command(description="See you or a person's Inventory")

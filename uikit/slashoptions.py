@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
 from thorny_core.db.factory import pool
+from thorny_core.db import User
 
 
 def current_month():
@@ -149,5 +150,16 @@ def slash_command_all_items():
     for item in item_rec:
         return_list.append(OptionChoice(name=item['display_name'],
                                         value=item['friendly_id']))
+
+    return return_list
+
+
+def redeem_items(thorny_user: User):
+    return_list = []
+    for item in thorny_user.inventory.slots:
+        if item.redeemable:
+            return_list.append(SelectOption(label=item.item_display_name,
+                                            value=item.item_id,
+                                            description=item.description))
 
     return return_list
