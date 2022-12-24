@@ -172,7 +172,7 @@ class Inventory:
             slot = {
                 "inventory_id": None,
                 "item_id": item["friendly_id"],
-                "item_count": None,
+                "item_count": 0,
                 "display_name": item["display_name"],
                 "max_item_count": item["max_item_count"],
                 "item_cost": item["item_cost"],

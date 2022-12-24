@@ -398,7 +398,6 @@ def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: gui
 
 
 def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
-
     embed = discord.Embed(colour=0xFFBF00,
                           title="Shop Catalogue",
                           description="Select an item from the menu to buy!")
@@ -412,6 +411,37 @@ def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
 
     return embed
 
+
+def store_selected_item(thorny_user: user.User, thorny_guild: guild.Guild, item_id: str):
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Shop Catalogue")
+
+    item = thorny_user.inventory.fetch(item_id)
+
+    embed.add_field(name=f"**About {item.item_display_name}**",
+                    value=f"```{item.description}```\n"
+                          f"**Cost:** {thorny_guild.currency.emoji}{item.item_cost}\n"
+                          f"**Your Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}\n\n"
+                          f"**You can have maximum** {item.item_max_count} of `{item.item_display_name}`\n"
+                          f"**You currently have** {item.item_count} of `{item.item_display_name}`\n")
+
+    return embed
+
+def store_receipt(thorny_user: user.User, thorny_guild: guild.Guild, history: dict):
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Receipt")
+
+    if len(history) > 0:
+        receipt_text = ""
+        for key, value in history.items():
+            receipt_text = f"{receipt_text}x{value} {key}\n"
+    else:
+        receipt_text = "You bought nothing this session"
+
+    embed.add_field(name="Your Shopping Session:",
+                    value=receipt_text)
+
+    return embed
 
 def secret_santa_message(gift_receiver: user.User, request: str):
     embed = discord.Embed(color=0xD70040)
