@@ -628,3 +628,20 @@ class Store(View):
         await self.update_view(interaction)
         await interaction.response.edit_message(view=self,
                                                 embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
+
+
+class RedeemMenu(View):
+    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
+        super().__init__(timeout=30.0)
+        self.ctx = context
+        self.user = thorny_user
+        self.guild = thorny_guild
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=self)
+
+    @discord.ui.select(placeholder="Select an item to redeem",
+                       options=slashoptions.redeem_items())
+    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
+        pass
