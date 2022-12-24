@@ -530,94 +530,101 @@ class ServerSetup(View):
 
 
 class Store(View):
-    def __init__(self, thorny_user: User, thorny_guild: Guild):
-        super().__init__(timeout=None)
+    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
+        super().__init__(timeout=30.0)
+        self.ctx = context
         self.user = thorny_user
         self.guild = thorny_guild
+        self.history = {}
         self.item_id = None
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=self,
+                            embed=embeds.store_receipt(self.user, self.guild, self.history))
+
+    async def update_view(self, interaction: discord.Interaction):
+        self.user = await UserFactory.build(interaction.user)
+
+        buy_one_button = [x for x in self.children if x.custom_id == "buy_1"][0]
+        buy_three_button = [x for x in self.children if x.custom_id == "buy_3"][0]
+        buy_max_button = [x for x in self.children if x.custom_id == "buy_max"][0]
+
+        buy_one_button.disabled = False
+        buy_three_button.disabled = False
+        buy_max_button.disabled = False
+
+        item = self.user.inventory.fetch(self.item_id)
+        amount_for_max = item.item_max_count - item.item_count
+
+        if item.item_count == item.item_max_count or self.user.balance - item.item_cost * amount_for_max < 0:
+            buy_max_button.disabled = True
+
+        if item.item_count + 3 > item.item_max_count or self.user.balance - item.item_cost * 3 < 0:
+            buy_three_button.disabled = True
+
+        if item.item_count + 1 > item.item_max_count or self.user.balance - item.item_cost < 0:
+            buy_one_button.disabled = True
 
     @discord.ui.select(placeholder="Select an item to buy",
                        options=slashoptions.shop_items())
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
         self.item_id = select_menu.values[0]
 
-        for item in select_menu.options:
-            if item.label == select_menu.values[0]:
-                index = select_menu.options.index(item)
-                select_menu.options[index].default = True
-            else:
-                index = select_menu.options.index(item)
-                select_menu.options[index].default = False
-
-        await interaction.response.defer()
-
-    @discord.ui.button(label="Buy x1",
-                       custom_id="buy_1",
-                       style=discord.ButtonStyle.green)
-    async def buy_one_callback(self, button: Button, interation: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
-
-        try:
-            self.user.inventory.add_item(self.item_id, 1)
-
-        except errors.ItemMaxCountError:
-            raise errors.ItemMaxCountError(item.item_max_count)
-
-        else:
-            if self.user.balance - item.item_cost >= 0:
-                self.user.balance -= item.item_cost
-
-                await interation.response.send_message(f"Successfully bought 1x {item.item_display_name} for "
-                                                       f"{item.item_cost}", ephemeral=True)
-
-                await commit(self.user)
-
-            else:
-                raise errors.BrokeError()
-
-    @discord.ui.button(label="Buy x3",
-                       custom_id="buy_3",
-                       style=discord.ButtonStyle.green)
-    async def buy_three_callback(self, button: Button, interation: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
-
-        try:
-            self.user.inventory.add_item(self.item_id, 3)
-
-        except errors.ItemMaxCountError:
-            raise errors.ItemMaxCountError(item.item_max_count)
-
-        else:
-            if self.user.balance - item.item_cost*3 >= 0:
-                self.user.balance -= item.item_cost*3
-
-                await interation.response.send_message(f"Successfully bought 3x {item.item_display_name} for "
-                                                       f"{item.item_cost*3}", ephemeral=True)
-
-                await commit(self.user)
-            else:
-                raise errors.BrokeError()
+        await self.update_view(interaction)
+        await interaction.response.edit_message(view=self, embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
 
     @discord.ui.button(label="Buy Max",
                        custom_id="buy_max",
-                       style=discord.ButtonStyle.blurple)
-    async def buy_max_callback(self, button: Button, interation: discord.Interaction):
+                       style=discord.ButtonStyle.blurple,
+                       disabled=True)
+    async def buy_max_callback(self, button: Button, interaction: discord.Interaction):
         item = self.user.inventory.fetch(self.item_id)
         amount = item.item_max_count - item.item_count
 
-        if amount == 0:
-            raise errors.ItemMaxCountError(item.item_max_count)
+        self.user.inventory.add_item(self.item_id, amount)
+        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + amount
 
-        else:
-            self.user.inventory.add_item(self.item_id, amount)
+        self.user.balance -= item.item_cost * amount
 
-            if self.user.balance - item.item_cost * amount >= 0:
-                self.user.balance -= item.item_cost * amount
+        await commit(self.user)
 
-                await interation.response.send_message(f"Successfully bought {amount}x {item.item_display_name} for "
-                                                       f"{item.item_cost*amount}", ephemeral=True)
+        await self.update_view(interaction)
+        await interaction.response.edit_message(view=self,
+                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
 
-                await commit(self.user)
+    @discord.ui.button(label="Buy x1",
+                       custom_id="buy_1",
+                       style=discord.ButtonStyle.green,
+                       disabled=True)
+    async def buy_one_callback(self, button: Button, interaction: discord.Interaction):
+        item = self.user.inventory.fetch(self.item_id)
 
-            else:
-                raise errors.BrokeError()
+        self.user.inventory.add_item(self.item_id, 1)
+        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 1
+
+        self.user.balance -= item.item_cost
+
+        await commit(self.user)
+
+        await self.update_view(interaction)
+        await interaction.response.edit_message(view=self,
+                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
+
+    @discord.ui.button(label="Buy x3",
+                       custom_id="buy_3",
+                       style=discord.ButtonStyle.green,
+                       disabled=True)
+    async def buy_three_callback(self, button: Button, interaction: discord.Interaction):
+        item = self.user.inventory.fetch(self.item_id)
+
+        self.user.inventory.add_item(self.item_id, 3)
+        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 3
+
+        self.user.balance -= item.item_cost*3
+
+        await commit(self.user)
+
+        await self.update_view(interaction)
+        await interaction.response.edit_message(view=self,
+                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
