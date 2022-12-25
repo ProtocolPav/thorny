@@ -28,7 +28,13 @@ class Inventory(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(user.guild)
 
-        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
+        if user == ctx.author:
+            view_to_be_sent = views.RedeemMenu(thorny_user, thorny_guild, ctx)
+        else:
+            view_to_be_sent = None
+
+        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild),
+                          view=view_to_be_sent)
 
     @inventory.command(description="Mod Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
@@ -75,8 +81,8 @@ class Inventory(commands.Cog):
     @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
                             guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
     @commands.has_permissions(administrator=True)
-    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                          choices=slashoptions.slash_command_all_items()),
+    async def setprice(self, ctx,
+                       item_id: discord.Option(str, "Select an item to redeem", choices=slashoptions.slash_command_all_items()),
                        price: int):
         selector = dbutils.Base()
         updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
@@ -91,37 +97,6 @@ class Inventory(commands.Cog):
 
         await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
                           view=views.Store(thorny_user, thorny_guild, ctx))
-
-    @commands.slash_command(description="Redeem an item from your inventory")
-    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                        choices=slashoptions.slash_command_all_items())):
-        thorny_user = await UserFactory.build(ctx.author)
-        item = thorny_user.inventory.fetch(item_id)
-
-        if item is not None and item.redeemable:
-            try:
-                thorny_user.inventory.remove_item(item_id, 1)
-
-            except errors.MissingItemError:
-                raise errors.MissingItemError()
-
-            else:
-                if item.item_id == 'role':
-                    await redeemingfuncs.redeem_role(ctx, thorny_user, self.client)
-                    await commit(thorny_user)
-
-                elif item.item_id == 'ticket':
-                    await redeemingfuncs.redeem_ticket(ctx, thorny_user)
-                    await commit(thorny_user)
-
-                elif item.item_id == 'xmas_gift_2022':
-                    await ctx.respond("You open the gift. To your surprise, laying within the box is something special. "
-                                      "It's a **Shulker Shell!**")
-
-        elif item.item_id is None:
-            raise errors.MissingItemError()
-        else:
-            raise errors.ItemNotAvailableError()
 
     @commands.slash_command(description="See how tickets work!")
     async def tickets(self, ctx):

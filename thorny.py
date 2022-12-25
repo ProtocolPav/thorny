@@ -13,6 +13,7 @@ import traceback
 import json
 import random
 import sys
+import httpx
 from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons
 from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
@@ -42,6 +43,14 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
+
+
+@tasks.loop(seconds=500)
+async def interruption_check():
+    async with httpx.AsyncClient() as client:
+        r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
+        if r.status_code != 404:
+            pass
 
 
 @tasks.loop(hours=24.0)
@@ -77,6 +86,7 @@ async def before_check():
 
 birthday_checker.start()
 day_counter.start()
+interruption_check.start()
 
 
 @thorny.slash_command(description="Get bot stats")
@@ -86,6 +96,9 @@ async def ping(ctx):
 
 @thorny.event
 async def on_application_command_error(context: discord.ApplicationContext, exception: errors.ThornyError):
+    print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
+    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
     command = context.command
     if command and command.has_error_handler():
         return
@@ -93,9 +106,6 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
     cog = context.cog
     if cog and cog.has_error_handler():
         return
-
-    print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
-    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
     try:
         await context.respond(embed=exception.return_embed(), ephemeral=True)
@@ -117,14 +127,14 @@ async def on_message(message: discord.Message):
         if message.content.lower() in thorny_guild.exact_responses:
             response_list = thorny_guild.exact_responses[message.content.lower()]
             response = response_list[random.randint(0, len(response_list) - 1)]
-            await message.channel.send(response)
+            await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
         else:
             for invoker in thorny_guild.wildcard_responses:
                 if invoker in message.content.lower():
                     response_list = thorny_guild.wildcard_responses[invoker]
                     response = response_list[random.randint(0, len(response_list) - 1)]
-                    await message.channel.send(response)
+                    await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
 
 @thorny.listen()
@@ -256,7 +266,7 @@ thorny.add_cog(leaderboards.Leaderboard(thorny))
 thorny.add_cog(help.Help(thorny))
 
 # Uncomment only during Christmastime
-thorny.add_cog(secret_santa.SecretSanta(thorny))
+# thorny.add_cog(secret_santa.SecretSanta(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 thorny.run(TOKEN)

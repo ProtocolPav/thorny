@@ -173,3 +173,16 @@ class ServerCurrencyEdit(Modal):
         self.thorny_guild.currency.__setattr__(self.children[0].custom_id, self.children[0].value)
         await commit(self.thorny_guild)
         await interaction.response.defer()
+
+
+class RedeemRole(Modal):
+    def __init__(self):
+        super().__init__(title="Customize Your Role")
+
+        self.add_item(InputText(label="What should your Custom Role be called?",
+                                placeholder="Eg. The Champion, Sniffer, Cool Person Role"))
+        self.add_item(InputText(label="Enter a Hex Code for the role's colour",
+                                placeholder="Eg. #9D5F33"))
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
