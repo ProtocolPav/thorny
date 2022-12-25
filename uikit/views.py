@@ -1,12 +1,14 @@
+import random
+
 import discord
 from discord.ui import View, Select, Button, InputText
-from datetime import datetime
+from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
 from thorny_core.db import User, UserFactory, GuildFactory, Guild, event as new_event
-from thorny_core import errors
+from thorny_core import errors, dbutils
 
 
 class ProfileEdit(View):
@@ -630,6 +632,84 @@ class Store(View):
                                                 embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
 
 
+class RedeemSelectMenu(Select):
+    def __init__(self, placeholder: str, options: list[discord.SelectOption],
+                 thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
+        super().__init__(placeholder=placeholder, options=options)
+        self.ctx = context
+        self.user = thorny_user
+        self.guild = thorny_guild
+
+    async def callback(self, interaction: discord.Interaction):
+        item = self.user.inventory.fetch(self.values[0])
+
+        self.user.inventory.remove_item(item.item_id, 1)
+        self.options = slashoptions.redeem_items(self.user)
+        await interaction.response.edit_message(view=self.view, embed=embeds.inventory_embed(self.user, self.guild))
+
+        match item.item_id:
+            case "ticket":
+                await self.redeem_ticket()
+
+            case "role":
+                await self.redeem_role()
+
+            case _:
+                raise errors.RedeemError
+
+        await commit(self.user)
+
+    async def redeem_ticket(self):
+        # This function is simply copied from the old functions. It needs changing!
+        def calculate_reward(prize_list, prizes_available):
+            nugs_reward = 0
+            for item in prize_list:
+                nugs_reward += item[1]
+            if prize_list[0] != prize_list[1] != prize_list[2] != prize_list[3] and prizes_available[5] not in prize_list:
+                nugs_reward = nugs_reward * 2
+            return nugs_reward
+
+        ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],
+                         ["<:goldenE:857714717153689610>", 7], [":dragon_face:", 64]]
+
+        able_to_redeem = True
+        if random.choices([True, False], weights=(2, 98), k=1)[0]:
+            raise errors.FaultyTicketError()
+        else:
+            prizes = []
+            winnings = []
+            for i in range(4):
+                random_icon = random.choices(ticket_prizes, weights=(2.99, 4, 5, 3, 1, 0.01), k=1)
+                prizes.append(random_icon[0])
+                winnings.append(f"||{random_icon[0][0]}||")
+
+            selector = dbutils.Base()
+            counter = await selector.select("count", "counter", "counter_name", "ticket_count")
+            ticket_embed = discord.Embed(color=self.ctx.author.color)
+            ticket_embed.add_field(name="**Scratch Ticket**",
+                                   value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
+            ticket_embed.set_footer(text=f"Ticket #{counter[0][0] + 1} "
+                                         f"| Use /tickets to see how Prizes work!")
+            if self.user.counters.ticket_count >= 4:
+                if datetime.now() - self.user.counters.ticket_last_purchase <= timedelta(hours=23):
+                    time = datetime.now() - self.user.counters.ticket_last_purchase
+                    able_to_redeem = False
+                    self.user.inventory.add_item("ticket", 1)
+                    await self.ctx.respond(f"You already redeemed 4 tickets! Next time you can redeem is in "
+                                      f"{timedelta(hours=23) - time}")
+                else:
+                    self.user.counters.ticket_count = 0
+            if able_to_redeem:
+                await self.ctx.respond(embed=ticket_embed)
+                self.user.balance += calculate_reward(prizes, ticket_prizes)
+                self.user.counters.ticket_count += 1
+                self.user.counters.ticket_last_purchase = datetime.now().replace(microsecond=0)
+
+    async def redeem_role(self):
+        pass
+
+
+
 class RedeemMenu(View):
     def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
         super().__init__(timeout=30.0)
@@ -637,11 +717,17 @@ class RedeemMenu(View):
         self.user = thorny_user
         self.guild = thorny_guild
 
+        self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
+                                       options=slashoptions.redeem_items(self.user),
+                                       thorny_user=thorny_user,
+                                       thorny_guild=thorny_guild,
+                                       context=context))
+
     async def on_timeout(self):
         self.disable_all_items()
         await self.ctx.edit(view=self)
 
-    @discord.ui.select(placeholder="Select an item to redeem",
-                       options=slashoptions.redeem_items())
-    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
-        pass
+    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
+        if isinstance(error, errors.ThornyError):
+            await interaction.followup.send(embed=error.return_embed(),
+                                            ephemeral=True)

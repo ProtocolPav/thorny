@@ -6,6 +6,7 @@ import json
 from thorny_core import errors
 from thorny_core.db import event as new_event
 from thorny_core.db import UserFactory, GuildFactory
+import httpx
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
@@ -165,11 +166,18 @@ class Playtime(commands.Cog):
                            f"<@{player['user_id']}> • " \
                            f"connected {time[0]}h{time[1]}m ago"
 
+        async with httpx.AsyncClient() as client:
+            r: httpx.Response = await client.get("http://bds_webserver:8000/status")
+
         online_embed = discord.Embed(color=0x6495ED)
-        if ctx.guild.id == 611008530077712395:
+        if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-            # Add Server Status
-            online_embed.title = f"Day {days_since_start.days + 1}"
+
+            if r.json()['server_status']:
+                online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
+            else:
+                online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"
+
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
                                    value="*All you can hear are the sounds of the crickets chirping in the silent "
