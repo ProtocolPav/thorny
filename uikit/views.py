@@ -721,11 +721,12 @@ class RedeemMenu(View):
         self.user = thorny_user
         self.guild = thorny_guild
 
-        self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
-                                       options=slashoptions.redeem_items(self.user),
-                                       thorny_user=thorny_user,
-                                       thorny_guild=thorny_guild,
-                                       context=context))
+        if len(thorny_user.inventory.slots) > 0:
+            self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
+                                           options=slashoptions.redeem_items(self.user),
+                                           thorny_user=thorny_user,
+                                           thorny_guild=thorny_guild,
+                                           context=context))
 
     async def on_timeout(self):
         self.disable_all_items()
