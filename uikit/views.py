@@ -654,6 +654,10 @@ class RedeemSelectMenu(Select):
             case "role":
                 await self.redeem_role()
 
+            case "xmas_gift_2022":
+                await self.ctx.respond("You open the gift. To your surprise, laying within the box is something special. "
+                                       "It's a **Shulker Shell!**")
+
             case _:
                 raise errors.RedeemError
 
