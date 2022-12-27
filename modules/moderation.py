@@ -18,12 +18,13 @@ class Moderation(commands.Cog):
         self.client = client
 
     @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def apply(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=ProjectApplicationForm(ctx),
                           ephemeral=True)
 
-    @commands.slash_command(description='CM Only | Strike someone for bad behaviour')
+    @commands.slash_command(description='CM Only | Strike someone for bad behaviour',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def strike(self, ctx, user: discord.Member, reason):
         thorny_user = await UserFactory.build(user)
@@ -36,7 +37,8 @@ class Moderation(commands.Cog):
         await ctx.respond(embed=strike_embed)
         await commit(thorny_user)
 
-    @commands.slash_command(description='Mod Only | Purge messages')
+    @commands.slash_command(description='Mod Only | Purge messages',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx: discord.ApplicationContext,
                     amount: int = discord.Option(int, "The amount of messages to delete")):
@@ -48,7 +50,8 @@ class Moderation(commands.Cog):
         await ctx.respond(f"Deleted {len(messages)} messages.\n"
                           f"Check Mod Logs (<#{thorny_guild.channels.logs_channel}>) for the list of deleted messages.")
 
-    @commands.slash_command(description='CM Only | Send someone to the Gulag')
+    @commands.slash_command(description='CM Only | Send someone to the Gulag',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def gulag(self, ctx, user: discord.Member):
         timeout_role = discord.utils.get(ctx.guild.roles, name="Time Out")
@@ -68,7 +71,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
         await ctx.defer()
@@ -99,7 +102,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Could not start the server, as it is already running!")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         async with httpx.AsyncClient() as client:
@@ -117,7 +120,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"The server is already stopped!")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -128,7 +131,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)

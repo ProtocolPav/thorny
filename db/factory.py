@@ -224,7 +224,7 @@ class UserFactory:
 
 
 class GuildFactory:
-    features = Literal['everthorn_only', 'beta', 'premium', 'basic']
+    FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME']
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
@@ -301,15 +301,15 @@ class GuildFactory:
                   f"{guild.name}, ID {guild.id}")
 
     @classmethod
-    def get_guilds_by_feature(cls, feature: features):
+    def get_guilds_by_feature(cls, feature: FEATURES):
         async def get():
             async with pool.acquire() as conn:
                 guild_ids = await conn.fetch("""
                                              SELECT guild_id FROM thorny.guild
-                                             WHERE features->>$1 = 'True'
+                                             WHERE $1 = any(features_v2)
                                              AND active = True
                                              """,
-                                             feature)
+                                             feature.upper())
 
                 guilds = [i['guild_id'] for i in guild_ids]
 

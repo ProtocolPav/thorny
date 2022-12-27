@@ -12,7 +12,8 @@ class Money(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    balance = discord.SlashCommandGroup("balance", "Balance Commands")
+    balance = discord.SlashCommandGroup("balance", "Balance Commands",
+                                        guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
 
     @balance.command(description="View someone's balance")
     async def view(self, ctx, user: discord.Member = None):
@@ -37,7 +38,8 @@ class Money(commands.Cog):
 
         await commit(thorny_user)
 
-    @commands.slash_command(description="Pay a player using nugs")
+    @commands.slash_command(description="Pay a player using nugs",
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def pay(self, ctx, user: discord.Member, amount: int, reason: str):
         receivable_user = await UserFactory.build(user)
         thorny_user = await UserFactory.build(ctx.author)
@@ -64,6 +66,6 @@ class Money(commands.Cog):
             raise errors.NegativeAmountError
 
     @commands.slash_command(description="Work for some money",
-                            guild_ids=GuildFactory.get_guilds_by_feature('beta'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('BETA'))
     async def work(self, ctx: discord.ApplicationContext):
         await ctx.respond("Nothing happened...")

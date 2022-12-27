@@ -20,7 +20,8 @@ class Inventory(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
+    inventory = discord.SlashCommandGroup("inventory", "Inventory Commands",
+                                          guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
 
     @inventory.command(description="See you or a person's Inventory")
     async def view(self, ctx, user: discord.Member = None):
@@ -79,7 +80,7 @@ class Inventory(commands.Cog):
             await commit(thorny_user)
 
     @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def setprice(self, ctx,
                        item_id: discord.Option(str, "Select an item to redeem", choices=slashoptions.slash_command_all_items()),
@@ -90,7 +91,7 @@ class Inventory(commands.Cog):
             await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @commands.slash_command(description="Purchase items from the shop!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('basic'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def shop(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)
@@ -98,7 +99,8 @@ class Inventory(commands.Cog):
         await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
                           view=views.Store(thorny_user, thorny_guild, ctx))
 
-    @commands.slash_command(description="See how tickets work!")
+    @commands.slash_command(description="See how tickets work!",
+                            guild_ids=None)
     async def tickets(self, ctx):
         thorny_guild = await GuildFactory.build(ctx.author.guild)
 
