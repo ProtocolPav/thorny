@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from thorny_core import functions as func
+from thorny_core.db import GuildFactory
 import json
 
 v = json.load(open('version.json', 'r'))['version']
@@ -54,7 +55,8 @@ class Help(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(description="Access the Thorny Help Center")
+    @commands.slash_command(description="Access the Thorny Help Center",
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def help(self, ctx):
         global help_dict, home_embed
         help_dict = await func.generate_help_dict(self, ctx)

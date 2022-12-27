@@ -14,7 +14,8 @@ class Leaderboard(commands.Cog):
         self.client = client
         self.pages = []
 
-    leaderboard = discord.SlashCommandGroup("lb", "Leaderboard Commands")
+    leaderboard = discord.SlashCommandGroup("lb", "Leaderboard Commands",
+                                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
 
     @leaderboard.command(description="See the Activity leaderboard")
     async def activity(self, ctx, month: discord.Option(str, "Pick a month to view activity for. Leave blank "
@@ -37,12 +38,12 @@ class Leaderboard(commands.Cog):
                 time = f"{user['sum']}".split(":")
                 playtime_text.append(f'**{playtime.index(user) + 1}.** <@{user["user_id"]}> • '
                                      f'**{time[0]}h{time[1]}m**')
-            rank = f"You are #{rank} on the Leaderboard"
+            rank_text = f"You are #{rank} on the Leaderboard"
 
             if page != total_pages + 1:
                 lb_embed = discord.Embed(title=f'**{datetime.strftime(month, "%B")} Activity Leaderboard**',
                                          color=0x6495ED)
-                lb_embed.add_field(name=f'**{rank}**',
+                lb_embed.add_field(name=f'**{rank_text}**',
                                    value='\n'.join(playtime_text), inline=False)
                 lb_embed.set_footer(text=f'Page {page}/{total_pages}')
                 self.pages.append(lb_embed)
@@ -65,7 +66,7 @@ class Leaderboard(commands.Cog):
             for user in balances[start:stop]:
                 balance_text.append(f'**{balances.index(user) + 1}.** <@{user["user_id"]}> • '
                                     f'{thorny_guild.currency.emoji} **{user["balance"]}**')
-            rank = f"You are #{rank} on the Leaderboard"
+            rank_text = f"You are #{rank} on the Leaderboard"
 
             if page != total_pages + 1:
                 lb_embed = discord.Embed(title=f'**{thorny_guild.currency.name.capitalize()} Leaderboard**',
@@ -73,7 +74,7 @@ class Leaderboard(commands.Cog):
                                          description=f"**Total {thorny_guild.currency.name} in circulation:** "
                                                      f"{thorny_guild.currency.emoji} "
                                                      f"{thorny_guild.currency.total_in_circulation}")
-                lb_embed.add_field(name=f'**{rank}**',
+                lb_embed.add_field(name=f'**{rank_text}**',
                                    value='\n'.join(balance_text))
                 lb_embed.set_footer(text=f'Page {page}/{total_pages}')
                 self.pages.append(lb_embed)
@@ -95,11 +96,11 @@ class Leaderboard(commands.Cog):
             for user in levels[start:stop]:
                 balance_text.append(f'**{levels.index(user) + 1}.** <@{user["user_id"]}> • '
                                     f'**Lvl. {user["user_level"]}**')
-            rank = f"You are #{rank} on the Leaderboard"
+            rank_text = f"You are #{rank} on the Leaderboard"
 
             if page != total_pages + 1:
                 lb_embed = discord.Embed(title=f'**Levels Leaderboard**', color=0x6495ED)
-                lb_embed.add_field(name=f'**{rank}**',
+                lb_embed.add_field(name=f'**{rank_text}**',
                                    value='\n'.join(balance_text))
                 lb_embed.set_footer(text=f'Page {page}/{total_pages} | Level up by chatting!')
                 self.pages.append(lb_embed)

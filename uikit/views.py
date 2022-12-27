@@ -645,7 +645,13 @@ class RedeemSelectMenu(Select):
 
         self.user.inventory.remove_item(item.item_id, 1)
         self.options = slashoptions.redeem_items(self.user)
-        await interaction.response.edit_message(view=self.view, embed=embeds.inventory_embed(self.user, self.guild))
+
+        if len(self.user.inventory.slots) > 0:
+            view_to_send = self.view
+        else:
+            view_to_send = None
+
+        await interaction.response.edit_message(view=view_to_send, embed=embeds.inventory_embed(self.user, self.guild))
 
         match item.item_id:
             case "ticket":
