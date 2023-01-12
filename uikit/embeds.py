@@ -2,9 +2,7 @@ import discord
 import json
 
 from datetime import datetime, timedelta
-from thorny_core.db import user, guild
-from thorny_core.db import GuildFactory
-import thorny_core.dbutils as dbutils
+from thorny_core.db import user, guild, GuildFactory, lbgen
 import giphy_client
 import random
 
@@ -118,13 +116,7 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
     last_month = (datetime.now() - timedelta(days=30)).strftime('%B')
     two_months_ago = (datetime.now() - timedelta(days=60)).strftime('%B')
 
-    playtime_leaderboard = dbutils.Leaderboard()
-    await playtime_leaderboard.select_activity(thorny_user, datetime.now())
-
-    rank = None
-    for lb_user in playtime_leaderboard.activity_list:
-        if lb_user['user_id'] == thorny_user.user_id:
-            rank = playtime_leaderboard.activity_list.index(lb_user) + 1
+    leaderboard, rank = await lbgen.activity_leaderboard(thorny_user, datetime.now())
 
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
@@ -398,7 +390,6 @@ def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: gui
 
 
 def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
-
     embed = discord.Embed(colour=0xFFBF00,
                           title="Shop Catalogue",
                           description="Select an item from the menu to buy!")
@@ -413,6 +404,37 @@ def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
+def store_selected_item(thorny_user: user.User, thorny_guild: guild.Guild, item_id: str):
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Shop Catalogue")
+
+    item = thorny_user.inventory.fetch(item_id)
+
+    embed.add_field(name=f"**About {item.item_display_name}**",
+                    value=f"```{item.description}```\n"
+                          f"**Cost:** {thorny_guild.currency.emoji}{item.item_cost}\n"
+                          f"**Your Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}\n\n"
+                          f"**You can have maximum** {item.item_max_count} of `{item.item_display_name}`\n"
+                          f"**You currently have** {item.item_count} of `{item.item_display_name}`\n")
+
+    return embed
+
+def store_receipt(thorny_user: user.User, thorny_guild: guild.Guild, history: dict):
+    embed = discord.Embed(colour=0xFFBF00,
+                          title="Receipt")
+
+    if len(history) > 0:
+        receipt_text = ""
+        for key, value in history.items():
+            receipt_text = f"{receipt_text}x{value} {key}\n"
+    else:
+        receipt_text = "You bought nothing this session"
+
+    embed.add_field(name="Your Shopping Session:",
+                    value=receipt_text)
+
+    return embed
+
 def secret_santa_message(gift_receiver: user.User, request: str):
     embed = discord.Embed(color=0xD70040)
 
@@ -426,5 +448,50 @@ def secret_santa_message(gift_receiver: user.User, request: str):
                           f"`Delivery location:` At the spawn Christmas Tree\n"
                           f"`Instructions:` Label the chest with the person's name. Run </delivered:0> in discord when you "
                           f"deliver the gift.")
+
+    return embed
+
+def roa_embed():
+    embed = discord.Embed(color=0xD70040,
+                          title="Authenticate your Realm or Server")
+
+    embed.add_field(name="<:_pink:921708790322192396> Instructions for Owners",
+                    value=f"<:_yellow:921708790313791529> Send an image of your Realm settings as shown in the gif below.\n"
+                          f"<:_yellow:921708790313791529> You must then **Copy** the image **link** by pressing the 'Copy Link' "
+                          f"button.\n"
+                          f"<:_yellow:921708790313791529> Then, click the green `Authenticate` button and paste the image link\n"
+                          f"\nNOTE: Please ensure that your Xbox account is connected to Discord. "
+                          f"You will not be verified otherwise.")
+    embed.add_field(name="<:_pink:921708790322192396> Instructions for Moderators/Admins",
+                    value="<:_yellow:921708790313791529> Please ask your **Owner** to confirm your position as Realm Moderator "
+                          "or Admin with us. "
+                          "It is best if your Owner DM's a ROA Admin.\n"
+                          "<:_yellow:921708790313791529> We will then manually verify you.",
+                    inline=False)
+    embed.add_field(name="Note",
+                    value="If you run a Minecraft BDS (Bedrock Dedicated Server), please DM an admin for manual verification.",
+                    inline=False)
+
+    embed.set_image(url="https://i.imgur.com/AZPvDjE.gif")
+
+    return embed
+
+def roa_panel(thorny_user: user.User, image: str):
+    embed = discord.Embed(color=0xFDDA0D,
+                          title=f"Authentication Request")
+    embed.add_field(name="Request sent by:",
+                    value=f"<@{thorny_user.user_id}>",
+                    inline=False)
+
+    embed.add_field(name="Instructions:",
+                    value=f"1. Check that the user has their Xbox account is connected to Discord.\n"
+                          f"2. Ensure the Xbox account is the same as in the image.\n"
+                          f"3. Verify the authenticity of the image.\n\n"
+                          f"**Note** that pressing `Deny & Kick` will kick the member from the server and they will have to "
+                          f"join again.",
+                    inline=False)
+
+    embed.set_image(url=image)
+    embed.set_footer(text=thorny_user.user_id)
 
     return embed

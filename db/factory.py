@@ -222,9 +222,19 @@ class UserFactory:
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
                       f"{thorny_user['username']}, Thorny ID {thorny_id}")
 
+    @classmethod
+    async def get_birthdays(cls):
+        async with pool.acquire() as conn:
+            bdays = await conn.fetch("""SELECT thorny_user_id, birthday, guild_id
+                                        FROM thorny.user
+                                        WHERE active = True AND birthday IS NOT NULL
+                                        AND date_part('day', birthday) = date_part('day', now())
+                                        AND date_part('month', birthday) = date_part('month', now())""")
+            return bdays
+
 
 class GuildFactory:
-    features = Literal['everthorn_only', 'beta', 'premium', 'basic']
+    FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
@@ -301,15 +311,15 @@ class GuildFactory:
                   f"{guild.name}, ID {guild.id}")
 
     @classmethod
-    def get_guilds_by_feature(cls, feature: features):
+    def get_guilds_by_feature(cls, feature: FEATURES):
         async def get():
             async with pool.acquire() as conn:
                 guild_ids = await conn.fetch("""
                                              SELECT guild_id FROM thorny.guild
-                                             WHERE features->>$1 = 'True'
+                                             WHERE $1 = any(features_v2)
                                              AND active = True
                                              """,
-                                             feature)
+                                             feature.upper())
 
                 guilds = [i['guild_id'] for i in guild_ids]
 

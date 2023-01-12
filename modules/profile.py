@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import utils
 import json
 from thorny_core.uikit import slashoptions, views, embeds
-from thorny_core.db import UserFactory, commit
+from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core import dbutils
 
 version_json = json.load(open('./version.json', 'r'))
@@ -15,7 +15,8 @@ class Profile(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(description="See your or a user's profile")
+    @commands.slash_command(description="See your or a user's profile",
+                            guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
     async def profile(self, ctx: discord.ApplicationContext,
                       user: discord.Option(discord.Member, "See someone's profile. Leave blank to see yours.",
                                            default=None)):
@@ -25,6 +26,8 @@ class Profile(commands.Cog):
 
         if discord.utils.find(lambda r: r.name == 'Legacy Donator Role', ctx.guild.roles) in user.roles:
             is_donator = f'I donated to Everthorn!'
+        elif discord.utils.find(lambda r: r.name == 'Patreon Supporter', ctx.guild.roles) in user.roles:
+            is_donator = 'I am an Everthorn Patreon Supporter!'
         else:
             is_donator = ''
 
@@ -33,22 +36,8 @@ class Profile(commands.Cog):
                  await embeds.profile_stats_embed(thorny_user)]
         await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
 
-    @commands.user_command(name="Thorny Profile", description="See this user's profile")
-    async def user_cmd_profile(self, ctx, member: discord.Member):
-        thorny_user = await UserFactory.build(member)
-        await commit(thorny_user)
-
-        if discord.utils.find(lambda r: r.name == 'Donator', ctx.guild.roles) in member.roles:
-            is_donator = f'I donated to Everthorn!'
-        else:
-            is_donator = ''
-
-        pages = [await embeds.profile_main_embed(thorny_user, is_donator),
-                 await embeds.profile_lore_embed(thorny_user),
-                 await embeds.profile_stats_embed(thorny_user)]
-        await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
-
-    birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
+    birthday = discord.SlashCommandGroup("birthday", "Birthday commands",
+                                         guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
 
     @birthday.command(description="Set your birthday")
     async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
@@ -77,7 +66,8 @@ class Profile(commands.Cog):
         await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages :(",
                           ephemeral=True)
 
-    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands")
+    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands",
+                                         guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
 
     @gamertag.command(description="Search the database for gamertags")
     async def search(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):

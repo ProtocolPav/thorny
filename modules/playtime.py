@@ -6,6 +6,7 @@ import json
 from thorny_core import errors
 from thorny_core.db import event as new_event
 from thorny_core.db import UserFactory, GuildFactory
+import httpx
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
@@ -17,7 +18,8 @@ class Playtime(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(description="Log your connect time")
+    @commands.slash_command(description="Log your connect time",
+                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def connect(self, ctx):
         if ctx.guild.id == 611008530077712395:
             raise errors.AccessDenied()
@@ -39,7 +41,8 @@ class Playtime(commands.Cog):
             response_embed.set_footer(text=f'{v}')
             await ctx.respond(embed=response_embed)
 
-    @commands.slash_command(description="Log your disconnect time as well as what you did")
+    @commands.slash_command(description="Log your disconnect time as well as what you did",
+                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def disconnect(self, ctx: discord.ApplicationContext):
         if ctx.guild.id == 611008530077712395:
             raise errors.AccessDenied()
@@ -69,7 +72,8 @@ class Playtime(commands.Cog):
             response_embed.set_footer(text=f'{v}')
             await ctx.respond(embed=response_embed)
 
-    @commands.slash_command(description='Adjust your recent playtime')
+    @commands.slash_command(description='Adjust your recent playtime',
+                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
         thorny_user = await UserFactory.build(ctx.author)
@@ -81,7 +85,8 @@ class Playtime(commands.Cog):
 
         await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
 
-    mod = discord.SlashCommandGroup("mod", "Mod-Only commands")
+    mod = discord.SlashCommandGroup("mod", "Mod-Only commands",
+                                    guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
 
     @mod.command(description="Connect a user")
     @commands.has_permissions(administrator=True)
@@ -106,7 +111,7 @@ class Playtime(commands.Cog):
     @mod.command(description="Disconnect a user")
     @commands.has_permissions(administrator=True)
     async def dis(self, ctx, user: discord.Member):
-        thorny_user = await UserFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
         disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
@@ -137,7 +142,7 @@ class Playtime(commands.Cog):
     async def adj(self, ctx, user: discord.Member,
                   hours: discord.Option(int, "Put a - if you want to add hours") = None,
                   minutes: discord.Option(int, "Put a - if you want to add minutes") = None):
-        thorny_user = await UserFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
         adjust = new_event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours), abs(minutes))
@@ -146,7 +151,8 @@ class Playtime(commands.Cog):
         await ctx.respond(f'{thorny_user.discord_member.mention}, your most recent playtime has been reduced by '
                           f'{hours or 0}h{minutes or 0}m.')
 
-    @commands.slash_command(description="See connected and AFK players and how much time they played for")
+    @commands.slash_command(description="See connected and AFK players and how much time they played for",
+                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def online(self, ctx):
         selector = dbutils.Base()
         connected = await selector.select_online(ctx.guild.id)
@@ -165,11 +171,18 @@ class Playtime(commands.Cog):
                            f"<@{player['user_id']}> • " \
                            f"connected {time[0]}h{time[1]}m ago"
 
+        async with httpx.AsyncClient() as client:
+            r: httpx.Response = await client.get("http://bds_webserver:8000/status")
+
         online_embed = discord.Embed(color=0x6495ED)
-        if ctx.guild.id == 611008530077712395:
+        if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-            # Add Server Status
-            online_embed.title = f"Day {days_since_start.days + 1}"
+
+            if r.json()['server_status']:
+                online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
+            else:
+                online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"
+
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
                                    value="*All you can hear are the sounds of the crickets chirping in the silent "

@@ -20,16 +20,8 @@ class Inventory(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @staticmethod
-    async def get_items():
-        selector = dbutils.Base()
-        item_data_list = await selector.select("*", "item_type")
-        item_list = []
-        for item_data in item_data_list:
-            item_list.append(item_data["friendly_id"])
-        return utils.basic_autocomplete(item_list)
-
-    inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
+    inventory = discord.SlashCommandGroup("inventory", "Inventory Commands",
+                                          guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
 
     @inventory.command(description="See you or a person's Inventory")
     async def view(self, ctx, user: discord.Member = None):
@@ -37,7 +29,13 @@ class Inventory(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(user.guild)
 
-        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
+        if user == ctx.author:
+            view_to_be_sent = views.RedeemMenu(thorny_user, thorny_guild, ctx)
+        else:
+            view_to_be_sent = None
+
+        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild),
+                          view=view_to_be_sent)
 
     @inventory.command(description="Mod Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
@@ -81,110 +79,28 @@ class Inventory(commands.Cog):
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
 
-    @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
-    @commands.has_permissions(administrator=True)
-    async def setprice(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                          choices=slashoptions.slash_command_all_items()),
-                       price: int):
-        selector = dbutils.Base()
-        updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
-        if updated:
-            await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
+    # @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
+    #                         guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    # @commands.has_permissions(administrator=True)
+    # async def setprice(self, ctx,
+    #                    item_id: discord.Option(str, "Select an item to redeem", choices=slashoptions.slash_command_all_items()),
+    #                    price: int):
+    #     selector = dbutils.Base()
+    #     updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
+    #     if updated:
+    #         await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @commands.slash_command(description="Purchase items from the shop!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('beta'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def shop(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
         await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
-                          view=views.Store(thorny_user, thorny_guild))
+                          view=views.Store(thorny_user, thorny_guild, ctx))
 
-    store = discord.SlashCommandGroup("store", "Store Commands")
-
-    @store.command(description="Get a list of all items available in the store")
-    async def catalogue(self, ctx):
-        thorny_user = await UserFactory.build(ctx.author)
-        thorny_guild = await GuildFactory.build(ctx.author.guild)
-
-        item_text = ""
-        for item_data in thorny_user.inventory.all_items:
-            if item_data.item_cost > 0:
-                item_text = f"{item_text}\n**{item_data.item_display_name}** |" \
-                            f" {thorny_guild.currency.emoji}{item_data.item_cost}\n" \
-                            f"**Item ID:** {item_data.item_id}\n"
-
-        store_embed = discord.Embed(colour=ctx.author.colour)
-        store_embed.add_field(name=f'**Items Available:**',
-                              value=f"{item_text}", inline=False)
-        store_embed.set_footer(text=f"{v} | Use /store buy to purchase!")
-        await ctx.respond(embed=store_embed)
-
-    @store.command(description="Purchase an item from the store")
-    async def buy(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                     choices=slashoptions.slash_command_all_items()),
-                  amount: int = 1):
-        thorny_user = await UserFactory.build(ctx.author)
-
-        try:
-            item = thorny_user.inventory.data(item_id)
-            if item.item_cost != 0:
-                thorny_user.inventory.add_item(item_id, amount)
-            elif item.item_cost == 0:
-                raise errors.ItemNotAvailableError()
-
-        except errors.ItemMaxCountError:
-            item = thorny_user.inventory.fetch(item_id)
-            raise errors.ItemMaxCountError(item.item_max_count)
-
-        else:
-            item = thorny_user.inventory.fetch(item_id)
-
-            if item.item_cost != 0 and thorny_user.balance - item.item_cost * amount >= 0:
-                thorny_user.balance -= item.item_cost * amount
-                inv_edit_embed = discord.Embed(colour=ctx.author.colour)
-                inv_edit_embed.add_field(name="**Cha-Ching!**",
-                                         value=f"Bought {amount}x `{item.item_display_name}`")
-                inv_edit_embed.set_footer(text=f"{v} | Use /redeem to redeem this item!")
-                await ctx.respond(embed=inv_edit_embed)
-                # Add code for transactions
-                await commit(thorny_user)
-            elif thorny_user.balance - item.item_cost * amount < 0:
-                raise errors.BrokeError()
-
-    @commands.slash_command(description="Redeem an item from your inventory")
-    async def redeem(self, ctx, item_id: discord.Option(str, "Select an item to redeem",
-                                                        choices=slashoptions.slash_command_all_items())):
-        thorny_user = await UserFactory.build(ctx.author)
-        item = thorny_user.inventory.fetch(item_id)
-
-        if item is not None and item.redeemable:
-            try:
-                thorny_user.inventory.remove_item(item_id, 1)
-
-            except errors.MissingItemError:
-                raise errors.MissingItemError()
-
-            else:
-                if item.item_id == 'role':
-                    await redeemingfuncs.redeem_role(ctx, thorny_user, self.client)
-                    await commit(thorny_user)
-
-                elif item.item_id == 'ticket':
-                    await redeemingfuncs.redeem_ticket(ctx, thorny_user)
-                    await commit(thorny_user)
-
-                elif item.item_id == 'xmas_gift_2022':
-                    await ctx.respond("You open the gift. To your surprise, laying within the box is something special. "
-                                      "It's a **Shulker Shell!**")
-
-        elif item.item_id is None:
-            raise errors.MissingItemError()
-        else:
-            raise errors.ItemNotAvailableError()
-
-    @commands.slash_command(description="See how tickets work!")
+    @commands.slash_command(description="See how tickets work!",
+                            guild_ids=None)
     async def tickets(self, ctx):
         thorny_guild = await GuildFactory.build(ctx.author.guild)
 

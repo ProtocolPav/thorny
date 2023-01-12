@@ -12,7 +12,7 @@ class SecretSanta(commands.Cog):
         self.client = client
 
     @commands.slash_command(description='Participate in Secret Santa by sending in your request!',
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def secretsanta(self, ctx: discord.ApplicationContext,
                           request: discord.Option(str, 'Request something specific, to help your Santa!')):
         file = open('../thorny_data/secret_santa.json', 'r+')
@@ -37,7 +37,7 @@ class SecretSanta(commands.Cog):
         file.close()
 
     @commands.slash_command(description='CANNOT UNDO! Generate and send out Secret Santa DMs',
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def generatesanta(self, ctx: discord.ApplicationContext, password: str):
         if password == "pls generate":
@@ -73,7 +73,7 @@ class SecretSanta(commands.Cog):
             await ctx.respond("Wrong password.")
 
     @commands.slash_command(description="Mark your gift as delivered",
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def delivered(self, ctx: discord.ApplicationContext):
         file = open('../thorny_data/secret_santa.json', 'r+')
         file_json: dict = json.load(file)
