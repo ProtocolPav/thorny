@@ -7,15 +7,6 @@ import discord.ext
 from dateutil import relativedelta
 
 
-def get_user_kingdom(ctx, user):
-    kingdom = None
-    kingdoms_list = ['Stregabor', 'Ambria', 'Eireann', 'Dalvasha', 'Asbahamael']
-    for item in kingdoms_list:
-        if discord.utils.find(lambda r: r.name == item, ctx.guild.roles) in user.roles:
-            kingdom = item.capitalize()
-    return kingdom
-
-
 def calculate_reward(prize_list, prizes):
     nugs_reward = 0
     for item in prize_list:

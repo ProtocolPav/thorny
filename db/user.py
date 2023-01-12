@@ -172,7 +172,7 @@ class Inventory:
             slot = {
                 "inventory_id": None,
                 "item_id": item["friendly_id"],
-                "item_count": None,
+                "item_count": 0,
                 "display_name": item["display_name"],
                 "max_item_count": item["max_item_count"],
                 "item_cost": item["item_cost"],
@@ -235,8 +235,11 @@ class Inventory:
 
     def __str__(self):
         string = []
-        for item in self.slots:
-            string.append(f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n")
+        if len(self.slots) > 0:
+            for item in self.slots:
+                string.append(f"<:_pink:921708790322192396> {item.item_count} **|** {item.item_display_name}\n")
+        else:
+            string.append("Empty")
 
         return "".join(string)
 

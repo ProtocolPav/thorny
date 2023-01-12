@@ -9,6 +9,7 @@ import httpx
 import json
 from thorny_core.db import UserFactory, commit, GuildFactory, event as new_event
 from thorny_core.dbutils import Base
+from thorny_core.uikit import embeds, views
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -18,12 +19,13 @@ class Moderation(commands.Cog):
         self.client = client
 
     @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def apply(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=ProjectApplicationForm(ctx),
                           ephemeral=True)
 
-    @commands.slash_command(description='CM Only | Strike someone for bad behaviour')
+    @commands.slash_command(description='CM Only | Strike someone for bad behaviour',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def strike(self, ctx, user: discord.Member, reason):
         thorny_user = await UserFactory.build(user)
@@ -36,7 +38,8 @@ class Moderation(commands.Cog):
         await ctx.respond(embed=strike_embed)
         await commit(thorny_user)
 
-    @commands.slash_command(description='Mod Only | Purge messages')
+    @commands.slash_command(description='Mod Only | Purge messages',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx: discord.ApplicationContext,
                     amount: int = discord.Option(int, "The amount of messages to delete")):
@@ -48,7 +51,8 @@ class Moderation(commands.Cog):
         await ctx.respond(f"Deleted {len(messages)} messages.\n"
                           f"Check Mod Logs (<#{thorny_guild.channels.logs_channel}>) for the list of deleted messages.")
 
-    @commands.slash_command(description='CM Only | Send someone to the Gulag')
+    @commands.slash_command(description='CM Only | Send someone to the Gulag',
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def gulag(self, ctx, user: discord.Member):
         timeout_role = discord.utils.get(ctx.guild.roles, name="Time Out")
@@ -68,16 +72,19 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx):
         await ctx.defer()
+
         async with httpx.AsyncClient() as client:
-            r = await client.get("http://bds_webserver:8000/start", timeout=None)
+            await client.post("http://bds_webserver:8000/start", timeout=None)
+            await asyncio.sleep(3)
+            status = await client.get("http://bds_webserver:8000/status")
             online_users = await Base.select_online(Base(), ctx.guild.id)
 
-            if r.json()["update"]:
-                await ctx.respond(f"I have found an update (version {r.json()['new_version']})!\n"
+            if status.json()['update'] is not None:
+                await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
                                   f"The server has been updated and has started successfully.")
 
                 for user in online_users:
@@ -87,8 +94,8 @@ class Moderation(commands.Cog):
                     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                     await disconnection.log()
 
-            elif r.json()["server_started"]:
-                await ctx.respond(f"The server started successfully.")
+            elif status.json()["server_online"]:
+                await ctx.respond(f"The server is online")
 
                 for user in online_users:
                     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
@@ -96,15 +103,18 @@ class Moderation(commands.Cog):
 
                     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                     await disconnection.log()
-            else:
-                await ctx.respond(f"Could not start the server, as it is already running!")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
+        await ctx.defer()
+
         async with httpx.AsyncClient() as client:
-            r: httpx.Response = await client.get("http://bds_webserver:8000/stop")
+            await client.post("http://bds_webserver:8000/stop", timeout=None)
+            await asyncio.sleep(3)
+            status = await client.get("http://bds_webserver:8000/status")
             online_users = await Base.select_online(Base(), ctx.guild.id)
+
             for user in online_users:
                 thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
                 thorny_guild = await GuildFactory.build(ctx.guild)
@@ -112,12 +122,10 @@ class Moderation(commands.Cog):
                 disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                 await disconnection.log()
 
-            if r.json()["server_stopped"]:
-                await ctx.respond(f"The server stopped successfully")
-            else:
-                await ctx.respond(f"The server is already stopped!")
+            if not status.json()["server_online"]:
+                await ctx.respond(f"The server is offline")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -128,7 +136,7 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('everthorn_only'))
+    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -140,3 +148,12 @@ class Moderation(commands.Cog):
                 await ctx.respond(f"Could not whitelist {thorny_user.profile.gamertag}. "
                                   f"Either you have already whitelisted this gamertag or it does not exist.")
 
+    @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
+                            guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
+    async def authenticate(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.author)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+
+        await ctx.respond(embed=embeds.roa_embed(),
+                          view=views.ROAVerification(thorny_user, thorny_guild, ctx),
+                          ephemeral=True)
