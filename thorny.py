@@ -36,7 +36,7 @@ bot_started = datetime.now().replace(microsecond=0)
 async def on_ready():
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Rockin' Around Thorny | {v}")
+                                    name=f"Hate It Or Thorn It | {v}")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
