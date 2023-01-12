@@ -222,6 +222,16 @@ class UserFactory:
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
                       f"{thorny_user['username']}, Thorny ID {thorny_id}")
 
+    @classmethod
+    async def get_birthdays(cls):
+        async with pool.acquire() as conn:
+            bdays = await conn.fetch("""SELECT thorny_user_id, birthday, guild_id
+                                        FROM thorny.user
+                                        WHERE active = True AND birthday IS NOT NULL
+                                        AND date_part('day', birthday) = date_part('day', now())
+                                        AND date_part('month', birthday) = date_part('month', now())""")
+            return bdays
+
 
 class GuildFactory:
     FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME']

@@ -5,7 +5,6 @@ from discord.ext import commands, tasks
 
 import giphy_client
 from db import UserFactory
-from dbutils import User
 from thorny_core.db import event as new_event
 from thorny_core.uikit import embeds
 import errors
@@ -15,7 +14,7 @@ import random
 import sys
 import httpx
 from thorny_core.db.factory import GuildFactory
-from thorny_core.uikit.views import PersistentProjectAdminButtons
+from thorny_core.uikit.views import PersistentProjectAdminButtons, ROAVerificationPanel
 from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
@@ -43,6 +42,7 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
+    thorny.add_view(ROAVerificationPanel())
 
 
 @tasks.loop(seconds=500)
@@ -56,18 +56,15 @@ async def interruption_check():
 @tasks.loop(hours=24.0)
 async def birthday_checker():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
-    bday_list = await User().select_birthdays()
+    bday_list = await UserFactory.get_birthdays()
     for user in bday_list:
-        if user["birthday"].day == datetime.now().day:
-            if user["birthday"].month == datetime.now().month:
-                for guild in thorny.guilds:
-                    if guild.id == user["guild_id"]:
-                        member = guild.get_member(user["user_id"])
-                        thorny_user = await UserFactory.build(member)
-                        thorny_guild = await GuildFactory.build(guild)
+        for guild in thorny.guilds:
+            if guild.id == user["guild_id"]:
+                thorny_guild = await GuildFactory.build(guild)
+                thorny_user = await UserFactory.get(guild, user['thorny_user_id'])
 
-                        birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
-                        await birthday_event.log()
+                birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                await birthday_event.log()
 
 
 @tasks.loop(time=time(hour=16))

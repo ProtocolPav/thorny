@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 
-from thorny_core.db import UserFactory, commit, GuildFactory
-from thorny_core import dbutils
+from thorny_core.db import UserFactory, commit, GuildFactory, lbgen
 
 
 class Level(commands.Cog):
@@ -38,12 +37,10 @@ class Level(commands.Cog):
         for i in range(10 - int(percentage/10)):
             progressbar = f"{progressbar}:white_large_square:"
 
-        levels_leaderboard = dbutils.Leaderboard()
-        await levels_leaderboard.select_levels(ctx, user)
-        user_rank = levels_leaderboard.user_rank
+        leaderboard, rank = await lbgen.levels_leaderboard(thorny_user)
 
         rank_embed.add_field(name=f"You are Level {thorny_user.level.level}!",
-                             value=f"**Your Rank:** #{user_rank} on the Leaderboard\n"
+                             value=f"**Your Rank:** #{rank} on the Leaderboard\n"
                                    f"**Lv.{thorny_user.level.level}** {progressbar} "
                                    f"**Lv.{thorny_user.level.level + 1}**\n\n"
                                    f"Level {thorny_user.level.level} is {int(percentage)}% Complete")

@@ -69,92 +69,6 @@ class Base:
                 return False
 
 
-class Leaderboard:
-    """This is needed"""
-    def __init__(self):
-        self.user_rank = None
-        self.activity_list = None
-        self.nugs_list = None
-        self.treasury_list = None
-        self.levels_list = None
-
-    async def select_activity(self, thorny_user: user.User, month: datetime):
-        async with pool.acquire() as conn:
-            if datetime.now() < month:
-                month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
-            else:
-                month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            next_month = month + relativedelta(months=1)
-            self.activity_list = await conn.fetch(f"""
-                                                  SELECT SUM(playtime), thorny.user.thorny_user_id, thorny.user.user_id
-                                                  FROM thorny.activity 
-                                                  JOIN thorny.user
-                                                  ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
-                                                  WHERE connect_time BETWEEN $1 AND $2
-                                                  AND playtime IS NOT NULL
-                                                  AND thorny.user.guild_id = $3 
-                                                  AND thorny.user.active = True
-                                                  GROUP BY thorny.user.user_id, thorny.user.thorny_user_id
-                                                  ORDER BY SUM(playtime) DESC
-                                                  """,
-                                                  month, next_month, thorny_user.guild_id)
-            for user in self.activity_list:
-                if user['thorny_user_id'] == thorny_user.thorny_id:
-                    self.user_rank = self.activity_list.index(user) + 1
-
-    async def select_nugs(self, ctx):
-        async with pool.acquire() as conn:
-            self.nugs_list = await conn.fetch(f"SELECT user_id, thorny_user_id, balance FROM thorny.user "
-                                              f"WHERE thorny.user.guild_id = $1 "
-                                              f"AND thorny.user.active = True "
-                                              f"GROUP BY user_id, thorny_user_id, balance "
-                                              f"ORDER BY balance DESC", ctx.guild.id)
-            thorny_user = await UserFactory.build(ctx.author)
-            for user in self.nugs_list:
-                if user['thorny_user_id'] == thorny_user.thorny_id:
-                    self.user_rank = self.nugs_list.index(user) + 1
-
-    async def select_treasury(self):
-        async with pool.acquire() as conn:
-            self.treasury_list = await conn.fetch(f"SELECT kingdom, treasury FROM thorny.kingdoms "
-                                                  f"ORDER BY treasury DESC")
-
-    async def select_levels(self, ctx, member: discord.Member = None):
-        async with pool.acquire() as conn:
-            self.levels_list = await conn.fetch("""
-                                                SELECT thorny.user.user_id, thorny.levels.thorny_user_id, user_level
-                                                FROM thorny.user 
-                                                JOIN thorny.levels 
-                                                ON thorny.user.thorny_user_id = thorny.levels.thorny_user_id
-                                                WHERE thorny.user.guild_id = $1 
-                                                AND thorny.user.active = True
-                                                GROUP BY thorny.levels.thorny_user_id,
-                                                thorny.user.user_id, user_level, xp
-                                                ORDER BY xp DESC
-                                                """,
-                                                ctx.guild.id)
-            if member is None:
-                thorny_user = await UserFactory.build(ctx.author)
-            else:
-                thorny_user = await UserFactory.build(member)
-            for user in self.levels_list:
-                if user['thorny_user_id'] == thorny_user.thorny_id:
-                    self.user_rank = self.levels_list.index(user) + 1
-
-
-class User:
-    """I could probably change this, but it is needed"""
-    def __init__(self):
-        self.list = None
-
-    async def select_birthdays(self):
-        async with pool.acquire() as conn:
-            self.list = await conn.fetch("""SELECT user_id, birthday, guild_id
-                                            FROM thorny.user
-                                            WHERE active = True AND birthday IS NOT NULL""")
-            return self.list
-
-
 class WebserverUpdates:
     @staticmethod
     async def connect(gamertag: str, event_time: datetime, connection):
@@ -217,23 +131,24 @@ class WebserverUpdates:
         print(f"[{event_time}] [DISCONNECT] {gamertag}, with Thorny ID {thorny_user[0]} has disconnected")
 
     @staticmethod
-    async def disconnect_all(guild_id: int, event_time: datetime, connection):
-        all_online = await Base.select_online(Base(), guild_id)
+    async def disconnect_all(guild_id: int, event_time: datetime):
+        async with pool.acquire() as connection:
+            all_online = await Base().select_online(guild_id)
 
-        for person in all_online:
-            recent_connection = await connection.fetchrow("""
-                                                          SELECT * FROM thorny.activity
-                                                          WHERE thorny_user_id = $1
-                                                          ORDER BY connect_time DESC
-                                                          """,
-                                                          person['thorny_user_id'])
+            for person in all_online:
+                recent_connection = await connection.fetchrow("""
+                                                              SELECT * FROM thorny.activity
+                                                              WHERE thorny_user_id = $1
+                                                              ORDER BY connect_time DESC
+                                                              """,
+                                                              person['thorny_user_id'])
 
-            playtime = event_time - recent_connection['connect_time']
-            await connection.execute("""
-                                     UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
-                                     WHERE thorny_user_id = $3 and connect_time = $4
-                                     """,
-                                     event_time, playtime, person['thorny_user_id'], recent_connection['connect_time'],
-                                     'Disconnect All')
-            print(f"[{event_time}] [DISCONNECT ALL] User with Thorny ID {person['thorny_user_id']} has disconnected")
+                playtime = event_time - recent_connection['connect_time']
+                await connection.execute("""
+                                         UPDATE thorny.activity SET disconnect_time = $1, playtime = $2, description = $5
+                                         WHERE thorny_user_id = $3 and connect_time = $4
+                                         """,
+                                         event_time, playtime, person['thorny_user_id'], recent_connection['connect_time'],
+                                         'Disconnect All')
+                print(f"[{event_time}] [DISCONNECT ALL] User with Thorny ID {person['thorny_user_id']} has disconnected")
 
