@@ -1,4 +1,5 @@
 import random
+import re
 
 import discord
 from discord.ui import View, Select, Button, InputText
@@ -130,7 +131,6 @@ class PersistentProjectAdminButtons(View):
             thread = await forum_channel.create_thread(name=interaction.message.embeds[0].title,
                                                        content=interaction.message.embeds[0].title,
                                                        embed=interaction.message.embeds[0])
-            await thread.send("<@&668091613687316500> Please give this thread the 'Ongoing Project' tag.")
             await thread.send(f"<@{interaction.message.embeds[0].footer.text}> Congrats on your project being accepted!"
                               f"\nYou can now start sending updates for everyone to see the progress on your "
                               f"amazing project! Good luck, and most importantly, have fun!")
@@ -719,7 +719,6 @@ class RedeemSelectMenu(Select):
         pass
 
 
-
 class RedeemMenu(View):
     def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
         super().__init__(timeout=30.0)
@@ -742,3 +741,104 @@ class RedeemMenu(View):
         if isinstance(error, errors.ThornyError):
             await interaction.followup.send(embed=error.return_embed(),
                                             ephemeral=True)
+
+
+class ROAVerificationPanel(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Verify",
+                       custom_id="verify",
+                       style=discord.ButtonStyle.green)
+    async def verify_callback(self, button: discord.Button, interaction: discord.Interaction):
+        interaction.message.embeds[0].colour = 0x50C878
+        interaction.message.embeds[0].add_field(name="**STATUS:**",
+                                                value=f"APPROVED by {interaction.user.mention}\n"
+                                                      f"on {datetime.now()}",
+                                                inline=False)
+
+        self.disable_all_items()
+        await interaction.response.edit_message(view=None,
+                                                embed=interaction.message.embeds[0])
+        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
+        await thorny_user.discord_member.remove_roles(interaction.guild.get_role(1009931750287364107))
+        await thorny_user.discord_member.add_roles(interaction.guild.get_role(1056302000490414201))
+        await thorny_user.discord_member.send(f"You have been verified by an admin in the ROA. You now have full access "
+                                              f"to the ROA server's channels! Follow the rules, and have fun!")
+
+    @discord.ui.button(label="Deny",
+                       custom_id="deny",
+                       style=discord.ButtonStyle.red)
+    async def deny_callback(self, button: discord.Button, interaction: discord.Interaction):
+        interaction.message.embeds[0].add_field(name="**STATUS:**",
+                                                value=f"DENIED by {interaction.user.mention}\n"
+                                                      f"on {datetime.now()}",
+                                                inline=False)
+
+        self.disable_all_items()
+        await interaction.response.edit_message(view=None,
+                                                embed=interaction.message.embeds[0])
+        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
+        await thorny_user.discord_member.send(f"Your ROA Verification Request has been denied. "
+                                              f"Please re-apply.\n\n"
+                                              f"*Why did this happen?*\n"
+                                              f"There are many reasons it could have happened, here are some common ones:\n"
+                                              f"- You did not connect the correct Xbox account to your Discord\n"
+                                              f"- You did not share the correct image\n"
+                                              f"- The image you shared was hard to authenticate")
+
+    @discord.ui.button(label="Deny & Kick",
+                       custom_id="deny_k",
+                       style=discord.ButtonStyle.red)
+    async def deny_kick_callback(self, button: discord.Button, interaction: discord.Interaction):
+        interaction.message.embeds[0].add_field(name="**STATUS:**",
+                                                value=f"DENIED & KICKED by {interaction.user.mention}\n"
+                                                      f"on {datetime.now()}",
+                                                inline=False)
+
+        self.disable_all_items()
+        await interaction.response.edit_message(view=None,
+                                                embed=interaction.message.embeds[0])
+        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
+        await thorny_user.discord_member.send(f"Your ROA Verification Request has been denied. We are unable to verify your "
+                                              f"realm/server's authenticity. You have been kicked from the ROA.\n\n"
+                                              f"If you believe you were wrongfully denied, please contact a ROA Owner.")
+        await interaction.guild.kick(thorny_user.discord_member, reason=f"ROA Verification Denied by {interaction.user.name}")
+
+
+class ROAVerification(View):
+    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
+        super().__init__(timeout=120.0)
+        self.ctx = context
+        self.user = thorny_user
+        self.guild = thorny_guild
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=self)
+
+    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
+        if isinstance(error, errors.ThornyError):
+            await interaction.edit_original_response(embed=error.return_embed())
+
+    @discord.ui.button(label="Authenticate",
+                       custom_id="auth",
+                       style=discord.ButtonStyle.green)
+    async def auth_callback(self, button: discord.Button, interaction: discord.Interaction):
+        modal = modals.ROAVerification()
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+
+        if "https://cdn.discordapp.com/attachments" in modal.children[0].value:
+            await interaction.edit_original_response(content="Thank you for submitting your Realm for verification.\n"
+                                                     "Please wait for an ROA Admin to verify your realm.",
+                                                     embed=None,
+                                                     view=None)
+
+            # channel = interaction.guild.get_channel(1056332349383639140)
+            channel = interaction.guild.get_channel(1023300253350367275)
+            await channel.send(embed=embeds.roa_panel(self.user, modal.children[0].value),
+                               view=ROAVerificationPanel())
+
+        else:
+            raise errors.LinkError()

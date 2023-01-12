@@ -79,16 +79,16 @@ class Inventory(commands.Cog):
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
 
-    @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    @commands.has_permissions(administrator=True)
-    async def setprice(self, ctx,
-                       item_id: discord.Option(str, "Select an item to redeem", choices=slashoptions.slash_command_all_items()),
-                       price: int):
-        selector = dbutils.Base()
-        updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
-        if updated:
-            await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
+    # @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
+    #                         guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    # @commands.has_permissions(administrator=True)
+    # async def setprice(self, ctx,
+    #                    item_id: discord.Option(str, "Select an item to redeem", choices=slashoptions.slash_command_all_items()),
+    #                    price: int):
+    #     selector = dbutils.Base()
+    #     updated = await selector.update("item_cost", price, "item_type", "friendly_id", item_id)
+    #     if updated:
+    #         await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
     @commands.slash_command(description="Purchase items from the shop!",
                             guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))

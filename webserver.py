@@ -33,19 +33,18 @@ async def connect(request: Request, gamertag: str):
 @app.post('/<gamertag:str>/disconnect')
 async def disconnect(request: Request, gamertag: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
-    datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
+    datetime_object = datetime.now().replace(microsecond=0)
     async with pool.acquire() as conn:
         await WebserverUpdates.disconnect(gamertag, datetime_object, conn)
     return sanicjson({"Accept": True})
 
 
 @app.post('/<guild_id:str>/disconnect/all')
-async def disconnect(request: Request, guild_id: str):
+async def disconnect_all(request: Request, guild_id: str):
     print("Disconnecting all")
     guild_id = int(guild_id[12:-3])
-    datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
-    async with pool.acquire() as conn:
-        await WebserverUpdates.disconnect_all(guild_id, datetime_object, conn)
+    datetime_object = datetime.now().replace(microsecond=0)
+    await WebserverUpdates.disconnect_all(guild_id, datetime_object)
 
     return sanicjson({"Accept": True})
 

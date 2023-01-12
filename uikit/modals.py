@@ -186,3 +186,14 @@ class RedeemRole(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
+
+
+class ROAVerification(Modal):
+    def __init__(self):
+        super().__init__(title="Enter the link to your image")
+
+        self.add_item(InputText(label="Image link",
+                                placeholder="In the form: https://cdn.discordapp.com/attachments/.../link.png"))
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()

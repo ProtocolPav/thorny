@@ -195,3 +195,16 @@ class RedeemError(ThornyError):
                              value="You've redeemed the item, but it does nothing!")
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error
+
+class LinkError(ThornyError):
+    """Raised when the link sent is wrong"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Darn",
+                             value="Please ensure your link is in the format: "
+                                   "https://cdn.discordapp.com/attachments/.../link.png")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
