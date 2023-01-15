@@ -9,11 +9,9 @@ from thorny_core.uikit import embeds
 from thorny_core.db import User, Guild
 from thorny_core.db import commit
 
-
 config = json.load(open('../thorny_data/config.json', 'r+'))
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
-
 
 class Event:
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
@@ -24,7 +22,6 @@ class Event:
 
     async def log(self):
         ...
-
 
 class Connect(Event):
     async def log(self):
@@ -62,7 +59,6 @@ class Connect(Event):
             activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
             await activity_channel.send(embed=log_embed)
 
-
 class Disconnect(Event):
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
         super().__init__(client, event_time, user, guild)
@@ -99,7 +95,6 @@ class Disconnect(Event):
             activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
             await activity_channel.send(embed=log_embed)
 
-
 class AdjustPlaytime(Event):
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild, hour: int, minute: int):
         super().__init__(client, event_time, user, guild)
@@ -121,7 +116,6 @@ class AdjustPlaytime(Event):
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
                                    playtime, desc, self.thorny_user.thorny_id, current_connection['connect_time'])
-
 
 class GainXP(Event):
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild, message: discord.Message):
@@ -148,7 +142,6 @@ class GainXP(Event):
 
         if level_up:
             await self.message.channel.send(embed=embeds.level_up_embed(self.thorny_user, self.thorny_guild))
-
 
 class Transaction(Event):
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild,
@@ -181,4 +174,3 @@ class Birthday(Event):
         if self.thorny_guild.channels.welcome_channel is not None:
             logs_channel = self.client.get_channel(self.thorny_guild.channels.welcome_channel)
             await logs_channel.send(birthday_message)
-
