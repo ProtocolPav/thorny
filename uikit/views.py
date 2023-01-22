@@ -829,14 +829,14 @@ class ROAVerification(View):
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        if "https://cdn.discordapp.com/attachments" in modal.children[0].value:
+        if "https://cdn.discordapp.com/attachments" in modal.children[0].value \
+            or "https://media.discordapp.com/attachments" in modal.children[0].value:
             await interaction.edit_original_response(content="Thank you for submitting your Realm for verification.\n"
                                                      "Please wait for an ROA Admin to verify your realm.",
                                                      embed=None,
                                                      view=None)
 
-            # channel = interaction.guild.get_channel(1056332349383639140)
-            channel = interaction.guild.get_channel(1023300253350367275)
+            channel = interaction.guild.get_channel(1056332349383639140)
             await channel.send(embed=embeds.roa_panel(self.user, modal.children[0].value),
                                view=ROAVerificationPanel())
 

@@ -74,56 +74,66 @@ class Moderation(commands.Cog):
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
-    async def start(self, ctx):
+    async def start(self, ctx: discord.ApplicationContext):
+        thorny_guild = await GuildFactory.build(ctx.guild)
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            await client.post("http://bds_webserver:8000/start", timeout=None)
-            await asyncio.sleep(3)
             status = await client.get("http://bds_webserver:8000/status")
-            online_users = await Base.select_online(Base(), ctx.guild.id)
+            if status.json()['server_online']:
+                await ctx.respond(content='The server is already running!')
 
-            if status.json()['update'] is not None:
-                await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
-                                  f"The server has been updated and has started successfully.")
+            else:
+                await client.post("http://bds_webserver:8000/start", timeout=None)
+                await asyncio.sleep(3)
 
-                for user in online_users:
-                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    thorny_guild = await GuildFactory.build(ctx.guild)
+                status = await client.get("http://bds_webserver:8000/status")
+                online_users = await thorny_guild.get_online_players()
 
-                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                    await disconnection.log()
+                if status.json()['update'] is not None:
+                    await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
+                                      f"The server has been updated and has started successfully.")
 
-            elif status.json()["server_online"]:
-                await ctx.respond(f"The server is online")
+                    for user in online_users:
+                        thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
 
-                for user in online_users:
-                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    thorny_guild = await GuildFactory.build(ctx.guild)
+                        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                        await disconnection.log()
 
-                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                    await disconnection.log()
+                elif status.json()["server_online"]:
+                    await ctx.respond(f"The server is online")
+
+                    for user in online_users:
+                        thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+
+                        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                        await disconnection.log()
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.guild)
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            await client.post("http://bds_webserver:8000/stop", timeout=None)
-            await asyncio.sleep(3)
             status = await client.get("http://bds_webserver:8000/status")
-            online_users = await Base.select_online(Base(), ctx.guild.id)
+            if not status.json()['server_online']:
+                await ctx.respond(content='The server is already stopped!')
 
-            for user in online_users:
-                thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                thorny_guild = await GuildFactory.build(ctx.guild)
+            else:
+                await client.post("http://bds_webserver:8000/stop", timeout=None)
+                await asyncio.sleep(3)
+                status = await client.get("http://bds_webserver:8000/status")
+                online_users = await thorny_guild.get_online_players()
 
-                disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                await disconnection.log()
+                for user in online_users:
+                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
 
-            if not status.json()["server_online"]:
-                await ctx.respond(f"The server is offline")
+                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    await disconnection.log()
+
+                if not status.json()["server_online"]:
+                    await ctx.respond(f"The server is offline")
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
