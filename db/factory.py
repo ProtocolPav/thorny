@@ -232,6 +232,19 @@ class UserFactory:
                                         AND date_part('month', birthday) = date_part('month', now())""")
             return bdays
 
+    @classmethod
+    async def get_user_by_gamertag(cls, gamertag):
+        async with pool.acquire() as conn:
+            user = await conn.fetchrow("""
+                                       SELECT thorny.user.user_id FROM thorny.user
+                                       INNER JOIN thorny.profile
+                                       ON thorny.profile.thorny_user_id = thorny.user.thorny_user_id
+                                       WHERE gamertag = $1
+                                       """,
+                                       gamertag)
+
+            return user
+
 
 class GuildFactory:
     FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']

@@ -4,7 +4,8 @@ from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
 from dbutils import WebserverUpdates, Base
-from thorny_core.db.factory import UserFactory
+from thorny import thorny as client
+from thorny_core.db import UserFactory
 
 app = Sanic("thorny_server_app")
 pool: pg.Pool
@@ -25,6 +26,8 @@ async def test(request: Request):
 async def connect(request: Request, gamertag: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
     datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
+    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
+    print(thorny_user)
     async with pool.acquire() as conn:
         await WebserverUpdates.connect(gamertag, datetime_object, conn)
     return sanicjson({"Accept": True})

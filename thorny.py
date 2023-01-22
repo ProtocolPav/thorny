@@ -266,4 +266,6 @@ thorny.add_cog(help.Help(thorny))
 # thorny.add_cog(secret_santa.SecretSanta(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
-thorny.run(TOKEN)
+
+if __name__ == "__main__":
+    thorny.run(TOKEN)
