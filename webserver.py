@@ -1,20 +1,23 @@
 import asyncpg as pg
-from db.factory import create_pool
+from db.factory import pool
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
 from dbutils import WebserverUpdates, Base
 from thorny import thorny as client
 from thorny_core.db import UserFactory
+import asyncio
+
+from thorny import thorny as client, TOKEN
 
 app = Sanic("thorny_server_app")
 pool: pg.Pool
 
 
-@app.listener('after_server_start')
-async def create_database_pool(sanic, loop):
-    global pool
-    pool = await create_pool(loop)
+# @app.listener('after_server_start')
+# async def create_database_pool(sanic):
+#     global pool
+#     pool = await create_pool()
 
 
 @app.route('/')
@@ -52,9 +55,13 @@ async def disconnect_all(request: Request, guild_id: str):
     return sanicjson({"Accept": True})
 
 
-# @app.listener('after_server_start')
-# async def start_bot(application, loop: asyncio.AbstractEventLoop):
-#     print("starting bot...")
-#     loop.create_task(thorny.start(TOKEN))
+@app.listener('after_server_start')
+async def start_bot(application):
+    print("starting bot...")
+    asyncio.get_event_loop().create_task(client.start(TOKEN))
+
+    while True:
+        print("TASKS LIST", asyncio.all_tasks(asyncio.get_event_loop()))
+        await asyncio.sleep(10)
 
 app.run(host="0.0.0.0")

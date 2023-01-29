@@ -18,7 +18,7 @@ async def create_pool(loop=None):
                                        port=5432,
                                        max_inactive_connection_lifetime=10.0,
                                        max_size=300,
-                                       loop=loop)
+                                       loop=asyncio.get_event_loop())
     return pool_object
 
 
