@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import discord
 
-from db import pool
+from db.poolwrapper import pool_wrapper
 from db import user
 from dateutil.relativedelta import relativedelta
 
@@ -13,7 +13,7 @@ class Base:
         self.returned = None
 
     async def select(self, item, table, where_condition=None, condition_is=None):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             if where_condition is not None:
                 self.returned = await conn.fetch(f"""
                                                  SELECT {item} FROM thorny.{table}
@@ -28,7 +28,7 @@ class Base:
                 return self.returned
 
     async def select_gamertags(self, guild_id, gamertag):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             self.returned = await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
@@ -37,7 +37,7 @@ class Base:
             return self.returned
 
     async def select_online(self, guild_id):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             self.returned = await conn.fetch("SELECT * FROM thorny.activity "
                                              "JOIN thorny.user "
                                              "ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id "
@@ -49,7 +49,7 @@ class Base:
 
     async def update(self, item, item_new_value, table, where_condition=None, condition_is=None):
         self.returned = None  # just to make it a method
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             if where_condition is not None:
                 await conn.execute(f"""
                                     UPDATE thorny.{table}

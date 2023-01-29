@@ -154,8 +154,8 @@ class Playtime(commands.Cog):
     @commands.slash_command(description="See connected and AFK players and how much time they played for",
                             guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def online(self, ctx):
-        selector = dbutils.Base()
-        connected = await selector.select_online(ctx.guild.id)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        connected = await thorny_guild.get_online_players()
         online_text = ''
         afk_text = ''
         for player in connected:

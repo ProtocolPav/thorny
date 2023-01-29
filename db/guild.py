@@ -1,7 +1,7 @@
 import asyncpg as pg
 from datetime import datetime, timedelta, date
 import discord
-from thorny_core import errors
+from thorny_core.db.poolwrapper import PoolWrapper
 from dataclasses import dataclass, field
 
 
@@ -97,7 +97,7 @@ class Activity:
 
 @dataclass
 class Guild:
-    connection_pool: pg.Pool = field(repr=False)
+    connection_pool: PoolWrapper = field(repr=False)
     discord_guild: discord.Guild = field(repr=False)
     guild_id: int
     guild_name: str
@@ -115,7 +115,7 @@ class Guild:
     levels_enabled: bool
 
     def __init__(self,
-                 pool: pg.Pool,
+                 pool: PoolWrapper,
                  guild: discord.Guild,
                  guild_record: pg.Record,
                  reaction_roles: list[pg.Record],
@@ -144,7 +144,7 @@ class Guild:
             self.reactions.append(Reaction(reaction_record=record))
 
     async def get_online_players(self):
-        async with self.connection_pool.acquire() as conn:
+        async with self.connection_pool.connection() as conn:
             online_players = await conn.fetch("""
                                               SELECT * FROM thorny.activity 
                                               JOIN thorny.user

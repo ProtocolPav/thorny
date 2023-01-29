@@ -1,27 +1,15 @@
-import asyncpg as pg
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
 # from dbutils import WebserverUpdates, Base
 import asyncio
-import json
+
+from thorny import thorny as client, TOKEN
+
+from thorny_core.db.poolwrapper import pool_wrapper
 
 
 app = Sanic("thorny_server_app")
-pool: pg.Pool
-
-
-async def create_pool(loop=None):
-    config = json.load(open('../thorny_data/config.json', 'r+'))
-    pool_object = await pg.create_pool(database=config['database']['name'],
-                                       user=config['database']['user'],
-                                       password=config['database']['password'],
-                                       host=config['database']['host'],
-                                       port=5432,
-                                       max_inactive_connection_lifetime=10.0,
-                                       max_size=300,
-                                       loop=loop)
-    return pool_object
 
 
 @app.route('/')
@@ -62,14 +50,9 @@ async def disconnect_all(request: Request, guild_id: str):
 @app.listener('after_server_start')
 async def start_bot(application):
     print("starting bot...")
-    asyncio.get_event_loop().create_task(coro=thorny.start(TOKEN),
+    asyncio.get_event_loop().create_task(coro=client.start(TOKEN),
                                          name="Thorny Discord Client")
 
-    global pool
-    pool = await create_pool()
-
-    while True:
-        print("TASKS LIST", asyncio.all_tasks(asyncio.get_running_loop()))
-        await asyncio.sleep(10)
+    await pool_wrapper.init_pool()
 
 app.run(host="0.0.0.0")

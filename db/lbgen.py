@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 async def activity_leaderboard(thorny_user: user.User, month: datetime) -> tuple[list, int]:
     user_rank = 0
 
-    async with thorny_user.connection_pool.acquire() as conn:
+    async with thorny_user.connection_pool.connection() as conn:
         if datetime.now() < month:
             month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
         else:
@@ -37,7 +37,7 @@ async def activity_leaderboard(thorny_user: user.User, month: datetime) -> tuple
 async def money_leaderboard(thorny_user: user.User) -> tuple[list, int]:
     user_rank = 0
 
-    async with thorny_user.connection_pool.acquire() as conn:
+    async with thorny_user.connection_pool.connection() as conn:
         leaderboard = await conn.fetch("""
                                        SELECT user_id, thorny_user_id, balance FROM thorny.user
                                        WHERE thorny.user.guild_id = $1
@@ -57,7 +57,7 @@ async def money_leaderboard(thorny_user: user.User) -> tuple[list, int]:
 async def levels_leaderboard(thorny_user: user.User) -> tuple[list, int]:
     user_rank = 0
 
-    async with thorny_user.connection_pool.acquire() as conn:
+    async with thorny_user.connection_pool.connection() as conn:
         leaderboard = await conn.fetch("""
                                        SELECT thorny.user.user_id, thorny.levels.thorny_user_id, user_level
                                        FROM thorny.user 

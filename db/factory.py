@@ -6,30 +6,14 @@ import discord
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
 from thorny_core.db.guild import Guild
-from thorny_core.webserver import pool
+from thorny_core.db.poolwrapper import pool_wrapper
 from typing import Literal
-
-
-async def create_pool(loop=None):
-    config = json.load(open('../thorny_data/config.json', 'r+'))
-    pool_object = await pg.create_pool(database=config['database']['name'],
-                                       user=config['database']['user'],
-                                       password=config['database']['password'],
-                                       host=config['database']['host'],
-                                       port=5432,
-                                       max_inactive_connection_lifetime=10.0,
-                                       max_size=300,
-                                       loop=loop)
-    return pool_object
-
-
-# pool: pg.Pool = asyncio.get_event_loop().run_until_complete(create_pool())
 
 
 class UserFactory:
     @classmethod
     async def build(cls, member: discord.Member) -> User:
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
             thorny_user = await conn.fetchrow("""
@@ -123,7 +107,7 @@ class UserFactory:
                                         WHERE thorny_user_id = $1
                                         """,
                                         thorny_id)
-            return User(pool=pool,
+            return User(pool=pool_wrapper,
                         member=member,
                         thorny_user=thorny_user,
                         profile=profile,
@@ -140,7 +124,7 @@ class UserFactory:
 
     @classmethod
     async def get(cls, guild: discord.Guild, thorny_id: int) -> User:
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE thorny_user_id = $1""", thorny_id)
             member = guild.get_member(thorny_user['user_id'])
@@ -148,7 +132,7 @@ class UserFactory:
 
     @classmethod
     async def create(cls, members: list[discord.Member]):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             for member in members:
                 user_id = member.id
                 guild_id = member.guild.id
@@ -207,7 +191,7 @@ class UserFactory:
 
     @classmethod
     async def deactivate(cls, members: list[discord.Member]):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             for member in members:
                 thorny_user = await conn.fetchrow("""
                                                   SELECT * FROM thorny.user
@@ -225,7 +209,7 @@ class UserFactory:
 
     @classmethod
     async def get_birthdays(cls):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             bdays = await conn.fetch("""SELECT thorny_user_id, birthday, guild_id
                                         FROM thorny.user
                                         WHERE active = True AND birthday IS NOT NULL
@@ -235,7 +219,7 @@ class UserFactory:
 
     @classmethod
     async def get_user_by_gamertag(cls, gamertag):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             user = await conn.fetchrow("""
                                        SELECT thorny.user.user_id FROM thorny.user
                                        INNER JOIN thorny.profile
@@ -252,7 +236,7 @@ class GuildFactory:
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             await conn.set_type_codec(
                 'json',
                 encoder=json.dumps,
@@ -278,7 +262,7 @@ class GuildFactory:
                                             """,
                                             guild.id)
 
-            return Guild(pool=pool,
+            return Guild(pool=pool_wrapper,
                          guild=guild,
                          guild_record=guild_rec,
                          reaction_roles=reaction_roles,
@@ -286,7 +270,7 @@ class GuildFactory:
 
     @classmethod
     async def create(cls, guild: discord.Guild):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             await conn.set_type_codec(
                 'json',
                 encoder=json.dumps,
@@ -315,7 +299,7 @@ class GuildFactory:
 
     @classmethod
     async def deactivate(cls, guild: discord.Guild):
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             await conn.execute("""
                                UPDATE thorny.guild
                                SET active = False WHERE guild_id = $1
@@ -327,7 +311,7 @@ class GuildFactory:
     @classmethod
     def get_guilds_by_feature(cls, feature: FEATURES):
         async def get():
-            async with pool.acquire() as conn:
+            async with pool_wrapper.connection() as conn:
                 guild_ids = await conn.fetch("""
                                              SELECT guild_id FROM thorny.guild
                                              WHERE $1 = any(features_v2)

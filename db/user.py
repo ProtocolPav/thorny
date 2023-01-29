@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, date
 import discord
 from thorny_core import errors
 from dataclasses import dataclass, field
+from thorny_core.db.poolwrapper import PoolWrapper
 
 
 class Time:
@@ -307,7 +308,7 @@ class Counters:
 
 @dataclass
 class User:
-    connection_pool: pg.Pool = field(repr=False)
+    connection_pool: PoolWrapper = field(repr=False)
     discord_member: discord.Member = field(repr=False)
     thorny_id: int
     user_id: int
@@ -327,7 +328,7 @@ class User:
     counters: Counters
 
     def __init__(self,
-                 pool: pg.Pool,
+                 pool: PoolWrapper,
                  member: discord.Member,
                  thorny_user: pg.Record,
                  profile: pg.Record,
