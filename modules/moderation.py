@@ -75,72 +75,50 @@ class Moderation(commands.Cog):
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx: discord.ApplicationContext):
-        thorny_guild = await GuildFactory.build(ctx.guild)
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://bds_webserver:8000/status")
+            status = await client.get("http://thorny-bds:8000/status")
             if status.json()['server_online']:
                 await ctx.respond(content='The server is already running!')
 
             else:
-                await client.post("http://bds_webserver:8000/start", timeout=None)
+                await client.post("http://thorny-bds:8000/start", timeout=None)
                 await asyncio.sleep(3)
 
-                status = await client.get("http://bds_webserver:8000/status")
-                online_users = await thorny_guild.get_online_players()
+                status = await client.get("http://thorny-bds:8000/status")
 
                 if status.json()['update'] is not None:
                     await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
                                       f"The server has been updated and has started successfully.")
 
-                    # for user in online_users:
-                    #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    #
-                    #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                    #     await disconnection.log()
-
                 elif status.json()["server_online"]:
-                    await ctx.respond(f"The server is online")
-
-                    # for user in online_users:
-                    #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                    #
-                    #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                    #     await disconnection.log()
+                    await ctx.respond(f"The server has started successfully")
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
-        thorny_guild = await GuildFactory.build(ctx.guild)
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://bds_webserver:8000/status")
+            status = await client.get("http://thorny-bds:8000/status")
             if not status.json()['server_online']:
                 await ctx.respond(content='The server is already stopped!')
 
             else:
-                await client.post("http://bds_webserver:8000/stop", timeout=None)
+                await client.post("http://thorny-bds:8000/stop", timeout=None)
                 await asyncio.sleep(3)
-                status = await client.get("http://bds_webserver:8000/status")
-                online_users = await thorny_guild.get_online_players()
-
-                # for user in online_users:
-                #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-                #
-                #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                #     await disconnection.log()
+                status = await client.get("http://thorny-bds:8000/status")
 
                 if not status.json()["server_online"]:
-                    await ctx.respond(f"The server is offline")
+                    await ctx.respond(f"The server has shut down successfully")
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
+            r = await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
             if r.json()["kicked"]:
                 await ctx.respond(f"Kicked {thorny_user.profile.gamertag}")
             else:
@@ -151,7 +129,7 @@ class Moderation(commands.Cog):
     async def whitelist(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.post(f"http://bds_webserver:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
+            r = await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
             if r.json()["gamertag_added"]:
                 await ctx.respond(f"Whitelisted {thorny_user.profile.gamertag}")
             else:
