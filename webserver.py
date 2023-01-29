@@ -1,23 +1,27 @@
 import asyncpg as pg
-from db.factory import pool
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
-from dbutils import WebserverUpdates, Base
-from thorny import thorny as client
-from thorny_core.db import UserFactory
+# from dbutils import WebserverUpdates, Base
 import asyncio
+import json
 
-from thorny import thorny as client, TOKEN
 
 app = Sanic("thorny_server_app")
 pool: pg.Pool
 
 
-# @app.listener('after_server_start')
-# async def create_database_pool(sanic):
-#     global pool
-#     pool = await create_pool()
+async def create_pool(loop=None):
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    pool_object = await pg.create_pool(database=config['database']['name'],
+                                       user=config['database']['user'],
+                                       password=config['database']['password'],
+                                       host=config['database']['host'],
+                                       port=5432,
+                                       max_inactive_connection_lifetime=10.0,
+                                       max_size=300,
+                                       loop=loop)
+    return pool_object
 
 
 @app.route('/')
@@ -29,8 +33,8 @@ async def test(request: Request):
 async def connect(request: Request, gamertag: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
     datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
-    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
-    print(thorny_user)
+    # thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
+    # print(thorny_user)
     async with pool.acquire() as conn:
         await WebserverUpdates.connect(gamertag, datetime_object, conn)
     return sanicjson({"Accept": True})
@@ -58,10 +62,14 @@ async def disconnect_all(request: Request, guild_id: str):
 @app.listener('after_server_start')
 async def start_bot(application):
     print("starting bot...")
-    asyncio.get_event_loop().create_task(client.start(TOKEN))
+    asyncio.get_event_loop().create_task(coro=thorny.start(TOKEN),
+                                         name="Thorny Discord Client")
+
+    global pool
+    pool = await create_pool()
 
     while True:
-        print("TASKS LIST", asyncio.all_tasks(asyncio.get_event_loop()))
+        print("TASKS LIST", asyncio.all_tasks(asyncio.get_running_loop()))
         await asyncio.sleep(10)
 
 app.run(host="0.0.0.0")

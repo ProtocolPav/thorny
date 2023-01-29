@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import discord
 
-from db import UserFactory, pool
+from db import pool
 from db import user
 from dateutil.relativedelta import relativedelta
 

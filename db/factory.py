@@ -6,6 +6,7 @@ import discord
 from dateutil.relativedelta import relativedelta
 from thorny_core.db.user import User
 from thorny_core.db.guild import Guild
+from thorny_core.webserver import pool
 from typing import Literal
 
 
@@ -18,11 +19,11 @@ async def create_pool(loop=None):
                                        port=5432,
                                        max_inactive_connection_lifetime=10.0,
                                        max_size=300,
-                                       loop=asyncio.get_event_loop())
+                                       loop=loop)
     return pool_object
 
 
-pool: pg.Pool = asyncio.get_event_loop().run_until_complete(create_pool())
+# pool: pg.Pool = asyncio.get_event_loop().run_until_complete(create_pool())
 
 
 class UserFactory:

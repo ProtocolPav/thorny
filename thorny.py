@@ -4,8 +4,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from db import UserFactory
-from thorny_core.db import event as new_event
+from thorny_core.db import event as new_event, GuildFactory, UserFactory
 from thorny_core.uikit import embeds
 import errors
 import traceback
@@ -13,7 +12,6 @@ import json
 import random
 import sys
 import httpx
-from thorny_core.db.factory import GuildFactory
 from thorny_core.uikit.views import PersistentProjectAdminButtons, ROAVerificationPanel
 from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
 
@@ -43,6 +41,10 @@ async def on_ready():
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(PersistentProjectAdminButtons())
     thorny.add_view(ROAVerificationPanel())
+
+    birthday_checker.start()
+    day_counter.start()
+    interruption_check.start()
 
 
 @tasks.loop(seconds=500)
@@ -79,11 +81,6 @@ async def day_counter():
 @birthday_checker.before_loop
 async def before_check():
     await thorny.wait_until_ready()
-
-
-birthday_checker.start()
-day_counter.start()
-interruption_check.start()
 
 
 @thorny.slash_command(description="Get bot stats")
@@ -267,5 +264,5 @@ thorny.add_cog(help.Help(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 
-# if __name__ == "__main__":
-#     thorny.run(TOKEN)
+if __name__ == "__main__":
+    thorny.run(TOKEN)
