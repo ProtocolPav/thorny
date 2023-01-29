@@ -7,7 +7,7 @@ from thorny_core.uikit.views import ProjectApplicationForm
 import httpx
 
 import json
-from thorny_core.db import UserFactory, commit, GuildFactory, event as new_event
+from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core.dbutils import Base
 from thorny_core.uikit import embeds, views
 
@@ -97,7 +97,7 @@ class Moderation(commands.Cog):
                     # for user in online_users:
                     #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
                     #
-                    #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                     #     await disconnection.log()
 
                 elif status.json()["server_online"]:
@@ -106,7 +106,7 @@ class Moderation(commands.Cog):
                     # for user in online_users:
                     #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
                     #
-                    #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                     #     await disconnection.log()
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
@@ -129,7 +129,7 @@ class Moderation(commands.Cog):
                 # for user in online_users:
                 #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
                 #
-                #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                #     disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
                 #     await disconnection.log()
 
                 if not status.json()["server_online"]:

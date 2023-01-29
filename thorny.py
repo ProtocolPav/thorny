@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event as new_event, GuildFactory, UserFactory
+from thorny_core.db import event, GuildFactory, UserFactory
 from thorny_core.uikit import embeds
 import errors
 import traceback
@@ -63,9 +63,9 @@ async def birthday_checker():
         for guild in thorny.guilds:
             if guild.id == user["guild_id"]:
                 thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.get(guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
 
-                birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()
 
 
@@ -138,7 +138,7 @@ async def on_message(message: discord.Message):
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.levels_enabled:
-            gain_xp_event = new_event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
+            gain_xp_event = event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
 
             await gain_xp_event.log()
 

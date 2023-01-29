@@ -110,6 +110,7 @@ class UserFactory:
             return User(pool=pool_wrapper,
                         member=member,
                         thorny_user=thorny_user,
+                        thorny_guild=await GuildFactory.build(member.guild),
                         profile=profile,
                         profile_columns=profile_column_data,
                         levels=levels,
@@ -123,12 +124,16 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def get(cls, guild: discord.Guild, thorny_id: int) -> User:
+    async def fetch(cls, guild: discord.Guild, thorny_id: int) -> User:
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
                                                  WHERE thorny_user_id = $1""", thorny_id)
             member = guild.get_member(thorny_user['user_id'])
         return await UserFactory.build(member)
+
+    @classmethod
+    async def fetch_by_gamertag(cls, guild: discord.Guild, gamertag: str) -> User:
+        ...
 
     @classmethod
     async def create(cls, members: list[discord.Member]):

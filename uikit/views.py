@@ -1,5 +1,4 @@
 import random
-import re
 
 import discord
 from discord.ui import View, Select, Button, InputText
@@ -8,7 +7,7 @@ import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
-from thorny_core.db import User, UserFactory, GuildFactory, Guild, event as new_event
+from thorny_core.db import User, UserFactory, GuildFactory, Guild
 from thorny_core import errors, dbutils
 
 

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from thorny_core import errors
 from thorny_core.db import UserFactory, commit, GuildFactory
-from thorny_core.db import event as new_event
+from thorny_core.db import event
 from thorny_core.uikit import embeds
 
 
@@ -56,7 +56,7 @@ class Money(commands.Cog):
             await ctx.respond(f"{user.mention} You've been paid!")
             await ctx.edit(content=None, embed=embeds.payment_embed(thorny_user, receivable_user, thorny_guild, amount, reason))
 
-            transaction = new_event.Transaction(self.client, datetime.now(), thorny_user, thorny_guild,
+            transaction = event.Transaction(self.client, datetime.now(), thorny_user, thorny_guild,
                                                 receivable_user, amount, reason)
 
             await transaction.log()
