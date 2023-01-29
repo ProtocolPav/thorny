@@ -94,20 +94,20 @@ class Moderation(commands.Cog):
                     await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
                                       f"The server has been updated and has started successfully.")
 
-                    for user in online_users:
-                        thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-
-                        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                        await disconnection.log()
+                    # for user in online_users:
+                    #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+                    #
+                    #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    #     await disconnection.log()
 
                 elif status.json()["server_online"]:
                     await ctx.respond(f"The server is online")
 
-                    for user in online_users:
-                        thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-
-                        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                        await disconnection.log()
+                    # for user in online_users:
+                    #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+                    #
+                    #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                    #     await disconnection.log()
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
@@ -126,11 +126,11 @@ class Moderation(commands.Cog):
                 status = await client.get("http://bds_webserver:8000/status")
                 online_users = await thorny_guild.get_online_players()
 
-                for user in online_users:
-                    thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
-
-                    disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
-                    await disconnection.log()
+                # for user in online_users:
+                #     thorny_user = await UserFactory.get(ctx.guild, user['thorny_user_id'])
+                #
+                #     disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+                #     await disconnection.log()
 
                 if not status.json()["server_online"]:
                     await ctx.respond(f"The server is offline")
