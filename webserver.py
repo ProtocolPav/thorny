@@ -22,7 +22,8 @@ async def connect(request: Request, gamertag: str, guild_id: str):
     guild_id = int(guild_id[12:-3])
 
     thorny_guild = await GuildFactory.build(client.get_guild(guild_id))
-    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag)))
+    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag,
+                                                                                                                       guild_id)))
     connection = event.Connect(client, datetime.now(), thorny_user, thorny_guild)
     await connection.log()
     return sanicjson({"Accept": True})
@@ -34,7 +35,8 @@ async def disconnect(request: Request, gamertag: str, guild_id: str):
     guild_id = int(guild_id[12:-3])
 
     thorny_guild = await GuildFactory.build(client.get_guild(guild_id))
-    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag)))
+    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag,
+                                                                                                                       guild_id)))
     disconnection = event.Disconnect(client, datetime.now(), thorny_user, thorny_guild)
     await disconnection.log()
     return sanicjson({"Accept": True})
