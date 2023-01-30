@@ -222,6 +222,7 @@ class UserFactory:
                                         AND date_part('month', birthday) = date_part('month', now())""")
             return bdays
 
+
     @classmethod
     async def get_user_by_gamertag(cls, gamertag):
         async with pool_wrapper.connection() as conn:
