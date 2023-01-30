@@ -16,21 +16,25 @@ async def test(request: Request):
     return sanicjson({'hello': 'world'})
 
 
-@app.post('/<gamertag:str>/connect')
-async def connect(request: Request, gamertag: str):
+@app.post('/<guild_id:str>/<gamertag:str>/connect')
+async def connect(request: Request, gamertag: str, guild_id: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
-    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
-    thorny_guild = await GuildFactory.build(client.get_guild(thorny_user.guild_id))
+    guild_id = int(guild_id[12:-3])
+
+    thorny_guild = await GuildFactory.build(client.get_guild(guild_id))
+    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag)))
     connection = event.Connect(client, datetime.now(), thorny_user, thorny_guild)
     await connection.log()
     return sanicjson({"Accept": True})
 
 
-@app.post('/<gamertag:str>/disconnect')
-async def disconnect(request: Request, gamertag: str):
+@app.post('/<guild_id:str>/<gamertag:str>/disconnect')
+async def disconnect(request: Request, gamertag: str, guild_id: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
-    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
-    thorny_guild = await GuildFactory.build(client.get_guild(thorny_user.guild_id))
+    guild_id = int(guild_id[12:-3])
+
+    thorny_guild = await GuildFactory.build(client.get_guild(guild_id))
+    thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag)))
     disconnection = event.Disconnect(client, datetime.now(), thorny_user, thorny_guild)
     await disconnection.log()
     return sanicjson({"Accept": True})
