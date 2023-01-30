@@ -28,7 +28,7 @@ class Event:
 
 class Connect(Event):
     async def log(self):
-        async with self.thorny_user.connection_pool.acquire() as conn:
+        async with self.thorny_user.connection_pool.connection() as conn:
             current_connection = self.thorny_user.playtime.current_connection
 
             if current_connection is None or current_connection['disconnect_time'] is not None:
@@ -70,7 +70,7 @@ class Disconnect(Event):
         self.playtime_overtime = False
 
     async def log(self):
-        async with self.thorny_user.connection_pool.acquire() as conn:
+        async with self.thorny_user.connection_pool.connection() as conn:
             current_connection = self.thorny_user.playtime.current_connection
 
             if current_connection is None or current_connection['disconnect_time'] is not None:
@@ -107,7 +107,7 @@ class AdjustPlaytime(Event):
         self.minute = minute
 
     async def log(self):
-        async with self.thorny_user.connection_pool.acquire() as conn:
+        async with self.thorny_user.connection_pool.connection() as conn:
             current_connection = self.thorny_user.playtime.current_connection
 
             if current_connection is None or current_connection['disconnect_time'] is None:

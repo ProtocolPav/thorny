@@ -4,12 +4,8 @@ from discord.ext import commands
 
 import json
 from thorny_core import errors
-from thorny_core import dbutils
 from thorny_core.db import UserFactory, commit, GuildFactory
-from discord import utils
-from thorny_core.uikit import embeds, views
-from thorny_core.modules import redeemingfuncs
-from thorny_core.uikit import slashoptions
+import thorny_core.uikit as uikit
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 vers = json.load(open('version.json', 'r'))
@@ -30,18 +26,18 @@ class Inventory(commands.Cog):
         thorny_guild = await GuildFactory.build(user.guild)
 
         if user == ctx.author:
-            view_to_be_sent = views.RedeemMenu(thorny_user, thorny_guild, ctx)
+            view_to_be_sent = uikit.RedeemMenu(thorny_user, thorny_guild, ctx)
         else:
             view_to_be_sent = None
 
-        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild),
+        await ctx.respond(embed=uikit.inventory_embed(thorny_user, thorny_guild),
                           view=view_to_be_sent)
 
     @inventory.command(description="Mod Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
-                                          choices=slashoptions.slash_command_all_items()),
+                                          choices=uikit.slash_command_all_items()),
                   count: int = 1):
         thorny_user = await UserFactory.build(user)
 
@@ -62,7 +58,7 @@ class Inventory(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
-                                             choices=slashoptions.slash_command_all_items()),
+                                             choices=uikit.slash_command_all_items()),
                      count: int = None):
         thorny_user = await UserFactory.build(user)
         item = thorny_user.inventory.fetch(item_id)
@@ -96,8 +92,8 @@ class Inventory(commands.Cog):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
-        await ctx.respond(embed=embeds.store_items(thorny_user, thorny_guild),
-                          view=views.Store(thorny_user, thorny_guild, ctx))
+        await ctx.respond(embed=uikit.store_items(thorny_user, thorny_guild),
+                          view=uikit.Store(thorny_user, thorny_guild, ctx))
 
     @commands.slash_command(description="See how tickets work!",
                             guild_ids=None)

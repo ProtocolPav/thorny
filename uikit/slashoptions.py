@@ -8,7 +8,7 @@ Make everything a function which returns the things needed, and rename the file 
 import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
-from thorny_core.db.factory import pool
+from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core.db import User
 
 
@@ -118,7 +118,7 @@ server_setup = [SelectOption(label="Welcome Configuration",
 
 def shop_items():
     async def get():
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             items = await conn.fetch("""
                                      SELECT * FROM thorny.item_type
                                      WHERE item_cost > 0
@@ -138,7 +138,7 @@ def shop_items():
 
 def slash_command_all_items():
     async def get():
-        async with pool.acquire() as conn:
+        async with pool_wrapper.connection() as conn:
             items = await conn.fetch("""
                                      SELECT * FROM thorny.item_type
                                      """)

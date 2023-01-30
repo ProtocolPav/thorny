@@ -1,19 +1,14 @@
-import asyncpg as pg
-from db.factory import create_pool
 from sanic import Sanic, Request
 from sanic.response import json as sanicjson
 from datetime import datetime
-from dbutils import WebserverUpdates, Base
-from thorny_core.db.factory import UserFactory
+import asyncio
 
-app = Sanic("thorny_server_app")
-pool: pg.Pool
+from thorny import thorny as client, TOKEN
+from thorny_core.db.poolwrapper import pool_wrapper
+from thorny_core.db import event, UserFactory, GuildFactory
 
 
-@app.listener('after_server_start')
-async def create_database_pool(sanic, loop):
-    global pool
-    pool = await create_pool(loop)
+app = Sanic("thorny_bot_app")
 
 
 @app.route('/')
@@ -24,34 +19,40 @@ async def test(request: Request):
 @app.post('/<gamertag:str>/connect')
 async def connect(request: Request, gamertag: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
-    datetime_object = datetime.strptime(request.body.decode('ascii'), "%Y-%m-%d %H:%M:%S")
-    async with pool.acquire() as conn:
-        await WebserverUpdates.connect(gamertag, datetime_object, conn)
+    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
+    thorny_guild = await GuildFactory.build(client.get_guild(thorny_user.guild_id))
+    connection = event.Connect(client, datetime.now(), thorny_user, thorny_guild)
+    await connection.log()
     return sanicjson({"Accept": True})
 
 
 @app.post('/<gamertag:str>/disconnect')
 async def disconnect(request: Request, gamertag: str):
     gamertag = gamertag[12:-3].replace("%20", " ")
-    datetime_object = datetime.now().replace(microsecond=0)
-    async with pool.acquire() as conn:
-        await WebserverUpdates.disconnect(gamertag, datetime_object, conn)
+    thorny_user = await UserFactory.build(client.get_user(await UserFactory.get_user_by_gamertag(gamertag)))
+    thorny_guild = await GuildFactory.build(client.get_guild(thorny_user.guild_id))
+    disconnection = event.Disconnect(client, datetime.now(), thorny_user, thorny_guild)
+    await disconnection.log()
     return sanicjson({"Accept": True})
 
 
 @app.post('/<guild_id:str>/disconnect/all')
 async def disconnect_all(request: Request, guild_id: str):
-    print("Disconnecting all")
     guild_id = int(guild_id[12:-3])
-    datetime_object = datetime.now().replace(microsecond=0)
-    await WebserverUpdates.disconnect_all(guild_id, datetime_object)
+    thorny_guild = await GuildFactory.build(client.get_guild(guild_id))
+    for connected_user in await thorny_guild.get_online_players():
+        thorny_user = await UserFactory.build(thorny_guild.discord_guild.get_member(connected_user['user_id']))
+        disconnection = event.Disconnect(client, datetime.now(), thorny_user, thorny_guild)
+        await disconnection.log()
 
     return sanicjson({"Accept": True})
 
 
-# @app.listener('after_server_start')
-# async def start_bot(application, loop: asyncio.AbstractEventLoop):
-#     print("starting bot...")
-#     loop.create_task(thorny.start(TOKEN))
+@app.listener('after_server_start')
+async def start_bot(application):
+    asyncio.get_event_loop().create_task(coro=client.start(TOKEN),
+                                         name="Thorny Discord Client")
+
+    await pool_wrapper.init_pool()
 
 app.run(host="0.0.0.0")

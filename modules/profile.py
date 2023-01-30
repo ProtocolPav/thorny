@@ -13,7 +13,7 @@ v = version_json["version"]
 
 class Profile(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.client: discord.Client = client
 
     @commands.slash_command(description="See your or a user's profile",
                             guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
