@@ -224,15 +224,16 @@ class UserFactory:
 
 
     @classmethod
-    async def get_user_by_gamertag(cls, gamertag):
+    async def get_user_by_gamertag(cls, gamertag, guild_id):
         async with pool_wrapper.connection() as conn:
             user = await conn.fetchrow("""
                                        SELECT thorny.user.user_id FROM thorny.user
                                        INNER JOIN thorny.profile
                                        ON thorny.profile.thorny_user_id = thorny.user.thorny_user_id
-                                       WHERE gamertag = $1
+                                       WHERE gamertag = $1 
+                                       AND guild_id = $2
                                        """,
-                                       gamertag)
+                                       gamertag, guild_id)
 
             return user
 
