@@ -299,8 +299,19 @@ class GuildFactory:
                                    """,
                                    guild.id, exact_default, wildcard_default
                                    )
-            print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Created guild "
-                  f"{guild.name}, ID {guild.id}")
+
+                print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Created guild "
+                      f"{guild.name}, ID {guild.id}")
+
+            else:
+                await conn.execute("""
+                                   UPDATE thorny.guild
+                                   SET active = True WHERE guild_id = $1
+                                   """,
+                                   guild.id)
+
+                print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Reactivated guild "
+                      f"{guild.name}, ID {guild.id}")
 
     @classmethod
     async def deactivate(cls, guild: discord.Guild):

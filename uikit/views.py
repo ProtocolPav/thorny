@@ -828,8 +828,7 @@ class ROAVerification(View):
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        if "https://cdn.discordapp.com/attachments" in modal.children[0].value \
-            or "https://media.discordapp.com/attachments" in modal.children[0].value:
+        if "cdn.discordapp.com" in modal.children[0].value or "media.discordapp.net" in modal.children[0].value:
             await interaction.edit_original_response(content="Thank you for submitting your Realm for verification.\n"
                                                      "Please wait for an ROA Admin to verify your realm.",
                                                      embed=None,

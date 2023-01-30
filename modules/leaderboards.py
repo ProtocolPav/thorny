@@ -6,7 +6,7 @@ import math
 
 from thorny_core.db.factory import UserFactory, GuildFactory
 from thorny_core.db import lbgen
-from thorny_core.uikit import slashoptions
+import thorny_core.uikit as uikit
 
 
 class Leaderboard(commands.Cog):
@@ -20,8 +20,8 @@ class Leaderboard(commands.Cog):
     @leaderboard.command(description="See the Activity leaderboard")
     async def activity(self, ctx, month: discord.Option(str, "Pick a month to view activity for. Leave blank "
                                                              "to see the current month.",
-                                                        autocomplete=basic_autocomplete(slashoptions.months),
-                                                        default=slashoptions.current_month())):
+                                                        autocomplete=basic_autocomplete(uikit.months),
+                                                        default=uikit.current_month())):
         self.pages = []
         month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
 

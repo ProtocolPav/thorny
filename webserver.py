@@ -8,7 +8,7 @@ from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core.db import event, UserFactory, GuildFactory
 
 
-app = Sanic("thorny_server_app")
+app = Sanic("thorny_bot_app")
 
 
 @app.route('/')
@@ -50,7 +50,6 @@ async def disconnect_all(request: Request, guild_id: str):
 
 @app.listener('after_server_start')
 async def start_bot(application):
-    print("starting bot...")
     asyncio.get_event_loop().create_task(coro=client.start(TOKEN),
                                          name="Thorny Discord Client")
 
