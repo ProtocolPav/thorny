@@ -16,6 +16,8 @@ giphy_token = config["giphy_token"]
 def ping_embed(client: discord.Bot, bot_started_on: datetime):
     uptime = datetime.now().replace(microsecond=0) - bot_started_on
 
+    print(client.application_commands)
+
     embed = discord.Embed(color=0x228B22)
     embed.add_field(name="Hey! I'm Thorny!",
                     value=f"*Always here to help!*\n\n"

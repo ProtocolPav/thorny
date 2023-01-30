@@ -4,7 +4,7 @@ from thorny_core import dbutils
 from datetime import datetime, timedelta
 import json
 from thorny_core import errors
-from thorny_core.db import event as new_event
+from thorny_core.db import event
 from thorny_core.db import UserFactory, GuildFactory
 import httpx
 
@@ -27,7 +27,7 @@ class Playtime(commands.Cog):
             thorny_user = await UserFactory.build(ctx.author)
             thorny_guild = await GuildFactory.build(ctx.guild)
 
-            connection = new_event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
+            connection = event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
             await connection.log()
 
             response_embed = discord.Embed(title="OOOH! You're playing! :smile:",
@@ -50,7 +50,7 @@ class Playtime(commands.Cog):
             thorny_user = await UserFactory.build(ctx.author)
             thorny_guild = await GuildFactory.build(ctx.guild)
 
-            disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+            disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
             await disconnection.log()
 
             response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
@@ -79,7 +79,7 @@ class Playtime(commands.Cog):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
-        adjust = new_event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours or 0),
+        adjust = event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours or 0),
                                           abs(minutes or 0))
         await adjust.log()
 
@@ -94,7 +94,7 @@ class Playtime(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
-        connection = new_event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
+        connection = event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
         await connection.log()
 
         response_embed = discord.Embed(title="Playing? On Everthorn?! :smile:",
@@ -114,7 +114,7 @@ class Playtime(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
-        disconnection = new_event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
+        disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
         await disconnection.log()
 
         response_embed = discord.Embed(title="Nooo Don't Go So Soon! :cry:", color=0xFF5F15)
@@ -145,7 +145,7 @@ class Playtime(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
-        adjust = new_event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours), abs(minutes))
+        adjust = event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours), abs(minutes))
         await adjust.log()
 
         await ctx.respond(f'{thorny_user.discord_member.mention}, your most recent playtime has been reduced by '
@@ -154,8 +154,8 @@ class Playtime(commands.Cog):
     @commands.slash_command(description="See connected and AFK players and how much time they played for",
                             guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def online(self, ctx):
-        selector = dbutils.Base()
-        connected = await selector.select_online(ctx.guild.id)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        connected = await thorny_guild.get_online_players()
         online_text = ''
         afk_text = ''
         for player in connected:
@@ -172,13 +172,13 @@ class Playtime(commands.Cog):
                            f"connected {time[0]}h{time[1]}m ago"
 
         async with httpx.AsyncClient() as client:
-            r: httpx.Response = await client.get("http://bds_webserver:8000/status")
+            r: httpx.Response = await client.get("http://thorny-bds:8000/status")
 
         online_embed = discord.Embed(color=0x6495ED)
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
 
-            if r.json()['server_status']:
+            if r.json()['server_online']:
                 online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
             else:
                 online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"

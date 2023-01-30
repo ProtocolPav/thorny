@@ -1,8 +1,32 @@
 import asyncpg as pg
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import discord
-from thorny_core import errors
+from thorny_core.db.poolwrapper import PoolWrapper
 from dataclasses import dataclass, field
+
+
+class Time:
+    def __init__(self, time_object: datetime | timedelta | date):
+        self.time = time_object
+
+    def __str__(self):
+        if type(self.time) == (date or datetime):
+            datetime_string = datetime.strftime(self.time, "%B %d, %Y")
+            return datetime_string
+        elif type(self.time) == timedelta:
+            total_seconds = int(self.time.total_seconds())
+            days, remainder = divmod(total_seconds, 24 * 60 * 60)
+            hours, remainder = divmod(remainder, 60*60)
+            minutes, seconds = divmod(remainder, 60)
+
+            if days == 0:
+                return f"{hours}h{minutes}m"
+            elif days == 1:
+                return f"{days} day, {hours}h{minutes}m"
+            elif days > 1:
+                return f"{days} days, {hours}h{minutes}m"
+
+        return str(self.time)
 
 
 @dataclass
@@ -65,12 +89,15 @@ class Reaction:
 
 @dataclass
 class Activity:
-    ...
+    total_current_month: Time
+
+    def __init__(self, activity_record: pg.Record):
+        self.total_current_month = Time(activity_record['current_month'])
 
 
 @dataclass
 class Guild:
-    connection_pool: pg.Pool = field(repr=False)
+    connection_pool: PoolWrapper = field(repr=False)
     discord_guild: discord.Guild = field(repr=False)
     guild_id: int
     guild_name: str
@@ -88,7 +115,7 @@ class Guild:
     levels_enabled: bool
 
     def __init__(self,
-                 pool: pg.Pool,
+                 pool: PoolWrapper,
                  guild: discord.Guild,
                  guild_record: pg.Record,
                  reaction_roles: list[pg.Record],
@@ -115,3 +142,17 @@ class Guild:
 
         for record in reaction_roles:
             self.reactions.append(Reaction(reaction_record=record))
+
+    async def get_online_players(self):
+        async with self.connection_pool.connection() as conn:
+            online_players = await conn.fetch("""
+                                              SELECT * FROM thorny.activity 
+                                              JOIN thorny.user
+                                              ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
+                                              WHERE disconnect_time is NULL
+                                              AND thorny.user.guild_id = $1
+                                              ORDER BY connect_time DESC
+                                              """,
+                                              self.guild_id)
+
+            return online_players

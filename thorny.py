@@ -4,18 +4,15 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from db import UserFactory
-from thorny_core.db import event as new_event
-from thorny_core.uikit import embeds
+from thorny_core.db import event, GuildFactory, UserFactory
 import errors
 import traceback
 import json
 import random
 import sys
 import httpx
-from thorny_core.db.factory import GuildFactory
-from thorny_core.uikit.views import PersistentProjectAdminButtons, ROAVerificationPanel
-from modules import money, help, inventory, leaderboards, moderation, playtime, profile, level, setup, secret_santa
+import modules
+import uikit
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -30,40 +27,59 @@ intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
 bot_started = datetime.now().replace(microsecond=0)
+shutdown_notice_received = False
 
 
 @thorny.event
 async def on_ready():
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Hate It Or Thorn It | {v}")
+                                    name=f"Thorn Flow")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
-    thorny.add_view(PersistentProjectAdminButtons())
-    thorny.add_view(ROAVerificationPanel())
+    thorny.add_view(uikit.PersistentProjectAdminButtons())
+    thorny.add_view(uikit.ROAVerificationPanel())
+
+    birthday_checker.start()
+    day_counter.start()
+    interruption_check.start()
 
 
-@tasks.loop(seconds=500)
+@tasks.loop(seconds=5)
 async def interruption_check():
+    global shutdown_notice_received
+    await thorny.wait_until_ready()
+
     async with httpx.AsyncClient() as client:
-        r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
-        if r.status_code != 404:
+        try:
+            r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
+            if r.status_code != 404 and not shutdown_notice_received:
+                channel = thorny.get_channel(687720871972044826)
+
+                await channel.send("I have received a shutdown notice. The server will be going offline in around 2 minutes.\n"
+                                   "Please wait patiently for the server to start back up.")
+
+                shutdown_notice_received = True
+
+        except httpx.ConnectError:
             pass
 
 
 @tasks.loop(hours=24.0)
 async def birthday_checker():
+    await thorny.wait_until_ready()
+
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
     bday_list = await UserFactory.get_birthdays()
     for user in bday_list:
         for guild in thorny.guilds:
             if guild.id == user["guild_id"]:
                 thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.get(guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
 
-                birthday_event = new_event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()
 
 
@@ -76,19 +92,9 @@ async def day_counter():
                                   f"**Day {days_since_start.days + 1}** has dawned upon us.")
 
 
-@birthday_checker.before_loop
-async def before_check():
-    await thorny.wait_until_ready()
-
-
-birthday_checker.start()
-day_counter.start()
-interruption_check.start()
-
-
 @thorny.slash_command(description="Get bot stats")
 async def ping(ctx):
-    await ctx.respond(embed=embeds.ping_embed(thorny, bot_started))
+    await ctx.respond(embed=uikit.ping_embed(thorny, bot_started))
 
 
 @thorny.event
@@ -141,7 +147,7 @@ async def on_message(message: discord.Message):
         thorny_guild = await GuildFactory.build(message.guild)
 
         if thorny_guild.levels_enabled:
-            gain_xp_event = new_event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
+            gain_xp_event = event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
 
             await gain_xp_event.log()
 
@@ -154,7 +160,7 @@ async def on_message_delete(message: discord.Message):
         if thorny_guild.channels.logs_channel is not None:
             logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
 
-            await logs_channel.send(embed=embeds.message_delete_embed(message, datetime.now()))
+            await logs_channel.send(embed=uikit.message_delete_embed(message, datetime.now()))
 
 
 @thorny.event
@@ -165,7 +171,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
         if thorny_guild.channels.logs_channel is not None:
             logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
 
-            await logs_channel.send(embed=embeds.message_edit_embed(before, after, datetime.now()))
+            await logs_channel.send(embed=uikit.message_edit_embed(before, after, datetime.now()))
 
 
 @thorny.event
@@ -223,7 +229,7 @@ async def on_member_join(member: discord.Member):
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
 
-        await welcome_channel.send(embed=embeds.user_join(thorny_user, thorny_guild))
+        await welcome_channel.send(embed=uikit.user_join(thorny_user, thorny_guild))
 
 
 @thorny.event
@@ -235,7 +241,7 @@ async def on_member_remove(member):
     if thorny_guild.channels.welcome_channel is not None:
         welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
 
-        await welcome_channel.send(embed=embeds.user_leave(thorny_user, thorny_guild))
+        await welcome_channel.send(embed=uikit.user_leave(thorny_user, thorny_guild))
 
 
 @thorny.event
@@ -252,18 +258,20 @@ async def on_guild_remove(guild):
     await GuildFactory.deactivate(guild)
 
 
-thorny.add_cog(setup.Configuration(thorny))
-thorny.add_cog(moderation.Moderation(thorny))
-thorny.add_cog(money.Money(thorny))
-thorny.add_cog(inventory.Inventory(thorny))
-thorny.add_cog(profile.Profile(thorny))
-thorny.add_cog(playtime.Playtime(thorny))
-thorny.add_cog(level.Level(thorny))
-thorny.add_cog(leaderboards.Leaderboard(thorny))
-thorny.add_cog(help.Help(thorny))
+thorny.add_cog(modules.Configuration(thorny))
+thorny.add_cog(modules.Moderation(thorny))
+thorny.add_cog(modules.Money(thorny))
+thorny.add_cog(modules.Inventory(thorny))
+thorny.add_cog(modules.Profile(thorny))
+thorny.add_cog(modules.Playtime(thorny))
+thorny.add_cog(modules.Level(thorny))
+thorny.add_cog(modules.Leaderboard(thorny))
+thorny.add_cog(modules.Help(thorny))
 
 # Uncomment only during Christmastime
 # thorny.add_cog(secret_santa.SecretSanta(thorny))
 
 # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
-thorny.run(TOKEN)
+
+if __name__ == "__main__":
+    thorny.run(TOKEN)
