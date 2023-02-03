@@ -172,7 +172,7 @@ class Playtime(commands.Cog):
                            f"connected {time[0]}h{time[1]}m ago"
 
         async with httpx.AsyncClient() as client:
-            r: httpx.Response = await client.get("http://thorny-bds:8000/status")
+            r: httpx.Response = await client.get("http://bds_webserver:8000/status")
 
         online_embed = discord.Embed(color=0x6495ED)
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
