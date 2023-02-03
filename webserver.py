@@ -54,15 +54,15 @@ async def disconnect_all(request: Request, guild_id: str):
     return sanicjson({"Accept": True})
 
 
-@app.listener('after_server_start')
-async def start_bot(application: Sanic):
-    asyncio.get_event_loop().create_task(coro=client.start(token=TOKEN, reconnect=True),
-                                         name="Thorny Discord Client")
-
-    birthday_checker.start()
-    day_counter.start()
-    # interruption_check.start()
-
-    await pool_wrapper.init_pool()
+# @app.listener('after_server_start')
+# async def start_bot(application: Sanic):
+#     asyncio.get_event_loop().create_task(coro=client.start(token=TOKEN, reconnect=True),
+#                                          name="Thorny Discord Client")
+#
+#     birthday_checker.start()
+#     day_counter.start()
+#     interruption_check.start()
+#
+#     await pool_wrapper.init_pool()
 
 app.run(host="0.0.0.0")

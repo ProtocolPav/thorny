@@ -34,7 +34,7 @@ shutdown_notice_received = False
 async def on_ready():
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Thorn Flow")
+                                    name=f"Thorn Criminal")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
@@ -260,6 +260,7 @@ async def on_guild_remove(guild):
     await GuildFactory.deactivate(guild)
 
 
+# Load all cogs
 thorny.add_cog(modules.Configuration(thorny))
 thorny.add_cog(modules.Moderation(thorny))
 thorny.add_cog(modules.Money(thorny))
@@ -269,11 +270,14 @@ thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
 thorny.add_cog(modules.Leaderboard(thorny))
 thorny.add_cog(modules.Help(thorny))
+# thorny.add_cog(secret_santa.SecretSanta(thorny)) UNCOMMENT DURING CHRISTMAS
 
-# Uncomment only during Christmastime
-# thorny.add_cog(secret_santa.SecretSanta(thorny))
+# Start Tasks
+birthday_checker.start()
+day_counter.start()
+interruption_check.start()
 
-# asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 
 if __name__ == "__main__":
+    # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
     thorny.run(TOKEN)
