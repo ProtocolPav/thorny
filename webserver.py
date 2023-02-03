@@ -3,7 +3,7 @@ from sanic.response import json as sanicjson
 from datetime import datetime
 import asyncio
 
-from thorny import thorny as client, TOKEN
+from thorny import thorny as client, TOKEN, birthday_checker, interruption_check, day_counter
 from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core.db import event, UserFactory, GuildFactory
 
@@ -55,9 +55,13 @@ async def disconnect_all(request: Request, guild_id: str):
 
 
 @app.listener('after_server_start')
-async def start_bot(application):
-    asyncio.get_event_loop().create_task(coro=client.start(TOKEN),
+async def start_bot(application: Sanic):
+    asyncio.get_event_loop().create_task(coro=client.start(token=TOKEN, reconnect=True),
                                          name="Thorny Discord Client")
+
+    birthday_checker.start()
+    day_counter.start()
+    # interruption_check.start()
 
     await pool_wrapper.init_pool()
 

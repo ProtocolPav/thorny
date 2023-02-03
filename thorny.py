@@ -42,15 +42,14 @@ async def on_ready():
     thorny.add_view(uikit.PersistentProjectAdminButtons())
     thorny.add_view(uikit.ROAVerificationPanel())
 
-    birthday_checker.start()
-    day_counter.start()
-    interruption_check.start()
+@thorny.event
+async def on_disconnect():
+    print(f"{datetime.now()} Disconnected at this time!")
 
 
 @tasks.loop(seconds=5)
 async def interruption_check():
     global shutdown_notice_received
-    await thorny.wait_until_ready()
 
     async with httpx.AsyncClient() as client:
         try:
@@ -69,8 +68,6 @@ async def interruption_check():
 
 @tasks.loop(hours=24.0)
 async def birthday_checker():
-    await thorny.wait_until_ready()
-
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
     bday_list = await UserFactory.get_birthdays()
     for user in bday_list:
@@ -90,6 +87,11 @@ async def day_counter():
     storyforge_channel = thorny.get_channel(932566162582167562)
     await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
                                   f"**Day {days_since_start.days + 1}** has dawned upon us.")
+
+
+@birthday_checker.before_loop
+async def before_check():
+    await thorny.wait_until_ready()
 
 
 @thorny.slash_command(description="Get bot stats")
