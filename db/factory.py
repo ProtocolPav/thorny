@@ -13,6 +13,7 @@ from typing import Literal
 class UserFactory:
     @classmethod
     async def build(cls, member: discord.Member) -> User:
+        print(member)
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -231,11 +232,11 @@ class UserFactory:
                                        INNER JOIN thorny.profile
                                        ON thorny.profile.thorny_user_id = thorny.user.thorny_user_id
                                        WHERE gamertag = $1 
-                                       AND guild_id = $2
+                                       AND thorny.user.guild_id = $2
                                        """,
                                        gamertag, guild_id)
 
-            return user
+            return user['user_id']
 
 
 class GuildFactory:
