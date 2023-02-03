@@ -13,7 +13,6 @@ from typing import Literal
 class UserFactory:
     @classmethod
     async def build(cls, member: discord.Member) -> User:
-        print(member)
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
