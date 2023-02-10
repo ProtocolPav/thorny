@@ -1,0 +1,12 @@
+[2023-02-10 20:43:00 +0000] [1] [ERROR] Experienced exception while trying to serve
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/sanic/mixins/startup.py", line 937, in serve_single
+    worker_serve(monitor_publisher=None, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/sanic/worker/serve.py", line 143, in worker_serve
+    raise e
+  File "/usr/local/lib/python3.10/site-packages/sanic/worker/serve.py", line 117, in worker_serve
+    return _serve_http_1(
+  File "/usr/local/lib/python3.10/site-packages/sanic/server/runners.py", line 272, in _serve_http_1
+    loop.run_until_complete(app._server_event("init", "after"))
+  File "uvloop/loop.pyx", line 1515, in uvloop.loop.Loop.run_until_complete
+RuntimeError: Event loop stopped before Future completed.

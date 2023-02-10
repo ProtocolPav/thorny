@@ -264,7 +264,7 @@ class GuildFactory:
                                               guild.id)
 
             guild_rec = await conn.fetchrow("""
-                                            SELECT * FROM thorny.guild
+                                            SELECT * FROM thorny.guildold
                                             WHERE guild_id = $1
                                             """,
                                             guild.id)
@@ -289,14 +289,14 @@ class GuildFactory:
             wildcard_default = {"super secret": ["You've found my super secret wildcard response!"]}
 
             guild_exists = await conn.fetchrow("""
-                                               SELECT guild_id FROM thorny.guild
+                                               SELECT guild_id FROM thorny.guildold
                                                WHERE guild_id = $1
                                                """,
                                                guild.id)
 
             if guild_exists is None:
                 await conn.execute("""
-                                   INSERT INTO thorny.guild (guild_id, responses_exact, responses_wildcard)
+                                   INSERT INTO thorny.guildold (guild_id, responses_exact, responses_wildcard)
                                    VALUES ($1, $2, $3)
                                    """,
                                    guild.id, exact_default, wildcard_default
@@ -307,7 +307,7 @@ class GuildFactory:
 
             else:
                 await conn.execute("""
-                                   UPDATE thorny.guild
+                                   UPDATE thorny.guildold
                                    SET active = True WHERE guild_id = $1
                                    """,
                                    guild.id)
@@ -319,7 +319,7 @@ class GuildFactory:
     async def deactivate(cls, guild: discord.Guild):
         async with pool_wrapper.connection() as conn:
             await conn.execute("""
-                               UPDATE thorny.guild
+                               UPDATE thorny.guildold
                                SET active = False WHERE guild_id = $1
                                """,
                                guild.id)
@@ -331,7 +331,7 @@ class GuildFactory:
         async def get():
             async with pool_wrapper.connection() as conn:
                 guild_ids = await conn.fetch("""
-                                             SELECT guild_id FROM thorny.guild
+                                             SELECT guild_id FROM thorny.guildold
                                              WHERE $1 = any(features_v2)
                                              AND active = True
                                              """,
