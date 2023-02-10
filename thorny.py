@@ -83,9 +83,8 @@ async def interruption_check():
             pass
 
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=1)
 async def webevent_handler():
-    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Checking webevents")
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
         try:
@@ -119,8 +118,6 @@ async def day_counter():
     storyforge_channel = thorny.get_channel(932566162582167562)
     await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
                                   f"**Day {days_since_start.days + 1}** has dawned upon us.")
-
-
 
 
 @thorny.slash_command(description="Get bot stats")
