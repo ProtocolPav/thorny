@@ -78,7 +78,7 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/status")
+            status = await client.get("http://thorny-bds:8000/status", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(content='The server is already running!')
 
@@ -86,7 +86,7 @@ class Moderation(commands.Cog):
                 await client.post("http://thorny-bds:8000/start", timeout=None)
                 await asyncio.sleep(3)
 
-                status = await client.get("http://thorny-bds:8000/status")
+                status = await client.get("http://thorny-bds:8000/status", timeout=None)
 
                 if status.json()['update'] is not None:
                     await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
@@ -101,14 +101,14 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/status")
+            status = await client.get("http://thorny-bds:8000/status", timeout=None)
             if not status.json()['server_online']:
                 await ctx.respond(content='The server is already stopped!')
 
             else:
                 await client.post("http://thorny-bds:8000/stop", timeout=None)
                 await asyncio.sleep(3)
-                status = await client.get("http://thorny-bds:8000/status")
+                status = await client.get("http://thorny-bds:8000/status", timeout=None)
 
                 if not status.json()["server_online"]:
                     await ctx.respond(f"The server has shut down successfully")

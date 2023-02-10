@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event, GuildFactory, UserFactory
+from thorny_core.db import event, GuildFactory, UserFactory, webevent, poolwrapper
 import errors
 import traceback
 import json
@@ -63,52 +63,64 @@ async def on_resumed():
     print(f"{datetime.now()} Reconnected at this time!")
 
 
-# @tasks.loop(seconds=5)
-# async def interruption_check():
-#     global shutdown_notice_received
-#
-#     async with httpx.AsyncClient() as client:
-#         try:
-#             r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
-#             if r.status_code != 404 and not shutdown_notice_received:
-#                 channel = thorny.get_channel(687720871972044826)
-#
-#                 await channel.send("I have received a shutdown notice. The server will be going offline in around 2 minutes.\n"
-#                                    "Please wait patiently for the server to start back up.")
-#
-#                 shutdown_notice_received = True
-#
-#         except httpx.ConnectError:
-#             pass
-#
-#
-# @tasks.loop(hours=24.0)
-# async def birthday_checker():
-#     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
-#     bday_list = await UserFactory.get_birthdays()
-#     for user in bday_list:
-#         for guild in thorny.guilds:
-#             if guild.id == user["guild_id"]:
-#                 thorny_guild = await GuildFactory.build(guild)
-#                 thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
-#
-#                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
-#                 await birthday_event.log()
-#
-# @birthday_checker.before_loop
-# async def before_check():
-#     await thorny.wait_until_ready()
-#
-#
-# @tasks.loop(time=time(hour=16))
-# async def day_counter():
-#     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
-#     days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-#     storyforge_channel = thorny.get_channel(932566162582167562)
-#     await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
-#                                   f"**Day {days_since_start.days + 1}** has dawned upon us.")
-#
-#
+@tasks.loop(seconds=5)
+async def interruption_check():
+    global shutdown_notice_received
+
+    async with httpx.AsyncClient() as client:
+        try:
+            r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
+            if r.status_code != 404 and not shutdown_notice_received:
+                channel = thorny.get_channel(687720871972044826)
+
+                await channel.send("I have received a shutdown notice. The server will be going offline in around 2 minutes.\n"
+                                   "Please wait patiently for the server to start back up.")
+
+                shutdown_notice_received = True
+            shutdown_notice_received = False
+
+        except httpx.ConnectError:
+            pass
+
+
+@tasks.loop(seconds=10)
+async def webevent_handler():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Checking webevents")
+    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    for pending_event in pending_events:
+        try:
+            await pending_event.process()
+        except AttributeError:
+            print("Guild not found")
+
+
+@tasks.loop(hours=24.0)
+async def birthday_checker():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
+    bday_list = await UserFactory.get_birthdays()
+    for user in bday_list:
+        for guild in thorny.guilds:
+            if guild.id == user["guild_id"]:
+                thorny_guild = await GuildFactory.build(guild)
+                thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
+
+                birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+                await birthday_event.log()
+
+@birthday_checker.before_loop
+async def before_check():
+    await thorny.wait_until_ready()
+
+
+@tasks.loop(time=time(hour=16))
+async def day_counter():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
+    days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+    storyforge_channel = thorny.get_channel(932566162582167562)
+    await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
+                                  f"**Day {days_since_start.days + 1}** has dawned upon us.")
+
+
 
 
 @thorny.slash_command(description="Get bot stats")
@@ -286,6 +298,11 @@ thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
 thorny.add_cog(modules.Leaderboard(thorny))
 thorny.add_cog(modules.Help(thorny))
+
+webevent_handler.start()
+birthday_checker.start()
+interruption_check.start()
+day_counter.start()
 
 # Uncomment only during Christmastime
 # thorny.add_cog(secret_santa.SecretSanta(thorny))
