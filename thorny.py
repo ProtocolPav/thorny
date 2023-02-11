@@ -73,7 +73,8 @@ async def webevent_handler():
         try:
             await pending_event.process()
         except AttributeError:
-            print("Guild not found")
+            # Thorny is not added on this guild
+            pass
 
 
 @tasks.loop(hours=24.0)
