@@ -13,7 +13,6 @@ from typing import Literal
 class UserFactory:
     @classmethod
     async def build(cls, member: discord.Member) -> User:
-        print(member)
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -223,7 +222,6 @@ class UserFactory:
                                         AND date_part('month', birthday) = date_part('month', now())""")
             return bdays
 
-
     @classmethod
     async def get_user_by_gamertag(cls, gamertag, guild_id):
         async with pool_wrapper.connection() as conn:
@@ -237,6 +235,17 @@ class UserFactory:
                                        gamertag, guild_id)
 
             return user['user_id']
+
+    @classmethod
+    async def get_gamertags(cls, guild_id, gamertag):
+        async with pool_wrapper.connection() as conn:
+            returned = await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
+                                             "JOIN thorny.user "
+                                             "ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
+                                             "WHERE LOWER(gamertag) LIKE $1 "
+                                             "AND thorny.user.guild_id = $2",
+                                        f'%{gamertag[0:3].lower()}%', guild_id)
+            return returned
 
 
 class GuildFactory:
@@ -270,9 +279,23 @@ class GuildFactory:
                                             """,
                                             guild.id)
 
+            features = await conn.fetch("""
+                                        SELECT * FROM thorny.features
+                                        WHERE guild_id = $1
+                                        """,
+                                        guild.id)
+
+            responses = await conn.fetch("""
+                                         SELECT * FROM thorny.responses
+                                         WHERE guild_id = $1
+                                         """,
+                                         guild.id)
+
             return Guild(pool=pool_wrapper,
                          guild=guild,
                          guild_record=guild_rec,
+                         features_record=features,
+                         responses_record=responses,
                          reaction_roles=reaction_roles,
                          currency_total=total_currency['total'])
 
@@ -286,8 +309,7 @@ class GuildFactory:
                 schema='pg_catalog'
             )
 
-            exact_default = {"secret": ["You've found my secret exact response!"]}
-            wildcard_default = {"super secret": ["You've found my super secret wildcard response!"]}
+            default_features = ['BASIC', 'PROFILE', 'PLAYTIME']
 
             guild_exists = await conn.fetchrow("""
                                                SELECT guild_id FROM thorny.guild
@@ -297,10 +319,24 @@ class GuildFactory:
 
             if guild_exists is None:
                 await conn.execute("""
-                                   INSERT INTO thorny.guild (guild_id, responses_exact, responses_wildcard)
-                                   VALUES ($1, $2, $3)
+                                   INSERT INTO thorny.guild(guild_id, guild_name)
+                                   VALUES ($1, $2)
                                    """,
-                                   guild.id, exact_default, wildcard_default
+                                   guild.id, guild.name
+                                   )
+                for feature in default_features:
+                    await conn.execute("""
+                                       INSERT INTO thorny.features
+                                       VALUES ($1, $2)
+                                       """,
+                                       guild.id, feature.upper()
+                                       )
+
+                await conn.execute("""
+                                   INSERT INTO thorny.responses
+                                   VALUES ($1, $2, $3, $4)
+                                   """,
+                                   guild.id, 'exact', 'response', "You've just triggered my super secret response!"
                                    )
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Created guild "
@@ -332,14 +368,13 @@ class GuildFactory:
         async def get():
             async with pool_wrapper.connection() as conn:
                 guild_ids = await conn.fetch("""
-                                             SELECT guild_id FROM thorny.guild
-                                             WHERE $1 = any(features_v2)
+                                             SELECT thorny.features.guild_id FROM thorny.features
+                                             INNER JOIN thorny.guild ON thorny.guild.guild_id = thorny.features.guild_id
+                                             WHERE feature = $1
                                              AND active = True
                                              """,
                                              feature.upper())
 
-                guilds = [i['guild_id'] for i in guild_ids]
-
-                return guilds
+                return [i['guild_id'] for i in guild_ids]
 
         return asyncio.get_event_loop().run_until_complete(get())

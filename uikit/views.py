@@ -8,7 +8,7 @@ from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds
 from thorny_core.uikit import slashoptions
 from thorny_core.db import User, UserFactory, GuildFactory, Guild
-from thorny_core import errors, dbutils
+from thorny_core import errors
 
 
 class ProfileEdit(View):
@@ -692,12 +692,10 @@ class RedeemSelectMenu(Select):
                 prizes.append(random_icon[0])
                 winnings.append(f"||{random_icon[0][0]}||")
 
-            selector = dbutils.Base()
-            counter = await selector.select("count", "counter", "counter_name", "ticket_count")
             ticket_embed = discord.Embed(color=self.ctx.author.color)
             ticket_embed.add_field(name="**Scratch Ticket**",
                                    value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
-            ticket_embed.set_footer(text=f"Ticket #{counter[0][0] + 1} "
+            ticket_embed.set_footer(text=f"Ticket #? "
                                          f"| Use /tickets to see how Prizes work!")
             if self.user.counters.ticket_count >= 4:
                 if datetime.now() - self.user.counters.ticket_last_purchase <= timedelta(hours=23):

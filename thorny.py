@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event, GuildFactory, UserFactory
+from thorny_core.db import event, GuildFactory, UserFactory, webevent, poolwrapper
 import errors
 import traceback
 import json
@@ -27,24 +27,23 @@ intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
 bot_started = datetime.now().replace(microsecond=0)
+
 shutdown_notice_received = False
 
 
 @thorny.event
 async def on_ready():
+    global bot_started
+    bot_started = datetime.now().replace(microsecond=0)
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Thorn Flow")
+                                    name=f"Thorn Criminal")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(uikit.PersistentProjectAdminButtons())
     thorny.add_view(uikit.ROAVerificationPanel())
-
-@thorny.event
-async def on_disconnect():
-    print(f"{datetime.now()} Disconnected at this time!")
 
 
 @tasks.loop(seconds=5)
@@ -61,8 +60,20 @@ async def interruption_check():
                                    "Please wait patiently for the server to start back up.")
 
                 shutdown_notice_received = True
+            shutdown_notice_received = False
 
         except httpx.ConnectError:
+            pass
+
+
+@tasks.loop(seconds=1)
+async def webevent_handler():
+    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    for pending_event in pending_events:
+        try:
+            await pending_event.process()
+        except AttributeError:
+            # Thorny is not added on this guild
             pass
 
 
@@ -79,6 +90,10 @@ async def birthday_checker():
                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()
 
+@birthday_checker.before_loop
+async def before_check():
+    await thorny.wait_until_ready()
+
 
 @tasks.loop(time=time(hour=16))
 async def day_counter():
@@ -87,11 +102,6 @@ async def day_counter():
     storyforge_channel = thorny.get_channel(932566162582167562)
     await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
                                   f"**Day {days_since_start.days + 1}** has dawned upon us.")
-
-
-@birthday_checker.before_loop
-async def before_check():
-    await thorny.wait_until_ready()
 
 
 @thorny.slash_command(description="Get bot stats")
@@ -260,6 +270,7 @@ async def on_guild_remove(guild):
     await GuildFactory.deactivate(guild)
 
 
+# Load all cogs
 thorny.add_cog(modules.Configuration(thorny))
 thorny.add_cog(modules.Moderation(thorny))
 thorny.add_cog(modules.Money(thorny))
@@ -269,11 +280,15 @@ thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
 thorny.add_cog(modules.Leaderboard(thorny))
 thorny.add_cog(modules.Help(thorny))
+# thorny.add_cog(secret_santa.SecretSanta(thorny)) UNCOMMENT DURING CHRISTMAS
 
-# Uncomment only during Christmastime
-# thorny.add_cog(secret_santa.SecretSanta(thorny))
+# Start Tasks
+webevent_handler.start()
+birthday_checker.start()
+day_counter.start()
+interruption_check.start()
 
-# asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
 
 if __name__ == "__main__":
+    # asyncio.get_event_loop().run_until_complete(thorny.start(TOKEN))
     thorny.run(TOKEN)
