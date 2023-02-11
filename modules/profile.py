@@ -5,7 +5,6 @@ from discord import utils
 import json
 from thorny_core.uikit import slashoptions, views, embeds
 from thorny_core.db import UserFactory, commit, GuildFactory
-from thorny_core import dbutils
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -70,9 +69,8 @@ class Profile(commands.Cog):
                                          guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
 
     @gamertag.command(description="Search the database for gamertags")
-    async def search(self, ctx, gamertag: discord.Option(str, "Enter parts of a gamertag")):
-        selector = dbutils.Base()
-        gamertags = await selector.select_gamertags(ctx.guild.id, gamertag)
+    async def search(self, ctx: discord.ApplicationContext, gamertag: discord.Option(str, "Enter parts of a gamertag")):
+        gamertags = await UserFactory.get_gamertags(ctx.guild.id, gamertag)
         send_text = []
         for tag in gamertags:
             send_text.append(f"<@{tag['user_id']}> • {tag['gamertag']}")

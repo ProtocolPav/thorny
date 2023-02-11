@@ -88,6 +88,27 @@ class Reaction:
 
 
 @dataclass
+class Responses:
+    exact: dict[str, list[str]]
+    wildcard: dict[str, list[str]]
+
+    def __init__(self, response_record: list[pg.Record]):
+        self.exact = {}
+        self.wildcard = {}
+        for response in response_record:
+            trigger = response['trigger']
+            response_string = response['response']
+
+            if response['response_type'] == 'exact':
+                self.exact[trigger] = self.exact.get(trigger, list())
+                self.exact[trigger].append(response_string)
+
+            elif response['response_type'] == 'wildcard':
+                self.wildcard[trigger] = self.wildcard.get(trigger, list())
+                self.wildcard[trigger].append(response_string)
+
+
+@dataclass
 class Activity:
     total_current_month: Time
 
@@ -106,6 +127,7 @@ class Guild:
     currency: Currency
     features_v2: list[str]
     reactions: list[Reaction]
+    responses: Responses
     exact_responses: dict[str, list[str]]
     wildcard_responses: dict[str, list[str]]
     join_message: str
@@ -118,6 +140,8 @@ class Guild:
                  pool: PoolWrapper,
                  guild: discord.Guild,
                  guild_record: pg.Record,
+                 features_record: list[pg.Record],
+                 responses_record: list[pg.Record],
                  reaction_roles: list[pg.Record],
                  currency_total: int
                  ):
@@ -130,18 +154,16 @@ class Guild:
         self.currency = Currency(currency_name=guild_record['currency_name'],
                                  currency_emoji=guild_record['currency_emoji'],
                                  total=currency_total)
-        self.features_v2 = guild_record['features_v2']
-        self.reactions = []
-        self.exact_responses = guild_record['responses_exact']
-        self.wildcard_responses = guild_record['responses_wildcard']
+        self.features_v2 = [feature['feature'] for feature in features_record]
+        self.reactions = [Reaction(reaction_record=record) for record in reaction_roles]
+        self.exact_responses = {}
+        self.wildcard_responses = {}
+        self.responses = Responses(response_record=responses_record)
         self.join_message = guild_record['join_message']
         self.leave_message = guild_record['leave_message']
         self.level_message = guild_record['level_up_message']
         self.xp_multiplier = round(guild_record['xp_multiplier'], 2)
         self.levels_enabled = guild_record['enable_levels']
-
-        for record in reaction_roles:
-            self.reactions.append(Reaction(reaction_record=record))
 
     async def get_online_players(self):
         async with self.connection_pool.connection() as conn:
