@@ -43,8 +43,8 @@ class WebEvent:
             if self.event.lower() in ['connect', 'disconnect']:
                 event_type = event.Connect if self.event.lower() == 'connect' else event.Disconnect
 
-                guild_id = int(self.description.split(' ')[0])
-                gamertag = self.description.split(' ')[1]
+                guild_id = int(self.description.split(',')[0])
+                gamertag = self.description.split(',')[1]
 
                 thorny_guild = await GuildFactory.build(self.__client.get_guild(guild_id))
 
