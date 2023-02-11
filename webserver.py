@@ -42,7 +42,7 @@ async def connect(request: Request, gamertag: str, guild_id: str):
                            INSERT INTO webserver.webevent(event_time, event, description)
                            VALUES($1, $2, $3)
                            """,
-                           datetime.now(), 'connect', f'{guild_id} {gamertag}')
+                           datetime.now(), 'connect', f'{guild_id},{gamertag}')
 
         print(f'[WEBSERVER] Sent Connect Event for processing...')
     return sanicjson({"Accept": True})
@@ -58,7 +58,7 @@ async def disconnect(request: Request, gamertag: str, guild_id: str):
                            INSERT INTO webserver.webevent(event_time, event, description)
                            VALUES($1, $2, $3)
                            """,
-                           datetime.now(), 'disconnect', f'{guild_id} {gamertag}')
+                           datetime.now(), 'disconnect', f'{guild_id},{gamertag}')
 
         print(f'[WEBSERVER] Sent Disconnect Event for processing...')
 
