@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from thorny_core import dbutils
 from datetime import datetime, timedelta
 import json
 from thorny_core import errors

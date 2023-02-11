@@ -1,14 +1,9 @@
 import asyncio
 import discord
-from discord.ext import commands
-
-import json
 from thorny_core import functions as func
 from thorny_core import errors
 import random
-from thorny_core import dbutils
 from thorny_core.db import User
-from discord import utils
 from datetime import datetime, timedelta
 
 
@@ -27,12 +22,10 @@ async def redeem_ticket(ctx, thorny_user: User):
             prizes.append(random_icon[0])
             winnings.append(f"||{random_icon[0][0]}||")
 
-        selector = dbutils.Base()
-        counter = await selector.select("count", "counter", "counter_name", "ticket_count")
         ticket_embed = discord.Embed(color=ctx.author.color)
         ticket_embed.add_field(name="**Scratch Ticket**",
                                value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
-        ticket_embed.set_footer(text=f"Ticket #{counter[0][0] + 1} "
+        ticket_embed.set_footer(text=f"Ticket #? "
                                      f"| Use /tickets to see how Prizes work!")
         if thorny_user.counters.ticket_count >= 4:
             if datetime.now() - thorny_user.counters.ticket_last_purchase <= timedelta(hours=23):

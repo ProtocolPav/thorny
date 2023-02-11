@@ -13,7 +13,6 @@ from typing import Literal
 class UserFactory:
     @classmethod
     async def build(cls, member: discord.Member) -> User:
-        print(member)
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -223,7 +222,6 @@ class UserFactory:
                                         AND date_part('month', birthday) = date_part('month', now())""")
             return bdays
 
-
     @classmethod
     async def get_user_by_gamertag(cls, gamertag, guild_id):
         async with pool_wrapper.connection() as conn:
@@ -237,6 +235,17 @@ class UserFactory:
                                        gamertag, guild_id)
 
             return user['user_id']
+
+    @classmethod
+    async def get_gamertags(cls, guild_id, gamertag):
+        async with pool_wrapper.connection() as conn:
+            returned = await conn.fetch("SELECT thorny.user.user_id, gamertag FROM thorny.profile "
+                                             "JOIN thorny.user "
+                                             "ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
+                                             "WHERE LOWER(gamertag) LIKE $1 "
+                                             "AND thorny.user.guild_id = $2",
+                                        f'%{gamertag[0:3].lower()}%', guild_id)
+            return returned
 
 
 class GuildFactory:
