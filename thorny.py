@@ -138,17 +138,16 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
 async def on_message(message: discord.Message):
     if not message.author.bot:
         thorny_guild = await GuildFactory.build(message.guild)
+        trigger = message.content.lower()
 
-        if message.content.lower() in thorny_guild.exact_responses:
-            response_list = thorny_guild.exact_responses[message.content.lower()]
-            response = response_list[random.randint(0, len(response_list) - 1)]
+        if trigger in thorny_guild.responses.exact:
+            response = random.choice(thorny_guild.responses.exact[trigger])
             await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
         else:
-            for invoker in thorny_guild.wildcard_responses:
-                if invoker in message.content.lower():
-                    response_list = thorny_guild.wildcard_responses[invoker]
-                    response = response_list[random.randint(0, len(response_list) - 1)]
+            for invoker in thorny_guild.responses.wildcard:
+                if invoker in trigger:
+                    response = random.choice(thorny_guild.responses.wildcard[invoker])
                     await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
 
