@@ -1,1 +1,106 @@
 # Put any generators here, for example Leaderboard generators, birthday generators, etc.
+from thorny_core.db import user, poolwrapper
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import asyncpg as pg
+
+
+async def activity_leaderboard(thorny_user: user.User, month: datetime) -> tuple[list, int]:
+    user_rank = 0
+
+    async with thorny_user.connection_pool.connection() as conn:
+        if datetime.now() < month:
+            month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) - relativedelta(years=1)
+        else:
+            month = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        next_month = month + relativedelta(months=1)
+
+        leaderboard = await conn.fetch("""
+                                       SELECT SUM(playtime), thorny.user.thorny_user_id, thorny.user.user_id
+                                       FROM thorny.activity 
+                                       JOIN thorny.user
+                                       ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
+                                       WHERE connect_time BETWEEN $1 AND $2
+                                       AND playtime IS NOT NULL
+                                       AND thorny.user.guild_id = $3 
+                                       AND thorny.user.active = True
+                                       GROUP BY thorny.user.user_id, thorny.user.thorny_user_id
+                                       ORDER BY SUM(playtime) DESC
+                                       """,
+                                       month, next_month, thorny_user.guild_id)
+
+        for person in leaderboard:
+            if person['thorny_user_id'] == thorny_user.thorny_id:
+                user_rank = leaderboard.index(person) + 1
+
+    return leaderboard, user_rank
+
+
+async def money_leaderboard(thorny_user: user.User) -> tuple[list, int]:
+    user_rank = 0
+
+    async with thorny_user.connection_pool.connection() as conn:
+        leaderboard = await conn.fetch("""
+                                       SELECT user_id, thorny_user_id, balance FROM thorny.user
+                                       WHERE thorny.user.guild_id = $1
+                                       AND thorny.user.active = True
+                                       GROUP BY user_id, thorny_user_id, balance
+                                       ORDER BY balance DESC
+                                       """,
+                                       thorny_user.guild_id)
+
+        for person in leaderboard:
+            if person['thorny_user_id'] == thorny_user.thorny_id:
+                user_rank = leaderboard.index(person) + 1
+
+    return leaderboard, user_rank
+
+
+async def levels_leaderboard(thorny_user: user.User) -> tuple[list, int]:
+    user_rank = 0
+
+    async with thorny_user.connection_pool.connection() as conn:
+        leaderboard = await conn.fetch("""
+                                       SELECT thorny.user.user_id, thorny.levels.thorny_user_id, user_level
+                                       FROM thorny.user 
+                                       JOIN thorny.levels 
+                                       ON thorny.user.thorny_user_id = thorny.levels.thorny_user_id
+                                       WHERE thorny.user.guild_id = $1 
+                                       AND thorny.user.active = True
+                                       GROUP BY thorny.levels.thorny_user_id, thorny.user.user_id, user_level, xp
+                                       ORDER BY xp DESC
+                                       """,
+                                       thorny_user.guild_id)
+
+        for person in leaderboard:
+            if person['thorny_user_id'] == thorny_user.thorny_id:
+                user_rank = leaderboard.index(person) + 1
+
+    return leaderboard, user_rank
+
+
+async def upcoming_birthdays(pool: poolwrapper.PoolWrapper) -> pg.Record:
+    async with pool.connection() as conn:
+        today = datetime.now()
+        end_of_year = today.replace(month=12, day=31)
+
+        bdays = await conn.fetch("""
+                                 SELECT thorny_user_id, birthday, guild_id
+                                 FROM thorny.user
+                                 WHERE active = True AND birthday IS NOT NULL
+                                 AND date_part('day', birthday) BETWEEN date_part('day', $1::timestamp) 
+                                                                    AND date_part('day', $2::timestamp)
+                                                                    
+                                 AND date_part('month', birthday) BETWEEN date_part('month', $1::timestamp)
+                                                                      AND date_part('month', $2::timestamp)
+                                                                      
+                                 ORDER BY date_part('month', birthday), date_part('day', birthday) ASC
+                                 """,
+                                 today, end_of_year)
+
+        return bdays
+
+
+async def gamertags(pool: poolwrapper.PoolWrapper):
+    ...
+

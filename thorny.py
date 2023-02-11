@@ -1,10 +1,11 @@
+import asyncio
 from datetime import datetime, time
 
 import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event, GuildFactory, UserFactory, webevent, poolwrapper
+from thorny_core.db import event, GuildFactory, UserFactory, webevent, poolwrapper, generator
 import errors
 import traceback
 import json
@@ -13,6 +14,7 @@ import sys
 import httpx
 import modules
 import uikit
+import signal
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -72,18 +74,18 @@ async def webevent_handler():
     for pending_event in pending_events:
         try:
             await pending_event.process()
-        except AttributeError:
-            # Thorny is not added on this guild
+        except:
+            # Ignore all errors
             pass
 
 
 @tasks.loop(hours=24.0)
 async def birthday_checker():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
-    bday_list = await UserFactory.get_birthdays()
-    for user in bday_list:
+    upcoming_bdays = await generator.upcoming_birthdays(pool=poolwrapper.pool_wrapper)
+    for user in upcoming_bdays:
         for guild in thorny.guilds:
-            if guild.id == user["guild_id"]:
+            if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
                 thorny_guild = await GuildFactory.build(guild)
                 thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
 
