@@ -14,7 +14,6 @@ import sys
 import httpx
 import modules
 import uikit
-import signal
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))

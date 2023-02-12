@@ -2,7 +2,7 @@ import discord
 import json
 
 from datetime import datetime, timedelta
-from thorny_core.db import user, guild, GuildFactory, lbgen
+from thorny_core.db import user, guild, GuildFactory, generator
 import giphy_client
 import random
 
@@ -116,7 +116,7 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
     last_month = (datetime.now() - timedelta(days=30)).strftime('%B')
     two_months_ago = (datetime.now() - timedelta(days=60)).strftime('%B')
 
-    leaderboard, rank = await lbgen.activity_leaderboard(thorny_user, datetime.now())
+    leaderboard, rank = await generator.activity_leaderboard(thorny_user, datetime.now())
 
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
@@ -250,12 +250,12 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                    description="Thorny picks one random response out of each list",
                                    colour=0xD7E99A)
     exact = ""
-    for key, val in thorny_guild.exact_responses.items():
+    for key, val in thorny_guild.responses.exact.items():
         exact = f"{exact}**{key}** = {','.join(val)}\n"
     response_embed.add_field(name="Exact Responses",
                              value=exact)
     wildcard = ""
-    for key, val in thorny_guild.wildcard_responses.items():
+    for key, val in thorny_guild.responses.wildcard.items():
         wildcard = f"{wildcard}**{key}** = {','.join(val)}\n"
     response_embed.add_field(name="Wildcard Responses",
                              value=wildcard,

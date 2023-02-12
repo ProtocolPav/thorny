@@ -2,7 +2,6 @@ from datetime import datetime
 from thorny_core.db.user import User, InventorySlot, Strike
 from thorny_core.db.guild import Guild
 
-import asyncpg as pg
 import json
 
 
@@ -127,11 +126,11 @@ async def update_guild(thorny_guild: Guild):
         )
         await conn.execute("""
                            UPDATE thorny.guild
-                           SET responses_exact = $1, responses_wildcard = $2, currency_name = $3, currency_emoji = $4, 
-                           level_up_message = $5, join_message = $6, leave_message = $7, xp_multiplier = $8, enable_levels = $9
-                           WHERE guild_id = $10
+                           SET currency_name = $1, currency_emoji = $2, 
+                           level_up_message = $3, join_message = $4, leave_message = $5, xp_multiplier = $6, enable_levels = $7
+                           WHERE guild_id = $8
                            """,
-                           thorny_guild.exact_responses, thorny_guild.wildcard_responses, thorny_guild.currency.name,
+                           thorny_guild.currency.name,
                            thorny_guild.currency.emoji, thorny_guild.level_message, thorny_guild.join_message,
                            thorny_guild.leave_message, float(thorny_guild.xp_multiplier), thorny_guild.levels_enabled,
                            thorny_guild.guild_id)

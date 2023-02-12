@@ -4,8 +4,7 @@ from discord.ext import commands, pages
 from discord.utils import basic_autocomplete
 import math
 
-from thorny_core.db.factory import UserFactory, GuildFactory
-from thorny_core.db import lbgen
+from thorny_core.db import UserFactory, GuildFactory, generator
 import thorny_core.uikit as uikit
 
 
@@ -27,7 +26,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await UserFactory.build(ctx.author)
 
-        playtime, rank = await lbgen.activity_leaderboard(thorny_user, month)
+        playtime, rank = await generator.activity_leaderboard(thorny_user, month)
 
         total_pages = math.ceil(len(playtime) / 10)
         for page in range(1, total_pages + 1):
@@ -56,7 +55,7 @@ class Leaderboard(commands.Cog):
         thorny_guild = await GuildFactory.build(ctx.author.guild)
 
         self.pages = []
-        balances, rank = await lbgen.money_leaderboard(thorny_user)
+        balances, rank = await generator.money_leaderboard(thorny_user)
 
         total_pages = math.ceil(len(balances) / 10)
         for page in range(1, total_pages + 1):
@@ -86,7 +85,7 @@ class Leaderboard(commands.Cog):
         self.pages = []
         thorny_user = await UserFactory.build(ctx.author)
 
-        levels, rank = await lbgen.levels_leaderboard(thorny_user)
+        levels, rank = await generator.levels_leaderboard(thorny_user)
 
         total_pages = math.ceil(len(levels) / 10)
         for page in range(1, total_pages + 1):
