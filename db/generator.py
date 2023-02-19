@@ -1,8 +1,10 @@
 # Put any generators here, for example Leaderboard generators, birthday generators, etc.
-from thorny_core.db import user, poolwrapper
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
 import asyncpg as pg
+from dateutil.relativedelta import relativedelta
+
+from thorny_core.db import user, poolwrapper
 
 
 async def activity_leaderboard(thorny_user: user.User, month: datetime) -> tuple[list, int]:

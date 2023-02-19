@@ -1,8 +1,10 @@
-import asyncpg as pg
-from datetime import datetime, timedelta, date
-import discord
-from thorny_core.db.poolwrapper import PoolWrapper
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, date
+
+import asyncpg as pg
+import discord
+
+from thorny_core.db.poolwrapper import PoolWrapper
 
 
 class Time:
@@ -164,7 +166,7 @@ class Guild:
     async def get_online_players(self):
         async with self.connection_pool.connection() as conn:
             online_players = await conn.fetch("""
-                                              SELECT * FROM thorny.activity 
+                                              SELECT * FROM thorny.activity
                                               JOIN thorny.user
                                               ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
                                               WHERE disconnect_time is NULL

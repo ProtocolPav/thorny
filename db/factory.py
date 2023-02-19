@@ -1,13 +1,14 @@
-import asyncpg as pg
 import asyncio
 import json
 from datetime import datetime
+from typing import Literal
+
 import discord
 from dateutil.relativedelta import relativedelta
-from thorny_core.db.user import User
+
 from thorny_core.db.guild import Guild
+from thorny_core.db.user import User
 from thorny_core.db.poolwrapper import pool_wrapper
-from typing import Literal
 
 
 class UserFactory:
