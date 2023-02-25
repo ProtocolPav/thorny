@@ -194,8 +194,8 @@ class PersistentProjectAdminButtons(View):
 
     @discord.ui.button(style=discord.ButtonStyle.red,
                        label="Deny",
-                       custom_id="deny")
-    async def deny_callback(self, button: Button, interaction: discord.Interaction):
+                       custom_id="project_deny")
+    async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
         role_list = []
         for role in interaction.user.roles:
             role_list.append(role.name)
@@ -775,9 +775,9 @@ class ROAVerificationPanel(View):
                                               f"to the ROA server's channels! Follow the rules, and have fun!")
 
     @discord.ui.button(label="Deny",
-                       custom_id="deny",
+                       custom_id="roa_deny",
                        style=discord.ButtonStyle.red)
-    async def deny_callback(self, button: discord.Button, interaction: discord.Interaction):
+    async def roa_deny_callback(self, button: discord.Button, interaction: discord.Interaction):
         interaction.message.embeds[0].add_field(name="**STATUS:**",
                                                 value=f"DENIED by {interaction.user.mention}\n"
                                                       f"on {datetime.now()}",

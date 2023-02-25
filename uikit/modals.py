@@ -99,7 +99,7 @@ class ProjectApplicationModal(Modal):
                                 placeholder="Eg. -400, 233"))
         self.add_item(InputText(label="Have you built a road to your project?",
                                 placeholder="If not, when will it be built?"))
-        self.add_item(InputText(label="What is the general idea of your project?",
+        self.add_item(InputText(label="What's your idea? How long will it take?",
                                 placeholder="Describe your project. Include a time estimation (eg. 2 months, 1 week)",
                                 style=discord.InputTextStyle.long,
                                 min_length=100))

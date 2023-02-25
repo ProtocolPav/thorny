@@ -146,9 +146,9 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
 
     edit_embed.add_field(name="It's simple, really!",
                          value=f"The Profile is separated into 3 pages:\n"
-                               f"<:arrow_pink:921704277737619476> The Main Page, all about **YOU**\n"
-                               f"<:arrow_purple:921704277733425194> The Lore Page, all about your character\n"
-                               f"<:arrow_orange:921704277599211540> The Playtime Stats Page, which gives deep insight\n"
+                               f"<:_pink:921708790322192396> The Main Page, all about **YOU**\n"
+                               f"<:_purple:921708790368309269> The Lore Page, all about your character\n"
+                               f"<:_orange:921708790099898419> The Playtime Stats Page, which gives deep insight\n"
                                f"\nAnd so, the **Editing Menus** are split up just the same!\n"
                                f"You have 3 **select Menus** to choose from, for each of the 3 **pages**!\n\n"
                                f"**Now, just choose a section from the menus below and start editing!**")
@@ -165,10 +165,11 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     info_embed.add_field(name="Project Info:",
                          value=f"**Coordinates:** {modal_children[1].value}\n"
                                f"**Road Built:** {modal_children[2].value}\n"
-                               f"**Project Helpers:** {modal_children[4].value}")
+                               f"**Project Members:** {thorny_user.discord_member.name}, {modal_children[4].value}")
 
-    info_embed.add_field(name="Project Idea & Time Estimation",
-                         value=f"{modal_children[3].value}")
+    info_embed.add_field(name="Project Idea & Time Estimation:",
+                         value=f"{modal_children[3].value}",
+                         inline=False)
 
     info_embed.add_field(name="CM Comments:",
                          value="If a CM has any comments, they will be added here",
