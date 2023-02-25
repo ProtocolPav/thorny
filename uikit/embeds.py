@@ -162,15 +162,16 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
 
-    info_embed.add_field(name="General Info:",
-                         value=f"**Name:** {modal_children[0].value}\n"
-                               f"**Coordinates:** {modal_children[1].value}\n"
+    info_embed.add_field(name="Project Info:",
+                         value=f"**Coordinates:** {modal_children[1].value}\n"
                                f"**Road Built:** {modal_children[2].value}\n"
-                               f"**General Idea:** {modal_children[3].value}\n"
-                               f"**Time Estimation:** {modal_children[4].value}")
+                               f"**Project Helpers:** {modal_children[4].value}")
 
-    info_embed.add_field(name="Extra Info:",
-                         value="A CM should add any extra info they find after asking more about the project.",
+    info_embed.add_field(name="Project Idea & Time Estimation",
+                         value=f"{modal_children[3].value}")
+
+    info_embed.add_field(name="CM Comments:",
+                         value="If a CM has any comments, they will be added here",
                          inline=False)
 
     info_embed.add_field(name="**STATUS**",

@@ -98,13 +98,13 @@ class ProjectApplicationModal(Modal):
         self.add_item(InputText(label="Type in the coordinates of your project",
                                 placeholder="Eg. -400, 233"))
         self.add_item(InputText(label="Have you built a road to your project?",
-                                placeholder="Yes or no?"))
+                                placeholder="If not, when will it be built?"))
         self.add_item(InputText(label="What is the general idea of your project?",
-                                placeholder="Describe your project. Minimum 100 words please",
+                                placeholder="Describe your project. Include a time estimation (eg. 2 months, 1 week)",
                                 style=discord.InputTextStyle.long,
                                 min_length=100))
-        self.add_item(InputText(label="How long do you estimate to be done?",
-                                placeholder="Eg. 2 months, 4-5 months, etc."))
+        self.add_item(InputText(label="Do you have Project Helpers?",
+                                placeholder="List them if you have any. If not, try and get some!"))
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(view=None,
@@ -113,10 +113,10 @@ class ProjectApplicationModal(Modal):
 
 class ProjectApplicationExtraInfo(Modal):
     def __init__(self):
-        super().__init__(title="Extra Info",
+        super().__init__(title="Comments",
                          timeout=None)
 
-        self.add_item(InputText(label="Add in extra info",
+        self.add_item(InputText(label="Add CM Comments",
                                 placeholder="Stuff like the members of the project, and more stuff.",
                                 style=discord.InputTextStyle.long))
 

@@ -127,18 +127,29 @@ class PersistentProjectAdminButtons(View):
             await interaction.response.edit_message(view=None,
                                                     embed=interaction.message.embeds[0])
             forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681)
-            thread = await forum_channel.create_thread(name=interaction.message.embeds[0].title,
-                                                       content=interaction.message.embeds[0].title,
-                                                       embed=interaction.message.embeds[0])
-            await thread.send(f"<@{interaction.message.embeds[0].footer.text}> Congrats on your project being accepted!"
-                              f"\nYou can now start sending updates for everyone to see the progress on your "
-                              f"amazing project! Good luck, and most importantly, have fun!")
+
+            project_name = interaction.message.embeds[0].title
+            project_description = interaction.message.embeds[0].fields[1].value
+            interaction.message.embeds[0].remove_field(1)
+
+            new_project_tag = None
+
+            for tag in forum_channel.available_tags:
+                if tag.name == "New Project":
+                    new_project_tag = tag
+
+            thread = await forum_channel.create_thread(name=project_name,
+                                                       content=project_description,
+                                                       embed=interaction.message.embeds[0],
+                                                       applied_tags=new_project_tag)
+
+            await thread.send(f"<@{interaction.message.embeds[0].footer.text}>, your project has been accepted!")
         else:
             await interaction.response.send_message("Hey! You're not a CM...",
                                                     ephemeral=True)
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
-                       label="Enter Extra Info",
+                       label="Add Comments",
                        custom_id="enter_extra_info")
     async def info_callback(self, button: Button, interaction: discord.Interaction):
         role_list = []
@@ -150,7 +161,7 @@ class PersistentProjectAdminButtons(View):
             await modal.wait()
 
             interaction.message.embeds[0].set_field_at(1,
-                                                       name="Extra Info:",
+                                                       name="CM Comments:",
                                                        value=f"{modal.children[0].value}",
                                                        inline=False)
 
@@ -220,7 +231,7 @@ class ProjectApplicationForm(View):
         modal = modals.ProjectApplicationModal()
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
-        channel = interaction.client.get_channel(1019959239713771680)
+        channel = interaction.client.get_channel(1023300253350367275)
         await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
 
