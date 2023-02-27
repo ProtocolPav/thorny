@@ -143,7 +143,8 @@ class PersistentProjectAdminButtons(View):
                                                        embed=interaction.message.embeds[0],
                                                        applied_tags=new_project_tag)
 
-            await thread.send(f"<@{interaction.message.embeds[0].footer.text}>, your project has been accepted!")
+            await thread.send(f"<@1079703011451998208>, <@{interaction.message.embeds[0].footer.text}>'s project has "
+                              f"been accepted!")
         else:
             await interaction.response.send_message("Hey! You're not a CM...",
                                                     ephemeral=True)
