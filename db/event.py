@@ -1,14 +1,13 @@
-import random
-import asyncpg as pg
-from datetime import datetime, timedelta
-import giphy_client
 import json
-import discord
-from thorny_core import errors
-from thorny_core.uikit import embeds
-from thorny_core.db import User, Guild
-from thorny_core.db import commit
+import random
+from datetime import datetime, timedelta
 
+import discord
+import giphy_client
+
+from thorny_core import errors
+from thorny_core.db import User, Guild, commit
+from thorny_core.uikit import embeds
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 api_instance = giphy_client.DefaultApi()

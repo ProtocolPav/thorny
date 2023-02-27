@@ -1,9 +1,10 @@
-import asyncpg as pg
 from datetime import datetime
 
+import asyncpg as pg
 import discord
 
 from thorny_core.db import UserFactory, GuildFactory, event, poolwrapper
+
 
 class WebEvent:
     __pool: poolwrapper.PoolWrapper

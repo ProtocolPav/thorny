@@ -2,7 +2,7 @@ import discord
 import json
 
 from datetime import datetime, timedelta
-from thorny_core.db import user, guild, GuildFactory, lbgen
+from thorny_core.db import user, guild, GuildFactory, generator
 import giphy_client
 import random
 
@@ -116,7 +116,7 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
     last_month = (datetime.now() - timedelta(days=30)).strftime('%B')
     two_months_ago = (datetime.now() - timedelta(days=60)).strftime('%B')
 
-    leaderboard, rank = await lbgen.activity_leaderboard(thorny_user, datetime.now())
+    leaderboard, rank = await generator.activity_leaderboard(thorny_user, datetime.now())
 
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
@@ -146,9 +146,9 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
 
     edit_embed.add_field(name="It's simple, really!",
                          value=f"The Profile is separated into 3 pages:\n"
-                               f"<:arrow_pink:921704277737619476> The Main Page, all about **YOU**\n"
-                               f"<:arrow_purple:921704277733425194> The Lore Page, all about your character\n"
-                               f"<:arrow_orange:921704277599211540> The Playtime Stats Page, which gives deep insight\n"
+                               f"<:_pink:921708790322192396> The Main Page, all about **YOU**\n"
+                               f"<:_purple:921708790368309269> The Lore Page, all about your character\n"
+                               f"<:_orange:921708790099898419> The Playtime Stats Page, which gives deep insight\n"
                                f"\nAnd so, the **Editing Menus** are split up just the same!\n"
                                f"You have 3 **select Menus** to choose from, for each of the 3 **pages**!\n\n"
                                f"**Now, just choose a section from the menus below and start editing!**")
@@ -162,15 +162,17 @@ async def application_info_embed(thorny_user: user.User, modal_children: discord
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
 
-    info_embed.add_field(name="General Info:",
-                         value=f"**Name:** {modal_children[0].value}\n"
-                               f"**Coordinates:** {modal_children[1].value}\n"
+    info_embed.add_field(name="Project Info:",
+                         value=f"**Coordinates:** {modal_children[1].value}\n"
                                f"**Road Built:** {modal_children[2].value}\n"
-                               f"**General Idea:** {modal_children[3].value}\n"
-                               f"**Time Estimation:** {modal_children[4].value}")
+                               f"**Project Members:** {thorny_user.discord_member.name}, {modal_children[4].value}")
 
-    info_embed.add_field(name="Extra Info:",
-                         value="A CM should add any extra info they find after asking more about the project.",
+    info_embed.add_field(name="Project Idea & Time Estimation:",
+                         value=f"{modal_children[3].value}",
+                         inline=False)
+
+    info_embed.add_field(name="CM Comments:",
+                         value="If a CM has any comments, they will be added here",
                          inline=False)
 
     info_embed.add_field(name="**STATUS**",
@@ -250,12 +252,12 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                    description="Thorny picks one random response out of each list",
                                    colour=0xD7E99A)
     exact = ""
-    for key, val in thorny_guild.exact_responses.items():
+    for key, val in thorny_guild.responses.exact.items():
         exact = f"{exact}**{key}** = {','.join(val)}\n"
     response_embed.add_field(name="Exact Responses",
                              value=exact)
     wildcard = ""
-    for key, val in thorny_guild.wildcard_responses.items():
+    for key, val in thorny_guild.responses.wildcard.items():
         wildcard = f"{wildcard}**{key}** = {','.join(val)}\n"
     response_embed.add_field(name="Wildcard Responses",
                              value=wildcard,
