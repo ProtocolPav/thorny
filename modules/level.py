@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from thorny_core.db import UserFactory, commit, GuildFactory, lbgen
+from thorny_core.db import UserFactory, commit, GuildFactory, generator
 
 
 class Level(commands.Cog):
@@ -37,7 +37,7 @@ class Level(commands.Cog):
         for i in range(10 - int(percentage/10)):
             progressbar = f"{progressbar}:white_large_square:"
 
-        leaderboard, rank = await lbgen.levels_leaderboard(thorny_user)
+        leaderboard, rank = await generator.levels_leaderboard(thorny_user)
 
         rank_embed.add_field(name=f"You are Level {thorny_user.level.level}!",
                              value=f"**Your Rank:** #{rank} on the Leaderboard\n"

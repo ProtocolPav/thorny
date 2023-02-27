@@ -1,13 +1,14 @@
-import asyncpg as pg
 import asyncio
 import json
 from datetime import datetime
+from typing import Literal
+
 import discord
 from dateutil.relativedelta import relativedelta
-from thorny_core.db.user import User
+
 from thorny_core.db.guild import Guild
+from thorny_core.db.user import User
 from thorny_core.db.poolwrapper import pool_wrapper
-from typing import Literal
 
 
 class UserFactory:
@@ -211,16 +212,6 @@ class UserFactory:
                                    thorny_id)
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
                       f"{thorny_user['username']}, Thorny ID {thorny_id}")
-
-    @classmethod
-    async def get_birthdays(cls):
-        async with pool_wrapper.connection() as conn:
-            bdays = await conn.fetch("""SELECT thorny_user_id, birthday, guild_id
-                                        FROM thorny.user
-                                        WHERE active = True AND birthday IS NOT NULL
-                                        AND date_part('day', birthday) = date_part('day', now())
-                                        AND date_part('month', birthday) = date_part('month', now())""")
-            return bdays
 
     @classmethod
     async def get_user_by_gamertag(cls, gamertag, guild_id):

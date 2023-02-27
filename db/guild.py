@@ -1,8 +1,10 @@
-import asyncpg as pg
-from datetime import datetime, timedelta, date
-import discord
-from thorny_core.db.poolwrapper import PoolWrapper
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, date
+
+import asyncpg as pg
+import discord
+
+from thorny_core.db.poolwrapper import PoolWrapper
 
 
 class Time:
@@ -125,11 +127,9 @@ class Guild:
     channels: Channels
     roles: Roles
     currency: Currency
-    features_v2: list[str]
+    features: list[str]
     reactions: list[Reaction]
     responses: Responses
-    exact_responses: dict[str, list[str]]
-    wildcard_responses: dict[str, list[str]]
     join_message: str
     leave_message: str
     level_message: str
@@ -154,10 +154,8 @@ class Guild:
         self.currency = Currency(currency_name=guild_record['currency_name'],
                                  currency_emoji=guild_record['currency_emoji'],
                                  total=currency_total)
-        self.features_v2 = [feature['feature'] for feature in features_record]
+        self.features = [feature['feature'] for feature in features_record]
         self.reactions = [Reaction(reaction_record=record) for record in reaction_roles]
-        self.exact_responses = {}
-        self.wildcard_responses = {}
         self.responses = Responses(response_record=responses_record)
         self.join_message = guild_record['join_message']
         self.leave_message = guild_record['leave_message']
@@ -168,7 +166,7 @@ class Guild:
     async def get_online_players(self):
         async with self.connection_pool.connection() as conn:
             online_players = await conn.fetch("""
-                                              SELECT * FROM thorny.activity 
+                                              SELECT * FROM thorny.activity
                                               JOIN thorny.user
                                               ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
                                               WHERE disconnect_time is NULL
