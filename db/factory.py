@@ -40,54 +40,53 @@ class UserFactory:
                                          """,
                                          thorny_id)
 
-            today = datetime.now()
-            today_hour_zero = today.replace(hour=0, minute=0)
-            current_month = today.replace(day=1, hour=0, minute=0)
-            previous_month = today.replace(day=1, hour=0, minute=0) - relativedelta(months=1)
-            expiring_month = today.replace(day=1, hour=0, minute=0) - relativedelta(months=2)
-
-            playtime = await conn.fetchrow("""
-                                           SELECT SUM(playtime)
-                                           AS total_playtime,
-                                           SUM(case when connect_time > $6 then playtime end)
-                                           AS todays_playtime,
-                                           SUM(case when connect_time between $3 and $2 then playtime end)
-                                           AS current_playtime,
-                                           SUM(case when connect_time between $4 and $3 then playtime end)
-                                           AS previous_playtime,
-                                           SUM(case when connect_time between $5 and $4 then playtime end)
-                                           AS expiring_playtime
-                                           FROM thorny.activity
-                                           WHERE thorny_user_id = $1
-                                           GROUP BY thorny_user_id
-                                           """,
-                                           thorny_id, today, current_month, previous_month, expiring_month,
-                                           today_hour_zero)
-
-            daily_average = await conn.fetchrow("""
-                                                SELECT thorny_user_id, AVG(sums) AS averages 
-                                                FROM (
-                                                      SELECT thorny_user_id, DATE(connect_time), SUM(playtime)
-                                                      AS sums
-                                                      FROM thorny.activity 
-                                                      GROUP BY thorny_user_id, DATE(connect_time)
-                                                      ) AS query
-                                                WHERE thorny_user_id = $1
-                                                GROUP BY thorny_user_id
+            monthly_playtime = await conn.fetch("""
+                                                SELECT t.year, t.month, sum(t.playtime) as playtime
+                                                FROM (SELECT sum(playtime) as playtime, 
+                                                             date_part('month', connect_time) as month, 
+                                                             date_part('year', connect_time) as year
+                                                      FROM thorny.activity
+                                                      INNER JOIN thorny.user 
+                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
+                                                      WHERE thorny.activity.thorny_user_id = $1
+                                                      GROUP BY connect_time 
+                                                      ) as t
+                                                GROUP BY t.year, t.month
+                                                ORDER BY t.year DESC, t.month DESC
                                                 """,
                                                 thorny_id)
-            recent_session = await conn.fetchrow("""
-                                                 SELECT * FROM thorny.activity
-                                                 WHERE thorny_user_id = $1 AND disconnect_time IS NOT NULL
-                                                 ORDER BY connect_time DESC
+
+            playtime_stats = await conn.fetchrow("""
+                                                 SELECT SUM(playtime) as total_playtime,
+                                                        SUM(case when date(connect_time) = date(now()) then playtime end) as today
+                                                 FROM thorny.activity
+                                                 WHERE thorny_user_id = $1
+                                                 GROUP BY thorny_user_id
                                                  """,
                                                  thorny_id)
+
+            daily_playtime = await conn.fetch("""
+                                              SELECT t.day, sum(t.playtime) as playtime 
+                                              FROM (SELECT sum(playtime) as playtime, 
+                                                           date(connect_time) as day
+                                                    FROM thorny.activity
+                                                    INNER JOIN thorny.user
+                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
+                                                    WHERE thorny.activity.thorny_user_id = $1
+                                                    GROUP BY day 
+                                                    ) as t
+                                              GROUP BY t.day
+                                              ORDER BY t.day desc
+                                              """,
+                                              thorny_id)
+
             current_connection = await conn.fetchrow("""
                                                      SELECT * FROM thorny.activity
                                                      WHERE thorny_user_id = $1
                                                      ORDER BY connect_time DESC
                                                      """,
                                                      thorny_id)
+
             inventory = await conn.fetch("""
                                          SELECT * FROM thorny.inventory
                                          INNER JOIN thorny.item_type
@@ -115,10 +114,9 @@ class UserFactory:
                         profile=profile,
                         profile_columns=profile_column_data,
                         levels=levels,
-                        playtime=playtime,
-                        recent_playtime=recent_session,
+                        playtime=monthly_playtime,
+                        total_playtime=playtime_stats,
                         current_connection=current_connection,
-                        daily_average=daily_average,
                         inventory=inventory,
                         item_data=item_data,
                         strikes=strikes,

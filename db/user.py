@@ -111,30 +111,18 @@ class Playtime:
     previous_playtime: Time
     expiring_playtime: Time
     todays_playtime: Time
-    recent_playtime: pg.Record
-    recent_session: Time
     current_connection: pg.Record
     daily_average: Time
 
-    def __init__(self, playtime_data, latest_playtime, current_connection, daily_average):
+    def __init__(self, monthly_data, stats, current_connection):
         default = Time(timedelta(hours=0))
-        set_default = False
 
-        if playtime_data is None:
-            set_default = True
-
-        def expression(data: str):
-            return default if set_default or playtime_data[data] is None else Time(playtime_data[data])
-
-        self.total_playtime = expression('total_playtime')
-        self.current_playtime = expression('current_playtime')
-        self.previous_playtime = expression('previous_playtime')
-        self.expiring_playtime = expression('expiring_playtime')
-        self.todays_playtime = expression('todays_playtime')
-        self.recent_playtime = latest_playtime if latest_playtime is not None else None
+        self.total_playtime = Time(stats['total_playtime']) if stats is not None else default
+        self.current_playtime = Time(monthly_data[0]['playtime']) if monthly_data is not None else default
+        self.previous_playtime = Time(monthly_data[1]['playtime']) if monthly_data is not None else default
+        self.expiring_playtime = Time(monthly_data[2]['playtime']) if monthly_data is not None else default
+        self.todays_playtime = Time(stats['today']) if stats['today'] is not None else default
         self.current_connection = current_connection
-        self.recent_session = Time(latest_playtime['playtime']) if latest_playtime is not None else default
-        self.daily_average = Time(daily_average['averages']) if daily_average is not None else default
 
 
 @dataclass
@@ -340,9 +328,8 @@ class User:
                  profile_columns: pg.Record,
                  levels: pg.Record,
                  playtime: pg.Record,
-                 recent_playtime: pg.Record,
+                 total_playtime: pg.Record,
                  current_connection: pg.Record,
-                 daily_average: pg.Record,
                  inventory: pg.Record,
                  item_data: pg.Record,
                  strikes: pg.Record,
@@ -365,8 +352,7 @@ class User:
             self.age = 0
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
-        self.playtime = Playtime(playtime_data=playtime, latest_playtime=recent_playtime, current_connection=current_connection,
-                                 daily_average=daily_average)
+        self.playtime = Playtime(monthly_data=playtime, stats=total_playtime, current_connection=current_connection)
         self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)
