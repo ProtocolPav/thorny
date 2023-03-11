@@ -105,3 +105,19 @@ async def fetch_pending_webevents(pool: poolwrapper.PoolWrapper, client: discord
                                         client))
 
     return return_list
+
+async def fetch_failed_webevents(pool: poolwrapper.PoolWrapper, client: discord.Client) -> list[WebEvent]:
+    async with pool.connection() as conn:
+        return_list = []
+        unprocessed_events = await conn.fetch("""
+                                              SELECT * FROM webserver.webevent
+                                              WHERE processed is NULL
+                                              ORDER BY event_time ASC
+                                              """)
+
+        for pending_event in unprocessed_events:
+            return_list.append(WebEvent(pending_event,
+                                        pool,
+                                        client))
+
+    return return_list

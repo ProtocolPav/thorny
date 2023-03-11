@@ -70,8 +70,12 @@ async def interruption_check():
 @tasks.loop(seconds=1)
 async def webevent_handler():
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    failed_events = await webevent.fetch_failed_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
         await pending_event.process()
+
+    for failed_event in failed_events:
+        print(f"[PROCESSING] {failed_event.event} Event with ID {failed_event.id} is still FAILED")
 
 @webevent_handler.error
 async def webevent_error(exception: Exception):
