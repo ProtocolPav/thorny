@@ -70,12 +70,19 @@ async def interruption_check():
 @tasks.loop(seconds=1)
 async def webevent_handler():
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    failed_events = await webevent.fetch_failed_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
-        try:
-            await pending_event.process()
-        except:
-            # Ignore all errors
-            pass
+        await pending_event.process()
+
+    for failed_event in failed_events:
+        print(f"[PROCESSING] {failed_event.event} Event with ID {failed_event.id} is still FAILED")
+
+@webevent_handler.error
+async def webevent_error(exception: Exception):
+    print(f"Ignoring exception in task webevent_handler:", file=sys.stderr)
+    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
+    webevent_handler.restart()
 
 
 @tasks.loop(hours=24.0)
