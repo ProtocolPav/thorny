@@ -112,9 +112,10 @@ class Playtime:
     expiring_playtime: Time
     todays_playtime: Time
     current_connection: pg.Record
+    loose_connections: pg.Record
     daily_average: Time
 
-    def __init__(self, monthly_data, stats, current_connection):
+    def __init__(self, monthly_data, stats, current_connection, unfulfilled_connections):
         default = Time(timedelta(hours=0))
 
         self.total_playtime = Time(stats['total_playtime']) if stats is not None else default
@@ -123,6 +124,7 @@ class Playtime:
         self.expiring_playtime = Time(monthly_data[2]['playtime']) if monthly_data is not None else default
         self.todays_playtime = Time(stats['today']) if stats['today'] is not None else default
         self.current_connection = current_connection
+        self.loose_connections = unfulfilled_connections
 
 
 @dataclass
@@ -330,6 +332,7 @@ class User:
                  playtime: pg.Record,
                  total_playtime: pg.Record,
                  current_connection: pg.Record,
+                 unfulfilled_connections: pg.Record,
                  inventory: pg.Record,
                  item_data: pg.Record,
                  strikes: pg.Record,
@@ -352,7 +355,8 @@ class User:
             self.age = 0
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
-        self.playtime = Playtime(monthly_data=playtime, stats=total_playtime, current_connection=current_connection)
+        self.playtime = Playtime(monthly_data=playtime, stats=total_playtime, current_connection=current_connection,
+                                 unfulfilled_connections=unfulfilled_connections)
         self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)

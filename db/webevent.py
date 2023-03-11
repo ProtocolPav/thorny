@@ -4,6 +4,7 @@ import asyncpg as pg
 import discord
 
 from thorny_core.db import UserFactory, GuildFactory, event, poolwrapper
+from thorny_core import errors
 
 
 class WebEvent:
@@ -39,6 +40,19 @@ class WebEvent:
 
             print(f"[PROCESSING] Successfully processed a {self.event} with ID {self.id}")
 
+    async def mark_failed_processing(self):
+        async with self.__pool.connection() as conn:
+            self.processed = False
+            self.process_time = datetime.now()
+            await conn.execute("""
+                               UPDATE webserver.webevent
+                               SET processed = NULL
+                               WHERE event_id = $1
+                               """,
+                               self.id)
+
+            print(f"[PROCESSING] Failed to process a {self.event} with ID {self.id}")
+
     async def process(self):
         if not self.processed:
             if self.event.lower() in ['connect', 'disconnect']:
@@ -57,8 +71,13 @@ class WebEvent:
                                         user=thorny_user,
                                         guild=thorny_guild)
 
-                await connection.log()
-                await self.mark_successful_processing()
+                try:
+                    await connection.log()
+                    await self.mark_successful_processing()
+                except errors.AlreadyConnectedError:
+                    await self.mark_failed_processing()
+                except errors.NotConnectedError:
+                    raise errors.NotConnectedError()
 
             elif self.event.lower() == 'disconnect all':
                 guild_id = int(self.description)
@@ -77,6 +96,7 @@ async def fetch_pending_webevents(pool: poolwrapper.PoolWrapper, client: discord
         unprocessed_events = await conn.fetch("""
                                               SELECT * FROM webserver.webevent
                                               WHERE processed = False
+                                              ORDER BY event_time ASC
                                               """)
 
         for pending_event in unprocessed_events:

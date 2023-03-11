@@ -87,6 +87,13 @@ class UserFactory:
                                                      """,
                                                      thorny_id)
 
+            unfulfilled_connections = await conn.fetch("""
+                                                       SELECT * FROM thorny.activity
+                                                       WHERE thorny_user_id = $1 AND disconnect_time is NULL
+                                                       ORDER BY connect_time ASC
+                                                       """,
+                                                       thorny_id)
+
             inventory = await conn.fetch("""
                                          SELECT * FROM thorny.inventory
                                          INNER JOIN thorny.item_type
@@ -117,6 +124,7 @@ class UserFactory:
                         playtime=monthly_playtime,
                         total_playtime=playtime_stats,
                         current_connection=current_connection,
+                        unfulfilled_connections=unfulfilled_connections,
                         inventory=inventory,
                         item_data=item_data,
                         strikes=strikes,
