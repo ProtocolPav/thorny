@@ -1,7 +1,8 @@
 import discord
 import json
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from thorny_core.db import user, guild, GuildFactory, generator
 import giphy_client
 import random
@@ -38,8 +39,8 @@ async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embe
     main_page_embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
 
     profile = thorny_user.profile
-    last_month = (datetime.now() - timedelta(days=30)).strftime('%B')
-    two_months_ago = (datetime.now() - timedelta(days=60)).strftime('%B')
+    last_month = (datetime.now() - relativedelta(months=1)).strftime('%B')
+    two_months_ago = (datetime.now() - relativedelta(months=2)).strftime('%B')
 
     main_page_embed.add_field(name=f"**:card_index: Information**",
                               value=f"{is_donator}\n"
@@ -52,7 +53,7 @@ async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embe
                               )
 
     main_page_embed.add_field(name=f"**:clock8: Quick Stats**",
-                              value=f"**Latest Playtime:** {thorny_user.playtime.recent_session}\n"
+                              value=f"**Today:** {thorny_user.playtime.todays_playtime}\n"
                                     f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
                                     f"**{last_month}:** {thorny_user.playtime.previous_playtime}\n"
                                     f"**{two_months_ago}:** {thorny_user.playtime.expiring_playtime}\n"
@@ -113,10 +114,14 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
     stats_page_embed.set_author(name=thorny_user.discord_member,
                                 icon_url=thorny_user.discord_member.display_avatar.url)
 
-    last_month = (datetime.now() - timedelta(days=30)).strftime('%B')
-    two_months_ago = (datetime.now() - timedelta(days=60)).strftime('%B')
+    last_month = (datetime.now() - relativedelta(months=1)).strftime('%B')
+    two_months_ago = (datetime.now() - relativedelta(months=2)).strftime('%B')
 
     leaderboard, rank = await generator.activity_leaderboard(thorny_user, datetime.now())
+
+    stats_page_embed.add_field(name=f"**:clock8: Today's Roundup**",
+                               value=f"You played for **{thorny_user.playtime.todays_playtime}** today",
+                               inline=True)
 
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
@@ -125,10 +130,10 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
                                      f"**Total:** {thorny_user.playtime.total_playtime}\n",
                                inline=True)
 
-    stats_page_embed.add_field(name=f"**:clock8: Today's Roundup**",
+    stats_page_embed.add_field(name=f"**:clock8: Monthly Roundup**",
                                value=f"You played for **{thorny_user.playtime.todays_playtime}** today\n"
                                      f"You are #{rank} on {datetime.now().strftime('%B')}'s Leaderboard\n",
-                               inline=True)
+                               inline=False)
 
     stats_page_embed.add_field(name=f"**🔜 More Stats Coming Soon...**",
                                value=f"I'm working *really* hard at analyzing your playtime. Soon I'll come back with"
