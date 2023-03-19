@@ -55,6 +55,7 @@ class WebEvent:
 
     async def process(self):
         if not self.processed:
+            print(f"[PROCESSING] Beginning to process a {self.event} with ID {self.id}")
             if self.event.lower() in ['connect', 'disconnect']:
                 event_type = event.Connect if self.event.lower() == 'connect' else event.Disconnect
 
