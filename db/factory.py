@@ -22,6 +22,15 @@ class UserFactory:
                                               WHERE user_id = $1 AND guild_id = $2
                                               """,
                                               user_id, guild_id)
+            if not thorny_user:
+                await UserFactory.create([member])
+
+                thorny_user = await conn.fetchrow("""
+                                                  SELECT * FROM thorny.user
+                                                  WHERE user_id = $1 AND guild_id = $2
+                                                  """,
+                                                  user_id, guild_id)
+
             thorny_id = thorny_user['thorny_user_id']
 
             profile = await conn.fetchrow("""
