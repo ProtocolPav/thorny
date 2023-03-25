@@ -4,10 +4,12 @@ from datetime import datetime
 from typing import Literal
 
 import discord
+import httpx
 from dateutil.relativedelta import relativedelta
 
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
+from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
 
 
@@ -227,19 +229,26 @@ class UserFactory:
     async def deactivate(cls, members: list[discord.Member]):
         async with pool_wrapper.connection() as conn:
             for member in members:
-                thorny_user = await conn.fetchrow("""
-                                                  SELECT * FROM thorny.user
-                                                  WHERE user_id = $1 AND guild_id = $2
-                                                  """,
-                                                  member.id, member.guild.id)
-                thorny_id = thorny_user['thorny_user_id']
+                thorny_user = await UserFactory.build(member)
+
+                if thorny_user.profile.whitelisted_gamertag is not None:
+                    async with httpx.AsyncClient() as client:
+                        r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+
+                        if r.json()['server_online']:
+                            removed_gamertag = thorny_user.profile.whitelisted_gamertag
+                            thorny_user.profile.whitelisted_gamertag = None
+                            await commit(thorny_user)
+
+                            await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
+
                 await conn.execute("""
                                    UPDATE thorny.user
                                    SET active = False WHERE thorny_user_id = $1
                                    """,
-                                   thorny_id)
+                                   thorny_user.thorny_id)
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
-                      f"{thorny_user['username']}, Thorny ID {thorny_id}")
+                      f"{thorny_user.username}, Thorny ID {thorny_user.thorny_id}")
 
     @classmethod
     async def get_similar_gamertags(cls, guild_id, gamertag):
