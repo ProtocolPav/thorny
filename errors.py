@@ -196,6 +196,7 @@ class RedeemError(ThornyError):
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error
 
+
 class LinkError(ThornyError):
     """Raised when the link sent is wrong"""
 
@@ -206,5 +207,60 @@ class LinkError(ThornyError):
         self.error.add_field(name="<:_no:921840417362804777> Darn",
                              value="Please ensure your link is in the format: "
                                    "https://cdn.discordapp.com/attachments/.../link.png")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class ServerNotOnline(ThornyError):
+    """Raised when an action that requires the server to be online sees that the server is not online"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Try again later",
+                             value="The server is not online. Please try again later.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class GamertagAlreadyAdded(ThornyError):
+    """Raised when the gamertag is already added and linked to a different user"""
+
+    def __init__(self, gamertag: str, user_id: int):
+        super().__init__()
+        self.gamertag = gamertag
+        self.user_id = user_id
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Could not whitelist",
+                             value=f"The gamertag {self.gamertag} already belongs to <@{self.user_id}>.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class AlreadyWhitelisted(ThornyError):
+    """Raised when the user already has a linked gamertag"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Could not whitelist",
+                             value=f"The user is already whitelisted under a different gamertag. Please run "
+                                   f"`/whitelist remove` first.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class NotWhitelisted(ThornyError):
+    """Raised when trying to remove someone from the whitelist, but they are not on the whitelist"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Did you make a mistake?",
+                             value=f"Cannot remove from the whitelist, because they aren't on it.")
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error

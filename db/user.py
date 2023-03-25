@@ -45,6 +45,7 @@ class Profile:
     default_lore: str = field(repr=False, default="I came from a distant land, far, far away...")
     slogan: str = None
     gamertag: str = None
+    whitelisted_gamertag: str = None
     aboutme: str = None
     character_name: str = None
     character_age: int = None
@@ -59,15 +60,12 @@ class Profile:
     stats_creativity: int = None
     stats_ingenuity: int = None
     lore: str = None
-    information_shown: bool = True
-    aboutme_shown: bool = True
-    activity_shown: bool = True
-    lore_shown: bool = True
 
     def __init__(self, profile_data, column_data):
         self.column_data = column_data
         self.slogan = profile_data['slogan']
         self.gamertag = profile_data['gamertag']
+        self.whitelisted_gamertag = profile_data['whitelisted_gamertag']
         self.role = None
         self.aboutme = profile_data['aboutme']
         self.character_name = profile_data['character_name']
