@@ -46,7 +46,7 @@ class WebEvent:
             self.process_time = datetime.now()
             await conn.execute("""
                                UPDATE webserver.webevent
-                               SET failed = True, processed_time = $2
+                               SET failed = True, processed = True, processed_time = $2
                                WHERE event_id = $1
                                """,
                                self.id, self.process_time)
