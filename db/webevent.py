@@ -64,9 +64,7 @@ class WebEvent:
                 gamertag = self.description.split(',')[1]
 
                 thorny_guild = await GuildFactory.build(self.__client.get_guild(guild_id))
-
-                discord_member = thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag, guild_id))
-                thorny_user = await UserFactory.build(discord_member)
+                thorny_user = await UserFactory.fetch_by_gamertag(thorny_guild, gamertag)
 
                 connection = event_type(client=self.__client,
                                         event_time=self.time,

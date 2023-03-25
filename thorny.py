@@ -92,7 +92,7 @@ async def birthday_checker():
         for guild in thorny.guilds:
             if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
                 thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.fetch_by_id(guild, user['thorny_user_id'])
 
                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()

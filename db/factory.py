@@ -141,16 +141,28 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def fetch(cls, guild: discord.Guild, thorny_id: int) -> User:
+    async def fetch_by_id(cls, guild: discord.Guild, thorny_id: int) -> User:
         async with pool_wrapper.connection() as conn:
-            thorny_user = await conn.fetchrow("""SELECT * FROM thorny.user
-                                                 WHERE thorny_user_id = $1""", thorny_id)
+            thorny_user = await conn.fetchrow("""
+                                              SELECT user_id FROM thorny.user
+                                              WHERE thorny_user_id = $1
+                                              """,
+                                              thorny_id)
             member = guild.get_member(thorny_user['user_id'])
         return await UserFactory.build(member)
 
     @classmethod
     async def fetch_by_gamertag(cls, guild: discord.Guild, gamertag: str) -> User:
-        ...
+        async with pool_wrapper.connection() as conn:
+            thorny_user = await conn.fetchrow("""
+                                              SELECT user_id FROM thorny.user
+                                              INNER JOIN thorny.profile
+                                              ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                              WHERE whitelisted_gamertag = $1
+                                              """,
+                                              gamertag)
+            member = guild.get_member(thorny_user['user_id'])
+        return await UserFactory.build(member)
 
     @classmethod
     async def create(cls, members: list[discord.Member]):
@@ -228,20 +240,6 @@ class UserFactory:
                                    thorny_id)
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
                       f"{thorny_user['username']}, Thorny ID {thorny_id}")
-
-    @classmethod
-    async def get_user_by_gamertag(cls, gamertag, guild_id):
-        async with pool_wrapper.connection() as conn:
-            user = await conn.fetchrow("""
-                                       SELECT thorny.user.user_id FROM thorny.user
-                                       INNER JOIN thorny.profile
-                                       ON thorny.profile.thorny_user_id = thorny.user.thorny_user_id
-                                       WHERE whitelisted_gamertag = $1 
-                                       AND thorny.user.guild_id = $2
-                                       """,
-                                       gamertag, guild_id)
-
-            return user['user_id']
 
     @classmethod
     async def get_similar_gamertags(cls, guild_id, gamertag):
