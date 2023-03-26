@@ -38,23 +38,25 @@ class WebEvent:
                                """,
                                self.id, self.process_time)
 
-            print(f"[PROCESSING] Successfully processed a {self.event} with ID {self.id}")
+            print(f"[{datetime.now().replace(microsecond=0)}] [PROCESSING] {self.event} Event with ID {self.id} processed")
 
     async def mark_failed_processing(self):
         async with self.__pool.connection() as conn:
-            self.processed = False
+            self.processed = True
             self.process_time = datetime.now()
             await conn.execute("""
                                UPDATE webserver.webevent
-                               SET processed = NULL
+                               SET failed = True, processed = True, processed_time = $2
                                WHERE event_id = $1
                                """,
-                               self.id)
+                               self.id, self.process_time)
 
-            print(f"[PROCESSING] Failed to process a {self.event} with ID {self.id}")
+            print(f"[{datetime.now().replace(microsecond=0)}] [PROCESSING] {self.event} Event with ID {self.id} failed")
 
     async def process(self):
         if not self.processed:
+            print(f"[{datetime.now().replace(microsecond=0)}] [PROCESSING] {self.event} Event with ID {self.id}...")
+
             if self.event.lower() in ['connect', 'disconnect']:
                 event_type = event.Connect if self.event.lower() == 'connect' else event.Disconnect
 
@@ -62,9 +64,7 @@ class WebEvent:
                 gamertag = self.description.split(',')[1]
 
                 thorny_guild = await GuildFactory.build(self.__client.get_guild(guild_id))
-
-                discord_member = thorny_guild.discord_guild.get_member(await UserFactory.get_user_by_gamertag(gamertag, guild_id))
-                thorny_user = await UserFactory.build(discord_member)
+                thorny_user = await UserFactory.fetch_by_gamertag(thorny_guild, gamertag)
 
                 connection = event_type(client=self.__client,
                                         event_time=self.time,
@@ -111,7 +111,7 @@ async def fetch_failed_webevents(pool: poolwrapper.PoolWrapper, client: discord.
         return_list = []
         unprocessed_events = await conn.fetch("""
                                               SELECT * FROM webserver.webevent
-                                              WHERE processed is NULL
+                                              WHERE failed = True
                                               ORDER BY event_time ASC
                                               """)
 

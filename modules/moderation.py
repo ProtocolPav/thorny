@@ -8,6 +8,7 @@ import httpx
 import json
 from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core.uikit import embeds, views
+from thorny_core import errors
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -122,17 +123,69 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands",
+                                          guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+
+    @whitelist.command(description="Add somebody to the server whitelist")
     @commands.has_permissions(administrator=True)
-    async def whitelist(self, ctx, user: discord.Member):
+    async def add(self, ctx: discord.ApplicationContext, user: discord.Member):
         thorny_user = await UserFactory.build(user)
-        async with httpx.AsyncClient() as client:
-            r = await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
-            if r.json()["gamertag_added"]:
-                await ctx.respond(f"Whitelisted {thorny_user.profile.gamertag}")
-            else:
-                await ctx.respond(f"Could not whitelist {thorny_user.profile.gamertag}. "
-                                  f"Either you have already whitelisted this gamertag or it does not exist.")
+        gamertags = await UserFactory.get_exact_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
+
+        if not gamertags and thorny_user.profile.whitelisted_gamertag is None:
+            async with httpx.AsyncClient() as client:
+                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+
+                if r.json()['server_online']:
+                    thorny_user.profile.whitelisted_gamertag = thorny_user.profile.gamertag
+                    await commit(thorny_user)
+
+                    await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
+
+                    await ctx.respond(f"Added <@{thorny_user.user_id}> to the whitelist "
+                                      f"under the gamertag **{thorny_user.profile.gamertag}**")
+                else:
+                    raise errors.ServerNotOnline()
+        elif gamertags:
+            raise errors.GamertagAlreadyAdded(thorny_user.profile.gamertag, gamertags[0]['user_id'])
+        elif thorny_user.profile.whitelisted_gamertag is not None:
+            raise errors.AlreadyWhitelisted()
+
+    @whitelist.command(description="Remove somebody from the server whitelist")
+    @commands.has_permissions(administrator=True)
+    async def remove(self, ctx, user: discord.Member):
+        thorny_user = await UserFactory.build(user)
+
+        if thorny_user.profile.whitelisted_gamertag is not None:
+            async with httpx.AsyncClient() as client:
+                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+
+                if r.json()['server_online']:
+                    removed_gamertag = thorny_user.profile.whitelisted_gamertag
+                    thorny_user.profile.whitelisted_gamertag = None
+                    await commit(thorny_user)
+
+                    await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
+
+                    await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
+                else:
+                    raise errors.ServerNotOnline()
+        else:
+            raise errors.NotWhitelisted()
+
+    @whitelist.command(description="See the whitelist")
+    @commands.has_permissions(administrator=True)
+    async def view(self, ctx: discord.ApplicationContext):
+        gamertags = await UserFactory.get_all_gamertags(ctx.guild.id)
+
+        send_text = []
+        for tag in gamertags:
+            send_text.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
+
+        gamertag_embed = discord.Embed(colour=0x64d5ac)
+        gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
+                                 value="\n".join(send_text[0:1000]))
+        await ctx.respond(embed=gamertag_embed)
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))

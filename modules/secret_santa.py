@@ -56,8 +56,8 @@ class SecretSanta(commands.Cog):
                 value['id_of_who_they_got'] = who_they_got
                 file_json[who_they_got]['id_of_who_got_them'] = key
 
-                user = await UserFactory.fetch(ctx.guild, int(key))
-                receiver = await UserFactory.fetch(ctx.guild, int(who_they_got))
+                user = await UserFactory.fetch_by_id(ctx.guild, int(key))
+                receiver = await UserFactory.fetch_by_id(ctx.guild, int(who_they_got))
                 await user.discord_member.send(embed=embeds.secret_santa_message(gift_receiver=receiver,
                                                                                  request=file_json[who_they_got]['request']))
 

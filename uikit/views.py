@@ -126,7 +126,7 @@ class PersistentProjectAdminButtons(View):
             self.disable_all_items()
             await interaction.response.edit_message(view=None,
                                                     embed=interaction.message.embeds[0])
-            forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681)
+            forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681) #1074005509419581490
 
             project_name = interaction.message.embeds[0].title
             project_description = interaction.message.embeds[0].fields[1].value
@@ -134,16 +134,15 @@ class PersistentProjectAdminButtons(View):
 
             new_project_tag = None
 
-            for tag in forum_channel.available_tags:
-                if tag.name == "New Project":
-                    new_project_tag = tag
+            # for tag in forum_channel.available_tags:
+            #     if tag.name == "New Project":
+            #         new_project_tag = tag
 
             thread = await forum_channel.create_thread(name=project_name,
                                                        content=project_description,
-                                                       embed=interaction.message.embeds[0],
-                                                       applied_tags=new_project_tag)
+                                                       embed=interaction.message.embeds[0])
 
-            await thread.send(f"<@1079703011451998208>, <@{interaction.message.embeds[0].footer.text}>'s project has "
+            await thread.send(f"<@&1079703011451998208>, <@{interaction.message.embeds[0].footer.text}>'s project has "
                               f"been accepted!")
         else:
             await interaction.response.send_message("Hey! You're not a CM...",
@@ -161,7 +160,7 @@ class PersistentProjectAdminButtons(View):
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-            interaction.message.embeds[0].set_field_at(1,
+            interaction.message.embeds[0].set_field_at(2,
                                                        name="CM Comments:",
                                                        value=f"{modal.children[0].value}",
                                                        inline=False)
@@ -181,7 +180,7 @@ class PersistentProjectAdminButtons(View):
             role_list.append(role.name)
         if "Community Manager" in role_list:
             interaction.message.embeds[0].colour = 0x702963
-            interaction.message.embeds[0].set_field_at(2,
+            interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value="ON WAITING LIST\n"
                                                              "*Your application has been placed on a waiting list.\n"
@@ -202,7 +201,7 @@ class PersistentProjectAdminButtons(View):
             role_list.append(role.name)
         if "Community Manager" in role_list:
             interaction.message.embeds[0].colour = 0xD22B2B
-            interaction.message.embeds[0].set_field_at(2,
+            interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value="DENIED",
                                                        inline=False)
@@ -232,7 +231,7 @@ class ProjectApplicationForm(View):
         modal = modals.ProjectApplicationModal()
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
-        channel = interaction.client.get_channel(1023300253350367275)
+        channel = interaction.client.get_channel(1019959239713771680)#1023300253350367275
         await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
 
