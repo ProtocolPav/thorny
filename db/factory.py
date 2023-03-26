@@ -157,7 +157,7 @@ class UserFactory:
     async def fetch_by_gamertag(cls, guild: discord.Guild, gamertag: str) -> User:
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
-                                              SELECT user_id FROM thorny.user
+                                              SELECT thorny.user.user_id FROM thorny.user
                                               INNER JOIN thorny.profile
                                               ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
                                               WHERE whitelisted_gamertag = $1
