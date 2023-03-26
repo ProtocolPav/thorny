@@ -25,14 +25,14 @@ async def update_profile(thorny_user: User):
                            character_name = $5, character_age = $6, character_race = $7,
                            character_role = $8, character_origin = $9, character_beliefs = $10,
                            agility = $11, valor = $12, strength = $13, charisma = $14, 
-                           creativity = $15, ingenuity = $16
-                           WHERE thorny_user_id = $17
+                           creativity = $15, ingenuity = $16, whitelisted_gamertag = $17
+                           WHERE thorny_user_id = $18
                            """,
                            profile.slogan, profile.gamertag, profile.aboutme, profile.lore,
                            profile.character_name, profile.character_age, profile.character_race,
                            profile.character_role, profile.character_origin, profile.character_beliefs,
                            profile.agility, profile.valor, profile.strength,
-                           profile.charisma, profile.creativity, profile.ingenuity,
+                           profile.charisma, profile.creativity, profile.ingenuity, profile.whitelisted_gamertag,
                            thorny_user.thorny_id)
 
 

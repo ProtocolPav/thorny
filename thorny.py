@@ -70,12 +70,11 @@ async def interruption_check():
 @tasks.loop(seconds=1)
 async def webevent_handler():
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
-    failed_events = await webevent.fetch_failed_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
-        await pending_event.process()
-
-    for failed_event in failed_events:
-        print(f"[PROCESSING] {failed_event.event} Event with ID {failed_event.id} is still FAILED")
+        try:
+            await pending_event.process()
+        except:
+            await pending_event.mark_failed_processing()
 
 @webevent_handler.error
 async def webevent_error(exception: Exception):
@@ -93,7 +92,7 @@ async def birthday_checker():
         for guild in thorny.guilds:
             if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
                 thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.fetch(guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.fetch_by_id(guild, user['thorny_user_id'])
 
                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()

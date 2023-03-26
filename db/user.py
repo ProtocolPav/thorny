@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, date
 
+import matplotlib.pyplot as plt
+
 import asyncpg as pg
 import discord
 
@@ -43,6 +45,7 @@ class Profile:
     default_lore: str = field(repr=False, default="I came from a distant land, far, far away...")
     slogan: str = None
     gamertag: str = None
+    whitelisted_gamertag: str = None
     aboutme: str = None
     character_name: str = None
     character_age: int = None
@@ -57,15 +60,12 @@ class Profile:
     stats_creativity: int = None
     stats_ingenuity: int = None
     lore: str = None
-    information_shown: bool = True
-    aboutme_shown: bool = True
-    activity_shown: bool = True
-    lore_shown: bool = True
 
     def __init__(self, profile_data, column_data):
         self.column_data = column_data
         self.slogan = profile_data['slogan']
         self.gamertag = profile_data['gamertag']
+        self.whitelisted_gamertag = profile_data['whitelisted_gamertag']
         self.role = None
         self.aboutme = profile_data['aboutme']
         self.character_name = profile_data['character_name']
@@ -111,20 +111,67 @@ class Playtime:
     previous_playtime: Time
     expiring_playtime: Time
     todays_playtime: Time
+    weekly_ratio: float
     current_connection: pg.Record
     loose_connections: pg.Record
-    daily_average: Time
+    daily_playtime: pg.Record
 
-    def __init__(self, monthly_data, stats, current_connection, unfulfilled_connections):
+    def __init__(self, monthly_data, stats, current_connection, unfulfilled_connections, daily_playtime):
         default = Time(timedelta(hours=0))
 
-        self.total_playtime = Time(stats['total_playtime']) if stats is not None else default
-        self.current_playtime = Time(monthly_data[0]['playtime']) if monthly_data is not None else default
-        self.previous_playtime = Time(monthly_data[1]['playtime']) if monthly_data is not None else default
-        self.expiring_playtime = Time(monthly_data[2]['playtime']) if monthly_data is not None else default
-        self.todays_playtime = Time(stats['today']) if stats['today'] is not None else default
+        if monthly_data:
+            self.current_playtime = Time(monthly_data[0]['playtime'])
+            self.previous_playtime = Time(monthly_data[1]['playtime']) if len(monthly_data) >= 2 else default
+            self.expiring_playtime = Time(monthly_data[2]['playtime']) if len(monthly_data) >= 3 else default
+        else:
+            self.current_playtime = default
+            self.previous_playtime = default
+            self.expiring_playtime = default
+
+        if stats:
+            self.total_playtime = Time(stats['total_playtime']) if stats['total_playtime'] is not None else default
+            self.todays_playtime = Time(stats['today']) if stats['today'] is not None else default
+        else:
+            self.total_playtime = default
+            self.todays_playtime = default
+
         self.current_connection = current_connection
         self.loose_connections = unfulfilled_connections
+        self.daily_playtime = daily_playtime
+
+        # self.generate_bar_chart()
+
+    def generate_bar_chart(self):
+        x_axis = []
+        y_axis = []
+        print(self.daily_playtime)
+
+        for i in range(0,7):
+            day = datetime.today() - timedelta(days=i)
+            x_axis.insert(0, f"{day.day}/{day.month}")
+
+            record = self.daily_playtime[i]
+            record_day = f"{record['day'].day}/{record['day'].month}"
+
+            print(record, record_day, x_axis[-i])
+            if record_day == x_axis[-i]:
+                y_axis.insert(0, round(record['playtime'].total_seconds()/3600, 1))
+            else:
+                y_axis.insert(0, 0)
+
+        plt.bar(x=x_axis, height=y_axis, edgecolor='none')
+
+        ax = plt.axes()
+        ax.set_xticks(range(7))
+        ax.set_xticklabels(x_axis)
+        ax.set_yticklabels([])
+
+        ax.set_axis_bgcolor('dark_grey')
+
+        plt.title('Playtime Graph')
+        plt.xlabel('Day')
+        plt.ylabel('Hours')
+        plt.savefig('pav.png')
 
 
 @dataclass
@@ -329,7 +376,8 @@ class User:
                  profile: pg.Record,
                  profile_columns: pg.Record,
                  levels: pg.Record,
-                 playtime: pg.Record,
+                 monthly_playtime: pg.Record,
+                 daily_playtime: pg.Record,
                  total_playtime: pg.Record,
                  current_connection: pg.Record,
                  unfulfilled_connections: pg.Record,
@@ -355,8 +403,8 @@ class User:
             self.age = 0
         self.profile = Profile(profile_data=profile, column_data=profile_columns)
         self.level = Level(level_data=levels)
-        self.playtime = Playtime(monthly_data=playtime, stats=total_playtime, current_connection=current_connection,
-                                 unfulfilled_connections=unfulfilled_connections)
+        self.playtime = Playtime(monthly_data=monthly_playtime, stats=total_playtime, current_connection=current_connection,
+                                 unfulfilled_connections=unfulfilled_connections, daily_playtime=daily_playtime)
         self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)
