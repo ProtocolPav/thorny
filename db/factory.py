@@ -154,7 +154,7 @@ class UserFactory:
         return await UserFactory.build(member)
 
     @classmethod
-    async def fetch_by_gamertag(cls, guild: discord.Guild, gamertag: str) -> User:
+    async def fetch_by_gamertag(cls, guild: Guild, gamertag: str) -> User:
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
                                               SELECT thorny.user.user_id FROM thorny.user
@@ -163,7 +163,7 @@ class UserFactory:
                                               WHERE whitelisted_gamertag = $1
                                               """,
                                               gamertag)
-            member = guild.get_member(thorny_user['user_id'])
+            member = guild.discord_guild.get_member(thorny_user['user_id'])
         return await UserFactory.build(member)
 
     @classmethod
