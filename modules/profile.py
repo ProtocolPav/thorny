@@ -70,7 +70,7 @@ class Profile(commands.Cog):
 
     @gamertag.command(description="Search the database for gamertags")
     async def search(self, ctx: discord.ApplicationContext, gamertag: discord.Option(str, "Enter parts of a gamertag")):
-        gamertags = await UserFactory.get_similar_gamertags(ctx.guild.id, gamertag)
+        gamertags = await UserFactory.get_gamertags(ctx.guild.id, gamertag[0:4])
         send_text = []
         for tag in gamertags:
             send_text.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")

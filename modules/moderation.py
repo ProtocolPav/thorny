@@ -130,7 +130,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def add(self, ctx: discord.ApplicationContext, user: discord.Member):
         thorny_user = await UserFactory.build(user)
-        gamertags = await UserFactory.get_exact_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
+        gamertags = await UserFactory.get_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
 
         if not gamertags and thorny_user.profile.whitelisted_gamertag is None:
             async with httpx.AsyncClient() as client:
@@ -176,7 +176,7 @@ class Moderation(commands.Cog):
     @whitelist.command(description="See the whitelist")
     @commands.has_permissions(administrator=True)
     async def view(self, ctx: discord.ApplicationContext):
-        gamertags = await UserFactory.get_all_gamertags(ctx.guild.id)
+        gamertags = await UserFactory.get_gamertags(ctx.guild.id)
 
         send_text = []
         for tag in gamertags:
