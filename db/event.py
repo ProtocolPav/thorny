@@ -61,8 +61,6 @@ class Disconnect(Event):
         async with self.thorny_user.connection_pool.connection() as conn:
             loose_connections = self.thorny_user.playtime.loose_connections
 
-            print(loose_connections)
-
             if not loose_connections:
                 raise errors.NotConnectedError()
             else:
