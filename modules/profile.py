@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import utils
 import json
 from thorny_core.uikit import slashoptions, views, embeds
-from thorny_core.db import UserFactory, commit, GuildFactory
+from thorny_core.db import UserFactory, commit, GuildFactory, generator
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -83,10 +83,13 @@ class Profile(commands.Cog):
         await ctx.respond(embed=gamertag_embed)
 
     # @commands.slash_command(description="See all upcoming birthdays!")
-    # async def birthdays(self, ctx):
-    #     list = await dbutils.User().select_birthdays()
-    #     birthdays = []
-    #     for user in list:
-    #         if user["guild_id"] == ctx.guild.id:
+    # async def birthdays(self, ctx: discord.ApplicationContext):
+    #     thorny_user = await UserFactory.build(ctx.author)
+    #     upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
+    #     events_embed = discord.Embed(title="Birthdays")
+    #     for user in upcoming_bdays:
+    #         temp_thorny_user = await UserFactory.fetch_by_id(thorny_user.guild, user['thorny_user_id'])
+    #         events_embed.add_field(name=temp_thorny_user.username,
+    #                                value=temp_thorny_user.birthday_display)
     #
     #     await ctx.respond(embed=events_embed)

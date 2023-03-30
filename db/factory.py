@@ -15,7 +15,7 @@ from thorny_core.db.poolwrapper import pool_wrapper
 
 class UserFactory:
     @classmethod
-    async def build(cls, member: discord.Member) -> User:
+    async def build(cls, member: discord.User | discord.Member) -> User:
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -143,14 +143,14 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def fetch_by_id(cls, guild: discord.Guild, thorny_id: int) -> User:
+    async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
                                               SELECT user_id FROM thorny.user
                                               WHERE thorny_user_id = $1
                                               """,
                                               thorny_id)
-            member = guild.get_member(thorny_user['user_id'])
+            member = guild.discord_guild.get_member(thorny_user['user_id'])
         return await UserFactory.build(member)
 
     @classmethod
@@ -285,6 +285,13 @@ class GuildFactory:
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
         async with pool_wrapper.connection() as conn:
+            await conn.set_type_codec(
+                'json',
+                encoder=json.dumps,
+                decoder=json.loads,
+                schema='pg_catalog'
+            )
+
             total_currency = await conn.fetchrow("""
                                                  SELECT SUM(balance) as total FROM thorny.user
                                                  WHERE guild_id = $1 AND active = TRUE
