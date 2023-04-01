@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from discord import utils
 import json
-from thorny_core.uikit import slashoptions, views, embeds
+import thorny_core.uikit as uikit
 from thorny_core.db import UserFactory, commit, GuildFactory, generator
 
 version_json = json.load(open('./version.json', 'r'))
@@ -30,21 +30,21 @@ class Profile(commands.Cog):
         else:
             is_donator = ''
 
-        pages = [await embeds.profile_main_embed(thorny_user, is_donator),
-                 await embeds.profile_lore_embed(thorny_user),
-                 await embeds.profile_stats_embed(thorny_user)]
-        await ctx.respond(embed=pages[0], view=views.Profile(thorny_user, pages, ctx))
+        pages = [await uikit.profile_main_embed(thorny_user, is_donator),
+                 await uikit.profile_lore_embed(thorny_user),
+                 await uikit.profile_stats_embed(thorny_user)]
+        await ctx.respond(embed=pages[0], view=uikit.Profile(thorny_user, pages, ctx))
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands",
                                          guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
 
     @birthday.command(description="Set your birthday")
     async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
-                                                   autocomplete=utils.basic_autocomplete(slashoptions.months)),
+                                                   autocomplete=utils.basic_autocomplete(uikit.all_months())),
                   day: discord.Option(int, "Pick or type a day",
-                                      autocomplete=utils.basic_autocomplete(slashoptions.days)),
+                                      autocomplete=utils.basic_autocomplete(uikit.days_of_the_month())),
                   year: discord.Option(int, "Pick or type a year",
-                                       autocomplete=utils.basic_autocomplete(slashoptions.years))):
+                                       autocomplete=utils.basic_autocomplete(uikit.years()))):
         if year is not None:
             date = f'{month} {day} {year}'
             date_system = datetime.strptime(date, "%B %d %Y")

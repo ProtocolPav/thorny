@@ -5,8 +5,7 @@ from discord.ui import View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
-from thorny_core.uikit import embeds
-from thorny_core.uikit import slashoptions
+from thorny_core.uikit import embeds, options
 from thorny_core.db import User, UserFactory, GuildFactory, Guild
 from thorny_core import errors
 
@@ -18,7 +17,7 @@ class ProfileEdit(View):
         self.edit_embed = embed
 
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
-                       options=slashoptions.profile_main_select)
+                       options=options.profile_main_select())
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         if select_menu.values[0] == 'birthday':
             await interaction.response.send_message("Please use the `/birthday set` command to set your birthday!",
@@ -28,13 +27,13 @@ class ProfileEdit(View):
                                                                          self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
-                       options=slashoptions.profile_lore_select)
+                       options=options.profile_lore_select())
     async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=slashoptions.profile_stats_select)
+                       options=options.profile_stats_select())
     async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
@@ -517,7 +516,7 @@ class ServerSetup(View):
         super().__init__(timeout=None)
 
     @discord.ui.select(placeholder="Configure your server settings",
-                       options=slashoptions.server_setup)
+                       options=options.server_setup())
     async def callback(self, select_menu: Select, interaction: discord.Interaction):
         thorny_guild = await GuildFactory.build(interaction.guild)
 
@@ -583,7 +582,7 @@ class Store(View):
             buy_one_button.disabled = True
 
     @discord.ui.select(placeholder="Select an item to buy",
-                       options=slashoptions.shop_items())
+                       options=options.shop_items())
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
         self.item_id = select_menu.values[0]
 
@@ -658,7 +657,7 @@ class RedeemSelectMenu(Select):
         item = self.user.inventory.fetch(self.values[0])
 
         self.user.inventory.remove_item(item.item_id, 1)
-        self.options = slashoptions.redeem_items(self.user)
+        self.options = options.redeem_items(self.user)
 
         if len(self.user.inventory.slots) > 0:
             view_to_send = self.view
@@ -740,7 +739,7 @@ class RedeemMenu(View):
 
         if len(thorny_user.inventory.slots) > 0:
             self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
-                                           options=slashoptions.redeem_items(self.user),
+                                           options=options.redeem_items(self.user),
                                            thorny_user=thorny_user,
                                            thorny_guild=thorny_guild,
                                            context=context))
