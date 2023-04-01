@@ -120,9 +120,20 @@ class Playtime:
         default = Time(timedelta(hours=0))
 
         if monthly_data:
-            self.current_playtime = Time(monthly_data[0]['playtime'])
-            self.previous_playtime = Time(monthly_data[1]['playtime']) if len(monthly_data) >= 2 else default
-            self.expiring_playtime = Time(monthly_data[2]['playtime']) if len(monthly_data) >= 3 else default
+            if monthly_data[0]['month'] == datetime.now().month:
+                self.current_playtime = Time(monthly_data[0]['playtime'])
+            else:
+                self.current_playtime = default
+
+            if monthly_data[1]['month'] == datetime.now().month - 1 and len(monthly_data) >= 2:
+                self.previous_playtime = Time(monthly_data[1]['playtime'])
+            else:
+                self.previous_playtime = default
+
+            if monthly_data[2]['month'] == datetime.now().month - 1 and len(monthly_data) >= 3:
+                self.expiring_playtime = Time(monthly_data[2]['playtime'])
+            else:
+                self.expiring_playtime = default
         else:
             self.current_playtime = default
             self.previous_playtime = default

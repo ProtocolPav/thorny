@@ -40,7 +40,7 @@ class Playtime(commands.Cog):
             response_embed.set_footer(text=f'{v}')
             await ctx.respond(embed=response_embed)
 
-    @commands.slash_command(description="Log your disconnect time as well as what you did",
+    @commands.slash_command(description="Log your disconnect time",
                             guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def disconnect(self, ctx: discord.ApplicationContext):
         if ctx.guild.id == 611008530077712395:
