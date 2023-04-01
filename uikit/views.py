@@ -20,8 +20,12 @@ class ProfileEdit(View):
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
                        options=slashoptions.profile_main_select)
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
-                                                                     self.edit_embed))
+        if select_menu.values[0] == 'birthday':
+            await interaction.response.send_message("Please use the `/birthday set` command to set your birthday!",
+                                                    ephemeral=True)
+        else:
+            await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                                         self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
                        options=slashoptions.profile_lore_select)
@@ -38,7 +42,7 @@ class ProfileEdit(View):
 
 class Profile(View):
     def __init__(self, thorny_user: User, pages: list, ctx: discord.ApplicationContext):
-        super().__init__(timeout=30.0)
+        super().__init__(timeout=120.0)
         self.profile_owner = thorny_user
         self.page = 0
         self.ctx = ctx
