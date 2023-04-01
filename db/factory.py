@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal
 
 import discord
+from discord import User as DiscordUser, Member as DiscordMember
 import httpx
 from dateutil.relativedelta import relativedelta
 
@@ -15,7 +16,7 @@ from thorny_core.db.poolwrapper import pool_wrapper
 
 class UserFactory:
     @classmethod
-    async def build(cls, member: discord.User | discord.Member) -> User:
+    async def build(cls, member: DiscordMember | DiscordUser) -> User:
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id

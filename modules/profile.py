@@ -82,14 +82,32 @@ class Profile(commands.Cog):
                                  value="\n".join(send_text))
         await ctx.respond(embed=gamertag_embed)
 
-    # @commands.slash_command(description="See all upcoming birthdays!")
-    # async def birthdays(self, ctx: discord.ApplicationContext):
-    #     thorny_user = await UserFactory.build(ctx.author)
-    #     upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
-    #     events_embed = discord.Embed(title="Birthdays")
-    #     for user in upcoming_bdays:
-    #         temp_thorny_user = await UserFactory.fetch_by_id(thorny_user.guild, user['thorny_user_id'])
-    #         events_embed.add_field(name=temp_thorny_user.username,
-    #                                value=temp_thorny_user.birthday_display)
-    #
-    #     await ctx.respond(embed=events_embed)
+    @commands.slash_command(description="See all upcoming birthdays!")
+    async def birthdays(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
+        events_embed = discord.Embed(title="Birthdays", colour=0xFF69B4)
+        for user in upcoming_bdays:
+            if user['guild_id'] == thorny_user.guild.guild_id:
+                temp_thorny_user = await UserFactory.fetch_by_id(thorny_user.guild, user['thorny_user_id'])
+
+                if str(temp_thorny_user.age + 1)[-1] == "1":
+                    suffix = "st"
+                elif str(temp_thorny_user.age + 1)[-1] == "2":
+                    suffix = "nd"
+                elif str(temp_thorny_user.age + 1)[-1] == "3":
+                    suffix = "rd"
+                else:
+                    suffix = "th"
+
+                birthday_found = False
+                for field in events_embed.fields:
+                    if str(temp_thorny_user.birthday).split(',')[0] == field.name:
+                        field.value = f"{field.value}\n{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday"
+                        birthday_found = True
+
+                if not birthday_found:
+                    events_embed.add_field(name=str(temp_thorny_user.birthday).split(',')[0],
+                                           value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday")
+
+        await ctx.respond(embed=events_embed)

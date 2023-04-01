@@ -357,9 +357,7 @@ class User:
     username: str
     balance: int
     join_date: Time
-    join_date_display: str
     birthday: Time
-    birthday_display: str
     age: int
     profile: Profile
     level: Level

@@ -70,7 +70,9 @@ class Disconnect(Event):
                                    UPDATE thorny.activity SET disconnect_time = $1, playtime = $2
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, self.playtime, self.thorny_user.thorny_id, loose_connections[0]['connect_time'])
+                                   self.time, self.playtime.replace(microsecond=0),
+                                   self.thorny_user.thorny_id,
+                                   loose_connections[0]['connect_time'])
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 

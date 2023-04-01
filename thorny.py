@@ -107,8 +107,9 @@ async def day_counter():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran days counter loop")
     days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
     storyforge_channel = thorny.get_channel(932566162582167562)
-    await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
-                                  f"**Day {days_since_start.days + 1}** has dawned upon us.")
+    if (days_since_start.days + 1) % 10 == 0:
+        await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
+                                      f"**Day {days_since_start.days + 1}** has dawned upon us.")
 
 
 @thorny.slash_command(description="Get bot stats")
