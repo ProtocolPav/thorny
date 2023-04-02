@@ -415,7 +415,7 @@ def store_selected_item(thorny_user: user.User, thorny_guild: guild.Guild, item_
     embed = discord.Embed(colour=0xFFBF00,
                           title="Shop Catalogue")
 
-    item = thorny_user.inventory.fetch(item_id)
+    item = thorny_user.inventory.get_item(item_id)
 
     embed.add_field(name=f"**About {item.item_display_name}**",
                     value=f"```{item.description}```\n"

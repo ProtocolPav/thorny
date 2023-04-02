@@ -40,19 +40,19 @@ class Inventory(commands.Cog):
                                           choices=uikit.slash_command_all_items()),
                   count: int = 1):
         thorny_user = await UserFactory.build(user)
+        item = thorny_user.inventory.get_item(item_id)
 
         try:
             thorny_user.inventory.add_item(item_id, count)
-        except errors.ItemMaxCountError:
-            item = thorny_user.inventory.data(item_id)
-            raise errors.ItemMaxCountError(item.item_max_count)
-        else:
-            item = thorny_user.inventory.fetch(item_id)
+
             inv_edit_embed = discord.Embed(colour=ctx.author.colour)
             inv_edit_embed.add_field(name="**Added Item Successfully**",
                                      value=f"Added {count}x `{item.item_display_name}` to {user}'s Inventory")
+
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
+        except errors.ItemMaxCountError:
+            raise errors.ItemMaxCountError(item.item_max_count)
 
     @inventory.command(description="Mod Only | Remove or clear an item from a user's inventory")
     @commands.has_permissions(administrator=True)
@@ -61,19 +61,22 @@ class Inventory(commands.Cog):
                                              choices=uikit.slash_command_all_items()),
                      count: int = None):
         thorny_user = await UserFactory.build(user)
-        item = thorny_user.inventory.fetch(item_id)
+        item = thorny_user.inventory.get_item(item_id)
+
+        if count is None:
+            count = item.item_count
 
         try:
             thorny_user.inventory.remove_item(item_id, count)
-        except errors.MissingItemError:
-            raise errors.MissingItemError()
-        else:
+
             inv_edit_embed = discord.Embed(colour=ctx.author.colour)
             inv_edit_embed.add_field(name="**Inventory Removed Successfully**",
-                                     value=f"Removed {count}x `{item.item_display_name}` "
-                                           f"from {user}'s Inventory")
+                                     value=f"Removed {count}x `{item.item_display_name}` from {user}'s Inventory")
+
             await ctx.respond(embed=inv_edit_embed)
             await commit(thorny_user)
+        except errors.MissingItemError:
+            raise errors.MissingItemError()
 
     # @commands.slash_command(description="Mod Only | Edit prices of items (0 to remove from the store)",
     #                         guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))

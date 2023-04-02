@@ -569,7 +569,7 @@ class Store(View):
         buy_three_button.disabled = False
         buy_max_button.disabled = False
 
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
         amount_for_max = item.item_max_count - item.item_count
 
         if item.item_count == item.item_max_count or self.user.balance - item.item_cost * amount_for_max < 0:
@@ -594,7 +594,7 @@ class Store(View):
                        style=discord.ButtonStyle.blurple,
                        disabled=True)
     async def buy_max_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
         amount = item.item_max_count - item.item_count
 
         self.user.inventory.add_item(self.item_id, amount)
@@ -613,7 +613,7 @@ class Store(View):
                        style=discord.ButtonStyle.green,
                        disabled=True)
     async def buy_one_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
 
         self.user.inventory.add_item(self.item_id, 1)
         self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 1
@@ -631,7 +631,7 @@ class Store(View):
                        style=discord.ButtonStyle.green,
                        disabled=True)
     async def buy_three_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
 
         self.user.inventory.add_item(self.item_id, 3)
         self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 3
@@ -654,7 +654,7 @@ class RedeemSelectMenu(Select):
         self.guild = thorny_guild
 
     async def callback(self, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.values[0])
+        item = self.user.inventory.get_item(self.values[0])
 
         self.user.inventory.remove_item(item.item_id, 1)
         self.options = options.redeem_items(self.user)

@@ -233,7 +233,7 @@ class Inventory:
             }
             self.all_items.append(InventorySlot(slot))
 
-    def fetch(self, item_id):
+    def get_item(self, item_id):
         for item in self.slots:
             if item.item_id == item_id:
                 return item
@@ -242,15 +242,8 @@ class Inventory:
             if item_data.item_id == item_id:
                 return item_data
 
-    def data(self, item_id):
-        """Delete this soon. I will keep just for the sake of ease for now
-        Replaced with `.fetch()` which fetches either the item in the inventory, or its data if it does not exist."""
-        for item_data in self.all_items:
-            if item_data.item_id == item_id:
-                return item_data
-
     def add_item(self, item_id, count):
-        item = self.fetch(item_id)
+        item = self.get_item(item_id)
 
         if item.inventory_id is None:
             if item.item_id == item_id and count <= item.item_max_count:
@@ -275,7 +268,7 @@ class Inventory:
                 raise errors.ItemMaxCountError
 
     def remove_item(self, item_id, count):
-        item = self.fetch(item_id)
+        item = self.get_item(item_id)
 
         if item.inventory_id is None:
             raise errors.MissingItemError
