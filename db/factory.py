@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal
 
 import discord
+from discord import User as DiscordUser, Member as DiscordMember
 import httpx
 from dateutil.relativedelta import relativedelta
 
@@ -15,7 +16,7 @@ from thorny_core.db.poolwrapper import pool_wrapper
 
 class UserFactory:
     @classmethod
-    async def build(cls, member: discord.Member) -> User:
+    async def build(cls, member: DiscordMember | DiscordUser) -> User:
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -143,14 +144,14 @@ class UserFactory:
                         counters=counters)
 
     @classmethod
-    async def fetch_by_id(cls, guild: discord.Guild, thorny_id: int) -> User:
+    async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
                                               SELECT user_id FROM thorny.user
                                               WHERE thorny_user_id = $1
                                               """,
                                               thorny_id)
-            member = guild.get_member(thorny_user['user_id'])
+            member = guild.discord_guild.get_member(thorny_user['user_id'])
         return await UserFactory.build(member)
 
     @classmethod
@@ -251,39 +252,31 @@ class UserFactory:
                       f"{thorny_user.username}, Thorny ID {thorny_user.thorny_id}")
 
     @classmethod
-    async def get_similar_gamertags(cls, guild_id, gamertag):
-        async with pool_wrapper.connection() as conn:
-            returned = await conn.fetch("SELECT thorny.user.user_id, whitelisted_gamertag FROM thorny.profile "
-                                        "JOIN thorny.user "
-                                        "ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id "
-                                        "WHERE LOWER(whitelisted_gamertag) LIKE $1 "
-                                        "AND thorny.user.guild_id = $2",
-                                        f'%{gamertag[0:3].lower()}%', guild_id)
-            return returned
+    async def get_gamertags(cls, guild_id: int, gamertag: str = None):
+        """
+        Leave gamertag blank to get all gamertags in the database.
 
-    @classmethod
-    async def get_exact_gamertags(cls, guild_id, gamertag: str):
+        Checks for gamertags that are similar. Use part of a gamertag to get all similar ones.
+        E.g. gamertag='Prot' will get all the gamertags similar to prot
+        """
         async with pool_wrapper.connection() as conn:
-            returned = await conn.fetch("""
-                                        SELECT thorny.user.user_id, whitelisted_gamertag
-                                        FROM thorny.profile
-                                        JOIN thorny.user ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
-                                        WHERE LOWER(whitelisted_gamertag) = $1
-                                        AND thorny.user.guild_id = $2
-                                        """,
-                                        gamertag.lower(), guild_id)
-            return returned
-
-    @classmethod
-    async def get_all_gamertags(cls, guild_id):
-        async with pool_wrapper.connection() as conn:
-            returned = await conn.fetch("""
-                                        SELECT thorny.user.user_id, whitelisted_gamertag
-                                        FROM thorny.profile
-                                        JOIN thorny.user ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
-                                        WHERE thorny.user.guild_id = $1 AND whitelisted_gamertag is not NULL
-                                        """,
-                                        guild_id)
+            if gamertag is None:
+                returned = await conn.fetch("""
+                                            SELECT thorny.user.user_id, whitelisted_gamertag
+                                            FROM thorny.profile
+                                            JOIN thorny.user ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                            WHERE thorny.user.guild_id = $1 AND whitelisted_gamertag is not NULL
+                                            """,
+                                            guild_id)
+            else:
+                returned = await conn.fetch("""
+                                            SELECT thorny.user.user_id, whitelisted_gamertag FROM thorny.profile
+                                            INNER JOIN thorny.user
+                                            ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                            WHERE LOWER(whitelisted_gamertag) LIKE $1
+                                            AND thorny.user.guild_id = $2
+                                            """,
+                                            f'%{gamertag}%', guild_id)
             return returned
 
 
@@ -341,13 +334,6 @@ class GuildFactory:
     @classmethod
     async def create(cls, guild: discord.Guild):
         async with pool_wrapper.connection() as conn:
-            await conn.set_type_codec(
-                'json',
-                encoder=json.dumps,
-                decoder=json.loads,
-                schema='pg_catalog'
-            )
-
             default_features = ['BASIC', 'PROFILE', 'PLAYTIME']
 
             guild_exists = await conn.fetchrow("""

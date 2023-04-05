@@ -12,10 +12,10 @@ class Money(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    balance = discord.SlashCommandGroup("balance", "Balance Commands",
-                                        guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    balance = discord.SlashCommandGroup("balance", "Balance Commands")
 
-    @balance.command(description="View someone's balance")
+    @balance.command(description="View someone's balance",
+                     guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
@@ -24,7 +24,8 @@ class Money(commands.Cog):
 
         await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
 
-    @balance.command(description="Mod Only | Edit someone's balance")
+    @balance.command(description="Mod Only | Edit someone's balance",
+                     guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx, user: discord.Member,
                    amount: discord.Option(int, "Negative number to remove money")):

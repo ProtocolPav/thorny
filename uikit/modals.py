@@ -1,6 +1,6 @@
 import discord
 from discord.ui import Modal, InputText
-from thorny_core.uikit.slashoptions import profile_main_select, profile_lore_select
+from thorny_core.uikit.options import profile_main_select, profile_lore_select
 from thorny_core.uikit.embeds import application_info_embed
 from thorny_core.db import User, Guild
 from thorny_core.db.commit import commit

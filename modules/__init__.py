@@ -1,4 +1,4 @@
-from .help import Help
+from .other import Other
 from .inventory import Inventory
 from .leaderboards import Leaderboard
 from .level import Level
@@ -6,5 +6,3 @@ from .moderation import Moderation
 from .money import Money
 from .playtime import Playtime
 from .profile import Profile
-from .secret_santa import SecretSanta
-from .setup import Configuration
