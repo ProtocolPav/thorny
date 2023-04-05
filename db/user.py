@@ -17,8 +17,9 @@ class Time:
 
     def __str__(self):
         if type(self.time) == (date or datetime):
-            datetime_string = datetime.strftime(self.time, "%B %d, %Y")
-            return datetime_string
+            datetime_object = datetime(year=self.time.year, month=self.time.month, day=self.time.day)
+            return f"<t:{int(datetime_object.timestamp())}:D>"
+
         elif type(self.time) == timedelta:
             total_seconds = int(self.time.total_seconds())
             days, remainder = divmod(total_seconds, 24 * 60 * 60)
