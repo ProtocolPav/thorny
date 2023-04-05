@@ -17,8 +17,9 @@ class Time:
 
     def __str__(self):
         if type(self.time) == (date or datetime):
-            datetime_string = datetime.strftime(self.time, "%B %d, %Y")
-            return datetime_string
+            datetime_object = datetime(year=self.time.year, month=self.time.month, day=self.time.day)
+            return f"<t:{int(datetime_object.timestamp())}:D>"
+
         elif type(self.time) == timedelta:
             total_seconds = int(self.time.total_seconds())
             days, remainder = divmod(total_seconds, 24 * 60 * 60)
@@ -120,9 +121,20 @@ class Playtime:
         default = Time(timedelta(hours=0))
 
         if monthly_data:
-            self.current_playtime = Time(monthly_data[0]['playtime'])
-            self.previous_playtime = Time(monthly_data[1]['playtime']) if len(monthly_data) >= 2 else default
-            self.expiring_playtime = Time(monthly_data[2]['playtime']) if len(monthly_data) >= 3 else default
+            if monthly_data[0]['month'] == datetime.now().month:
+                self.current_playtime = Time(monthly_data[0]['playtime'])
+            else:
+                self.current_playtime = default
+
+            if monthly_data[1]['month'] == datetime.now().month - 1 and len(monthly_data) >= 2:
+                self.previous_playtime = Time(monthly_data[1]['playtime'])
+            else:
+                self.previous_playtime = default
+
+            if monthly_data[2]['month'] == datetime.now().month - 1 and len(monthly_data) >= 3:
+                self.expiring_playtime = Time(monthly_data[2]['playtime'])
+            else:
+                self.expiring_playtime = default
         else:
             self.current_playtime = default
             self.previous_playtime = default
@@ -222,7 +234,7 @@ class Inventory:
             }
             self.all_items.append(InventorySlot(slot))
 
-    def fetch(self, item_id):
+    def get_item(self, item_id):
         for item in self.slots:
             if item.item_id == item_id:
                 return item
@@ -231,15 +243,8 @@ class Inventory:
             if item_data.item_id == item_id:
                 return item_data
 
-    def data(self, item_id):
-        """Delete this soon. I will keep just for the sake of ease for now
-        Replaced with `.fetch()` which fetches either the item in the inventory, or its data if it does not exist."""
-        for item_data in self.all_items:
-            if item_data.item_id == item_id:
-                return item_data
-
     def add_item(self, item_id, count):
-        item = self.fetch(item_id)
+        item = self.get_item(item_id)
 
         if item.inventory_id is None:
             if item.item_id == item_id and count <= item.item_max_count:
@@ -264,7 +269,7 @@ class Inventory:
                 raise errors.ItemMaxCountError
 
     def remove_item(self, item_id, count):
-        item = self.fetch(item_id)
+        item = self.get_item(item_id)
 
         if item.inventory_id is None:
             raise errors.MissingItemError
@@ -357,9 +362,7 @@ class User:
     username: str
     balance: int
     join_date: Time
-    join_date_display: str
     birthday: Time
-    birthday_display: str
     age: int
     profile: Profile
     level: Level
