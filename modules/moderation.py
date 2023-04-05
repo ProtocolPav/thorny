@@ -123,10 +123,10 @@ class Moderation(commands.Cog):
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands",
-                                          guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands")
 
-    @whitelist.command(description="Add somebody to the server whitelist")
+    @whitelist.command(description="Add somebody to the server whitelist",
+                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def add(self, ctx: discord.ApplicationContext, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -151,7 +151,8 @@ class Moderation(commands.Cog):
         elif thorny_user.profile.whitelisted_gamertag is not None:
             raise errors.AlreadyWhitelisted()
 
-    @whitelist.command(description="Remove somebody from the server whitelist")
+    @whitelist.command(description="Remove somebody from the server whitelist",
+                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -173,7 +174,8 @@ class Moderation(commands.Cog):
         else:
             raise errors.NotWhitelisted()
 
-    @whitelist.command(description="See the whitelist")
+    @whitelist.command(description="See the whitelist",
+                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def view(self, ctx: discord.ApplicationContext):
         gamertags = await UserFactory.get_gamertags(ctx.guild.id)

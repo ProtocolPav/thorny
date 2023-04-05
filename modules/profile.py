@@ -35,10 +35,10 @@ class Profile(commands.Cog):
                  await uikit.profile_stats_embed(thorny_user)]
         await ctx.respond(embed=pages[0], view=uikit.Profile(thorny_user, pages, ctx))
 
-    birthday = discord.SlashCommandGroup("birthday", "Birthday commands",
-                                         guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
+    birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
 
-    @birthday.command(description="Set your birthday")
+    @birthday.command(description="Set your birthday",
+                      guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
     async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
                                                    autocomplete=utils.basic_autocomplete(uikit.all_months())),
                   day: discord.Option(int, "Pick or type a day",
@@ -57,7 +57,8 @@ class Profile(commands.Cog):
         await commit(thorny_user)
         await ctx.respond(f"Your Birthday is set to: **{thorny_user.birthday}**", ephemeral=True)
 
-    @birthday.command(description="Remove your birthday")
+    @birthday.command(description="Remove your birthday",
+                      guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
     async def remove(self, ctx):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_user.birthday.time = None
@@ -65,10 +66,10 @@ class Profile(commands.Cog):
         await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages :(",
                           ephemeral=True)
 
-    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands",
-                                         guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands")
 
-    @gamertag.command(description="Search the database for gamertags")
+    @gamertag.command(description="Search the database for gamertags",
+                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def search(self, ctx: discord.ApplicationContext, gamertag: discord.Option(str, "Enter parts of a gamertag")):
         gamertags = await UserFactory.get_gamertags(ctx.guild.id, gamertag[0:4])
         send_text = []
@@ -82,7 +83,8 @@ class Profile(commands.Cog):
                                  value="\n".join(send_text))
         await ctx.respond(embed=gamertag_embed)
 
-    @commands.slash_command(description="See all upcoming birthdays!")
+    @commands.slash_command(description="See all upcoming birthdays!",
+                            guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
     async def birthdays(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.user)
         upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)

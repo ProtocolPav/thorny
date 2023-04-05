@@ -84,10 +84,10 @@ class Playtime(commands.Cog):
 
         await ctx.respond(f'Your most recent playtime has been reduced by {hours or 0}h{minutes or 0}m.')
 
-    mod = discord.SlashCommandGroup("mod", "Mod-Only commands",
-                                    guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    mod = discord.SlashCommandGroup("mod", "Mod-Only commands")
 
-    @mod.command(description="Connect a user")
+    @mod.command(description="Connect a user",
+                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     @commands.has_permissions(administrator=True)
     async def con(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -107,7 +107,8 @@ class Playtime(commands.Cog):
         response_embed.set_footer(text=f'{v}')
         await ctx.respond(f"{user.mention}, you have been connected by {ctx.author}", embed=response_embed)
 
-    @mod.command(description="Disconnect a user")
+    @mod.command(description="Disconnect a user",
+                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     @commands.has_permissions(administrator=True)
     async def dis(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
@@ -136,7 +137,8 @@ class Playtime(commands.Cog):
         await ctx.respond(f"{user.mention}, you have been disconnected by {ctx.author}", embed=response_embed)
 
 
-    @mod.command(description="Adjust a user's playtime")
+    @mod.command(description="Adjust a user's playtime",
+                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     @commands.has_permissions(administrator=True)
     async def adj(self, ctx, user: discord.Member,
                   hours: discord.Option(int, "Put a - if you want to add hours") = None,

@@ -27,7 +27,6 @@ giphy_token = config["giphy_token"]
 intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
 thorny.remove_command('help')
-bot_started = datetime.now().replace(microsecond=0)
 
 shutdown_notice_received = False
 
@@ -110,11 +109,6 @@ async def day_counter():
     if (days_since_start.days + 1) % 10 == 0:
         await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
                                       f"**Day {days_since_start.days + 1}** has dawned upon us.")
-
-
-@thorny.slash_command(description="Get bot stats")
-async def ping(ctx):
-    await ctx.respond(embed=uikit.ping_embed(thorny, bot_started))
 
 
 @thorny.event
@@ -278,7 +272,6 @@ async def on_guild_remove(guild):
 
 
 # Load all cogs
-thorny.add_cog(modules.Configuration(thorny))
 thorny.add_cog(modules.Moderation(thorny))
 thorny.add_cog(modules.Money(thorny))
 thorny.add_cog(modules.Inventory(thorny))
@@ -286,8 +279,7 @@ thorny.add_cog(modules.Profile(thorny))
 thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
 thorny.add_cog(modules.Leaderboard(thorny))
-thorny.add_cog(modules.Help(thorny))
-# thorny.add_cog(secret_santa.SecretSanta(thorny)) UNCOMMENT DURING CHRISTMAS
+thorny.add_cog(modules.Other(thorny))
 
 # Start Tasks
 webevent_handler.start()
