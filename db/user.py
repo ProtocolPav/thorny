@@ -106,34 +106,32 @@ class Level:
 
 @dataclass
 class Playtime:
-    total_playtime: Time
-    current_playtime: Time
-    previous_playtime: Time
-    expiring_playtime: Time
-    todays_playtime: Time
     weekly_ratio: float
     current_connection: pg.Record
     loose_connections: pg.Record
     daily_playtime: pg.Record
+    total_playtime: Time = Time(timedelta(hours=0))
+    current_playtime: Time = Time(timedelta(hours=0))
+    previous_playtime: Time = Time(timedelta(hours=0))
+    expiring_playtime: Time = Time(timedelta(hours=0))
+    todays_playtime: Time = Time(timedelta(hours=0))
 
     def __init__(self, monthly_data, stats, current_connection, unfulfilled_connections, daily_playtime):
-        default = Time(timedelta(hours=0))
-
         if monthly_data:
-            self.current_playtime = Time(monthly_data[0]['playtime'])
-            self.previous_playtime = Time(monthly_data[1]['playtime']) if len(monthly_data) >= 2 else default
-            self.expiring_playtime = Time(monthly_data[2]['playtime']) if len(monthly_data) >= 3 else default
-        else:
-            self.current_playtime = default
-            self.previous_playtime = default
-            self.expiring_playtime = default
+            if monthly_data[0]['month'] == datetime.now().month:
+                self.current_playtime = Time(monthly_data[0]['playtime'])
+
+            if len(monthly_data) >= 2 and monthly_data[1]['month'] == datetime.now().month - 1:
+                self.previous_playtime = Time(monthly_data[1]['playtime'])
+
+            if len(monthly_data) >= 3 and monthly_data[2]['month'] == datetime.now().month - 1:
+                self.expiring_playtime = Time(monthly_data[2]['playtime'])
 
         if stats:
-            self.total_playtime = Time(stats['total_playtime']) if stats['total_playtime'] is not None else default
-            self.todays_playtime = Time(stats['today']) if stats['today'] is not None else default
-        else:
-            self.total_playtime = default
-            self.todays_playtime = default
+            if stats['total_playtime'] is not None:
+                self.total_playtime = Time(stats['total_playtime'])
+            if stats['today'] is not None:
+                self.todays_playtime = Time(stats['today'])
 
         self.current_connection = current_connection
         self.loose_connections = unfulfilled_connections
