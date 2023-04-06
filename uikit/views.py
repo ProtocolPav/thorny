@@ -5,8 +5,7 @@ from discord.ui import View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
-from thorny_core.uikit import embeds
-from thorny_core.uikit import slashoptions
+from thorny_core.uikit import embeds, options
 from thorny_core.db import User, UserFactory, GuildFactory, Guild
 from thorny_core import errors
 
@@ -18,19 +17,23 @@ class ProfileEdit(View):
         self.edit_embed = embed
 
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
-                       options=slashoptions.profile_main_select)
+                       options=options.profile_main_select())
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
-                                                                     self.edit_embed))
+        if select_menu.values[0] == 'birthday':
+            await interaction.response.send_message("Please use the `/birthday set` command to set your birthday!",
+                                                    ephemeral=True)
+        else:
+            await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                                         self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
-                       options=slashoptions.profile_lore_select)
+                       options=options.profile_lore_select())
     async def lore_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
     @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=slashoptions.profile_stats_select)
+                       options=options.profile_stats_select())
     async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
@@ -38,7 +41,7 @@ class ProfileEdit(View):
 
 class Profile(View):
     def __init__(self, thorny_user: User, pages: list, ctx: discord.ApplicationContext):
-        super().__init__(timeout=30.0)
+        super().__init__(timeout=120.0)
         self.profile_owner = thorny_user
         self.page = 0
         self.ctx = ctx
@@ -513,7 +516,7 @@ class ServerSetup(View):
         super().__init__(timeout=None)
 
     @discord.ui.select(placeholder="Configure your server settings",
-                       options=slashoptions.server_setup)
+                       options=options.server_setup())
     async def callback(self, select_menu: Select, interaction: discord.Interaction):
         thorny_guild = await GuildFactory.build(interaction.guild)
 
@@ -566,7 +569,7 @@ class Store(View):
         buy_three_button.disabled = False
         buy_max_button.disabled = False
 
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
         amount_for_max = item.item_max_count - item.item_count
 
         if item.item_count == item.item_max_count or self.user.balance - item.item_cost * amount_for_max < 0:
@@ -579,7 +582,7 @@ class Store(View):
             buy_one_button.disabled = True
 
     @discord.ui.select(placeholder="Select an item to buy",
-                       options=slashoptions.shop_items())
+                       options=options.shop_items())
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
         self.item_id = select_menu.values[0]
 
@@ -591,7 +594,7 @@ class Store(View):
                        style=discord.ButtonStyle.blurple,
                        disabled=True)
     async def buy_max_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
         amount = item.item_max_count - item.item_count
 
         self.user.inventory.add_item(self.item_id, amount)
@@ -610,7 +613,7 @@ class Store(View):
                        style=discord.ButtonStyle.green,
                        disabled=True)
     async def buy_one_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
 
         self.user.inventory.add_item(self.item_id, 1)
         self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 1
@@ -628,7 +631,7 @@ class Store(View):
                        style=discord.ButtonStyle.green,
                        disabled=True)
     async def buy_three_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.item_id)
+        item = self.user.inventory.get_item(self.item_id)
 
         self.user.inventory.add_item(self.item_id, 3)
         self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 3
@@ -651,10 +654,10 @@ class RedeemSelectMenu(Select):
         self.guild = thorny_guild
 
     async def callback(self, interaction: discord.Interaction):
-        item = self.user.inventory.fetch(self.values[0])
+        item = self.user.inventory.get_item(self.values[0])
 
         self.user.inventory.remove_item(item.item_id, 1)
-        self.options = slashoptions.redeem_items(self.user)
+        self.options = options.redeem_items(self.user)
 
         if len(self.user.inventory.slots) > 0:
             view_to_send = self.view
@@ -736,7 +739,7 @@ class RedeemMenu(View):
 
         if len(thorny_user.inventory.slots) > 0:
             self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
-                                           options=slashoptions.redeem_items(self.user),
+                                           options=options.redeem_items(self.user),
                                            thorny_user=thorny_user,
                                            thorny_guild=thorny_guild,
                                            context=context))
@@ -849,3 +852,77 @@ class ROAVerification(View):
 
         else:
             raise errors.LinkError()
+
+
+class HelpDropdown(View):
+    def __init__(self, client: discord.Bot, guild_id: int):
+        super().__init__(timeout=0)
+        self.client = client
+
+        self.commands = {}
+
+        for cog_name in client.cogs:
+            self.commands[cog_name] = []
+
+            for command in client.get_cog(cog_name).walk_commands():
+                if isinstance(command, discord.SlashCommand) and guild_id in command.guild_ids:
+                    self.commands[cog_name].append({"command_name": f'</{command.qualified_name}:{command.qualified_id}>',
+                                                    "description": command.description})
+
+        self.default = discord.Embed(title="Home | Thorny Help Center",
+                                     description="Use the **Select Menu** to see more about commands!",
+                                     color=0x65b39b)
+        for cog in self.client.cogs:
+            easy_view_text = []
+
+            for command in self.commands[cog]:
+                easy_view_text.append(command['command_name'])
+
+            if len(easy_view_text) > 3:
+                easy_view_text = f"{'**,** '.join(easy_view_text[0:3])}**,** and more"
+            elif len(easy_view_text) <= 3:
+                easy_view_text = f"{'**,** '.join(easy_view_text)}"
+
+            if easy_view_text != "":
+                self.default.add_field(name=f"**{cog} Commands**",
+                                       value=f"{easy_view_text}",
+                                       inline=False)
+
+    help_options = [
+                   discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡", default=True),
+                   discord.SelectOption(label="Moderation", description="Commands to moderate your server", emoji="🔎"),
+                   discord.SelectOption(label="Money", description="Commands to do with money", emoji="💳"),
+                   discord.SelectOption(label="Inventory", description="Commands to do with the Inventory and Shop", emoji="🎒"),
+                   discord.SelectOption(label="Profile", description="Commands to do with your profile", emoji="📝"),
+                   discord.SelectOption(label="Playtime", description="Commands to do with playtime", emoji="⏰"),
+                   discord.SelectOption(label="Level", description="Commands to do with levels", emoji="🌟"),
+                   discord.SelectOption(label="Leaderboard", description="Leaderboards... Self explanatory", emoji="🥇"),
+                   discord.SelectOption(label="Other", description="Other commands, like /configure", emoji="⚙️")
+    ]
+
+    @discord.ui.select(placeholder="Click on a category to see its commands",
+                       min_values=1, max_values=1, options=help_options)
+    async def callback(self, select, interaction: discord.Interaction):
+        category = select.values[0]
+        for item in select.options:
+            if item.label == select.values[0]:
+                index = select.options.index(item)
+                select.options[index].default = True
+            else:
+                index = select.options.index(item)
+                select.options[index].default = False
+        if category == "Home":
+            help_embed = self.default
+        else:
+            help_embed = discord.Embed(title=f"{category} | Thorny Help Center",
+                                       description="Click on a command to use it!",
+                                       color=0x65b39b)
+            text = ''
+            category = category.capitalize()
+            for command in self.commands[category]:
+                text = f"{text}{command['command_name']}\n```{command['description']}```\n"
+
+            help_embed.add_field(name=f"**{category} Commands**",
+                                 value=f"{text}")
+
+        await interaction.response.edit_message(embed=help_embed, view=select.view)
