@@ -102,7 +102,3 @@ async def upcoming_birthdays(pool: poolwrapper.PoolWrapper) -> pg.Record:
 
         return bdays
 
-
-async def gamertags(pool: poolwrapper.PoolWrapper):
-    ...
-
