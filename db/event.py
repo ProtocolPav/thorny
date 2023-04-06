@@ -64,13 +64,13 @@ class Disconnect(Event):
             if not loose_connections:
                 raise errors.NotConnectedError()
             else:
-                self.playtime = self.time - loose_connections[0]['connect_time']
+                self.playtime = self.time.replace(microsecond=0) - loose_connections[0]['connect_time'].replace(microsecond=0)
 
                 await conn.execute("""
                                    UPDATE thorny.activity SET disconnect_time = $1, playtime = $2
                                    WHERE thorny_user_id = $3 and connect_time = $4
                                    """,
-                                   self.time, self.playtime.replace(microsecond=0),
+                                   self.time, self.playtime,
                                    self.thorny_user.thorny_id,
                                    loose_connections[0]['connect_time'])
 

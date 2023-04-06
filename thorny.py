@@ -70,15 +70,15 @@ async def interruption_check():
 async def webevent_handler():
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
-        try:
-            await pending_event.process()
-        except:
-            await pending_event.mark_failed_processing()
+        await pending_event.process()
 
 @webevent_handler.error
 async def webevent_error(exception: Exception):
     print(f"Ignoring exception in task webevent_handler:", file=sys.stderr)
     traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
+    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    await pending_events[0].mark_failed_processing()
 
     webevent_handler.restart()
 
