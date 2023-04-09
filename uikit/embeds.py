@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from thorny_core.db import user, guild, GuildFactory, generator
+from thorny_core.db import user, guild, GuildFactory, generator, Event
 import giphy_client
 import random
 
@@ -483,6 +483,7 @@ def roa_embed():
 
     return embed
 
+
 def roa_panel(thorny_user: user.User, image: str):
     embed = discord.Embed(color=0xFDDA0D,
                           title=f"Authentication Request")
@@ -500,5 +501,35 @@ def roa_panel(thorny_user: user.User, image: str):
 
     embed.set_image(url=image)
     embed.set_footer(text=thorny_user.user_id)
+
+    return embed
+
+
+def connect_embed(event: Event):
+    timestamp = event.time.replace(microsecond=0).timestamp()
+
+    embed = discord.Embed(title='Player Connected', colour=0x44ef56)
+
+    embed.add_field(name='Details:',
+                    value=f"**Gamertag:** {event.thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {event.time}\n"
+                          f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
+
+    embed.set_author(name=event.thorny_user.username, icon_url=event.thorny_user.discord_member.display_avatar.url)
+
+    return embed
+
+
+def disconnect_embed(event: Event):
+    timestamp = event.time.replace(microsecond=0).timestamp()
+
+    embed = discord.Embed(title='Player Disconnected', colour=0xA52A2A)
+
+    embed.add_field(name='Details:',
+                    value=f"**Gamertag:** {event.thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {event.time}\n"
+                          f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
+
+    embed.set_author(name=event.thorny_user.username, icon_url=event.thorny_user.discord_member.display_avatar.url)
 
     return embed

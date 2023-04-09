@@ -39,13 +39,9 @@ class Connect(Event):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                log_embed = discord.Embed(title=f'CONNECTION', colour=0x44ef56)
-                log_embed.set_footer(text=f"Event Time: {self.time}")
-                log_embed.set_author(name=self.thorny_user.username, icon_url=self.thorny_user.discord_member.display_avatar.url)
-
                 if self.thorny_guild.channels.logs_channel is not None:
                     activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=log_embed)
+                    await activity_channel.send(embed=embeds.connect_embed(self))
 
             else:
                 raise errors.AlreadyConnectedError()
@@ -76,14 +72,9 @@ class Disconnect(Event):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                log_embed = discord.Embed(title=f'DISCONNECTION', colour=0xA52A2A)
-                log_embed.set_footer(text=f"Event Time: {self.time}")
-                log_embed.set_author(name=self.thorny_user.username,
-                                     icon_url=self.thorny_user.discord_member.display_avatar.url)
-
                 if self.thorny_guild.channels.logs_channel is not None:
                     activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=log_embed)
+                    await activity_channel.send(embed=embeds.disconnect_embed(self))
 
 
 class AdjustPlaytime(Event):
