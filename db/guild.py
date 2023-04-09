@@ -166,9 +166,9 @@ class Guild:
     async def get_online_players(self):
         async with self.connection_pool.connection() as conn:
             online_players = await conn.fetch("""
-                                              SELECT * FROM thorny.activity
+                                              SELECT * FROM thorny.playtime
                                               JOIN thorny.user
-                                              ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
+                                              ON thorny.user.thorny_user_id = thorny.playtime.thorny_user_id
                                               WHERE disconnect_time is NULL
                                               AND thorny.user.guild_id = $1
                                               ORDER BY connect_time DESC

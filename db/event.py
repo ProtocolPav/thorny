@@ -32,7 +32,7 @@ class Connect(Event):
 
             if not loose_connections:
                 await conn.execute("""
-                                   INSERT INTO thorny.activity(thorny_user_id, connect_time) 
+                                   INSERT INTO thorny.playtime(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
                                    self.thorny_user.thorny_id, self.time)
@@ -41,7 +41,7 @@ class Connect(Event):
 
                 if self.thorny_guild.channels.logs_channel is not None:
                     activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=embeds.connect_embed(self))
+                    await activity_channel.send(embed=embeds.connect_embed(self.time, self.thorny_user))
 
             else:
                 raise errors.AlreadyConnectedError()
@@ -63,18 +63,17 @@ class Disconnect(Event):
                 self.playtime = self.time.replace(microsecond=0) - loose_connections[0]['connect_time'].replace(microsecond=0)
 
                 await conn.execute("""
-                                   UPDATE thorny.activity SET disconnect_time = $1, playtime = $2
-                                   WHERE thorny_user_id = $3 and connect_time = $4
+                                   UPDATE thorny.playtime SET disconnect_time = $1, playtime = $2
+                                   WHERE playtime_id = $3
                                    """,
                                    self.time, self.playtime,
-                                   self.thorny_user.thorny_id,
-                                   loose_connections[0]['connect_time'])
+                                   loose_connections[0]['playtime_id'])
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 
                 if self.thorny_guild.channels.logs_channel is not None:
                     activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=embeds.disconnect_embed(self))
+                    await activity_channel.send(embed=embeds.disconnect_embed(self.time, self.thorny_user))
 
 
 class AdjustPlaytime(Event):

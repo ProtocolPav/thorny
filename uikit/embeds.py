@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from thorny_core.db import user, guild, GuildFactory, generator, Event
+from thorny_core.db import user, guild, GuildFactory, generator
 import giphy_client
 import random
 
@@ -505,31 +505,31 @@ def roa_panel(thorny_user: user.User, image: str):
     return embed
 
 
-def connect_embed(event: Event):
-    timestamp = event.time.replace(microsecond=0).timestamp()
+def connect_embed(time: datetime, thorny_user: user.User):
+    timestamp = round(time.timestamp())
 
     embed = discord.Embed(title='Player Connected', colour=0x44ef56)
 
     embed.add_field(name='Details:',
-                    value=f"**Gamertag:** {event.thorny_user.profile.whitelisted_gamertag}\n"
-                          f"**System Time:** {event.time}\n"
+                    value=f"**Gamertag:** {thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {time}\n"
                           f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
 
-    embed.set_author(name=event.thorny_user.username, icon_url=event.thorny_user.discord_member.display_avatar.url)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
 
     return embed
 
 
-def disconnect_embed(event: Event):
-    timestamp = event.time.replace(microsecond=0).timestamp()
+def disconnect_embed(time: datetime, thorny_user: user.User):
+    timestamp = round(time.timestamp())
 
     embed = discord.Embed(title='Player Disconnected', colour=0xA52A2A)
 
     embed.add_field(name='Details:',
-                    value=f"**Gamertag:** {event.thorny_user.profile.whitelisted_gamertag}\n"
-                          f"**System Time:** {event.time}\n"
+                    value=f"**Gamertag:** {thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {time}\n"
                           f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
 
-    embed.set_author(name=event.thorny_user.username, icon_url=event.thorny_user.discord_member.display_avatar.url)
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
 
     return embed

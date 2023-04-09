@@ -57,10 +57,10 @@ class UserFactory:
                                                 FROM (SELECT sum(playtime) as playtime, 
                                                              date_part('month', connect_time) as month, 
                                                              date_part('year', connect_time) as year
-                                                      FROM thorny.activity
+                                                      FROM thorny.playtime
                                                       INNER JOIN thorny.user 
-                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
-                                                      WHERE thorny.activity.thorny_user_id = $1
+                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
+                                                      WHERE thorny.playtime.thorny_user_id = $1
                                                       GROUP BY connect_time 
                                                       ) as t
                                                 GROUP BY t.year, t.month
@@ -71,7 +71,7 @@ class UserFactory:
             playtime_stats = await conn.fetchrow("""
                                                  SELECT SUM(playtime) as total_playtime,
                                                         SUM(case when date(connect_time) = date(now()) then playtime end) as today
-                                                 FROM thorny.activity
+                                                 FROM thorny.playtime
                                                  WHERE thorny_user_id = $1
                                                  GROUP BY thorny_user_id
                                                  """,
@@ -81,10 +81,10 @@ class UserFactory:
                                               SELECT t.day, sum(t.playtime) as playtime 
                                               FROM (SELECT sum(playtime) as playtime, 
                                                            date(connect_time) as day
-                                                    FROM thorny.activity
+                                                    FROM thorny.playtime
                                                     INNER JOIN thorny.user
-                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
-                                                    WHERE thorny.activity.thorny_user_id = $1
+                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
+                                                    WHERE thorny.playtime.thorny_user_id = $1
                                                     GROUP BY day 
                                                     ) as t
                                               GROUP BY t.day
@@ -93,14 +93,14 @@ class UserFactory:
                                               thorny_id)
 
             current_connection = await conn.fetchrow("""
-                                                     SELECT * FROM thorny.activity
+                                                     SELECT * FROM thorny.playtime
                                                      WHERE thorny_user_id = $1
                                                      ORDER BY connect_time DESC
                                                      """,
                                                      thorny_id)
 
             unfulfilled_connections = await conn.fetch("""
-                                                       SELECT * FROM thorny.activity
+                                                       SELECT * FROM thorny.playtime
                                                        WHERE thorny_user_id = $1 AND disconnect_time is NULL
                                                        ORDER BY connect_time ASC
                                                        """,
