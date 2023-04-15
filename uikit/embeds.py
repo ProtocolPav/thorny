@@ -193,7 +193,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     welcome_embed = discord.Embed(title="Configuring Welcome Settings",
                                   colour=0xD7E99A)
     welcome_embed.add_field(name="Current Settings",
-                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.welcome_channel}>\n\n"
+                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.get_channel('welcome')}>\n\n"
                                   f"**Join Message:** {thorny_guild.join_message}\n"
                                   f"**Leave Message:** {thorny_guild.leave_message}\n"
                                   f"**Birthday Message:** Currently not available",
@@ -215,7 +215,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     logs_embed = discord.Embed(title="Configuring Logs",
                                colour=0xD7E99A)
     logs_embed.add_field(name="Current Settings",
-                         value=f"**Logs channel:** <#{thorny_guild.channels.logs_channel}>")
+                         value=f"**Logs channel:** <#{thorny_guild.channels.get_channel('logs')}>")
     logs_embed.add_field(name="Note",
                          value="When editing the **channel**, enter the channel ID!\n"
                                "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
@@ -228,7 +228,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                   f"changelogs and tutorials for new features in a channel. You can make it private or "
                                   f"public for people to see.")
     updates_embed.add_field(name="Current Settings",
-                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.thorny_updates_channel}>",
+                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.get_channel('thorny_updates')}>",
                             inline=False)
     updates_embed.add_field(name="Note",
                             value="When editing the **channel**, enter the channel ID!\n"
@@ -243,7 +243,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                 "help dissolve any arguments they may be having. \n"
                                 "When a user is taken into the gulag, they cannot see any channel except for the gulag.")
     gulag_embed.add_field(name="Current Settings",
-                          value=f"**Gulag Channel:** <#{thorny_guild.channels.gulag_channel}>\n"
+                          value=f"**Gulag Channel:** <#{thorny_guild.channels.get_channel('gulag')}>\n"
                                 f"**Gulag Role:** <@{thorny_guild.roles.timeout_role}>",
                           inline=False)
     gulag_embed.add_field(name="Important Note",

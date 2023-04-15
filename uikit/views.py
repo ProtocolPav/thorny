@@ -115,21 +115,21 @@ class PersistentProjectAdminButtons(View):
                        label="Approve",
                        custom_id="approve")
     async def approve_callback(self, button: Button, interaction: discord.Interaction):
+        thorny_guild = await GuildFactory.build(interaction.guild)
         role_list = []
         for role in interaction.user.roles:
             role_list.append(role.name)
         if "Community Manager" in role_list:
             interaction.message.embeds[0].colour = 0x50C878
-            interaction.message.embeds[0].set_field_at(2,
+            interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value=f"APPROVED by {interaction.user.mention}\n"
                                                              f"on {datetime.now()}",
                                                        inline=False)
 
             self.disable_all_items()
-            await interaction.response.edit_message(view=None,
-                                                    embed=interaction.message.embeds[0])
-            forum_channel: discord.ForumChannel = interaction.guild.get_channel(1019825292841328681) #1074005509419581490
+            await interaction.response.edit_message(view=None, embed=interaction.message.embeds[0])
+            forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.channels.get_channel('project_forum'))
 
             project_name = interaction.message.embeds[0].title
             project_description = interaction.message.embeds[0].fields[1].value
@@ -141,9 +141,9 @@ class PersistentProjectAdminButtons(View):
             #     if tag.name == "New Project":
             #         new_project_tag = tag
 
-            thread = await forum_channel.create_thread(name=project_name,
-                                                       content=project_description,
-                                                       embed=interaction.message.embeds[0])
+            thread = await forum.create_thread(name=project_name,
+                                               content=project_description,
+                                               embed=interaction.message.embeds[0])
 
             await thread.send(f"<@&1079703011451998208>, <@{interaction.message.embeds[0].footer.text}>'s project has "
                               f"been accepted!")
@@ -234,7 +234,7 @@ class ProjectApplicationForm(View):
         modal = modals.ProjectApplicationModal()
         await interaction.response.send_modal(modal=modal)
         await modal.wait()
-        channel = interaction.client.get_channel(1019959239713771680)#1023300253350367275
+        channel = interaction.client.get_channel(thorny_user.guild.channels.get_channel('project_applications'))
         await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
                            view=PersistentProjectAdminButtons())
 
@@ -291,7 +291,7 @@ class SetupWelcome(View):
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Channel (Please enter Channel ID)",
                                custom_id="welcome_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.welcome_channel}")
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('welcome')}")
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
@@ -379,7 +379,7 @@ class SetupLogs(View):
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Channel (Please enter Channel ID)",
                                custom_id="logs_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.logs_channel}")
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('logs')}")
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()
@@ -406,7 +406,7 @@ class SetupUpdates(View):
     async def channel_callback(self, button: Button, interation: discord.Interaction):
         input_text = InputText(label="Edit Channel (Please enter Channel ID)",
                                custom_id="thorny_updates_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.thorny_updates_channel}")
+                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('thorny_updates')}")
         modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
         await interation.response.send_modal(modal)
         await modal.wait()

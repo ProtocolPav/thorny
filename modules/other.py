@@ -36,3 +36,20 @@ class Other(commands.Cog):
     async def configure(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=uikit.ServerSetup(),
                           ephemeral=True)
+
+    project = discord.SlashCommandGroup("project", "Project Commands")
+
+    @project.command(description="Apply for a Project!",
+                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def apply(self, ctx: discord.ApplicationContext):
+        await ctx.respond(view=uikit.ProjectApplicationForm(ctx),
+                          ephemeral=True)
+
+    @project.command()
+    async def progress(self, ctx: discord.ApplicationContext,
+                       percentage: discord.Option(int, "How much % have you completed? Eg. 5% more, 10% more")):
+        ...
+
+    @project.command()
+    async def complete(self, ctx: discord.ApplicationContext):
+        ...

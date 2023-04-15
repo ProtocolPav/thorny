@@ -138,24 +138,13 @@ async def update_guild(thorny_guild: Guild):
 
 async def update_channels(thorny_guild: Guild):
     async with thorny_guild.connection_pool.connection() as conn:
-        await conn.set_type_codec(
-            'json',
-            encoder=json.dumps,
-            decoder=json.loads,
-            schema='pg_catalog'
-        )
-        await conn.execute("""
-                           UPDATE thorny.guild
-                           SET channels = $1
-                           WHERE guild_id = $2
-                           """,
-                           {"logs": thorny_guild.channels.logs_channel,
-                            "welcome": thorny_guild.channels.welcome_channel,
-                            "gulag": thorny_guild.channels.gulag_channel,
-                            "projects": thorny_guild.channels.projects_channel,
-                            "announcements": thorny_guild.channels.announcements_channel,
-                            "thorny_updates": thorny_guild.channels.thorny_updates_channel},
-                           thorny_guild.guild_id)
+        for channel in thorny_guild.channels.all_channels():
+            await conn.execute("""
+                               UPDATE thorny.channels
+                               SET channel_id = $1
+                               WHERE guild_id = $2 AND channel_type = $3
+                               """,
+                               channel['channel_id'], thorny_guild.guild_id, channel['channel_type'])
 
 
 async def commit(object_to_commit: User | Guild):

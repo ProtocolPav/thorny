@@ -39,8 +39,8 @@ class Connect(Event):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                if self.thorny_guild.channels.logs_channel is not None:
-                    activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
+                if self.thorny_guild.channels.get_channel('logs'):
+                    activity_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
                     await activity_channel.send(embed=embeds.connect_embed(self.time, self.thorny_user))
 
             else:
@@ -71,8 +71,8 @@ class Disconnect(Event):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                if self.thorny_guild.channels.logs_channel is not None:
-                    activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
+                if self.thorny_guild.channels.get_channel('logs'):
+                    activity_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
                     await activity_channel.send(embed=embeds.disconnect_embed(self.time, self.thorny_user))
 
 
@@ -136,9 +136,10 @@ class Transaction(Event):
         self.reason = reason
 
     async def log(self):
-        logs_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-        await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild, self.amount,
-                                                         self.reason))
+        if self.thorny_guild.channels.get_channel('logs'):
+            logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
+            await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild,
+                                                             self.amount, self.reason))
 
 class Birthday(Event):
     async def log(self):
@@ -154,7 +155,7 @@ class Birthday(Event):
         birthday_message = f"Wohoo!! It is {self.thorny_user.discord_member.mention}'s {self.thorny_user.age}{suffix} birthday " \
                            f"today! Happy Birthday, {self.thorny_user.username}! :partying_face: :partying_face: :partying_face:"
 
-        if self.thorny_guild.channels.welcome_channel is not None:
-            logs_channel = self.client.get_channel(self.thorny_guild.channels.welcome_channel)
+        if self.thorny_guild.channels.get_channel('welcome'):
+            logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('welcome'))
             await logs_channel.send(birthday_message)
 

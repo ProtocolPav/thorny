@@ -323,9 +323,16 @@ class GuildFactory:
                                          """,
                                          guild.id)
 
+            channels = await conn.fetch("""
+                                        SELECT * FROM thorny.channels
+                                        WHERE guild_id = $1
+                                        """,
+                                        guild.id)
+
             return Guild(pool=pool_wrapper,
                          guild=guild,
                          guild_record=guild_rec,
+                         channels_record=channels,
                          features_record=features,
                          responses_record=responses,
                          reaction_roles=reaction_roles,

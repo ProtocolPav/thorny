@@ -17,12 +17,6 @@ class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(description="Apply for a Project!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def apply(self, ctx: discord.ApplicationContext):
-        await ctx.respond(view=ProjectApplicationForm(ctx),
-                          ephemeral=True)
-
     @commands.slash_command(description='CM Only | Strike someone for bad behaviour',
                             guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     @commands.has_permissions(administrator=True)
@@ -48,7 +42,7 @@ class Moderation(commands.Cog):
 
         messages = await ctx.channel.purge(limit=amount)
         await ctx.respond(f"Deleted {len(messages)} messages.\n"
-                          f"Check Mod Logs (<#{thorny_guild.channels.logs_channel}>) for the list of deleted messages.")
+                          f"Check Mod Logs (<#{thorny_guild.channels.get_channel('logs')}>) for the list of deleted messages.")
 
     @commands.slash_command(description='CM Only | Send someone to the Gulag',
                             guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
