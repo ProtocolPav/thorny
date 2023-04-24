@@ -339,6 +339,40 @@ class Counters:
 
 
 @dataclass
+class ProjectUpdate:
+    update_id: int
+    update_comment: int
+    update_date: datetime
+
+
+@dataclass
+class ProjectRating:
+    rating_id: int
+    thorny_id: int
+    rating_date: datetime
+    rating: int
+    rating_comment: str
+
+
+@dataclass
+class Project:
+    project_id: int = 0
+    name: str = None
+    thread: int = None
+    status: str = "active"
+    coordinates: str = None
+    description: str = None
+    time_estimation: str = None
+    road_built: str = None
+    members: str = None
+    progress: float = 0.0
+    ratings: list[ProjectRating] = None
+    updates: list[ProjectUpdate] = None
+    accept_date: datetime = None
+    complete_date: datetime = None
+
+
+@dataclass
 class User:
     connection_pool: PoolWrapper = field(repr=False)
     discord_member: discord.Member = field(repr=False)
@@ -351,6 +385,7 @@ class User:
     join_date: Time
     birthday: Time
     age: int
+    projects: list[Project]
     profile: Profile
     level: Level
     playtime: Playtime
@@ -401,3 +436,6 @@ class User:
 
     async def update(self, attribute, value):
         self.__setattr__(attribute, value)
+
+    def new_project(self):
+        return Project()

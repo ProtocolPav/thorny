@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from thorny_core import uikit
-from thorny_core.db import GuildFactory
+from thorny_core.db import GuildFactory, UserFactory
 from datetime import datetime
 
 class Other(commands.Cog):
@@ -42,7 +42,9 @@ class Other(commands.Cog):
     @project.command(description="Apply for a Project!",
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def apply(self, ctx: discord.ApplicationContext):
-        await ctx.respond(view=uikit.ProjectApplicationForm(ctx),
+        thorny_user = await UserFactory.build(ctx.user)
+        await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user),
+                          embed=uikit.application_builder_embed(thorny_user, thorny_user.new_project()),
                           ephemeral=True)
 
     @project.command()

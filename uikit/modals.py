@@ -1,7 +1,7 @@
 import discord
 from discord.ui import Modal, InputText
 from thorny_core.uikit.options import profile_main_select, profile_lore_select
-from thorny_core.uikit.embeds import application_info_embed
+from thorny_core.uikit.embeds import application_builder_embed
 from thorny_core.db import User, Guild
 from thorny_core.db.commit import commit
 import thorny_core.errors as errors
@@ -109,6 +109,66 @@ class ProjectApplicationModal(Modal):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.edit_message(view=None,
                                                 content="Thank you for filling in the form!")
+
+
+class ProjectDetails(Modal):
+    def __init__(self, thorny_user: User, project, view: discord.ui.View):
+        super().__init__(title="Project Details [1/2]",
+                         timeout=None)
+
+        self.thorny_user = thorny_user
+        self.project = project
+        self.view = view
+
+        self.add_item(InputText(label="What is the project name?",
+                                placeholder="Eg. Tramonte, Pirate's Cove, Hobbitshire"))
+        self.add_item(InputText(label="Type in the coordinates of your project",
+                                placeholder="Eg. -400, 233"))
+        self.add_item(InputText(label="Have you built a road to your project?",
+                                placeholder="If not, when will it be built?"))
+
+    async def callback(self, interaction: discord.Interaction):
+        self.project.name = self.children[0].value
+        self.project.coordinates = self.children[1].value
+        self.project.road_built = self.children[2].value
+
+        button = self.view.children[0]
+        button.label = "Next [2/2]"
+
+        await interaction.response.edit_message(embed=application_builder_embed(self.thorny_user, self.project),
+                                                view=self.view)
+
+
+class ProjectDetails2(Modal):
+    def __init__(self, thorny_user: User, project, view):
+        super().__init__(title="Project Details [2/2]",
+                         timeout=None)
+
+        self.thorny_user = thorny_user
+        self.project = project
+        self.view = view
+
+        self.add_item(InputText(label="What's your project idea?",
+                                placeholder="Describe your project.",
+                                style=discord.InputTextStyle.long,
+                                min_length=100))
+        self.add_item(InputText(label="How long will the project take you?",
+                                placeholder="This is a time estimation (eg. 2 months, 1 week)"))
+        self.add_item(InputText(label="Do you have Project Helpers?",
+                                placeholder="List them if you have any. LEAVE BLANK IF NOT.",
+                                required=False))
+
+    async def callback(self, interaction: discord.Interaction):
+        self.project.description = self.children[0].value
+        self.project.time_estimation = self.children[1].value
+        self.project.members = self.children[2].value
+
+        button = self.view.children[0]
+        button.label = "Confirm Submission"
+        button.style = discord.ButtonStyle.blurple
+
+        await interaction.response.edit_message(embed=application_builder_embed(self.thorny_user, self.project),
+                                                view=self.view)
 
 
 class ProjectApplicationExtraInfo(Modal):

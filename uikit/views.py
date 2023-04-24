@@ -218,25 +218,44 @@ class PersistentProjectAdminButtons(View):
 
 
 class ProjectApplicationForm(View):
-    def __init__(self, ctx: discord.ApplicationContext):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User):
         super().__init__(timeout=60.0)
         self.ctx = ctx
+        self.thorny_user = thorny_user
+        self.project = thorny_user.new_project()
+
+        self.step = 0
 
     async def on_timeout(self):
         self.disable_all_items()
         await self.ctx.edit(view=self)
 
-    @discord.ui.button(style=discord.ButtonStyle.green,
-                       label="Fill In The Form!",
+    @discord.ui.button(style=discord.ButtonStyle.gray,
+                       label="Start [1/2]",
                        custom_id="form")
     async def form_callback(self, button: Button, interaction: discord.Interaction):
-        thorny_user = await UserFactory.build(self.ctx.author)
-        modal = modals.ProjectApplicationModal()
-        await interaction.response.send_modal(modal=modal)
-        await modal.wait()
-        channel = interaction.client.get_channel(thorny_user.guild.channels.get_channel('project_applications'))
-        await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
-                           view=PersistentProjectAdminButtons())
+        if "Start" in button.label:
+            modal = modals.ProjectDetails(self.thorny_user, self.project, view=self)
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
+            self.project.name = modal.children[0].value
+            self.project.coordinates = modal.children[1].value
+            self.project.road_built = modal.children[2].value
+
+        elif "Next" in button.label:
+            modal = modals.ProjectDetails2(self.thorny_user, self.project, view=self)
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
+            self.project.description = modal.children[0].value
+            self.project.time_estimation = modal.children[1].value
+            self.project.members = modal.children[2].value
+
+        elif "Confirm" in button.label:
+            channel = interaction.client.get_channel(self.thorny_user.guild.channels.get_channel('project_applications'))
+            await channel.send(embed=embeds.application_embed(self.project, self.thorny_user),
+                               view=PersistentProjectAdminButtons())
 
 
 class SetupWelcome(View):
