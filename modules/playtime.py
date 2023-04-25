@@ -152,25 +152,18 @@ class Playtime(commands.Cog):
         await ctx.respond(f'{thorny_user.discord_member.mention}, your most recent playtime has been reduced by '
                           f'{hours or 0}h{minutes or 0}m.')
 
-    @commands.slash_command(description="See connected and AFK players and how much time they played for",
+    @commands.slash_command(description="See connected players and how much time they've been on for",
                             guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
     async def online(self, ctx):
         thorny_guild = await GuildFactory.build(ctx.guild)
         connected = await thorny_guild.get_online_players()
         online_text = ''
-        afk_text = ''
         for player in connected:
             time = datetime.now() - player['connect_time']
-            if time < timedelta(hours=12):
-                time = str(time).split(":")
-                online_text = f"{online_text}\n" \
-                              f"<@{player['user_id']}> • " \
-                              f"connected {time[0]}h{time[1]}m ago"
-            else:
-                time = str(time).split(":")
-                afk_text = f"{afk_text}\n" \
-                           f"<@{player['user_id']}> • " \
-                           f"connected {time[0]}h{time[1]}m ago"
+            time = str(time).split(":")
+            online_text = f"{online_text}\n" \
+                          f"<@{player['user_id']}> • " \
+                          f"connected {time[0]}h{time[1]}m ago"
 
         async with httpx.AsyncClient() as client:
             r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
@@ -179,21 +172,19 @@ class Playtime(commands.Cog):
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
 
-            if r.json()['server_online']:
+            if r.json()['server_online'] and r.json()['server_status'] == "started_by_user":
                 online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
+            elif not r.json()['server_online'] and r.json()['server_status'] == "server_crashed":
+                online_embed.title = f":red_circle: The server has crashed! || Day {days_since_start.days + 1}"
             else:
                 online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"
 
         if online_text == "":
             online_embed.add_field(name="**Empty!**",
-                                   value="*All you can hear are the sounds of the crickets chirping in the silent "
-                                         "night...*", inline=False)
+                                   value="*You are the hero. The one who can change that. It's on you to "
+                                         "fill the server with life.*", inline=False)
         elif online_text != "":
             online_embed.add_field(name="**Connected Players**\n",
                                    value=online_text, inline=False)
-        if afk_text != "":
-            online_embed.add_field(name="**AFK Players (Connected over 12h ago)**\n"
-                                        "*Playtime: Defaults to 1h05m*",
-                                   value=f"{afk_text}", inline=False)
 
         await ctx.respond(embed=online_embed)

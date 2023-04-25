@@ -72,7 +72,7 @@ class Moderation(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             status = await client.get("http://thorny-bds:8000/status", timeout=None)
-            if status.json()['server_online']:
+            if status.json()['server_online'] or status.json()['server_status'] == "started_by_user":
                 await ctx.respond(content='The server is already running!')
 
             else:
