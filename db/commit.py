@@ -116,6 +116,10 @@ async def delete_strike(thorny_user: User, strike: Strike):
                            strike.strike_id)
 
 
+async def update_project():
+    ...
+
+
 async def update_guild(thorny_guild: Guild):
     async with thorny_guild.connection_pool.connection() as conn:
         await conn.set_type_codec(

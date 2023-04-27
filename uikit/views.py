@@ -217,6 +217,28 @@ class PersistentProjectAdminButtons(View):
                                                     ephemeral=True)
 
 
+class OldProjectApplicationForm(View):
+    def __init__(self, ctx: discord.ApplicationContext):
+        super().__init__(timeout=60.0)
+        self.ctx = ctx
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.green,
+                       label="Fill In The Form!",
+                       custom_id="form")
+    async def form_callback(self, button: Button, interaction: discord.Interaction):
+        thorny_user = await UserFactory.build(self.ctx.user)
+        modal = modals.ProjectApplicationModal()
+        await interaction.response.send_modal(modal=modal)
+        await modal.wait()
+        channel = interaction.client.get_channel(thorny_user.guild.channels.get_channel('project_applications'))
+        await channel.send(embed=await embeds.application_info_embed(thorny_user, modal.children),
+                           view=PersistentProjectAdminButtons())
+
+
 class ProjectApplicationForm(View):
     def __init__(self, ctx: discord.ApplicationContext, thorny_user: User):
         super().__init__(timeout=60.0)
