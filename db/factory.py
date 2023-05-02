@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
+from thorny_core.db.project import Project
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
 
@@ -410,3 +411,51 @@ class GuildFactory:
                 return [i['guild_id'] for i in guild_ids]
 
         return asyncio.get_event_loop().run_until_complete(get())
+
+
+class ProjectFactory:
+    @classmethod
+    async def build(cls, project_id: int) -> Project:
+        async with pool_wrapper.connection() as conn:
+            project_data = await conn.fetchrow("""
+                                               SELECT * FROM thorny.projects
+                                               WHERE project_id = $1
+                                               """,
+                                               project_id)
+
+            project_ratings = ...
+            project_updates = ...
+
+            return Project(project_data=project_data)
+
+    @classmethod
+    async def fetch_by_user(cls, thorny_user: User) -> list[Project]:
+        async with pool_wrapper.connection() as conn:
+            project_ids = await conn.fetch("""
+                                           SELECT project_id FROM thorny.projects
+                                           WHERE owner_id = $1 AND status != $2
+                                           """,
+                                           thorny_user.thorny_id, "building application")
+
+            project_list = []
+            for project_id in project_ids:
+                project_list.append(await ProjectFactory.build(project_id[0]))
+
+            return project_list
+
+    @classmethod
+    async def create(cls, thorny_user: User) -> Project:
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.projects(owner_id, status)
+                               VALUES($1, $2)
+                               """,
+                               thorny_user.thorny_id, "building application")
+
+            project_id = await conn.fetchrow("""
+                                             SELECT project_id FROM thorny.projects
+                                             WHERE owner_id = $1 AND status = $2
+                                             """,
+                                             thorny_user.thorny_id, "building application")
+
+            return await ProjectFactory.build(project_id[0])

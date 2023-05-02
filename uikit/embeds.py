@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from thorny_core.db import user, guild, GuildFactory, generator
+from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
 import random
 
@@ -161,7 +161,7 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
     return edit_embed
 
 
-def application_builder_embed(thorny_user: user.User, project: user.Project):
+def application_builder_embed(thorny_user: user.User, project: Project):
     embed = discord.Embed(title="Project Application Builder",
                           colour=0xFDDA0D)
     embed.set_author(name=thorny_user.username,
@@ -192,7 +192,7 @@ def application_builder_embed(thorny_user: user.User, project: user.Project):
     return embed
 
 
-def application_embed(project: user.Project, thorny_user: user.User):
+def application_embed(project: Project, thorny_user: user.User):
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
     info_embed = discord.Embed(title=project.name,

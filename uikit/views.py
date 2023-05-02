@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
 from thorny_core.uikit import embeds, options
-from thorny_core.db import User, UserFactory, GuildFactory, Guild
+from thorny_core.db import User, UserFactory, GuildFactory, Guild, Project
 from thorny_core import errors
 
 
@@ -240,11 +240,11 @@ class OldProjectApplicationForm(View):
 
 
 class ProjectApplicationForm(View):
-    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
         super().__init__(timeout=60.0)
         self.ctx = ctx
         self.thorny_user = thorny_user
-        self.project = thorny_user.new_project()
+        self.project = project
 
         self.step = 0
 

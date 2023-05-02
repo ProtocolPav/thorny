@@ -339,55 +339,6 @@ class Counters:
 
 
 @dataclass
-class ProjectUpdate:
-    update_id: int
-    update_comment: int
-    update_date: datetime
-
-
-@dataclass
-class ProjectRating:
-    rating_id: int
-    thorny_id: int
-    rating_date: datetime
-    rating: int
-    rating_comment: str
-
-
-@dataclass
-class Project:
-    project_id: int = 0
-    name: str = None
-    thread: int = None
-    status: str = None
-    coordinates: str = None
-    description: str = None
-    time_estimation: str = None
-    road_built: str = None
-    members: str = None
-    progress: float = None
-    ratings: list[ProjectRating] = None
-    updates: list[ProjectUpdate] = None
-    accept_date: datetime = None
-    complete_date: datetime = None
-
-    def __init__(self, project_data: pg.Record = None):
-        if project_data is not None:
-            self.project_id = project_data['project_id']
-            self.name = project_data['name']
-            self.thread = project_data['thread_id']
-            self.status = project_data['status']
-            self.coordinates = project_data['coordinates']
-            self.description = project_data['description']
-            self.time_estimation = project_data['time_estimation']
-            self.road_built = project_data['road_built']
-            self.members = project_data['members']
-            self.progress = project_data['progress']
-            self.accept_date = project_data['accepted_on']
-            self.complete_date = project_data['completed_on']
-
-
-@dataclass
 class User:
     connection_pool: PoolWrapper = field(repr=False)
     discord_member: discord.Member = field(repr=False)
@@ -400,7 +351,6 @@ class User:
     join_date: Time
     birthday: Time
     age: int
-    projects: list[Project]
     profile: Profile
     level: Level
     playtime: Playtime

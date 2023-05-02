@@ -3,6 +3,7 @@ from datetime import datetime
 
 from thorny_core.db.user import User, InventorySlot, Strike
 from thorny_core.db.guild import Guild
+from thorny_core.db.project import Project
 
 
 async def update_user(thorny_user: User):
@@ -151,7 +152,7 @@ async def update_channels(thorny_guild: Guild):
                                channel['channel_id'], thorny_guild.guild_id, channel['channel_type'])
 
 
-async def commit(object_to_commit: User | Guild):
+async def commit(object_to_commit: User | Guild | Project):
     async with object_to_commit.connection_pool.connection() as conn:
 
         async with conn.transaction():
