@@ -415,7 +415,7 @@ class GuildFactory:
 
 class ProjectFactory:
     @classmethod
-    async def build(cls, project_id: int) -> Project:
+    async def build(cls, project_id: int, owner: User) -> Project:
         async with pool_wrapper.connection() as conn:
             project_data = await conn.fetchrow("""
                                                SELECT * FROM thorny.projects
@@ -426,7 +426,7 @@ class ProjectFactory:
             project_ratings = ...
             project_updates = ...
 
-            return Project(project_data=project_data)
+            return Project(pool_wrapper=pool_wrapper, project_data=project_data, owner=owner)
 
     @classmethod
     async def fetch_by_user(cls, thorny_user: User) -> list[Project]:
@@ -439,23 +439,33 @@ class ProjectFactory:
 
             project_list = []
             for project_id in project_ids:
-                project_list.append(await ProjectFactory.build(project_id[0]))
+                project_list.append(await ProjectFactory.build(project_id[0], thorny_user))
 
             return project_list
 
     @classmethod
     async def create(cls, thorny_user: User) -> Project:
         async with pool_wrapper.connection() as conn:
-            await conn.execute("""
-                               INSERT INTO thorny.projects(owner_id, status)
-                               VALUES($1, $2)
-                               """,
-                               thorny_user.thorny_id, "building application")
+            in_construction = await conn.fetchrow("""
+                                                  SELECT project_id FROM thorny.projects
+                                                  WHERE owner_id = $1 AND status = $2
+                                                  """,
+                                                  thorny_user.thorny_id, "building application")
 
-            project_id = await conn.fetchrow("""
-                                             SELECT project_id FROM thorny.projects
-                                             WHERE owner_id = $1 AND status = $2
-                                             """,
-                                             thorny_user.thorny_id, "building application")
+            if in_construction:
+                return await ProjectFactory.build(in_construction[0], thorny_user)
 
-            return await ProjectFactory.build(project_id[0])
+            else:
+                await conn.execute("""
+                                   INSERT INTO thorny.projects(owner_id, status)
+                                   VALUES($1, $2)
+                                   """,
+                                   thorny_user.thorny_id, "building application")
+
+                project_id = await conn.fetchrow("""
+                                                 SELECT project_id FROM thorny.projects
+                                                 WHERE owner_id = $1 AND status = $2
+                                                 """,
+                                                 thorny_user.thorny_id, "building application")
+
+                return await ProjectFactory.build(project_id[0], thorny_user)

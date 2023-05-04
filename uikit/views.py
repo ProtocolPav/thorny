@@ -241,7 +241,7 @@ class OldProjectApplicationForm(View):
 
 class ProjectApplicationForm(View):
     def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
-        super().__init__(timeout=60.0)
+        super().__init__(timeout=200.0)
         self.ctx = ctx
         self.thorny_user = thorny_user
         self.project = project
@@ -275,7 +275,17 @@ class ProjectApplicationForm(View):
             self.project.members = modal.children[2].value
 
         elif "Confirm" in button.label:
+            self.project.status = "awaiting approval"
             channel = interaction.client.get_channel(self.thorny_user.guild.channels.get_channel('project_applications'))
+            await commit(self.project)
+
+            await interaction.response.edit_message(content=f"Thanks for submitting your application! You can check the "
+                                                            f"progress in {channel.mention}!\n"
+                                                            f"Community Managers need to check through and make sure that "
+                                                            f"everything is included.",
+                                                    embed=None,
+                                                    view=None)
+
             await channel.send(embed=embeds.application_embed(self.project, self.thorny_user),
                                view=PersistentProjectAdminButtons())
 

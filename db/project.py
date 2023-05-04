@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, date
+from thorny_core.db.poolwrapper import PoolWrapper
 
 import asyncpg as pg
+from thorny_core.db.user import User
 import discord
 
 @dataclass
@@ -22,9 +24,11 @@ class ProjectRating:
 
 @dataclass
 class Project:
+    connection_pool: PoolWrapper = field(repr=False)
     project_id: int
+    owner: User
     name: str
-    thread: int
+    thread_id: int
     status: str
     coordinates: str
     description: str
@@ -37,10 +41,12 @@ class Project:
     accept_date: datetime
     complete_date: datetime
 
-    def __init__(self, project_data: pg.Record):
+    def __init__(self, pool_wrapper: PoolWrapper, owner: User, project_data: pg.Record):
+        self.connection_pool = pool_wrapper
         self.project_id = project_data['project_id']
+        self.owner = owner
         self.name = project_data['name']
-        self.thread = project_data['thread_id']
+        self.thread_id = project_data['thread_id']
         self.status = project_data['status']
         self.coordinates = project_data['coordinates']
         self.description = project_data['description']

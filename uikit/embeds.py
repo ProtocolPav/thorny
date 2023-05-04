@@ -195,7 +195,7 @@ def application_builder_embed(thorny_user: user.User, project: Project):
 def application_embed(project: Project, thorny_user: user.User):
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
-    info_embed = discord.Embed(title=project.name,
+    info_embed = discord.Embed(title=f"{project.name}",
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)

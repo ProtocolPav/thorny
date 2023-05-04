@@ -117,10 +117,6 @@ async def delete_strike(thorny_user: User, strike: Strike):
                            strike.strike_id)
 
 
-async def update_project():
-    ...
-
-
 async def update_guild(thorny_guild: Guild):
     async with thorny_guild.connection_pool.connection() as conn:
         await conn.set_type_codec(
@@ -150,6 +146,21 @@ async def update_channels(thorny_guild: Guild):
                                WHERE guild_id = $2 AND channel_type = $3
                                """,
                                channel['channel_id'], thorny_guild.guild_id, channel['channel_type'])
+
+
+async def update_project(project: Project):
+    async with project.connection_pool.connection() as conn:
+        await conn.execute("""
+                           UPDATE thorny.projects
+                           SET status = $1, name = $2, thread_id = $3, coordinates = $4,
+                           description = $5, time_estimation = $6, road_built = $7, members = $8,
+                           progress = $9, accepted_on = $10, completed_on = $11
+                           WHERE project_id = $12
+                           """,
+                           project.status, project.name, project.thread_id, project.coordinates, project.description,
+                           project.time_estimation, project.road_built, project.members, project.progress, project.accept_date,
+                           project.complete_date,
+                           project.project_id)
 
 
 async def commit(object_to_commit: User | Guild | Project):
@@ -196,3 +207,9 @@ async def commit(object_to_commit: User | Guild | Project):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Guild {object_to_commit.guild_name} with "
                       f"ID", object_to_commit.guild_id)
+
+            elif type(object_to_commit) == Project:
+                await update_project(object_to_commit)
+
+                print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Project {object_to_commit.name} with "
+                      f"ID", object_to_commit.project_id)
