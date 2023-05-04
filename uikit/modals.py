@@ -1,7 +1,7 @@
 import discord
 from discord.ui import Modal, InputText
 from thorny_core.uikit.options import profile_main_select, profile_lore_select
-from thorny_core.uikit.embeds import application_builder_embed
+from thorny_core.uikit.embeds import project_application_builder_embed
 from thorny_core.db import User, Guild
 from thorny_core.db.commit import commit
 import thorny_core.errors as errors
@@ -135,7 +135,7 @@ class ProjectDetails(Modal):
         button = self.view.children[0]
         button.label = "Next [2/2]"
 
-        await interaction.response.edit_message(embed=application_builder_embed(self.thorny_user, self.project),
+        await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
 
 
@@ -167,7 +167,7 @@ class ProjectDetails2(Modal):
         button.label = "Confirm Submission"
         button.style = discord.ButtonStyle.blurple
 
-        await interaction.response.edit_message(embed=application_builder_embed(self.thorny_user, self.project),
+        await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
 
 

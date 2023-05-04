@@ -45,7 +45,7 @@ class Other(commands.Cog):
         thorny_user = await UserFactory.build(ctx.user)
         project = await ProjectFactory.create(thorny_user)
         await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, project),
-                          embed=uikit.application_builder_embed(thorny_user, project),
+                          embed=uikit.project_application_builder_embed(thorny_user, project),
                           ephemeral=True)
 
     @project.command()

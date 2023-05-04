@@ -161,7 +161,7 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
     return edit_embed
 
 
-def application_builder_embed(thorny_user: user.User, project: Project):
+def project_application_builder_embed(thorny_user: user.User, project: Project) -> discord.Embed:
     embed = discord.Embed(title="Project Application Builder",
                           colour=0xFDDA0D)
     embed.set_author(name=thorny_user.username,
@@ -192,7 +192,7 @@ def application_builder_embed(thorny_user: user.User, project: Project):
     return embed
 
 
-def application_embed(project: Project, thorny_user: user.User):
+def project_application_embed(project: Project, thorny_user: user.User) -> discord.Embed:
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
     info_embed = discord.Embed(title=f"{project.name}",
@@ -219,35 +219,39 @@ def application_embed(project: Project, thorny_user: user.User):
                          value="IN REVIEW...",
                          inline=False)
 
-    info_embed.set_footer(text=f"{thorny_user.user_id}")
+    info_embed.set_footer(text=f"{thorny_user.thorny_id}PR{project.project_id}")
 
     return info_embed
 
 
-async def application_info_embed(thorny_user: user.User, modal_children: discord.ui.Modal.children):
-    info_embed = discord.Embed(title=modal_children[0].value,
-                               colour=0xFDDA0D)
-    info_embed.set_author(name=thorny_user.username,
-                          icon_url=thorny_user.discord_member.display_avatar.url)
+def project_embed(project: Project, thorny_user: user.User) -> discord.Embed:
+    wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
-    info_embed.add_field(name="Project Info:",
-                         value=f"**Coordinates:** {modal_children[1].value}\n"
-                               f"**Road Built:** {modal_children[2].value}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {modal_children[4].value}")
+    info_embed = discord.Embed(title=f"{project.name}",
+                               colour=0x50C878)
 
-    info_embed.add_field(name="Project Idea & Time Estimation:",
-                         value=f"{modal_children[3].value}",
+    info_embed.add_field(name=f"ℹ️ About {project.name}",
+                         value=f"{project.description}")
+
+    info_embed.add_field(name="🔎 Quick Info",
+                         value=f"[Go to {project.name}'s Wiki!]({wiki_page})\n"
+                               f"**Coordinates:** {project.coordinates}\n"
+                               f"**Road Built:** {project.road_built}\n"
+                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}")
+
+    info_embed.add_field(name="📟 Recent Updates",
+                         value=f"**I've added some shrubbery around the road leading to town square** • *11 hours ago*\n"
+                               f"**Built the Tavern!** • *2 days ago*\n"
+                               f"**Terraformed the hill nearby, opening space for a new buildi...** • *3 days ago*\n"
+                               f"**View 12 more updates by pressing the 'View Updates' button!**",
                          inline=False)
 
-    info_embed.add_field(name="CM Comments:",
-                         value="If a CM has any comments, they will be added here",
+    info_embed.add_field(name="📟 Public Ratings",
+                         value=f"**Loving the progress on here!** • 9/10\n"
+                               f"**The tavern looks amazing** • 8/10\n"
+                               f"**I think the road needs some work** • 6/10\n"
+                               f"**View 25 more ratings by pressing the 'View Ratings' button!**",
                          inline=False)
-
-    info_embed.add_field(name="**STATUS**",
-                         value="IN REVIEW...",
-                         inline=False)
-
-    info_embed.set_footer(text=f"{thorny_user.user_id}")
 
     return info_embed
 
