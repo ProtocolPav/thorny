@@ -172,12 +172,12 @@ class ProjectDetails2(Modal):
 
 
 class ProjectApplicationExtraInfo(Modal):
-    def __init__(self):
-        super().__init__(title="Comments",
+    def __init__(self, title: str, label: str, placeholder: str):
+        super().__init__(title=title,
                          timeout=None)
 
-        self.add_item(InputText(label="Add CM Comments",
-                                placeholder="Stuff like the members of the project, and more stuff.",
+        self.add_item(InputText(label=label,
+                                placeholder=placeholder,
                                 style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction):

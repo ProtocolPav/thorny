@@ -193,8 +193,6 @@ def project_application_builder_embed(thorny_user: user.User, project: Project) 
 
 
 def project_application_embed(project: Project, thorny_user: user.User) -> discord.Embed:
-    wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
-
     info_embed = discord.Embed(title=f"{project.name}",
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
@@ -203,8 +201,7 @@ def project_application_embed(project: Project, thorny_user: user.User) -> disco
     info_embed.add_field(name="Project Info:",
                          value=f"**Coordinates:** {project.coordinates}\n"
                                f"**Road Built:** {project.road_built}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}\n"
-                               f"**Wiki Page:** [{project.name}]({wiki_page})")
+                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}")
 
     info_embed.add_field(name="Project Idea & Time Estimation:",
                          value=f"**Description:** {project.description}\n"
@@ -212,7 +209,7 @@ def project_application_embed(project: Project, thorny_user: user.User) -> disco
                          inline=False)
 
     info_embed.add_field(name="CM Comments:",
-                         value="If a CM has any comments, they will be added here",
+                         value="A CM will write any reason for Accepting, Denying or placing on a Waiting List here.",
                          inline=False)
 
     info_embed.add_field(name="**STATUS**",
@@ -231,26 +228,21 @@ def project_embed(project: Project, thorny_user: user.User) -> discord.Embed:
                                colour=0x50C878)
 
     info_embed.add_field(name=f"ℹ️ About {project.name}",
-                         value=f"{project.description}")
+                         value=f"{project.description}",
+                         inline=False)
 
     info_embed.add_field(name="🔎 Quick Info",
-                         value=f"[Go to {project.name}'s Wiki!]({wiki_page})\n"
+                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
                                f"**Coordinates:** {project.coordinates}\n"
                                f"**Road Built:** {project.road_built}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}")
+                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}",
+                         inline=False)
 
     info_embed.add_field(name="📟 Recent Updates",
                          value=f"**I've added some shrubbery around the road leading to town square** • *11 hours ago*\n"
                                f"**Built the Tavern!** • *2 days ago*\n"
                                f"**Terraformed the hill nearby, opening space for a new buildi...** • *3 days ago*\n"
                                f"**View 12 more updates by pressing the 'View Updates' button!**",
-                         inline=False)
-
-    info_embed.add_field(name="📟 Public Ratings",
-                         value=f"**Loving the progress on here!** • 9/10\n"
-                               f"**The tavern looks amazing** • 8/10\n"
-                               f"**I think the road needs some work** • 6/10\n"
-                               f"**View 25 more ratings by pressing the 'View Ratings' button!**",
                          inline=False)
 
     return info_embed

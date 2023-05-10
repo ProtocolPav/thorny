@@ -58,7 +58,9 @@ async def interruption_check():
                                    "Please wait patiently for the server to start back up.")
 
                 shutdown_notice_received = True
-            shutdown_notice_received = False
+
+            elif r.status_code == 404:
+                shutdown_notice_received = False
 
         except httpx.ConnectError:
             pass

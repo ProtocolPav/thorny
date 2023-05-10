@@ -132,13 +132,28 @@ class PersistentProjectAdminButtons(View):
 
         if self.check_for_community_manager(interaction):
             self.disable_all_items()
+            modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
+                                                       label="Why are you accepting this project?",
+                                                       placeholder="eg: Good description, trustworthy, dedicated player")
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
 
             interaction.message.embeds[0].colour = 0x50C878
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="CM Comments:",
+                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
+                                                             f"{interaction.user.mention}: {modal.children[0].value}",
+                                                       inline=False)
+
             interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value=f"APPROVED by {interaction.user.mention}",
                                                        inline=False)
-            await interaction.response.edit_message(view=None, embed=interaction.message.embeds[0])
+
+            await interaction.followup.edit_message(message_id=interaction.message.id,
+                                                    embed=interaction.message.embeds[0],
+                                                    view=None)
+
             forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.channels.get_channel('project_forum'))
             new_project_tag = None
 
@@ -151,6 +166,11 @@ class PersistentProjectAdminButtons(View):
                                                embed=embeds.project_embed(project, thorny_user),
                                                applied_tags=[new_project_tag])
 
+            project.thread_id = thread.id
+            project.status = "accepted"
+            project.accept_date = datetime.now()
+            await commit(project)
+
             await thread.send(f"<@&1079703011451998208>, <@{interaction.message.embeds[0].footer.text}>'s project has "
                               f"been accepted!")
         else:
@@ -161,34 +181,43 @@ class PersistentProjectAdminButtons(View):
                        label="Add Comments",
                        custom_id="enter_extra_info")
     async def info_callback(self, button: Button, interaction: discord.Interaction):
-        role_list = []
-        for role in interaction.user.roles:
-            role_list.append(role.name)
-        if "Community Manager" in role_list:
-            modal = modals.ProjectApplicationExtraInfo()
+        if self.check_for_community_manager(interaction):
+            modal = modals.ProjectApplicationExtraInfo(title="Enter Comments",
+                                                       label="Comment on the project",
+                                                       placeholder="Anything you'd like them to change, anything you like")
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
             interaction.message.embeds[0].set_field_at(2,
                                                        name="CM Comments:",
-                                                       value=f"{modal.children[0].value}",
+                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
+                                                             f"{interaction.user.mention}: {modal.children[0].value}",
                                                        inline=False)
 
             await interaction.followup.edit_message(message_id=interaction.message.id,
                                                     embed=interaction.message.embeds[0])
         else:
-            await interaction.response.send_message("Hey! You're not a CM...",
+            await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
 
     @discord.ui.button(style=discord.ButtonStyle.blurple,
                        label="Place On Waiting List",
                        custom_id="waiting_list")
     async def waiting_callback(self, button: Button, interaction: discord.Interaction):
-        role_list = []
-        for role in interaction.user.roles:
-            role_list.append(role.name)
-        if "Community Manager" in role_list:
+        if self.check_for_community_manager(interaction):
+            modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
+                                                       label="Why are you wait-listing this project?",
+                                                       placeholder="eg: Large Projects need to be discussed by all CMs before approval")
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
             interaction.message.embeds[0].colour = 0x702963
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="CM Comments:",
+                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
+                                                             f"{interaction.user.mention}: {modal.children[0].value}",
+                                                       inline=False)
+
             interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value="ON WAITING LIST\n"
@@ -196,30 +225,52 @@ class PersistentProjectAdminButtons(View):
                                                              "Don't worry, it'll be approved eventually!*",
                                                        inline=False)
 
-            await interaction.response.edit_message(embed=interaction.message.embeds[0])
+            await interaction.followup.edit_message(message_id=interaction.message.id,
+                                                    embed=interaction.message.embeds[0])
         else:
-            await interaction.response.send_message("Hey! You're not a CM...",
+            await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
 
     @discord.ui.button(style=discord.ButtonStyle.red,
                        label="Deny",
                        custom_id="project_deny")
     async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
-        role_list = []
-        for role in interaction.user.roles:
-            role_list.append(role.name)
-        if "Community Manager" in role_list:
+        project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
+        thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
+
+        thorny_guild = await GuildFactory.build(interaction.guild)
+        thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
+        project = await ProjectFactory.build(project_id, thorny_user)
+
+        if self.check_for_community_manager(interaction):
+            modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
+                                                       label="Why are you denying this project?",
+                                                       placeholder="eg: Invalid Coordinates / Do not trust player to complete")
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
             interaction.message.embeds[0].colour = 0xD22B2B
+            interaction.message.embeds[0].set_field_at(2,
+                                                       name="CM Comments:",
+                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
+                                                             f"{interaction.user.mention}: {modal.children[0].value}",
+                                                       inline=False)
+
             interaction.message.embeds[0].set_field_at(3,
                                                        name="**STATUS:**",
                                                        value="DENIED",
                                                        inline=False)
 
             self.disable_all_items()
-            await interaction.response.edit_message(view=None,
-                                                    embed=interaction.message.embeds[0])
+            await interaction.followup.edit_message(message_id=interaction.message.id,
+                                                    embed=interaction.message.embeds[0],
+                                                    view=None)
+
+            project.status = "denied"
+            project.accept_date = datetime.now()
+            await commit(project)
         else:
-            await interaction.response.send_message("Hey! You're not a CM...",
+            await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
 
 
@@ -741,7 +792,7 @@ class RedeemSelectMenu(Select):
                 prizes.append(random_icon[0])
                 winnings.append(f"||{random_icon[0][0]}||")
 
-            ticket_embed = discord.Embed(color=self.ctx.author.color)
+            ticket_embed = discord.Embed(color=self.ctx.user.color)
             ticket_embed.add_field(name="**Scratch Ticket**",
                                    value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
             ticket_embed.set_footer(text=f"Ticket #? "
