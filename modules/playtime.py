@@ -172,7 +172,7 @@ class Playtime(commands.Cog):
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
 
-            if r.json()['server_online'] and r.json()['server_status'] == "started_by_user":
+            if r.json()['server_online']:
                 online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
             elif not r.json()['server_online'] and r.json()['server_status'] == "server_crashed":
                 online_embed.title = f":red_circle: The server has crashed! || Day {days_since_start.days + 1}"
