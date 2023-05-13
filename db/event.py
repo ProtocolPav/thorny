@@ -32,20 +32,16 @@ class Connect(Event):
 
             if not loose_connections:
                 await conn.execute("""
-                                   INSERT INTO thorny.activity(thorny_user_id, connect_time) 
+                                   INSERT INTO thorny.playtime(thorny_user_id, connect_time) 
                                    VALUES($1, $2)
                                    """,
                                    self.thorny_user.thorny_id, self.time)
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [CONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                log_embed = discord.Embed(title=f'CONNECTION', colour=0x44ef56)
-                log_embed.set_footer(text=f"Event Time: {self.time}")
-                log_embed.set_author(name=self.thorny_user.username, icon_url=self.thorny_user.discord_member.display_avatar.url)
-
-                if self.thorny_guild.channels.logs_channel is not None:
-                    activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=log_embed)
+                if self.thorny_guild.channels.get_channel('logs'):
+                    activity_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
+                    await activity_channel.send(embed=embeds.connect_embed(self.time, self.thorny_user))
 
             else:
                 raise errors.AlreadyConnectedError()
@@ -64,26 +60,20 @@ class Disconnect(Event):
             if not loose_connections:
                 raise errors.NotConnectedError()
             else:
-                self.playtime = self.time - loose_connections[0]['connect_time']
+                self.playtime = self.time.replace(microsecond=0) - loose_connections[0]['connect_time'].replace(microsecond=0)
 
                 await conn.execute("""
-                                   UPDATE thorny.activity SET disconnect_time = $1, playtime = $2
-                                   WHERE thorny_user_id = $3 and connect_time = $4
+                                   UPDATE thorny.playtime SET disconnect_time = $1, playtime = $2
+                                   WHERE playtime_id = $3
                                    """,
-                                   self.time, self.playtime.replace(microsecond=0),
-                                   self.thorny_user.thorny_id,
-                                   loose_connections[0]['connect_time'])
+                                   self.time, self.playtime,
+                                   loose_connections[0]['playtime_id'])
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DISCONNECT] ThornyID {self.thorny_user.thorny_id}")
 
-                log_embed = discord.Embed(title=f'DISCONNECTION', colour=0xA52A2A)
-                log_embed.set_footer(text=f"Event Time: {self.time}")
-                log_embed.set_author(name=self.thorny_user.username,
-                                     icon_url=self.thorny_user.discord_member.display_avatar.url)
-
-                if self.thorny_guild.channels.logs_channel is not None:
-                    activity_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-                    await activity_channel.send(embed=log_embed)
+                if self.thorny_guild.channels.get_channel('logs'):
+                    activity_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
+                    await activity_channel.send(embed=embeds.disconnect_embed(self.time, self.thorny_user))
 
 
 class AdjustPlaytime(Event):
@@ -146,9 +136,10 @@ class Transaction(Event):
         self.reason = reason
 
     async def log(self):
-        logs_channel = self.client.get_channel(self.thorny_guild.channels.logs_channel)
-        await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild, self.amount,
-                                                         self.reason))
+        if self.thorny_guild.channels.get_channel('logs'):
+            logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
+            await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild,
+                                                             self.amount, self.reason))
 
 class Birthday(Event):
     async def log(self):
@@ -164,7 +155,7 @@ class Birthday(Event):
         birthday_message = f"Wohoo!! It is {self.thorny_user.discord_member.mention}'s {self.thorny_user.age}{suffix} birthday " \
                            f"today! Happy Birthday, {self.thorny_user.username}! :partying_face: :partying_face: :partying_face:"
 
-        if self.thorny_guild.channels.welcome_channel is not None:
-            logs_channel = self.client.get_channel(self.thorny_guild.channels.welcome_channel)
+        if self.thorny_guild.channels.get_channel('welcome'):
+            logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('welcome'))
             await logs_channel.send(birthday_message)
 

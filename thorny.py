@@ -33,8 +33,6 @@ shutdown_notice_received = False
 
 @thorny.event
 async def on_ready():
-    global bot_started
-    bot_started = datetime.now().replace(microsecond=0)
     print(config['ascii_thorny'])
     bot_activity = discord.Activity(type=discord.ActivityType.listening,
                                     name=f"Thorn Criminal")
@@ -60,7 +58,9 @@ async def interruption_check():
                                    "Please wait patiently for the server to start back up.")
 
                 shutdown_notice_received = True
-            shutdown_notice_received = False
+
+            elif r.status_code == 404:
+                shutdown_notice_received = False
 
         except httpx.ConnectError:
             pass
@@ -70,15 +70,15 @@ async def interruption_check():
 async def webevent_handler():
     pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
     for pending_event in pending_events:
-        try:
-            await pending_event.process()
-        except:
-            await pending_event.mark_failed_processing()
+        await pending_event.process()
 
 @webevent_handler.error
 async def webevent_error(exception: Exception):
     print(f"Ignoring exception in task webevent_handler:", file=sys.stderr)
     traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
+    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
+    await pending_events[0].mark_failed_processing()
 
     webevent_handler.restart()
 
@@ -170,8 +170,8 @@ async def on_message_delete(message: discord.Message):
     if not message.author.bot and message.content is not None:
         thorny_guild = await GuildFactory.build(message.guild)
 
-        if thorny_guild.channels.logs_channel is not None:
-            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+        if thorny_guild.channels.get_channel('logs'):
+            logs_channel = thorny.get_channel(thorny_guild.channels.get_channel('logs'))
 
             await logs_channel.send(embed=uikit.message_delete_embed(message, datetime.now()))
 
@@ -181,8 +181,8 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     if not before.author.bot and before.content != after.content:
         thorny_guild = await GuildFactory.build(before.guild)
 
-        if thorny_guild.channels.logs_channel is not None:
-            logs_channel = thorny.get_channel(thorny_guild.channels.logs_channel)
+        if thorny_guild.channels.get_channel('logs'):
+            logs_channel = thorny.get_channel(thorny_guild.channels.get_channel('logs'))
 
             await logs_channel.send(embed=uikit.message_edit_embed(before, after, datetime.now()))
 
@@ -239,8 +239,8 @@ async def on_member_join(member: discord.Member):
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
 
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+    if thorny_guild.channels.get_channel('welcome'):
+        welcome_channel = thorny.get_channel(thorny_guild.channels.get_channel('welcome'))
 
         await welcome_channel.send(embed=uikit.user_join(thorny_user, thorny_guild))
 
@@ -251,8 +251,8 @@ async def on_member_remove(member):
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
 
-    if thorny_guild.channels.welcome_channel is not None:
-        welcome_channel = thorny.get_channel(thorny_guild.channels.welcome_channel)
+    if thorny_guild.channels.get_channel('welcome'):
+        welcome_channel = thorny.get_channel(thorny_guild.channels.get_channel('welcome'))
 
         await welcome_channel.send(embed=uikit.user_leave(thorny_user, thorny_guild))
 

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from thorny_core.db.user import User, InventorySlot, Strike
 from thorny_core.db.guild import Guild
+from thorny_core.db.project import Project
 
 
 async def update_user(thorny_user: User):
@@ -138,27 +139,31 @@ async def update_guild(thorny_guild: Guild):
 
 async def update_channels(thorny_guild: Guild):
     async with thorny_guild.connection_pool.connection() as conn:
-        await conn.set_type_codec(
-            'json',
-            encoder=json.dumps,
-            decoder=json.loads,
-            schema='pg_catalog'
-        )
+        for channel in thorny_guild.channels.all_channels():
+            await conn.execute("""
+                               UPDATE thorny.channels
+                               SET channel_id = $1
+                               WHERE guild_id = $2 AND channel_type = $3
+                               """,
+                               channel['channel_id'], thorny_guild.guild_id, channel['channel_type'])
+
+
+async def update_project(project: Project):
+    async with project.connection_pool.connection() as conn:
         await conn.execute("""
-                           UPDATE thorny.guild
-                           SET channels = $1
-                           WHERE guild_id = $2
+                           UPDATE thorny.projects
+                           SET status = $1, name = $2, thread_id = $3, coordinates = $4,
+                           description = $5, time_estimation = $6, road_built = $7, members = $8,
+                           progress = $9, accepted_on = $10, completed_on = $11
+                           WHERE project_id = $12
                            """,
-                           {"logs": thorny_guild.channels.logs_channel,
-                            "welcome": thorny_guild.channels.welcome_channel,
-                            "gulag": thorny_guild.channels.gulag_channel,
-                            "projects": thorny_guild.channels.projects_channel,
-                            "announcements": thorny_guild.channels.announcements_channel,
-                            "thorny_updates": thorny_guild.channels.thorny_updates_channel},
-                           thorny_guild.guild_id)
+                           project.status, project.name, project.thread_id, project.coordinates, project.description,
+                           project.time_estimation, project.road_built, project.members, project.progress, project.accept_date,
+                           project.complete_date,
+                           project.project_id)
 
 
-async def commit(object_to_commit: User | Guild):
+async def commit(object_to_commit: User | Guild | Project):
     async with object_to_commit.connection_pool.connection() as conn:
 
         async with conn.transaction():
@@ -202,3 +207,9 @@ async def commit(object_to_commit: User | Guild):
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Guild {object_to_commit.guild_name} with "
                       f"ID", object_to_commit.guild_id)
+
+            elif type(object_to_commit) == Project:
+                await update_project(object_to_commit)
+
+                print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed Project {object_to_commit.name} with "
+                      f"ID", object_to_commit.project_id)

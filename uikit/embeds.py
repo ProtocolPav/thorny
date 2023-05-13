@@ -3,7 +3,7 @@ import json
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from thorny_core.db import user, guild, GuildFactory, generator
+from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
 import random
 
@@ -161,30 +161,86 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
     return edit_embed
 
 
-async def application_info_embed(thorny_user: user.User, modal_children: discord.ui.Modal.children):
-    info_embed = discord.Embed(title=modal_children[0].value,
+def project_application_builder_embed(thorny_user: user.User, project: Project) -> discord.Embed:
+    embed = discord.Embed(title="Project Application Builder",
+                          colour=0xFDDA0D)
+    embed.set_author(name=thorny_user.username,
+                     icon_url=thorny_user.discord_member.display_avatar.url)
+
+    embed.add_field(name="Project Info:",
+                    value=f"**Name:** `{project.name or '[EMPTY]'}`\n"
+                          f"**Coordinates:** `{project.coordinates or '[EMPTY]'}`\n"
+                          f"**Road Built:** `{project.road_built or '[EMPTY]'}`")
+
+    embed.add_field(name="Project Members:",
+                    value=f"`{project.members or '[Enter any Project Members if you have any. If not, leave this blank!]'}`",
+                    inline=False)
+
+    embed.add_field(name="Project Description:",
+                    value=f"`{project.description or '[Talk in detail about your project.]'}`",
+                    inline=False)
+
+    embed.add_field(name="Time Estimation:",
+                    value=f"`{project.time_estimation or '[How long do you estimate the project to take?]'}`",
+                    inline=False)
+
+    embed.add_field(name=":page_facing_up: How To Submit Your Application",
+                    value="Press **Start** to start filling in the project. Then, keep pressing **Next** until the purple "
+                          "**Confirm Submission** button appears!",
+                    inline=False)
+
+    return embed
+
+
+def project_application_embed(project: Project, thorny_user: user.User) -> discord.Embed:
+    info_embed = discord.Embed(title=f"{project.name}",
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
 
     info_embed.add_field(name="Project Info:",
-                         value=f"**Coordinates:** {modal_children[1].value}\n"
-                               f"**Road Built:** {modal_children[2].value}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {modal_children[4].value}")
+                         value=f"**Coordinates:** {project.coordinates}\n"
+                               f"**Road Built:** {project.road_built}\n"
+                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}")
 
     info_embed.add_field(name="Project Idea & Time Estimation:",
-                         value=f"{modal_children[3].value}",
+                         value=f"**Description:** {project.description}\n"
+                               f"**Time Estimation:** {project.time_estimation}",
                          inline=False)
 
     info_embed.add_field(name="CM Comments:",
-                         value="If a CM has any comments, they will be added here",
+                         value="A CM will write any reason for Accepting, Denying or placing on a Waiting List here.",
                          inline=False)
 
     info_embed.add_field(name="**STATUS**",
                          value="IN REVIEW...",
                          inline=False)
 
-    info_embed.set_footer(text=f"{thorny_user.user_id}")
+    info_embed.set_footer(text=f"{thorny_user.thorny_id}PR{project.project_id}")
+
+    return info_embed
+
+
+def project_embed(project: Project) -> discord.Embed:
+    wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
+
+    info_embed = discord.Embed(title=f"{project.name}",
+                               colour=0x50C878)
+
+    info_embed.add_field(name=f"ℹ️ About {project.name}",
+                         value=f"{project.description}",
+                         inline=False)
+
+    info_embed.add_field(name="🔎 Quick Info",
+                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
+                               f"**Coordinates:** {project.coordinates}\n"
+                               f"**Road Built:** {project.road_built}\n"
+                               f"**Project Members:** {project.owner.discord_member.name}, {project.members}",
+                         inline=False)
+
+    info_embed.add_field(name="📟 Recent Updates",
+                         value=f"**Progress Updates are coming to the next Thorny Version.**",
+                         inline=False)
 
     return info_embed
 
@@ -193,7 +249,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     welcome_embed = discord.Embed(title="Configuring Welcome Settings",
                                   colour=0xD7E99A)
     welcome_embed.add_field(name="Current Settings",
-                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.welcome_channel}>\n\n"
+                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.get_channel('welcome')}>\n\n"
                                   f"**Join Message:** {thorny_guild.join_message}\n"
                                   f"**Leave Message:** {thorny_guild.leave_message}\n"
                                   f"**Birthday Message:** Currently not available",
@@ -215,7 +271,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
     logs_embed = discord.Embed(title="Configuring Logs",
                                colour=0xD7E99A)
     logs_embed.add_field(name="Current Settings",
-                         value=f"**Logs channel:** <#{thorny_guild.channels.logs_channel}>")
+                         value=f"**Logs channel:** <#{thorny_guild.channels.get_channel('logs')}>")
     logs_embed.add_field(name="Note",
                          value="When editing the **channel**, enter the channel ID!\n"
                                "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
@@ -228,7 +284,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                   f"changelogs and tutorials for new features in a channel. You can make it private or "
                                   f"public for people to see.")
     updates_embed.add_field(name="Current Settings",
-                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.thorny_updates_channel}>",
+                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.get_channel('thorny_updates')}>",
                             inline=False)
     updates_embed.add_field(name="Note",
                             value="When editing the **channel**, enter the channel ID!\n"
@@ -243,7 +299,7 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
                                 "help dissolve any arguments they may be having. \n"
                                 "When a user is taken into the gulag, they cannot see any channel except for the gulag.")
     gulag_embed.add_field(name="Current Settings",
-                          value=f"**Gulag Channel:** <#{thorny_guild.channels.gulag_channel}>\n"
+                          value=f"**Gulag Channel:** <#{thorny_guild.channels.get_channel('gulag')}>\n"
                                 f"**Gulag Role:** <@{thorny_guild.roles.timeout_role}>",
                           inline=False)
     gulag_embed.add_field(name="Important Note",
@@ -483,6 +539,7 @@ def roa_embed():
 
     return embed
 
+
 def roa_panel(thorny_user: user.User, image: str):
     embed = discord.Embed(color=0xFDDA0D,
                           title=f"Authentication Request")
@@ -500,5 +557,35 @@ def roa_panel(thorny_user: user.User, image: str):
 
     embed.set_image(url=image)
     embed.set_footer(text=thorny_user.user_id)
+
+    return embed
+
+
+def connect_embed(time: datetime, thorny_user: user.User):
+    timestamp = round(time.timestamp())
+
+    embed = discord.Embed(title='Player Connected', colour=0x44ef56)
+
+    embed.add_field(name='Details:',
+                    value=f"**Gamertag:** {thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {time}\n"
+                          f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
+
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+
+    return embed
+
+
+def disconnect_embed(time: datetime, thorny_user: user.User):
+    timestamp = round(time.timestamp())
+
+    embed = discord.Embed(title='Player Disconnected', colour=0xA52A2A)
+
+    embed.add_field(name='Details:',
+                    value=f"**Gamertag:** {thorny_user.profile.whitelisted_gamertag}\n"
+                          f"**System Time:** {time}\n"
+                          f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
+
+    embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
 
     return embed

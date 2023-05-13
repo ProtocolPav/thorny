@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from thorny_core import uikit
-from thorny_core.db import GuildFactory
+from thorny_core.db import GuildFactory, UserFactory, ProjectFactory
 from datetime import datetime
 
 class Other(commands.Cog):
@@ -36,3 +36,35 @@ class Other(commands.Cog):
     async def configure(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=uikit.ServerSetup(),
                           ephemeral=True)
+
+    project = discord.SlashCommandGroup("project", "Project Commands")
+
+    @project.command(description="Apply for a Project!",
+                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def apply(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        project = await ProjectFactory.create(thorny_user)
+        await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, project),
+                          embed=uikit.project_application_builder_embed(thorny_user, project),
+                          ephemeral=True)
+
+    @project.command(description="Use in a Project Thread. View the current project's info",
+                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def view(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        project = await ProjectFactory.fetch_by_thread(ctx.channel_id, thorny_guild)
+
+        await ctx.respond(embed=uikit.project_embed(project))
+
+
+
+    @project.command(description="COMING SOON! Give a project progress update",
+                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def progress(self, ctx: discord.ApplicationContext):
+        ...
+
+    @project.command(description="COMING SOON! Mark your project as complete",
+                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def complete(self, ctx: discord.ApplicationContext):
+        ...

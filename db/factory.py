@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
+from thorny_core.db.project import Project
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
 
@@ -57,10 +58,10 @@ class UserFactory:
                                                 FROM (SELECT sum(playtime) as playtime, 
                                                              date_part('month', connect_time) as month, 
                                                              date_part('year', connect_time) as year
-                                                      FROM thorny.activity
+                                                      FROM thorny.playtime
                                                       INNER JOIN thorny.user 
-                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
-                                                      WHERE thorny.activity.thorny_user_id = $1
+                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
+                                                      WHERE thorny.playtime.thorny_user_id = $1
                                                       GROUP BY connect_time 
                                                       ) as t
                                                 GROUP BY t.year, t.month
@@ -71,7 +72,7 @@ class UserFactory:
             playtime_stats = await conn.fetchrow("""
                                                  SELECT SUM(playtime) as total_playtime,
                                                         SUM(case when date(connect_time) = date(now()) then playtime end) as today
-                                                 FROM thorny.activity
+                                                 FROM thorny.playtime
                                                  WHERE thorny_user_id = $1
                                                  GROUP BY thorny_user_id
                                                  """,
@@ -81,10 +82,10 @@ class UserFactory:
                                               SELECT t.day, sum(t.playtime) as playtime 
                                               FROM (SELECT sum(playtime) as playtime, 
                                                            date(connect_time) as day
-                                                    FROM thorny.activity
+                                                    FROM thorny.playtime
                                                     INNER JOIN thorny.user
-                                                        ON thorny.activity.thorny_user_id = thorny.user.thorny_user_id 
-                                                    WHERE thorny.activity.thorny_user_id = $1
+                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
+                                                    WHERE thorny.playtime.thorny_user_id = $1
                                                     GROUP BY day 
                                                     ) as t
                                               GROUP BY t.day
@@ -93,14 +94,14 @@ class UserFactory:
                                               thorny_id)
 
             current_connection = await conn.fetchrow("""
-                                                     SELECT * FROM thorny.activity
+                                                     SELECT * FROM thorny.playtime
                                                      WHERE thorny_user_id = $1
                                                      ORDER BY connect_time DESC
                                                      """,
                                                      thorny_id)
 
             unfulfilled_connections = await conn.fetch("""
-                                                       SELECT * FROM thorny.activity
+                                                       SELECT * FROM thorny.playtime
                                                        WHERE thorny_user_id = $1 AND disconnect_time is NULL
                                                        ORDER BY connect_time ASC
                                                        """,
@@ -323,9 +324,16 @@ class GuildFactory:
                                          """,
                                          guild.id)
 
+            channels = await conn.fetch("""
+                                        SELECT * FROM thorny.channels
+                                        WHERE guild_id = $1
+                                        """,
+                                        guild.id)
+
             return Guild(pool=pool_wrapper,
                          guild=guild,
                          guild_record=guild_rec,
+                         channels_record=channels,
                          features_record=features,
                          responses_record=responses,
                          reaction_roles=reaction_roles,
@@ -403,3 +411,76 @@ class GuildFactory:
                 return [i['guild_id'] for i in guild_ids]
 
         return asyncio.get_event_loop().run_until_complete(get())
+
+
+class ProjectFactory:
+    @classmethod
+    async def build(cls, project_id: int, owner: User) -> Project:
+        async with pool_wrapper.connection() as conn:
+            project_data = await conn.fetchrow("""
+                                               SELECT * FROM thorny.projects
+                                               WHERE project_id = $1
+                                               """,
+                                               project_id)
+
+            project_updates = ...
+
+            return Project(pool_wrapper=pool_wrapper, project_data=project_data, owner=owner)
+
+    @classmethod
+    async def fetch_by_user(cls, thorny_user: User) -> list[Project]:
+        async with pool_wrapper.connection() as conn:
+            project_ids = await conn.fetch("""
+                                           SELECT project_id FROM thorny.projects
+                                           WHERE owner_id = $1 AND status != $2
+                                           """,
+                                           thorny_user.thorny_id, "building application")
+
+            project_list = []
+            for project_id in project_ids:
+                project_list.append(await ProjectFactory.build(project_id[0], thorny_user))
+
+            return project_list
+
+    @classmethod
+    async def fetch_by_thread(cls, thread_id: int, thorny_guild: Guild) -> Project:
+        async with pool_wrapper.connection() as conn:
+            project_id = await conn.fetchrow("""
+                                             SELECT owner_id, project_id FROM thorny.projects
+                                             WHERE thread_id = $1
+                                             """,
+                                             thread_id)
+
+            if project_id is None:
+                raise ...
+
+            thorny_user = await UserFactory.fetch_by_id(thorny_guild, project_id['owner_id'])
+
+            return await ProjectFactory.build(project_id['project_id'], thorny_user)
+
+    @classmethod
+    async def create(cls, thorny_user: User) -> Project:
+        async with pool_wrapper.connection() as conn:
+            in_construction = await conn.fetchrow("""
+                                                  SELECT project_id FROM thorny.projects
+                                                  WHERE owner_id = $1 AND status = $2
+                                                  """,
+                                                  thorny_user.thorny_id, "building application")
+
+            if in_construction:
+                return await ProjectFactory.build(in_construction[0], thorny_user)
+
+            else:
+                await conn.execute("""
+                                   INSERT INTO thorny.projects(owner_id, status)
+                                   VALUES($1, $2)
+                                   """,
+                                   thorny_user.thorny_id, "building application")
+
+                project_id = await conn.fetchrow("""
+                                                 SELECT project_id FROM thorny.projects
+                                                 WHERE owner_id = $1 AND status = $2
+                                                 """,
+                                                 thorny_user.thorny_id, "building application")
+
+                return await ProjectFactory.build(project_id[0], thorny_user)
