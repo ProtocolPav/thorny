@@ -19,9 +19,9 @@ async def activity_leaderboard(thorny_user: user.User, month: datetime) -> tuple
 
         leaderboard = await conn.fetch("""
                                        SELECT SUM(playtime), thorny.user.thorny_user_id, thorny.user.user_id
-                                       FROM thorny.activity 
+                                       FROM thorny.playtime
                                        JOIN thorny.user
-                                       ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
+                                       ON thorny.user.thorny_user_id = thorny.playtime.thorny_user_id
                                        WHERE connect_time BETWEEN $1 AND $2
                                        AND playtime IS NOT NULL
                                        AND thorny.user.guild_id = $3 

@@ -125,7 +125,7 @@ class Playtime:
             if len(monthly_data) >= 2 and monthly_data[1]['month'] == datetime.now().month - 1:
                 self.previous_playtime = Time(monthly_data[1]['playtime'])
 
-            if len(monthly_data) >= 3 and monthly_data[2]['month'] == datetime.now().month - 1:
+            if len(monthly_data) >= 3 and monthly_data[2]['month'] == datetime.now().month - 2:
                 self.expiring_playtime = Time(monthly_data[2]['playtime'])
 
         if stats:
@@ -401,3 +401,6 @@ class User:
 
     async def update(self, attribute, value):
         self.__setattr__(attribute, value)
+
+    def new_project(self):
+        return Project()

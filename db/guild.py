@@ -33,20 +33,34 @@ class Time:
 
 @dataclass
 class Channels:
-    logs_channel: int
-    welcome_channel: int
-    gulag_channel: int
-    projects_channel: int
-    announcements_channel: int
-    thorny_updates_channel: int
+    """
+    Available channels:
+    - welcome
+    - logs
+    - gulag
+    - project_forum
+    - project_applications
+    - thorny_updates
+    """
+    __channels: list
 
-    def __init__(self, all_channels: dict):
-        self.logs_channel = all_channels['logs']
-        self.welcome_channel = all_channels['welcome']
-        self.gulag_channel = all_channels['gulag']
-        self.projects_channel = all_channels['projects']
-        self.announcements_channel = all_channels['announcements']
-        self.thorny_updates_channel = all_channels['thorny_updates']
+    def __init__(self, all_channels: list[pg.Record]):
+        self.__channels = []
+        for channel in all_channels:
+            self.__channels.append({
+                                    "channel_type": channel['channel_type'],
+                                    "channel_id": channel['channel_id']
+                                    })
+
+    def get_channel(self, channel_type: str) -> int:
+        for channel in self.__channels:
+            if channel['channel_type'] == channel_type:
+                return channel['channel_id']
+
+        return 0
+
+    def all_channels(self):
+        return self.__channels
 
 
 @dataclass
@@ -140,6 +154,7 @@ class Guild:
                  pool: PoolWrapper,
                  guild: discord.Guild,
                  guild_record: pg.Record,
+                 channels_record: list[pg.Record],
                  features_record: list[pg.Record],
                  responses_record: list[pg.Record],
                  reaction_roles: list[pg.Record],
@@ -149,7 +164,7 @@ class Guild:
         self.discord_guild = guild
         self.guild_id = guild.id
         self.guild_name = guild.name
-        self.channels = Channels(all_channels=guild_record['channels'])
+        self.channels = Channels(all_channels=channels_record)
         self.roles = Roles(all_roles=guild_record['roles'])
         self.currency = Currency(currency_name=guild_record['currency_name'],
                                  currency_emoji=guild_record['currency_emoji'],
@@ -166,9 +181,9 @@ class Guild:
     async def get_online_players(self):
         async with self.connection_pool.connection() as conn:
             online_players = await conn.fetch("""
-                                              SELECT * FROM thorny.activity
+                                              SELECT * FROM thorny.playtime
                                               JOIN thorny.user
-                                              ON thorny.user.thorny_user_id = thorny.activity.thorny_user_id
+                                              ON thorny.user.thorny_user_id = thorny.playtime.thorny_user_id
                                               WHERE disconnect_time is NULL
                                               AND thorny.user.guild_id = $1
                                               ORDER BY connect_time DESC
