@@ -186,7 +186,7 @@ class Moderation(commands.Cog):
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
     async def authenticate(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.author)
+        thorny_user = await UserFactory.build(ctx.user)
         thorny_guild = await GuildFactory.build(ctx.guild)
 
         await ctx.respond(embed=embeds.roa_embed(),
