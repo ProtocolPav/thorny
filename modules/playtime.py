@@ -176,8 +176,13 @@ class Playtime(commands.Cog):
                 online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
             elif not r.json()['server_online'] and r.json()['server_status'] == "server_crashed":
                 online_embed.title = f":red_circle: The server has crashed! || Day {days_since_start.days + 1}"
+            elif not r.json()['server_online'] and r.json()['server_status'] == "responding_to_crash":
+                online_embed.title = f":yellow_circle: AutoRestart is in progress... || Day {days_since_start.days + 1}"
             else:
                 online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"
+
+            # online_embed.description = f"**Server Uptime:** {r.json()['uptime']}\n" \
+            #                            f"**More Server Info Soon To Come...**"
 
         if online_text == "":
             online_embed.add_field(name="**Empty!**",

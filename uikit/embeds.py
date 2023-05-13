@@ -221,7 +221,7 @@ def project_application_embed(project: Project, thorny_user: user.User) -> disco
     return info_embed
 
 
-def project_embed(project: Project, thorny_user: user.User) -> discord.Embed:
+def project_embed(project: Project) -> discord.Embed:
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
     info_embed = discord.Embed(title=f"{project.name}",
@@ -235,14 +235,11 @@ def project_embed(project: Project, thorny_user: user.User) -> discord.Embed:
                          value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
                                f"**Coordinates:** {project.coordinates}\n"
                                f"**Road Built:** {project.road_built}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}",
+                               f"**Project Members:** {project.owner.discord_member.name}, {project.members}",
                          inline=False)
 
     info_embed.add_field(name="📟 Recent Updates",
-                         value=f"**I've added some shrubbery around the road leading to town square** • *11 hours ago*\n"
-                               f"**Built the Tavern!** • *2 days ago*\n"
-                               f"**Terraformed the hill nearby, opening space for a new buildi...** • *3 days ago*\n"
-                               f"**View 12 more updates by pressing the 'View Updates' button!**",
+                         value=f"**Progress Updates are coming to the next Thorny Version.**",
                          inline=False)
 
     return info_embed

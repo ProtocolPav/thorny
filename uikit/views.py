@@ -163,7 +163,7 @@ class PersistentProjectAdminButtons(View):
 
             thread = await forum.create_thread(name=project.name,
                                                content=project.description,
-                                               embed=embeds.project_embed(project, thorny_user),
+                                               embed=embeds.project_embed(project),
                                                applied_tags=[new_project_tag])
 
             project.thread_id = thread.id

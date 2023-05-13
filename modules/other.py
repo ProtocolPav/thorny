@@ -48,15 +48,20 @@ class Other(commands.Cog):
                           embed=uikit.project_application_builder_embed(thorny_user, project),
                           ephemeral=True)
 
-    @project.command(description="COMING SOON! View the Project Page for a project",
+    @project.command(description="Use in a Project Thread. View the current project's info",
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def view(self, project: str):
-        ...
+    async def view(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        project = await ProjectFactory.fetch_by_thread(ctx.channel_id, thorny_guild)
 
-    @project.command(description="COMING SOON! Update your project",
+        await ctx.respond(embed=uikit.project_embed(project))
+
+
+
+    @project.command(description="COMING SOON! Give a project progress update",
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def update(self, ctx: discord.ApplicationContext,
-                       percentage: discord.Option(int, "How much % have you completed? Eg. 5% more, 10% more")):
+    async def progress(self, ctx: discord.ApplicationContext):
         ...
 
     @project.command(description="COMING SOON! Mark your project as complete",

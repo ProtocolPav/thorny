@@ -423,7 +423,6 @@ class ProjectFactory:
                                                """,
                                                project_id)
 
-            project_ratings = ...
             project_updates = ...
 
             return Project(pool_wrapper=pool_wrapper, project_data=project_data, owner=owner)
@@ -442,6 +441,22 @@ class ProjectFactory:
                 project_list.append(await ProjectFactory.build(project_id[0], thorny_user))
 
             return project_list
+
+    @classmethod
+    async def fetch_by_thread(cls, thread_id: int, thorny_guild: Guild) -> Project:
+        async with pool_wrapper.connection() as conn:
+            project_id = await conn.fetchrow("""
+                                             SELECT owner_id, project_id FROM thorny.projects
+                                             WHERE thread_id = $1
+                                             """,
+                                             thread_id)
+
+            if project_id is None:
+                raise ...
+
+            thorny_user = await UserFactory.fetch_by_id(thorny_guild, project_id['owner_id'])
+
+            return await ProjectFactory.build(project_id['project_id'], thorny_user)
 
     @classmethod
     async def create(cls, thorny_user: User) -> Project:
