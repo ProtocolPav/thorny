@@ -16,7 +16,7 @@ class ProfileEditMain(Modal):
         self.edit_embed = embed
 
         placeholder = None
-        for option in profile_main_select:
+        for option in profile_main_select():
             if option.value == section:
                 placeholder = option.description
                 self.label = option.label
@@ -53,7 +53,7 @@ class ProfileEditLore(Modal):
         self.edit_embed = embed
 
         placeholder = None
-        for option in profile_lore_select:
+        for option in profile_lore_select():
             if option.value == section:
                 placeholder = option.description
                 self.label = option.label
@@ -86,29 +86,6 @@ class ProfileEditLore(Modal):
     async def on_error(self, error: Exception, interaction: discord.Interaction) -> None:
         if isinstance(error, errors.ThornyError):
             await interaction.response.edit_message(embed=error.return_embed())
-
-
-class ProjectApplicationModal(Modal):
-    def __init__(self):
-        super().__init__(title="Project Application",
-                         timeout=None)
-
-        self.add_item(InputText(label="What is the project name?",
-                                placeholder="Eg. Tramonte, Pirate's Cove, Hobbitshire"))
-        self.add_item(InputText(label="Type in the coordinates of your project",
-                                placeholder="Eg. -400, 233"))
-        self.add_item(InputText(label="Have you built a road to your project?",
-                                placeholder="If not, when will it be built?"))
-        self.add_item(InputText(label="What's your idea? How long will it take?",
-                                placeholder="Describe your project. Include a time estimation (eg. 2 months, 1 week)",
-                                style=discord.InputTextStyle.long,
-                                min_length=100))
-        self.add_item(InputText(label="Do you have Project Helpers?",
-                                placeholder="List them if you have any. If not, try and get some!"))
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=None,
-                                                content="Thank you for filling in the form!")
 
 
 class ProjectDetails(Modal):
