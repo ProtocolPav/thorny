@@ -276,7 +276,7 @@ class PersistentProjectAdminButtons(View):
 
 class ProjectApplicationForm(View):
     def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
-        super().__init__(timeout=200.0)
+        super().__init__(timeout=None)
         self.ctx = ctx
         self.thorny_user = thorny_user
         self.project = project
