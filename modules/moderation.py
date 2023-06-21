@@ -71,22 +71,13 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/status", timeout=None)
-            if status.json()['server_online'] or status.json()['server_status'] == "started_by_user":
-                await ctx.respond(content='The server is already running!')
-
+            status = await client.post("http://thorny-bds:8000/start", timeout=None)
+            if status.json()['update'] is not None:
+                await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
+            elif not status.json()['server_online']:
+                await ctx.respond(embed=embeds.server_start_embed())
             else:
-                await client.post("http://thorny-bds:8000/start", timeout=None)
-                await asyncio.sleep(3)
-
-                status = await client.get("http://thorny-bds:8000/status", timeout=None)
-
-                if status.json()['update'] is not None:
-                    await ctx.respond(f"I have found an update (version {status.json()['update']})!\n"
-                                      f"The server has been updated and has started successfully.")
-
-                elif status.json()["server_online"]:
-                    await ctx.respond(f"The server has started successfully")
+                raise errors.ServerStartStop(starting=True)
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
@@ -94,17 +85,11 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/status", timeout=None)
-            if not status.json()['server_online']:
-                await ctx.respond(content='The server is already stopped!')
-
+            status = await client.post("http://thorny-bds:8000/stop", timeout=None)
+            if status.json()['server_online']:
+                await ctx.respond(embed=embeds.server_stop_embed())
             else:
-                await client.post("http://thorny-bds:8000/stop", timeout=None)
-                await asyncio.sleep(3)
-                status = await client.get("http://thorny-bds:8000/status", timeout=None)
-
-                if not status.json()["server_online"]:
-                    await ctx.respond(f"The server has shut down successfully")
+                raise errors.ServerStartStop(starting=False)
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
@@ -182,6 +167,12 @@ class Moderation(commands.Cog):
         gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
                                  value="\n".join(send_text[0:1000]))
         await ctx.respond(embed=gamertag_embed)
+
+    @commands.slash_command(description="Send a message or set of messages to the server",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def servermessage(self, ctx: discord.ApplicationContext, message: str, interval: int, duration: int):
+        ...
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
