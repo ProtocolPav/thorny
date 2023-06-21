@@ -1,20 +1,6 @@
 import discord
 
 
-class UnexpectedError1(discord.ApplicationCommandError):
-    """ Raised when something truly unexpected happens """
-    def __init__(self, tb: str):
-        self.error: discord.Embed = discord.Embed(color=0xD70040)
-        self.traceback = tb
-
-    def return_embed(self) -> discord.Embed:
-        self.error.add_field(name="<:_no:921840417362804777> I have NEVER seen this before...",
-                             value=f"This is something that I didn't expect to happen. Here's the issue: "
-                                   f"{self.traceback}")
-        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
-        return self.error
-
-
 class UnexpectedError2(discord.ApplicationCommandError):
     """ Raised when something unexpected happens """
     def __init__(self, tb: str):
@@ -262,5 +248,24 @@ class NotWhitelisted(ThornyError):
     def return_embed(self) -> discord.Embed:
         self.error.add_field(name="<:_no:921840417362804777> Did you make a mistake?",
                              value=f"Cannot remove from the whitelist, because they aren't on it.")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
+class ServerStartStop(ThornyError):
+    """Raised when stopping or starting the server, but the server is already stopped/started"""
+
+    def __init__(self, starting: bool):
+        super().__init__()
+        self.starting = starting
+
+    def return_embed(self) -> discord.Embed:
+        if self.starting:
+            self.error.add_field(name="<:_no:921840417362804777> Oops...",
+                                 value=f"I could not start the server, because it is already running!")
+        else:
+            self.error.add_field(name="<:_no:921840417362804777> Oops...",
+                                 value=f"I could not stop the server, because it is already stopped!")
+
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error
