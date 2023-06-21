@@ -173,10 +173,16 @@ class Moderation(commands.Cog):
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def servermessage(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
-        self.messages.append({'msg': message,
-                              'repetitions': repetitions})
+        if repetitions != 0:
+            self.messages.append({'msg': message,
+                                  'repetitions': repetitions})
 
-        await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
+            await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
+        else:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(f"http://thorny-bds:8000/message/<msg:{message}>", timeout=None)
+
+                await ctx.respond(f"I just sent the message *'{message}'* to the server. It will not repeat.")
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))

@@ -48,13 +48,14 @@ async def on_ready():
 async def send_server_message():
     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran servermessage loop")
     async with httpx.AsyncClient() as client:
-        for message in modules.Moderation.messages:
+        for message in mod_cog.messages:
             if message['repetitions'] > 0:
                 print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Sent message {message['msg']}")
                 r = await client.get(f"http://thorny-bds:8000/message/<msg:{message['msg']}>", timeout=None)
                 message['repetitions'] -= 1
 
-            await asyncio.sleep(1200)
+            if len(mod_cog.messages) > 1:
+                await asyncio.sleep(1200)
 
 @send_server_message.before_loop
 async def before_check():
@@ -289,7 +290,8 @@ async def on_guild_remove(guild):
 
 
 # Load all cogs
-thorny.add_cog(modules.Moderation(thorny))
+mod_cog = modules.Moderation(thorny)
+thorny.add_cog(mod_cog)
 thorny.add_cog(modules.Money(thorny))
 thorny.add_cog(modules.Inventory(thorny))
 thorny.add_cog(modules.Profile(thorny))
@@ -303,6 +305,7 @@ webevent_handler.start()
 birthday_checker.start()
 day_counter.start()
 interruption_check.start()
+send_server_message.start()
 
 
 if __name__ == "__main__":
