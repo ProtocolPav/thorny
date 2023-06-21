@@ -18,6 +18,10 @@ from thorny_core.db.poolwrapper import pool_wrapper
 class UserFactory:
     @classmethod
     async def build(cls, member: DiscordMember | DiscordUser) -> User:
+        """
+        Build a User class based on the Discord Member object.
+        This is used when you know who the person is, e.g. In an application command where `ctx.user` is available
+        """
         async with pool_wrapper.connection() as conn:
             user_id = member.id
             guild_id = member.guild.id
@@ -146,6 +150,13 @@ class UserFactory:
 
     @classmethod
     async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
+        """
+        Fetch a User object based on the ThornyID of the user. This requires you also knowing the Guild the user is in.
+        --------
+        Parameters:
+        guild: Guild
+        thorny_id: int
+        """
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
                                               SELECT user_id FROM thorny.user
@@ -157,6 +168,13 @@ class UserFactory:
 
     @classmethod
     async def fetch_by_gamertag(cls, guild: Guild, gamertag: str) -> User:
+        """
+        Fetch a User object based on the gamertag of the user. This requires you to know the Guild the user is in.
+        --------
+        Parameters:
+        guild: Guild
+        gamertag: str
+        """
         async with pool_wrapper.connection() as conn:
             thorny_user = await conn.fetchrow("""
                                               SELECT thorny.user.user_id FROM thorny.user
@@ -170,6 +188,17 @@ class UserFactory:
 
     @classmethod
     async def create(cls, members: list[discord.Member]):
+        """
+        Create or re-activate a new User object in the database. This does not return the User object.
+
+        Creating a User: If a new user joins a guild, it will create a new ThornyID for them
+        Re-Activating a User: If a user left and re-joined the guild, it will activate the ThornyID account
+
+        This should only be used in Thorny Events. If you need to create a User and return it, use `UserFactory.build()` instead
+        --------
+        Parameters:
+        members: list[discord.Member]
+        """
         async with pool_wrapper.connection() as conn:
             for member in members:
                 user_id = member.id
@@ -229,6 +258,12 @@ class UserFactory:
 
     @classmethod
     async def deactivate(cls, members: list[discord.Member]):
+        """
+        Deactivates the account of a user. Only use when the user leaves a guild.
+        --------
+        Parameters:
+        members: list[discord.Member]
+        """
         async with pool_wrapper.connection() as conn:
             for member in members:
                 thorny_user = await UserFactory.build(member)

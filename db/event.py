@@ -15,6 +15,9 @@ giphy_token = config["giphy_token"]
 
 
 class Event:
+    """
+    Base Event class
+    """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
         self.client = client
         self.time = event_time
@@ -26,6 +29,9 @@ class Event:
 
 
 class Connect(Event):
+    """
+    Called when a user connects. Always create the Event object first, then call the .log() method to log it in the db
+    """
     async def log(self):
         async with self.thorny_user.connection_pool.connection() as conn:
             loose_connections = self.thorny_user.playtime.loose_connections
@@ -48,6 +54,9 @@ class Connect(Event):
 
 
 class Disconnect(Event):
+    """
+    Called when a user disconnects. Always create the Event object first, then call the .log() method to log it in the db
+    """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild):
         super().__init__(client, event_time, user, guild)
         self.playtime: timedelta = timedelta(hours=0)
@@ -77,6 +86,9 @@ class Disconnect(Event):
 
 
 class AdjustPlaytime(Event):
+    """
+    Called when a user adjusts playtime. Always create the Event object first, then call the .log() method to log it in the db
+    """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild, hour: int, minute: int):
         super().__init__(client, event_time, user, guild)
         self.hour = hour
@@ -100,6 +112,9 @@ class AdjustPlaytime(Event):
 
 
 class GainXP(Event):
+    """
+    Called when a user gains XP. Always create the Event object first, then call the .log() method to log it in the db
+    """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild, message: discord.Message):
         super().__init__(client, event_time, user, guild)
 
@@ -127,6 +142,9 @@ class GainXP(Event):
 
 
 class Transaction(Event):
+    """
+    Called when a transaction occurs. Always create the Event object first, then call the .log() method to log it in the db
+    """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild,
                  receivable: User, amount: int, reason: str):
         super().__init__(client, event_time, user, guild)
@@ -142,6 +160,9 @@ class Transaction(Event):
                                                              self.amount, self.reason))
 
 class Birthday(Event):
+    """
+    Called when a user has a birthday. Always create the Event object first, then call the .log() method to log it in the db
+    """
     async def log(self):
         if str(self.thorny_user.age)[-1] == "1":
             suffix = "st"
