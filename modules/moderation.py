@@ -16,6 +16,7 @@ config = json.load(open("./../thorny_data/config.json", "r"))
 class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self.messages = []
 
     @commands.slash_command(description='CM Only | Strike someone for bad behaviour',
                             guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
@@ -171,8 +172,11 @@ class Moderation(commands.Cog):
     @commands.slash_command(description="Send a message or set of messages to the server",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
-    async def servermessage(self, ctx: discord.ApplicationContext, message: str, interval: int, duration: int):
-        ...
+    async def servermessage(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
+        self.messages.append({'msg': message,
+                              'repetitions': repetitions})
+
+        await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
