@@ -164,6 +164,13 @@ async def update_project(project: Project):
 
 
 async def commit(object_to_commit: User | Guild | Project):
+    """
+    Commit an object to the database. This saves the object's files in the database. Currently you can only commit
+    User, Guild and Project objects.
+    --------
+    Parameters:
+        object_to_commit: User or Guild or Project
+    """
     async with object_to_commit.connection_pool.connection() as conn:
 
         async with conn.transaction():

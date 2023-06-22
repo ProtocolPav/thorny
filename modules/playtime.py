@@ -5,6 +5,7 @@ import json
 from thorny_core import errors
 from thorny_core.db import event
 from thorny_core.db import UserFactory, GuildFactory
+import thorny_core.uikit as uikit
 import httpx
 
 version_file = open('./version.json', 'r+')
@@ -157,39 +158,20 @@ class Playtime(commands.Cog):
     async def online(self, ctx):
         thorny_guild = await GuildFactory.build(ctx.guild)
         connected = await thorny_guild.get_online_players()
-        online_text = ''
-        for player in connected:
-            time = datetime.now() - player['connect_time']
-            time = str(time).split(":")
-            online_text = f"{online_text}\n" \
-                          f"<@{player['user_id']}> • " \
-                          f"connected {time[0]}h{time[1]}m ago"
 
         async with httpx.AsyncClient() as client:
-            r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+            status: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+            uptime: httpx.Response = await client.get("http://thorny-bds:8000/status/uptime", timeout=None)
+            load: httpx.Response = await client.get("http://thorny-bds:8000/status/system_usage", timeout=None)
 
-        online_embed = discord.Embed(color=0x6495ED)
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
-            days_since_start = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+            everthorn_guild = True
+        else:
+            everthorn_guild = False
 
-            if r.json()['server_online']:
-                online_embed.title = f":green_circle: The server is online || Day {days_since_start.days + 1}"
-            elif not r.json()['server_online'] and r.json()['server_status'] == "server_crashed":
-                online_embed.title = f":red_circle: The server has crashed! || Day {days_since_start.days + 1}"
-            elif not r.json()['server_online'] and r.json()['server_status'] == "responding_to_crash":
-                online_embed.title = f":yellow_circle: AutoRestart is in progress... || Day {days_since_start.days + 1}"
-            else:
-                online_embed.title = f":red_circle: The server is offline || Day {days_since_start.days + 1}"
-
-            # online_embed.description = f"**Server Uptime:** {r.json()['uptime']}\n" \
-            #                            f"**More Server Info Soon To Come...**"
-
-        if online_text == "":
-            online_embed.add_field(name="**Empty!**",
-                                   value="*You are the hero. The one who can change that. It's on you to "
-                                         "fill the server with life.*", inline=False)
-        elif online_text != "":
-            online_embed.add_field(name="**Connected Players**\n",
-                                   value=online_text, inline=False)
-
-        await ctx.respond(embed=online_embed)
+        await ctx.respond(embed=uikit.server_status(online=status.json()['server_online'],
+                                                    status=status.json()['server_status'],
+                                                    uptime=uptime.json()['uptime'],
+                                                    load=load.json()['usage'],
+                                                    online_players=connected,
+                                                    everthorn_guilds=everthorn_guild))

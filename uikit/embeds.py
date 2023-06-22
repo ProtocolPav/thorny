@@ -1,7 +1,7 @@
 import discord
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
@@ -587,5 +587,79 @@ def disconnect_embed(time: datetime, thorny_user: user.User):
                           f"**Your Time:** <t:{timestamp}:D> at <t:{timestamp}:T>")
 
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
+
+    return embed
+
+
+def server_start_embed():
+    embed = discord.Embed(colour=0x44ef56)
+
+    embed.add_field(name='The Server is Running',
+                    value=f"The server has successfully started! You may now join.")
+
+    return embed
+
+
+def server_stop_embed():
+    embed = discord.Embed(colour=0xA52A2A)
+
+    embed.add_field(name='The Server is Stopped',
+                    value=f"I have successfully stopped the server")
+
+    return embed
+
+
+def server_update_embed(update_version: str):
+    embed = discord.Embed(colour=0xFDDA0D)
+
+    embed.add_field(name='Update Found!',
+                    value=f"I have found an update to the server: **{update_version}**\n"
+                          f"The server has been updated and successfully started. You may now join.")
+
+    return embed
+
+
+def server_status(online: bool, status: str, uptime: str, load: dict, online_players: dict, everthorn_guilds: bool):
+    embed = discord.Embed(color=0x6495ED)
+
+    if everthorn_guilds:
+        in_game_days = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+
+        if status == "system_clearance":
+            embed.title = f":stopwatch: Restart in 60s || Day {in_game_days.days + 1}"
+
+        elif status == "executing_restart":
+            embed.title = f":star2: Regular Restart in progress... || Day {in_game_days.days + 1}"
+
+        elif status == "server_crashed":
+            embed.title = f":bangbang: The server has crashed! || Day {in_game_days.days + 1}"
+
+        elif status == "responding_to_crash":
+            embed.title = f":star2: Responding to crash... || Day {in_game_days.days + 1}"
+
+        elif online:
+            embed.title = f":green_circle: The server is online || Day {in_game_days.days + 1}"
+
+        else:
+            embed.title = f":red_circle: The server is offline || Day {in_game_days.days + 1}"
+
+        embed.description = f"**Uptime:** {uptime.split('.')[0] if online else '0:00:00'}\n" \
+                            f"**RAM/CPU Usage:** {load['ram_percentage']}% / {load['cpu_percent']}%\n"
+
+    online_text = ''
+    for player in online_players:
+        time = datetime.now() - player['connect_time']
+        time = str(time).split(":")
+        online_text = f"{online_text}\n" \
+                      f"<@{player['user_id']}> • " \
+                      f"connected {time[0]}h{time[1]}m ago"
+
+    if online_text == "":
+        embed.add_field(name="**Empty!**",
+                        value="*Seems like nobody's online. Perfect time to pull a prank on somebody!*", inline=False)
+
+    elif online_text != "":
+        embed.add_field(name="**Connected Players**\n",
+                        value=online_text, inline=False)
 
     return embed
