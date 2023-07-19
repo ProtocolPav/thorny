@@ -160,9 +160,7 @@ class Playtime(commands.Cog):
         connected = await thorny_guild.get_online_players()
 
         async with httpx.AsyncClient() as client:
-            status: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
-            uptime: httpx.Response = await client.get("http://thorny-bds:8000/status/uptime", timeout=None)
-            load: httpx.Response = await client.get("http://thorny-bds:8000/status/system_usage", timeout=None)
+            status: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
         if ctx.guild.id == 611008530077712395 or ctx.guild.id == 1023300252805103626:
             everthorn_guild = True
@@ -171,7 +169,7 @@ class Playtime(commands.Cog):
 
         await ctx.respond(embed=uikit.server_status(online=status.json()['server_online'],
                                                     status=status.json()['server_status'],
-                                                    uptime=uptime.json()['uptime'],
-                                                    load=load.json()['usage'],
+                                                    uptime=status.json()['uptime'],
+                                                    load=status.json()['usage'],
                                                     online_players=connected,
                                                     everthorn_guilds=everthorn_guild))
