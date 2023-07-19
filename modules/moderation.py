@@ -72,7 +72,7 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.post("http://thorny-bds:8000/start", timeout=None)
+            status = await client.get("http://thorny-bds:8000/start", timeout=None)
             if status.json()['update'] is not None:
                 await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
             elif not status.json()['server_online']:
@@ -86,7 +86,7 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.post("http://thorny-bds:8000/stop", timeout=None)
+            status = await client.get("http://thorny-bds:8000/stop", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_stop_embed())
             else:
@@ -97,7 +97,7 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
+            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.gamertag}")
             if r.json()["kicked"]:
                 await ctx.respond(f"Kicked {thorny_user.profile.gamertag}")
             else:
@@ -114,13 +114,13 @@ class Moderation(commands.Cog):
 
         if not gamertags and thorny_user.profile.whitelisted_gamertag is None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     thorny_user.profile.whitelisted_gamertag = thorny_user.profile.gamertag
                     await commit(thorny_user)
 
-                    await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
+                    await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.profile.gamertag}")
 
                     await ctx.respond(f"Added <@{thorny_user.user_id}> to the whitelist "
                                       f"under the gamertag **{thorny_user.profile.gamertag}**")
@@ -139,14 +139,14 @@ class Moderation(commands.Cog):
 
         if thorny_user.profile.whitelisted_gamertag is not None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     removed_gamertag = thorny_user.profile.whitelisted_gamertag
                     thorny_user.profile.whitelisted_gamertag = None
                     await commit(thorny_user)
 
-                    await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
+                    await client.get(f"http://thorny-bds:8000/whitelist/remove/{removed_gamertag}")
 
                     await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
                 else:
@@ -180,7 +180,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
         else:
             async with httpx.AsyncClient() as client:
-                r = await client.get(f"http://thorny-bds:8000/message/<msg:{message}>", timeout=None)
+                r = await client.get(f"http://thorny-bds:8000/commands/message/{message}", timeout=None)
 
                 await ctx.respond(f"I just sent the message *'{message}'* to the server. It will not repeat.")
 
