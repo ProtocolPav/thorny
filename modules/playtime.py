@@ -162,7 +162,7 @@ class Playtime(commands.Cog):
         async with httpx.AsyncClient() as client:
             status: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
-        if ctx.guild.id in GuildFactory.get_guilds_by_feature('EVERTHORN'):
+        if 'EVERTHORN' in thorny_guild.features:
             everthorn_guild = True
         else:
             everthorn_guild = False
