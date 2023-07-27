@@ -25,7 +25,7 @@ class Other(commands.Cog):
 
 
     @commands.slash_command(description="Get bot stats",
-                          guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
     async def ping(self, ctx):
         await ctx.respond(embed=uikit.ping_embed(self.client, self.bot_started))
 

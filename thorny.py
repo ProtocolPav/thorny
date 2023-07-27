@@ -51,7 +51,7 @@ async def send_server_message():
         for message in mod_cog.messages:
             if message['repetitions'] > 0:
                 print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Sent message {message['msg']}")
-                r = await client.get(f"http://thorny-bds:8000/message/<msg:{message['msg']}>", timeout=None)
+                r = await client.get(f"http://thorny-bds:8000/commands/message/{message['msg']}", timeout=None)
                 message['repetitions'] -= 1
 
             if len(mod_cog.messages) > 1:

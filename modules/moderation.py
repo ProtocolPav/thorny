@@ -43,7 +43,8 @@ class Moderation(commands.Cog):
 
         messages = await ctx.channel.purge(limit=amount)
         await ctx.respond(f"Deleted {len(messages)} messages.\n"
-                          f"Check Mod Logs (<#{thorny_guild.channels.get_channel('logs')}>) for the list of deleted messages.")
+                          f"Check Mod Logs (<#{thorny_guild.channels.get_channel('logs')}>) for the list of deleted messages.",
+                          ephemeral=True)
 
     @commands.slash_command(description='CM Only | Send someone to the Gulag',
                             guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
@@ -72,13 +73,13 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.post("http://thorny-bds:8000/start", timeout=None)
-            if status.json()['update'] is not None:
+            status = await client.get("http://thorny-bds:8000/start", timeout=None)
+            if status.json()['server_online']:
+                raise errors.ServerStartStop(starting=True)
+            elif status.json()['update'] is not None:
                 await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
             elif not status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_start_embed())
-            else:
-                raise errors.ServerStartStop(starting=True)
 
     @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
@@ -86,22 +87,11 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.post("http://thorny-bds:8000/stop", timeout=None)
+            status = await client.get("http://thorny-bds:8000/stop", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_stop_embed())
             else:
                 raise errors.ServerStartStop(starting=False)
-
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    @commands.has_permissions(administrator=True)
-    async def kick(self, ctx, user: discord.Member):
-        thorny_user = await UserFactory.build(user)
-        async with httpx.AsyncClient() as client:
-            r = await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/kick")
-            if r.json()["kicked"]:
-                await ctx.respond(f"Kicked {thorny_user.profile.gamertag}")
-            else:
-                await ctx.respond(f"Couldn't Kick")
 
     whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands")
 
@@ -114,13 +104,13 @@ class Moderation(commands.Cog):
 
         if not gamertags and thorny_user.profile.whitelisted_gamertag is None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     thorny_user.profile.whitelisted_gamertag = thorny_user.profile.gamertag
                     await commit(thorny_user)
 
-                    await client.post(f"http://thorny-bds:8000/<gamertag:{thorny_user.profile.gamertag}>/whitelist/add")
+                    await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.profile.gamertag}")
 
                     await ctx.respond(f"Added <@{thorny_user.user_id}> to the whitelist "
                                       f"under the gamertag **{thorny_user.profile.gamertag}**")
@@ -139,14 +129,14 @@ class Moderation(commands.Cog):
 
         if thorny_user.profile.whitelisted_gamertag is not None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     removed_gamertag = thorny_user.profile.whitelisted_gamertag
                     thorny_user.profile.whitelisted_gamertag = None
                     await commit(thorny_user)
 
-                    await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
+                    await client.get(f"http://thorny-bds:8000/whitelist/remove/{removed_gamertag}")
 
                     await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
                 else:
@@ -169,10 +159,23 @@ class Moderation(commands.Cog):
                                  value="\n".join(send_text[0:1000]))
         await ctx.respond(embed=gamertag_embed)
 
-    @commands.slash_command(description="Send a message or set of messages to the server",
+    server_command = discord.SlashCommandGroup("send", "Minecraft BDS Commands")
+
+    @server_command.command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def kick(self, ctx, user: discord.Member):
+        thorny_user = await UserFactory.build(user)
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.whitelisted_gamertag}")
+            if r.json()["kicked"]:
+                await ctx.respond(f"Kicked {thorny_user.profile.whitelisted_gamertag}")
+            else:
+                await ctx.respond(f"Couldn't Kick")
+
+    @server_command.command(description="Send a message or set of messages to the server",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
-    async def servermessage(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
+    async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
         if repetitions != 0:
             self.messages.append({'msg': message,
                                   'repetitions': repetitions})
@@ -180,9 +183,35 @@ class Moderation(commands.Cog):
             await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
         else:
             async with httpx.AsyncClient() as client:
-                r = await client.get(f"http://thorny-bds:8000/message/<msg:{message}>", timeout=None)
+                r = await client.get(f"http://thorny-bds:8000/commands/message/{message}", timeout=None)
 
                 await ctx.respond(f"I just sent the message *'{message}'* to the server. It will not repeat.")
+
+    @server_command.command(description="Send an announcement to the server",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def announcement(self, ctx: discord.ApplicationContext, message: str):
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"http://thorny-bds:8000/commands/announce/{message}", timeout=None)
+
+            await ctx.respond(f"I just sent the announcement *'{message}'* to the server.")
+
+    @server_command.command(description="Test Command",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def give_test(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        gamertag = thorny_user.profile.whitelisted_gamertag
+
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/dirt/1", timeout=None)
+            response = f"Send Clear Command Response: {r.json()}"
+
+            if gamertag in r.json()['response']:
+                r = await client.get(f"http://thorny-bds:8000/commands/give/{gamertag}/sand/1", timeout=None)
+                response = f"{response}\nSend Give Command Response: {r.json()}"
+
+        await ctx.respond(response, ephemeral=True)
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
