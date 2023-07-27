@@ -166,9 +166,9 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.gamertag}")
+            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.whitelisted_gamertag}")
             if r.json()["kicked"]:
-                await ctx.respond(f"Kicked {thorny_user.profile.gamertag}")
+                await ctx.respond(f"Kicked {thorny_user.profile.whitelisted_gamertag}")
             else:
                 await ctx.respond(f"Couldn't Kick")
 
@@ -207,8 +207,9 @@ class Moderation(commands.Cog):
             r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/dirt/1", timeout=None)
             response = f"Send Clear Command Response: {r.json()}"
 
-            r = await client.get(f"http://thorny-bds:8000/commands/give/{gamertag}/coarse_dirt/1", timeout=None)
-            response = f"{response}\nSend Give Command Response: {r.json()}"
+            if gamertag in r.json()['response']:
+                r = await client.get(f"http://thorny-bds:8000/commands/give/{gamertag}/sand/1", timeout=None)
+                response = f"{response}\nSend Give Command Response: {r.json()}"
 
         await ctx.respond(response, ephemeral=True)
 
