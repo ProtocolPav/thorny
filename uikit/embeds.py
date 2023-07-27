@@ -648,11 +648,10 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
     online_text = ''
     for player in online_players:
-        time = datetime.now() - player['connect_time']
-        time = str(time).split(":")
+        unix_timestamp = player['connect_time'].replace(microsecond=0).timestamp()
         online_text = f"{online_text}\n" \
                       f"<@{player['user_id']}> • " \
-                      f"connected {time[0]}h{time[1]}m ago"
+                      f"connected <t:{int(unix_timestamp)}:R>"
 
     if online_text == "":
         embed.add_field(name="**Empty!**",
