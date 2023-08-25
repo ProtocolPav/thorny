@@ -293,7 +293,7 @@ async def on_guild_remove(guild):
 mod_cog = modules.Moderation(thorny)
 thorny.add_cog(mod_cog)
 thorny.add_cog(modules.Money(thorny))
-thorny.add_cog(modules.Inventory(thorny))
+# thorny.add_cog(modules.Inventory(thorny))
 thorny.add_cog(modules.Profile(thorny))
 thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
