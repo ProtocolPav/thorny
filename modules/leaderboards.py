@@ -20,6 +20,9 @@ class Leaderboard(commands.Cog):
                                                              "to see the current month.",
                                                         autocomplete=basic_autocomplete(uikit.all_months()),
                                                         default=uikit.current_month())):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
+
         self.pages = []
         month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
 
@@ -50,8 +53,8 @@ class Leaderboard(commands.Cog):
 
     @leaderboard.command(description="See the Money Leaderboard")
     async def money(self, ctx):
-        thorny_user = await UserFactory.build(ctx.author)
-        thorny_guild = await GuildFactory.build(ctx.author.guild)
+        thorny_user = await UserFactory.build(ctx.user)
+        thorny_guild = await GuildFactory.build(ctx.guild)
 
         self.pages = []
         balances, rank = await generator.money_leaderboard(thorny_user)
@@ -81,6 +84,9 @@ class Leaderboard(commands.Cog):
 
     @leaderboard.command(description="See the levels leaderboard")
     async def levels(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'LEVELS')
+
         self.pages = []
         thorny_user = await UserFactory.build(ctx.author)
 

@@ -8,8 +8,6 @@ class Level(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    # Make these commands be dependent on a new LEVELS feature.
-
     @commands.slash_command(description="See someone's Thorny Level, as well as their rank")
     async def level(self, ctx, user: discord.Member = None):
         thorny_guild = await GuildFactory.build(ctx.guild)
