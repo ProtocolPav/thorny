@@ -318,7 +318,7 @@ class UserFactory:
 
 
 class GuildFactory:
-    FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']
+    FEATURES = Literal['EVERTHORN', 'LEVELS', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:

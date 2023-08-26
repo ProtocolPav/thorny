@@ -12,6 +12,9 @@ class Level(commands.Cog):
 
     @commands.slash_command(description="See someone's Thorny Level, as well as their rank")
     async def level(self, ctx, user: discord.Member = None):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'LEVELS')
+
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
@@ -56,6 +59,9 @@ class Level(commands.Cog):
     @commands.slash_command(description="Level up a user")
     @commands.has_permissions(administrator=True)
     async def levelup(self, ctx, user: discord.Member, level: int):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'LEVELS')
+
         thorny_user = await UserFactory.build(user)
         required_xp = 100
         for lvl in range(1, level):
