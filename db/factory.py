@@ -13,6 +13,7 @@ from thorny_core.db.user import User
 from thorny_core.db.project import Project
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
+from thorny_core import errors
 
 
 class UserFactory:
@@ -446,6 +447,11 @@ class GuildFactory:
                 return [i['guild_id'] for i in guild_ids]
 
         return asyncio.get_event_loop().run_until_complete(get())
+
+    @classmethod
+    def check_guild_feature(cls, guild: Guild, feature: FEATURES):
+        if feature not in guild.features:
+            raise errors.AccessDenied(feature)
 
 
 class ProjectFactory:

@@ -158,14 +158,20 @@ class IncorrectStrikeID(ThornyError):
 
 
 class AccessDenied(ThornyError):
-    """Raised when command is disabled"""
+    """Raised when a feature is not enabled for a guild, disabling the use of a command"""
 
-    def __init__(self):
+    def __init__(self, module: str):
         super().__init__()
+        self.feature = module
 
     def return_embed(self) -> discord.Embed:
-        self.error.add_field(name="<:_no:921840417362804777> Darn",
-                             value="This command has been disabled for this server!")
+        if self.feature not in ['ROA', 'EVERTHORN', 'BETA']:
+            self.error.add_field(name="<:_no:921840417362804777> Darn",
+                                 value=f"You must enable the {self.feature} module to use this command.\n"
+                                       f"Enable using `/configure` (Requires administrator permissions)")
+        else:
+            self.error.add_field(name="<:_no:921840417362804777> Darn",
+                                 value=f"This command is disabled for your server.")
         self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
         return self.error
 

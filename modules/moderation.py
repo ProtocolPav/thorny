@@ -1,7 +1,7 @@
 import asyncio
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, pages
 from thorny_core.uikit.views import ProjectApplicationForm
 import httpx
 
@@ -18,8 +18,7 @@ class Moderation(commands.Cog):
         self.client = client
         self.messages = []
 
-    @commands.slash_command(description='CM Only | Strike someone for bad behaviour',
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description='Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)
     async def strike(self, ctx, user: discord.Member, reason):
         thorny_user = await UserFactory.build(user)
@@ -32,8 +31,7 @@ class Moderation(commands.Cog):
         await ctx.respond(embed=strike_embed)
         await commit(thorny_user)
 
-    @commands.slash_command(description='Mod Only | Purge messages',
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description='Purge messages')
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx: discord.ApplicationContext,
                     amount: int = discord.Option(int, "The amount of messages to delete")):
@@ -46,8 +44,7 @@ class Moderation(commands.Cog):
                           f"Check Mod Logs (<#{thorny_guild.channels.get_channel('logs')}>) for the list of deleted messages.",
                           ephemeral=True)
 
-    @commands.slash_command(description='CM Only | Send someone to the Gulag',
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description='Send someone to the Gulag')
     @commands.has_permissions(administrator=True)
     async def gulag(self, ctx, user: discord.Member):
         timeout_role = discord.utils.get(ctx.guild.roles, name="Time Out")
@@ -67,7 +64,8 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.slash_command(description='Start the server if it is stopped',
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def start(self, ctx: discord.ApplicationContext):
         await ctx.defer()
@@ -81,7 +79,8 @@ class Moderation(commands.Cog):
             elif not status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_start_embed())
 
-    @commands.slash_command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.slash_command(description='Stop the server if it is currently running',
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         await ctx.defer()
@@ -150,20 +149,37 @@ class Moderation(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext):
         gamertags = await UserFactory.get_gamertags(ctx.guild.id)
 
-        send_text = []
+        whitelist = []
         for tag in gamertags:
-            send_text.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
+            whitelist.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
 
         gamertag_embed = discord.Embed(colour=0x64d5ac)
         gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
-                                 value="\n".join(send_text[0:1000]))
-        await ctx.respond(embed=gamertag_embed)
+                                 value="\n".join(whitelist[0:1000]))
+
+        total_pages = len(gamertags) // 10
+        for page in range(1, total_pages + 1):
+            start = page * 10 - 10
+            stop = page * 10
+            whitelist = []
+            for tag in gamertags[start:stop]:
+                whitelist.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
+
+            if page != total_pages + 1:
+                gamertag_embed = discord.Embed(colour=0x64d5ac)
+                gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
+                                         value="\n".join(whitelist))
+                gamertag_embed.set_footer(text=f'Page {page}/{total_pages}')
+                self.pages.append(gamertag_embed)
+        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
+        await paginator.respond(ctx.interaction)
 
     server_command = discord.SlashCommandGroup("send", "Minecraft BDS Commands")
 
-    @server_command.command(guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @server_command.command(description='Kick someone from the server',
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
-    async def kick(self, ctx, user: discord.Member):
+    async def boot(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         async with httpx.AsyncClient() as client:
             r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.whitelisted_gamertag}")

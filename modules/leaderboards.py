@@ -15,8 +15,7 @@ class Leaderboard(commands.Cog):
 
     leaderboard = discord.SlashCommandGroup("lb", "Leaderboard Commands")
 
-    @leaderboard.command(description="See the Activity leaderboard",
-                         guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @leaderboard.command(description="See the Activity leaderboard")
     async def activity(self, ctx, month: discord.Option(str, "Pick a month to view activity for. Leave blank "
                                                              "to see the current month.",
                                                         autocomplete=basic_autocomplete(uikit.all_months()),
@@ -49,8 +48,7 @@ class Leaderboard(commands.Cog):
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
 
-    @leaderboard.command(description="See the Money Leaderboard",
-                         guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @leaderboard.command(description="See the Money Leaderboard")
     async def money(self, ctx):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.author.guild)
@@ -81,8 +79,7 @@ class Leaderboard(commands.Cog):
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
 
-    @leaderboard.command(description="See the levels leaderboard",
-                         guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @leaderboard.command(description="See the levels leaderboard")
     async def levels(self, ctx):
         self.pages = []
         thorny_user = await UserFactory.build(ctx.author)
