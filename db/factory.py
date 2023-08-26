@@ -378,7 +378,7 @@ class GuildFactory:
     @classmethod
     async def create(cls, guild: discord.Guild):
         async with pool_wrapper.connection() as conn:
-            default_features = ['BASIC', 'PROFILE', 'PLAYTIME']
+            default_features = ['PROFILE', 'PLAYTIME', 'LEVELS']
 
             guild_exists = await conn.fetchrow("""
                                                SELECT guild_id FROM thorny.guild
