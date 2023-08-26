@@ -349,10 +349,14 @@ class GuildFactory:
                                             guild.id)
 
             features = await conn.fetch("""
-                                        SELECT * FROM thorny.features
+                                        SELECT * FROM thorny.guild_feature
                                         WHERE guild_id = $1
                                         """,
                                         guild.id)
+            all_features = await conn.fetch("""
+                                            SELECT * FROM thorny.feature
+                                            WHERE configured = true
+                                            """)
 
             responses = await conn.fetch("""
                                          SELECT * FROM thorny.responses
@@ -378,7 +382,7 @@ class GuildFactory:
     @classmethod
     async def create(cls, guild: discord.Guild):
         async with pool_wrapper.connection() as conn:
-            default_features = ['PROFILE', 'PLAYTIME', 'LEVELS']
+            default_features = ['BASIC', 'PROFILE', 'PLAYTIME', 'LEVELS']
 
             guild_exists = await conn.fetchrow("""
                                                SELECT guild_id FROM thorny.guild
@@ -395,7 +399,7 @@ class GuildFactory:
                                    )
                 for feature in default_features:
                     await conn.execute("""
-                                       INSERT INTO thorny.features
+                                       INSERT INTO thorny.guild_feature
                                        VALUES ($1, $2)
                                        """,
                                        guild.id, feature.upper()

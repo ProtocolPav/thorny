@@ -325,6 +325,49 @@ class ProjectApplicationForm(View):
                                view=PersistentProjectAdminButtons())
 
 
+class SetupFeature(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.select(placeholder="Manage Server Modules",
+                       options=options.server_setup())
+    async def callback(self, select_menu: Select, interaction: discord.Interaction):
+        thorny_guild = await GuildFactory.build(interaction.guild)
+
+        match select_menu.values[0]:
+            case "welcome":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['welcome'],
+                                                        view=SetupWelcome(thorny_guild))
+            case "levels":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['levels'],
+                                                        view=SetupLevels(thorny_guild))
+            case "logs":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['logs'],
+                                                        view=SetupLogs(thorny_guild))
+            case "updates":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['updates'],
+                                                        view=SetupUpdates(thorny_guild))
+            case "gulag":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['gulag'],
+                                                        view=SetupGulag(thorny_guild))
+            case "responses":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['responses'],
+                                                        view=SetupResponses(thorny_guild))
+            case "currency":
+                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
+                                                        view=SetupCurrency(thorny_guild))
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
 class SetupWelcome(View):
     def __init__(self, thorny_guild: Guild):
         super().__init__(timeout=None)

@@ -246,6 +246,15 @@ def project_embed(project: Project) -> discord.Embed:
 
 
 def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+    feature_embed = discord.Embed(title="Configuring Thorny Modules",
+                                  colour=0xD7E99A)
+    feature_embed.add_field(name="Current Enabled Modules",
+                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.get_channel('welcome')}>\n\n"
+                                  f"**Join Message:** {thorny_guild.join_message}\n"
+                                  f"**Leave Message:** {thorny_guild.leave_message}\n"
+                                  f"**Birthday Message:** Currently not available",
+                            inline=False)
+
     welcome_embed = discord.Embed(title="Configuring Welcome Settings",
                                   colour=0xD7E99A)
     welcome_embed.add_field(name="Current Settings",
