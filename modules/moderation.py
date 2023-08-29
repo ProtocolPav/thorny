@@ -192,25 +192,27 @@ class Moderation(commands.Cog):
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
-        if repetitions != 0:
-            self.messages.append({'msg': message,
-                                  'repetitions': repetitions})
+        async with httpx.AsyncClient() as client:
+            if repetitions != 0:
+                r = await client.get(f"http://thorny-bds:8000/commands/message/schedule", timeout=None,
+                                     params={'msg': message, 'count': repetitions})
 
-            await ctx.respond(f"The message *'{message}'* will be sent {repetitions} time(s) to the server at 3 hour intervals.")
-        else:
-            async with httpx.AsyncClient() as client:
-                r = await client.get(f"http://thorny-bds:8000/commands/message/{message}", timeout=None)
+                await ctx.respond(f"## Message Scheduled!\n**Message:** {message}\n**Repetitions:** {repetitions}")
+            else:
+                r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+                                     params={'msg': message})
 
-                await ctx.respond(f"I just sent the message *'{message}'* to the server. It will not repeat.")
+                await ctx.respond(f"## Message Sent!\n**Message:** {message}")
 
     @server_command.command(description="Send an announcement to the server",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
     async def announcement(self, ctx: discord.ApplicationContext, message: str):
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/commands/announce/{message}", timeout=None)
+            r = await client.get(f"http://thorny-bds:8000/commands/announce", timeout=None,
+                                 params={'msg': message})
 
-            await ctx.respond(f"I just sent the announcement *'{message}'* to the server.")
+            await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
 
     @server_command.command(description="Test Command",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
