@@ -441,8 +441,8 @@ class GuildFactory:
         async def get():
             async with pool_wrapper.connection() as conn:
                 guild_ids = await conn.fetch("""
-                                             SELECT thorny.features.guild_id FROM thorny.features
-                                             INNER JOIN thorny.guild ON thorny.guild.guild_id = thorny.features.guild_id
+                                             SELECT thorny.guild_feature.guild_id FROM thorny.guild_feature
+                                             INNER JOIN thorny.guild ON thorny.guild.guild_id = thorny.guild_feature.guild_id
                                              WHERE feature = $1
                                              AND active = True
                                              """,

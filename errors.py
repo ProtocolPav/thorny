@@ -167,7 +167,7 @@ class AccessDenied(ThornyError):
     def return_embed(self) -> discord.Embed:
         if self.feature not in ['ROA', 'EVERTHORN', 'BETA']:
             self.error.add_field(name="<:_no:921840417362804777> Darn",
-                                 value=f"You must enable the {self.feature} module to use this command.\n"
+                                 value=f"This server must have the {self.feature} module enabled to use this command.\n"
                                        f"Enable using `/configure` (Requires administrator permissions)")
         else:
             self.error.add_field(name="<:_no:921840417362804777> Darn",

@@ -331,32 +331,15 @@ class SetupFeature(View):
         self.thorny_guild = thorny_guild
 
     @discord.ui.select(placeholder="Manage Server Modules",
-                       options=options.server_setup())
+                       options=...)
     async def callback(self, select_menu: Select, interaction: discord.Interaction):
         thorny_guild = await GuildFactory.build(interaction.guild)
 
-        match select_menu.values[0]:
-            case "welcome":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['welcome'],
-                                                        view=SetupWelcome(thorny_guild))
-            case "levels":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['levels'],
-                                                        view=SetupLevels(thorny_guild))
-            case "logs":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['logs'],
-                                                        view=SetupLogs(thorny_guild))
-            case "updates":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['updates'],
-                                                        view=SetupUpdates(thorny_guild))
-            case "gulag":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['gulag'],
-                                                        view=SetupGulag(thorny_guild))
-            case "responses":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['responses'],
-                                                        view=SetupResponses(thorny_guild))
-            case "currency":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
-                                                        view=SetupCurrency(thorny_guild))
+        # When a user clicks on one of the buttons, if the feature is enabled, it will be removed.
+        # If it is not enabled, it will be added.
+        # Then, the thorny_guild will commit itself to the db, saving the feature changes.
+        # TODO: make the Features setup
+        ...
 
     @discord.ui.button(label="Back",
                        custom_id="back",
