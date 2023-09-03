@@ -16,7 +16,6 @@ config = json.load(open("./../thorny_data/config.json", "r"))
 class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.messages = []
 
     @commands.slash_command(description='Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)
@@ -71,7 +70,7 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/start", timeout=None)
+            status = await client.get("http://thorny-bds:8000/server/start", timeout=None)
             if status.json()['server_online']:
                 raise errors.ServerStartStop(starting=True)
             elif status.json()['update'] is not None:
@@ -86,7 +85,7 @@ class Moderation(commands.Cog):
         await ctx.defer()
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/stop", timeout=None)
+            status = await client.get("http://thorny-bds:8000/server/stop", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_stop_embed())
             else:
