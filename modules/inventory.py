@@ -18,8 +18,7 @@ class Inventory(commands.Cog):
 
     inventory = discord.SlashCommandGroup("inventory", "Inventory Commands")
 
-    @inventory.command(description="See you or a person's Inventory",
-                       guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @inventory.command(description="See you or a person's Inventory")
     async def view(self, ctx, user: discord.Member = None):
         user = user or ctx.author
         thorny_user = await UserFactory.build(user)
@@ -33,8 +32,7 @@ class Inventory(commands.Cog):
         await ctx.respond(embed=uikit.inventory_embed(thorny_user, thorny_guild),
                           view=view_to_be_sent)
 
-    @inventory.command(description="Mod Only | Add an item to a user's inventory",
-                       guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @inventory.command(description="Mod Only | Add an item to a user's inventory")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx, user: discord.Member,
                   item_id: discord.Option(str, "Select an item to add",
@@ -55,8 +53,7 @@ class Inventory(commands.Cog):
         except errors.ItemMaxCountError:
             raise errors.ItemMaxCountError(item.item_max_count)
 
-    @inventory.command(description="Mod Only | Remove or clear an item from a user's inventory",
-                       guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @inventory.command(description="Mod Only | Remove or clear an item from a user's inventory")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member,
                      item_id: discord.Option(str, "Select an item to redeem",
@@ -91,8 +88,7 @@ class Inventory(commands.Cog):
     #     if updated:
     #         await ctx.respond(f"Done! {item_id} is now {price}", ephemeral=True)
 
-    @commands.slash_command(description="Purchase items from the shop!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description="Purchase items from the shop!")
     async def shop(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)

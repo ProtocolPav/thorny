@@ -9,8 +9,7 @@ class Other(commands.Cog):
         self.client = client
         self.bot_started = datetime.now().replace(microsecond=0)
 
-    @commands.slash_command(description="Access the Thorny Help Center",
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description="Access the Thorny Help Center")
     async def help(self, ctx: discord.ApplicationContext):
         view = uikit.HelpDropdown(self.client, ctx.guild.id)
         for item in view.help_options:
@@ -24,14 +23,12 @@ class Other(commands.Cog):
         await ctx.respond(embed=view.default, view=view)
 
 
-    @commands.slash_command(description="Get bot stats",
-                            guild_ids=GuildFactory.get_guilds_by_feature('BASIC'))
+    @commands.slash_command(description="Get bot stats")
     async def ping(self, ctx):
         await ctx.respond(embed=uikit.ping_embed(self.client, self.bot_started))
 
 
-    @commands.slash_command(description="Configure your server settings",
-                            guild_ids=GuildFactory.get_guilds_by_feature('BETA'))
+    @commands.slash_command(description="Configure your server settings")
     @commands.has_permissions(administrator=True)
     async def configure(self, ctx: discord.ApplicationContext):
         await ctx.respond(view=uikit.ServerSetup(),

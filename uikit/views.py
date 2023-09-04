@@ -325,6 +325,32 @@ class ProjectApplicationForm(View):
                                view=PersistentProjectAdminButtons())
 
 
+class SetupFeature(View):
+    def __init__(self, thorny_guild: Guild):
+        super().__init__(timeout=None)
+        self.thorny_guild = thorny_guild
+
+    @discord.ui.select(placeholder="Manage Server Modules",
+                       options=...)
+    async def callback(self, select_menu: Select, interaction: discord.Interaction):
+        thorny_guild = await GuildFactory.build(interaction.guild)
+
+        # When a user clicks on one of the buttons, if the feature is enabled, it will be removed.
+        # If it is not enabled, it will be added.
+        # Then, the thorny_guild will commit itself to the db, saving the feature changes.
+        # TODO: make the Features setup
+        ...
+
+    @discord.ui.button(label="Back",
+                       custom_id="back",
+                       row=2,
+                       style=discord.ButtonStyle.red)
+    async def back_callback(self, button: Button, interation: discord.Interaction):
+        await interation.response.edit_message(content=None,
+                                               embed=None,
+                                               view=ServerSetup())
+
+
 class SetupWelcome(View):
     def __init__(self, thorny_guild: Guild):
         super().__init__(timeout=None)

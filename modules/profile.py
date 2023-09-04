@@ -14,11 +14,13 @@ class Profile(commands.Cog):
     def __init__(self, client):
         self.client: discord.Client = client
 
-    @commands.slash_command(description="See your or a user's profile",
-                            guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
+    @commands.slash_command(description="See your or a user's profile")
     async def profile(self, ctx: discord.ApplicationContext,
                       user: discord.Option(discord.Member, "See someone's profile. Leave blank to see yours.",
                                            default=None)):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+
         if user is None:
             user = ctx.author
         thorny_user = await UserFactory.build(user)
@@ -37,14 +39,16 @@ class Profile(commands.Cog):
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
 
-    @birthday.command(description="Set your birthday",
-                      guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
+    @birthday.command(description="Set your birthday")
     async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
                                                    autocomplete=utils.basic_autocomplete(uikit.all_months())),
                   day: discord.Option(int, "Pick or type a day",
                                       autocomplete=utils.basic_autocomplete(uikit.days_of_the_month())),
                   year: discord.Option(int, "Pick or type a year",
                                        autocomplete=utils.basic_autocomplete(uikit.years()))):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+
         if year is not None:
             date = f'{month} {day} {year}'
             date_system = datetime.strptime(date, "%B %d %Y")
@@ -57,9 +61,11 @@ class Profile(commands.Cog):
         await commit(thorny_user)
         await ctx.respond(f"Your Birthday is set to: **{thorny_user.birthday}**", ephemeral=True)
 
-    @birthday.command(description="Remove your birthday",
-                      guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
+    @birthday.command(description="Remove your birthday")
     async def remove(self, ctx):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+
         thorny_user = await UserFactory.build(ctx.author)
         thorny_user.birthday.time = None
         await commit(thorny_user)
@@ -83,9 +89,11 @@ class Profile(commands.Cog):
                                  value="\n".join(send_text))
         await ctx.respond(embed=gamertag_embed)
 
-    @commands.slash_command(description="See all upcoming birthdays!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('PROFILE'))
+    @commands.slash_command(description="See all upcoming birthdays!")
     async def birthdays(self, ctx: discord.ApplicationContext):
+        thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+
         thorny_user = await UserFactory.build(ctx.user)
         upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
         events_embed = discord.Embed(title="Birthdays", colour=0xFF69B4)
@@ -110,6 +118,7 @@ class Profile(commands.Cog):
 
                 if not birthday_found:
                     events_embed.add_field(name=str(temp_thorny_user.birthday).split(',')[0],
-                                           value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday")
+                                           value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday",
+                                           inline=True)
 
         await ctx.respond(embed=events_embed)
