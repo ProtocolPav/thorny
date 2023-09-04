@@ -119,6 +119,6 @@ class Profile(commands.Cog):
                 if not birthday_found:
                     events_embed.add_field(name=str(temp_thorny_user.birthday).split(',')[0],
                                            value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday",
-                                           inline=False)
+                                           inline=True)
 
         await ctx.respond(embed=events_embed)
