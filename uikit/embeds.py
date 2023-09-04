@@ -246,6 +246,14 @@ def project_embed(project: Project) -> discord.Embed:
 
 
 def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+    feature_embed = discord.Embed(title="Configuring Thorny Modules",
+                                  colour=0xD7E99A)
+    # TODO: Make the features embed
+    modules = '\n'.join(thorny_guild.features)
+    feature_embed.add_field(name="Current Enabled Modules",
+                            value=f"{modules}",
+                            inline=False)
+
     welcome_embed = discord.Embed(title="Configuring Welcome Settings",
                                   colour=0xD7E99A)
     welcome_embed.add_field(name="Current Settings",
@@ -648,10 +656,11 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
     online_text = ''
     for player in online_players:
-        unix_timestamp = player['connect_time'].replace(microsecond=0).timestamp()
+        time = datetime.now() - player['connect_time']
+        time = str(time).split(":")
         online_text = f"{online_text}\n" \
                       f"<@{player['user_id']}> • " \
-                      f"connected <t:{int(unix_timestamp)}:R>"
+                      f"connected {time[0]}h{time[1]}m ago"
 
     if online_text == "":
         embed.add_field(name="**Empty!**",

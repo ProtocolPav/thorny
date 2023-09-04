@@ -44,24 +44,6 @@ async def on_ready():
     thorny.add_view(uikit.ROAVerificationPanel())
 
 
-@tasks.loop(hours=3)
-async def send_server_message():
-    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran servermessage loop")
-    async with httpx.AsyncClient() as client:
-        for message in mod_cog.messages:
-            if message['repetitions'] > 0:
-                print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Sent message {message['msg']}")
-                r = await client.get(f"http://thorny-bds:8000/commands/message/{message['msg']}", timeout=None)
-                message['repetitions'] -= 1
-
-            if len(mod_cog.messages) > 1:
-                await asyncio.sleep(1200)
-
-@send_server_message.before_loop
-async def before_check():
-    await thorny.wait_until_ready()
-
-
 @tasks.loop(seconds=5)
 async def interruption_check():
     global shutdown_notice_received
@@ -109,7 +91,7 @@ async def birthday_checker():
         for guild in thorny.guilds:
             if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
                 thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.fetch_by_id(guild, user['thorny_user_id'])
+                thorny_user = await UserFactory.fetch_by_id(thorny_guild, user['thorny_user_id'])
 
                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
                 await birthday_event.log()
@@ -290,10 +272,9 @@ async def on_guild_remove(guild):
 
 
 # Load all cogs
-mod_cog = modules.Moderation(thorny)
-thorny.add_cog(mod_cog)
+thorny.add_cog(modules.Moderation(thorny))
 thorny.add_cog(modules.Money(thorny))
-thorny.add_cog(modules.Inventory(thorny))
+# thorny.add_cog(modules.Inventory(thorny))
 thorny.add_cog(modules.Profile(thorny))
 thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
@@ -305,7 +286,6 @@ webevent_handler.start()
 birthday_checker.start()
 day_counter.start()
 interruption_check.start()
-send_server_message.start()
 
 
 if __name__ == "__main__":

@@ -18,14 +18,14 @@ class Playtime(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.slash_command(description="Log your connect time",
-                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
-    async def connect(self, ctx):
+    @commands.slash_command(description="Log your connect time")
+    async def connect(self, ctx: discord.ApplicationContext):
         if ctx.guild.id == 611008530077712395:
-            raise errors.AccessDenied()
+            raise errors.AccessDenied('EVERTHORN')
         else:
-            thorny_user = await UserFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.user)
             thorny_guild = await GuildFactory.build(ctx.guild)
+            GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
             connection = event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
             await connection.log()
@@ -37,18 +37,18 @@ class Playtime(commands.Cog):
             response_embed.add_field(name=f"**View Your Playtime:**",
                                      value="</profile:1> - See your profile\n</online:1> - See who else is on!",
                                      inline=False)
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar)
+            response_embed.set_author(name=ctx.author, icon_url=ctx.user.display_avatar)
             response_embed.set_footer(text=f'{v}')
             await ctx.respond(embed=response_embed)
 
-    @commands.slash_command(description="Log your disconnect time",
-                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @commands.slash_command(description="Log your disconnect time")
     async def disconnect(self, ctx: discord.ApplicationContext):
         if ctx.guild.id == 611008530077712395:
-            raise errors.AccessDenied()
+            raise errors.AccessDenied('EVERTHORN')
         else:
-            thorny_user = await UserFactory.build(ctx.author)
+            thorny_user = await UserFactory.build(ctx.user)
             thorny_guild = await GuildFactory.build(ctx.guild)
+            GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
             disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
             await disconnection.log()
@@ -68,16 +68,16 @@ class Playtime(commands.Cog):
             response_embed.add_field(name=f"**Adjust Your Hours:**",
                                      value="Did you forget to disconnect for many hours? Use the </adjust:1> command "
                                            "to bring your hours down!", inline=False)
-            response_embed.set_author(name=ctx.author, icon_url=ctx.author.display_avatar.url)
+            response_embed.set_author(name=ctx.author, icon_url=ctx.user.display_avatar.url)
             response_embed.set_footer(text=f'{v}')
             await ctx.respond(embed=response_embed)
 
-    @commands.slash_command(description='Adjust your recent playtime',
-                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @commands.slash_command(description='Adjust your recent playtime')
     async def adjust(self, ctx, hours: discord.Option(int, "How many hours do you want to bring down?") = None,
                      minutes: discord.Option(int, "How many minutes do you want to bring down?") = None):
         thorny_user = await UserFactory.build(ctx.author)
         thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
         adjust = event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours or 0),
                                           abs(minutes or 0))
@@ -87,12 +87,12 @@ class Playtime(commands.Cog):
 
     mod = discord.SlashCommandGroup("mod", "Mod-Only commands")
 
-    @mod.command(description="Connect a user",
-                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @mod.command(description="Connect a user")
     @commands.has_permissions(administrator=True)
     async def con(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
         connection = event.Connect(self.client, datetime.now(), thorny_user, thorny_guild)
         await connection.log()
@@ -108,12 +108,12 @@ class Playtime(commands.Cog):
         response_embed.set_footer(text=f'{v}')
         await ctx.respond(f"{user.mention}, you have been connected by {ctx.author}", embed=response_embed)
 
-    @mod.command(description="Disconnect a user",
-                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @mod.command(description="Disconnect a user",)
     @commands.has_permissions(administrator=True)
     async def dis(self, ctx, user: discord.Member):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
         disconnection = event.Disconnect(self.client, datetime.now(), thorny_user, thorny_guild)
         await disconnection.log()
@@ -138,14 +138,14 @@ class Playtime(commands.Cog):
         await ctx.respond(f"{user.mention}, you have been disconnected by {ctx.author}", embed=response_embed)
 
 
-    @mod.command(description="Adjust a user's playtime",
-                 guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @mod.command(description="Adjust a user's playtime")
     @commands.has_permissions(administrator=True)
     async def adj(self, ctx, user: discord.Member,
                   hours: discord.Option(int, "Put a - if you want to add hours") = None,
                   minutes: discord.Option(int, "Put a - if you want to add minutes") = None):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
 
         adjust = event.AdjustPlaytime(self.client, datetime.now(), thorny_user, thorny_guild, abs(hours), abs(minutes))
         await adjust.log()
@@ -153,10 +153,11 @@ class Playtime(commands.Cog):
         await ctx.respond(f'{thorny_user.discord_member.mention}, your most recent playtime has been reduced by '
                           f'{hours or 0}h{minutes or 0}m.')
 
-    @commands.slash_command(description="See connected players and how much time they've been on for",
-                            guild_ids=GuildFactory.get_guilds_by_feature('PLAYTIME'))
+    @commands.slash_command(description="See connected players and how much time they've been on for")
     async def online(self, ctx):
         thorny_guild = await GuildFactory.build(ctx.guild)
+        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
+
         connected = await thorny_guild.get_online_players()
 
         async with httpx.AsyncClient() as client:

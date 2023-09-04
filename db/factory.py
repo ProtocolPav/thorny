@@ -13,6 +13,7 @@ from thorny_core.db.user import User
 from thorny_core.db.project import Project
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
+from thorny_core import errors
 
 
 class UserFactory:
@@ -317,7 +318,7 @@ class UserFactory:
 
 
 class GuildFactory:
-    FEATURES = Literal['BASIC', 'EVERTHORN', 'PREMIUM', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']
+    FEATURES = Literal['EVERTHORN', 'LEVELS', 'BETA', 'PROFILE', 'PLAYTIME', 'ROA']
 
     @classmethod
     async def build(cls, guild: discord.Guild) -> Guild:
@@ -348,10 +349,14 @@ class GuildFactory:
                                             guild.id)
 
             features = await conn.fetch("""
-                                        SELECT * FROM thorny.features
+                                        SELECT * FROM thorny.guild_feature
                                         WHERE guild_id = $1
                                         """,
                                         guild.id)
+            all_features = await conn.fetch("""
+                                            SELECT * FROM thorny.feature
+                                            WHERE configured = true
+                                            """)
 
             responses = await conn.fetch("""
                                          SELECT * FROM thorny.responses
@@ -377,7 +382,7 @@ class GuildFactory:
     @classmethod
     async def create(cls, guild: discord.Guild):
         async with pool_wrapper.connection() as conn:
-            default_features = ['BASIC', 'PROFILE', 'PLAYTIME']
+            default_features = ['BASIC', 'PROFILE', 'PLAYTIME', 'LEVELS']
 
             guild_exists = await conn.fetchrow("""
                                                SELECT guild_id FROM thorny.guild
@@ -394,7 +399,7 @@ class GuildFactory:
                                    )
                 for feature in default_features:
                     await conn.execute("""
-                                       INSERT INTO thorny.features
+                                       INSERT INTO thorny.guild_feature
                                        VALUES ($1, $2)
                                        """,
                                        guild.id, feature.upper()
@@ -436,8 +441,8 @@ class GuildFactory:
         async def get():
             async with pool_wrapper.connection() as conn:
                 guild_ids = await conn.fetch("""
-                                             SELECT thorny.features.guild_id FROM thorny.features
-                                             INNER JOIN thorny.guild ON thorny.guild.guild_id = thorny.features.guild_id
+                                             SELECT thorny.guild_feature.guild_id FROM thorny.guild_feature
+                                             INNER JOIN thorny.guild ON thorny.guild.guild_id = thorny.guild_feature.guild_id
                                              WHERE feature = $1
                                              AND active = True
                                              """,
@@ -446,6 +451,11 @@ class GuildFactory:
                 return [i['guild_id'] for i in guild_ids]
 
         return asyncio.get_event_loop().run_until_complete(get())
+
+    @classmethod
+    def check_guild_feature(cls, guild: Guild, feature: FEATURES):
+        if feature not in guild.features:
+            raise errors.AccessDenied(feature)
 
 
 class ProjectFactory:
