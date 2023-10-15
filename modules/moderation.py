@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import discord
 from discord.ext import commands, pages
@@ -6,7 +7,7 @@ from thorny_core.uikit.views import ProjectApplicationForm
 import httpx
 
 import json
-from thorny_core.db import UserFactory, commit, GuildFactory
+from thorny_core.db import UserFactory, commit, GuildFactory, event
 from thorny_core.uikit import embeds, views
 from thorny_core import errors
 
@@ -229,6 +230,42 @@ class Moderation(commands.Cog):
                 response = f"{response}\nSend Give Command Response: {r.json()}"
 
         await ctx.respond(response, ephemeral=True)
+
+    @server_command.command(description="Use during Everhallows Event. Exchange Pumpkins for Nugs",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def exchange(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        gamertag = thorny_user.profile.whitelisted_gamertag
+
+        async with httpx.AsyncClient() as client:
+            r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/pumpkin/256", timeout=None)
+
+            if f"cleared the inventory of {gamertag}".lower() in r.json()['response'].lower():
+                thorny_user.balance += 1
+                transaction = event.Transaction(self.client, datetime.now(), thorny_user, thorny_user.guild,
+                                                thorny_user, 1, 'Exchanged for points')
+                await transaction.log()
+                await commit(thorny_user)
+
+                response = "Hooray! You successfully exchanged 256 Pumpkins for 1 Everhallow Point!"
+            else:
+                response = "Sorry... You don't have enough Pumpkins in your inventory! 4 stacks = 1 Point"
+
+        # async with httpx.AsyncClient() as client:
+        #     r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/fmh:witch_spawn_egg/1", timeout=None)
+        #
+        #     if f"cleared the inventory of {gamertag}".lower() in r.json()['response'].lower():
+        #         thorny_user.balance += 1
+        #         transaction = event.Transaction(self.client, datetime.now(), thorny_user, thorny_user.guild,
+        #                                         thorny_user, 1, 'Exchanged for points')
+        #         await transaction.log()
+        #         await commit(thorny_user)
+        #
+        #         response = "Hooray! You successfully exchanged 1 Witch Head for 1 Everhallow Point!"
+        #     else:
+        #         response = "Sorry... You don't have enough Witch Heads in your inventory! 1 head = 1 Point"
+
+        await ctx.respond(response)
 
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
