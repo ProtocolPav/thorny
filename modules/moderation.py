@@ -236,6 +236,7 @@ class Moderation(commands.Cog):
     async def exchange(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.user)
         gamertag = thorny_user.profile.whitelisted_gamertag
+        await ctx.defer()
 
         async with httpx.AsyncClient() as client:
             r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/pumpkin/256", timeout=None)
@@ -273,6 +274,7 @@ class Moderation(commands.Cog):
     async def modexchange(self, ctx: discord.ApplicationContext, user: discord.User):
         thorny_user = await UserFactory.build(user)
         gamertag = thorny_user.profile.whitelisted_gamertag
+        await ctx.defer()
 
         async with httpx.AsyncClient() as client:
             r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/pumpkin/256", timeout=None)
