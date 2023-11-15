@@ -202,7 +202,7 @@ class UserFactory:
                                        INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
                                        VALUES($1, $2, $3, $4, $5)
                                        """,
-                                       user_id, guild_id, member.joined_at, 25, member.name)
+                                       user_id, guild_id, member.joined_at, 0, member.name)
                     thorny_id = await conn.fetchrow("""
                                                     SELECT thorny_user_id FROM thorny.user
                                                     WHERE user_id=$1 AND guild_id=$2
