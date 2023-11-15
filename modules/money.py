@@ -21,7 +21,7 @@ class Money(commands.Cog):
         thorny_user = await UserFactory.build(user)
         thorny_guild = await GuildFactory.build(user.guild)
 
-        await ctx.respond(embed=embeds.inventory_embed(thorny_user, thorny_guild))
+        await ctx.respond(embed=embeds.balance_embed(thorny_user, thorny_guild))
 
     @balance.command(description="Edit someone's balance")
     @commands.has_permissions(administrator=True)
@@ -63,9 +63,7 @@ class Money(commands.Cog):
         elif amount < 0:
             raise errors.NegativeAmountError
 
-    @commands.slash_command(description="Work for some money")
-    async def work(self, ctx: discord.ApplicationContext):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'BETA')
-
-        await ctx.respond("Nothing happened...")
+    @commands.slash_command(description="View this month's Pouch Store",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def pouches(self, ctx: discord.ApplicationContext):
+        ...

@@ -29,7 +29,7 @@ class Inventory(commands.Cog):
         else:
             view_to_be_sent = None
 
-        await ctx.respond(embed=uikit.inventory_embed(thorny_user, thorny_guild),
+        await ctx.respond(embed=uikit.balance_embed(thorny_user, thorny_guild),
                           view=view_to_be_sent)
 
     @inventory.command(description="Mod Only | Add an item to a user's inventory")

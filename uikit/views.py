@@ -776,7 +776,7 @@ class RedeemSelectMenu(Select):
         else:
             view_to_send = None
 
-        await interaction.response.edit_message(view=view_to_send, embed=embeds.inventory_embed(self.user, self.guild))
+        await interaction.response.edit_message(view=view_to_send, embed=embeds.balance_embed(self.user, self.guild))
 
         match item.item_id:
             case "ticket":

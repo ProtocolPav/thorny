@@ -354,7 +354,6 @@ class User:
     profile: Profile
     level: Level
     playtime: Playtime
-    inventory: Inventory
     strikes: Strikes
     counters: Counters
 
@@ -371,8 +370,6 @@ class User:
                  total_playtime: pg.Record,
                  current_connection: pg.Record,
                  unfulfilled_connections: pg.Record,
-                 inventory: pg.Record,
-                 item_data: pg.Record,
                  strikes: pg.Record,
                  counters: pg.Record
                  ):
@@ -395,7 +392,6 @@ class User:
         self.level = Level(level_data=levels)
         self.playtime = Playtime(monthly_data=monthly_playtime, stats=total_playtime, current_connection=current_connection,
                                  unfulfilled_connections=unfulfilled_connections, daily_playtime=daily_playtime)
-        self.inventory = Inventory(inventory=inventory, item_data=item_data)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)
 

@@ -112,16 +112,6 @@ class UserFactory:
                                                        """,
                                                        thorny_id)
 
-            inventory = await conn.fetch("""
-                                         SELECT * FROM thorny.inventory
-                                         INNER JOIN thorny.item_type
-                                         ON thorny.item_type.friendly_id = thorny.inventory.item_id
-                                         WHERE thorny.inventory.thorny_user_id = $1
-                                         """,
-                                         thorny_id)
-            item_data = await conn.fetch("""
-                                         SELECT * FROM thorny.item_type
-                                         """)
             strikes = await conn.fetch("""
                                        SELECT * from thorny.strikes
                                        WHERE thorny_user_id = $1
@@ -144,8 +134,6 @@ class UserFactory:
                         total_playtime=playtime_stats,
                         current_connection=current_connection,
                         unfulfilled_connections=unfulfilled_connections,
-                        inventory=inventory,
-                        item_data=item_data,
                         strikes=strikes,
                         counters=counters)
 
