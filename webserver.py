@@ -81,6 +81,23 @@ async def disconnect_all(request: Request, guild_id: str):
     return sanicjson({"Accept": True})
 
 
+@app.get('/<guild_id:str>/commands/server')
+async def server_commands(request: Request, guild_id: str):
+    async with webserver_pool.connection() as conn:
+        guild_id = int(guild_id[12:-3])
+
+        command_list = await conn.fetch("""
+                                        SELECT * FROM webserver.commands
+                                        WHERE type = 'server'
+                                        AND executed = false
+                                        AND failed = false
+                                        AND guild_id = $1
+                                        ORDER BY schedule ASC
+                                        """, guild_id)
+
+    return sanicjson({"commands": command_list})
+
+
 @app.listener('after_server_start')
 async def start_bot(application: Sanic, loop: asyncio.AbstractEventLoop):
     # await client.login(TOKEN)
