@@ -144,20 +144,34 @@ class GainXP(Event):
 class Transaction(Event):
     """
     Called when a transaction occurs. Always create the Event object first, then call the .log() method to log it in the db
+
+    Transaction Types:
+    - Buy Pouch
+    - Add Balance
+    - Remove Balance
     """
     def __init__(self, client: discord.Client, event_time: datetime, user: User, guild: Guild,
-                 receivable: User, amount: int, reason: str):
+                 transaction_type: str, amount: int, description: str, pouch_id: int = None):
         super().__init__(client, event_time, user, guild)
 
-        self.receivable_user = receivable
+        self.transaction_type = transaction_type
         self.amount = amount
-        self.reason = reason
+        self.description = description
+        self.pouch_id = pouch_id
 
     async def log(self):
+        async with self.thorny_user.connection_pool.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.transactions(time, user_id, type, amount, pouch_id, description)
+                               VALUES($1, $2, $3, $4, $5, $6)
+                               """,
+                               self.time, self.thorny_user.thorny_id, self.transaction_type, self.amount, self.pouch_id,
+                               self.description)
+
         if self.thorny_guild.channels.get_channel('logs'):
             logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
-            await logs_channel.send(embed=embeds.payment_log(self.thorny_user, self.receivable_user, self.thorny_guild,
-                                                             self.amount, self.reason))
+            await logs_channel.send(embed=embeds.transaction_log(self.thorny_user, self.thorny_guild,
+                                                                 self.transaction_type, self.amount, self.description))
 
 class Birthday(Event):
     """
