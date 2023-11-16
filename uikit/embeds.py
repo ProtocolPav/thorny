@@ -447,12 +447,14 @@ def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: g
     return embed
 
 
-def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transaction_type: str, amount: int, reason: str):
+def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transaction_type: str, amount: int, reason: str,
+                    time: datetime):
     embed = discord.Embed(color=0xF4C430)
     embed.add_field(name=f"**Transaction - {transaction_type}**",
                     value=f"**User:** <@{thorny_user.discord_member.id}>\n"
                           f"**Amount:** {thorny_guild.currency.emoji}{amount}\n"
                           f"**Reason:** {reason}")
+    embed.set_footer(text=f"{time}")
 
     return embed
 

@@ -171,7 +171,8 @@ class Transaction(Event):
         if self.thorny_guild.channels.get_channel('logs'):
             logs_channel = self.client.get_channel(self.thorny_guild.channels.get_channel('logs'))
             await logs_channel.send(embed=embeds.transaction_log(self.thorny_user, self.thorny_guild,
-                                                                 self.transaction_type, self.amount, self.description))
+                                                                 self.transaction_type, self.amount, self.description,
+                                                                 self.time))
 
 class Birthday(Event):
     """

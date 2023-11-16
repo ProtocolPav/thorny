@@ -51,6 +51,7 @@ class Money(commands.Cog):
         receivable_user = await UserFactory.build(user)
         thorny_user = await UserFactory.build(ctx.user)
         thorny_guild = await GuildFactory.build(user.guild)
+        reason = f"[Payment] {reason}"
 
         if user == ctx.author:
             raise errors.SelfPaymentError
