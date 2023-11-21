@@ -416,14 +416,11 @@ def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
-def inventory_embed(thorny_user: user.User, thorny_guild: guild.Guild):
+def balance_embed(thorny_user: user.User, thorny_guild: guild.Guild):
     embed = discord.Embed(color=0xE0115F)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f'**Financials:**',
                     value=f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}")
-    embed.add_field(name=f'**Inventory:**',
-                    value=f"{thorny_user.inventory}",
-                    inline=False)
 
     return embed
 
@@ -450,12 +447,14 @@ def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: g
     return embed
 
 
-def payment_log(thorny_user: user.User, receivable: user.User, thorny_guild: guild.Guild, amount: int, reason: str):
+def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transaction_type: str, amount: int, reason: str,
+                    time: datetime):
     embed = discord.Embed(color=0xF4C430)
-    embed.add_field(name="**Transaction**",
-                    value=f"<@{thorny_user.discord_member.id}> paid <@{receivable.discord_member.id}> "
-                          f"**{thorny_guild.currency.emoji}{amount}**\n"
+    embed.add_field(name=f"**Transaction - {transaction_type}**",
+                    value=f"**User:** <@{thorny_user.discord_member.id}>\n"
+                          f"**Amount:** {thorny_guild.currency.emoji}{amount}\n"
                           f"**Reason:** {reason}")
+    embed.set_footer(text=f"{time}")
 
     return embed
 

@@ -4,6 +4,7 @@ from datetime import datetime
 import asyncio
 import asyncpg as pg
 import json
+import httpx
 
 app = Sanic("thorny-bot-app")
 
@@ -30,6 +31,14 @@ webserver_pool = PoolWrapper()
 @app.route('/')
 async def test(request: Request):
     return sanicjson({'hello': 'world'})
+
+
+@app.route('/preemption/warning')
+async def preempt(request: Request):
+    async with httpx.AsyncClient() as client:
+        r = await client.get(f"http://thorny-bds:8000/server/preempt", timeout=None)
+
+    return sanicjson({'server': 'preempted'})
 
 
 @app.post('/<guild_id:str>/<gamertag:str>/connect')
@@ -79,6 +88,23 @@ async def disconnect_all(request: Request, guild_id: str):
         print(f'[WEBSERVER] Sent Disconnect All Event for processing...')
 
     return sanicjson({"Accept": True})
+
+
+@app.get('/<guild_id:str>/commands/server')
+async def server_commands(request: Request, guild_id: str):
+    async with webserver_pool.connection() as conn:
+        guild_id = int(guild_id[12:-3])
+
+        command_list = await conn.fetch("""
+                                        SELECT * FROM webserver.commands
+                                        WHERE type = 'server'
+                                        AND executed = false
+                                        AND failed = false
+                                        AND guild_id = $1
+                                        ORDER BY schedule ASC
+                                        """, guild_id)
+
+    return sanicjson({"commands": command_list})
 
 
 @app.listener('after_server_start')
