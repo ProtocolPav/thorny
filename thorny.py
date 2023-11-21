@@ -34,8 +34,8 @@ shutdown_notice_received = False
 @thorny.event
 async def on_ready():
     print(config['ascii_thorny'])
-    bot_activity = discord.Activity(type=discord.ActivityType.listening,
-                                    name=f"Thorn Criminal")
+    bot_activity = discord.Activity(type=discord.ActivityType.watching,
+                                    name=f"everything.")
     await thorny.change_presence(activity=bot_activity)
     print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")

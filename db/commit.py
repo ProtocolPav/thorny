@@ -71,34 +71,6 @@ async def update_counters(thorny_user: User):
                            counters.level_last_message, thorny_user.thorny_id)
 
 
-async def update_inventory_slot(thorny_user: User, inventory_slot: InventorySlot):
-    async with thorny_user.connection_pool.connection() as conn:
-        await conn.execute("""
-                           UPDATE thorny.inventory
-                           SET item_id = $1, item_count = $2
-                           WHERE inventory_id = $3
-                           """,
-                           inventory_slot.item_id, inventory_slot.item_count, inventory_slot.inventory_id)
-
-
-async def insert_inventory_slot(thorny_user: User, inventory_slot: InventorySlot):
-    async with thorny_user.connection_pool.connection() as conn:
-        await conn.execute("""
-                           INSERT INTO thorny.inventory(thorny_user_id, item_id, item_count)
-                           VALUES($1, $2, $3)
-                           """,
-                           thorny_user.thorny_id, inventory_slot.item_id, inventory_slot.item_count)
-
-
-async def delete_inventory_slot(thorny_user: User, inventory_slot: InventorySlot):
-    async with thorny_user.connection_pool.connection() as conn:
-        await conn.execute("""
-                           DELETE FROM thorny.inventory
-                           WHERE inventory_id = $1
-                           """,
-                           inventory_slot.inventory_id)
-
-
 async def insert_strike(thorny_user: User, strike: Strike):
     async with thorny_user.connection_pool.connection() as conn:
         await conn.execute("""
@@ -179,20 +151,6 @@ async def commit(object_to_commit: User | Guild | Project):
                 await update_profile(object_to_commit)
                 await update_levels(object_to_commit)
                 await update_counters(object_to_commit)
-
-                original_slots = object_to_commit.inventory.original_slots
-                slots = object_to_commit.inventory.slots
-                if len(original_slots) > len(slots):
-                    for slot in original_slots:
-                        if slot not in slots:
-                            await delete_inventory_slot(object_to_commit, slot)
-                elif len(slots) > len(original_slots):
-                    for slot in slots:
-                        if slot not in original_slots:
-                            await insert_inventory_slot(object_to_commit, slot)
-                elif len(slots) == len(original_slots):
-                    for slot in slots:
-                        await update_inventory_slot(object_to_commit, slot)
 
                 original_strikes = object_to_commit.strikes.original_strikes
                 strikes = object_to_commit.strikes.strikes
