@@ -427,23 +427,18 @@ class SetupWelcome(View):
                                style=discord.InputTextStyle.long)
         await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
 
-    @discord.ui.button(label="Change Channel",
-                       custom_id="edit_channel",
-                       row=2,
-                       style=discord.ButtonStyle.gray)
-    async def channel_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
-                               custom_id="welcome_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('welcome')}")
-        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
-                                               view=SetupWelcome(modal.thorny_guild))
+    @discord.ui.channel_select(placeholder="Change Channel",
+                               min_values=0, max_values=1, row=2)
+    async def channel_callback(self, select_menu: Select, interaction: discord.Interaction):
+        self.thorny_guild.channels.__setattr__("welcome_channel", int(select_menu.values[0].id))
+        await commit(self.thorny_guild)
+
+        await interaction.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['welcome'],
+                                                view=SetupWelcome(self.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
-                       row=2,
+                       row=3,
                        style=discord.ButtonStyle.red)
     async def back_callback(self, button: Button, interation: discord.Interaction):
         await interation.response.edit_message(content=None,
