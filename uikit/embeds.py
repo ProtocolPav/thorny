@@ -173,7 +173,7 @@ def project_application_builder_embed(thorny_user: user.User, project: Project) 
                           f"**Road Built:** `{project.road_built or '[EMPTY]'}`")
 
     embed.add_field(name="Project Members:",
-                    value=f"`{project.members or '[Enter any Project Members if you have any. If not, leave this blank!]'}`",
+                    value=f"{project.members or '`[Enter any Project Members if you have any. If not, leave this blank!]`'}",
                     inline=False)
 
     embed.add_field(name="Project Description:",
@@ -185,8 +185,8 @@ def project_application_builder_embed(thorny_user: user.User, project: Project) 
                     inline=False)
 
     embed.add_field(name=":page_facing_up: How To Submit Your Application",
-                    value="Press **Start** to start filling in the project. Then, keep pressing **Next** until the purple "
-                          "**Confirm Submission** button appears!",
+                    value="Press **Start** to start filling in the project. You will be guided through every part of it.\n"
+                          "At the end, a green **Confirm Submission** button will appear. You must press it!",
                     inline=False)
 
     return embed

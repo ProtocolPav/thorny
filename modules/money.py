@@ -76,7 +76,7 @@ class Money(commands.Cog):
         elif amount < 0:
             raise errors.NegativeAmountError
 
-    @commands.slash_command(description="View the current Pouch Market",
+    @commands.slash_command(description="View the Monthly Market",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def market(self, ctx: discord.ApplicationContext):
         ...
