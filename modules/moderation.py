@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands, pages
@@ -213,6 +213,20 @@ class Moderation(commands.Cog):
                                  params={'msg': message})
 
             await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
+
+    @server_command.command(description="Redeem your Lottery Ticket!",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def redeem(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        if thorny_user.balance == 0 and thorny_user.playtime.todays_playtime.time >= timedelta(minutes=10):
+            thorny_user.balance += 1
+            await ctx.respond("You've got a Lottery Ticket! Congrats!", ephemeral=True)
+        elif thorny_user.balance != 0:
+            await ctx.respond("You already redeemed a ticket before.", ephemeral=True)
+        elif thorny_user.playtime.todays_playtime.time <= timedelta(minutes=10):
+            await ctx.respond("You need to have a minimum of 10 minutes of playtime today to redeem a ticket!",
+                              ephemeral=True)
 
     @server_command.command(description="Test Command",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
