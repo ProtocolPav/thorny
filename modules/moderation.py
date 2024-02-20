@@ -1,5 +1,6 @@
 import asyncio
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands, pages
@@ -213,6 +214,27 @@ class Moderation(commands.Cog):
                                  params={'msg': message})
 
             await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
+
+    @server_command.command(description="Redeem your Lottery Ticket!",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def redeem(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+        if thorny_user.balance == 0 and thorny_user.playtime.todays_playtime.time >= timedelta(minutes=10):
+            thorny_user.balance += 1
+            await ctx.respond("You have redeemed a Lottery Ticket", ephemeral=True)
+
+            async with httpx.AsyncClient() as client:
+                gt = thorny_user.profile.whitelisted_gamertag
+                egg = random.choices(["minecraft:pig_spawn_egg", "minecraft:salmon_spawn_egg",
+                                      "minecraft:zombie_spawn_egg", "minecraft:drowned_spawn_egg", "minecraft:slime_spawn_egg"],
+                                     [20, 21, 7, 2, 0.1])[0]
+                r = await client.get(f"http://thorny-bds:8000/commands/give/{gt}/{egg}/1", timeout=None)
+
+        elif thorny_user.balance != 0:
+            await ctx.respond("You already redeemed a ticket before.", ephemeral=True)
+        elif thorny_user.playtime.todays_playtime.time <= timedelta(minutes=10):
+            await ctx.respond("You need to have a minimum of 10 minutes of playtime today to redeem a ticket!",
+                              ephemeral=True)
 
     @server_command.command(description="Test Command",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))

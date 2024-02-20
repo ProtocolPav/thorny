@@ -274,6 +274,35 @@ class PersistentProjectAdminButtons(View):
                                                     ephemeral=True)
 
 
+class ProjectApplicationMembers(View):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
+        super().__init__(timeout=None)
+        self.ctx = ctx
+        self.thorny_user = thorny_user
+        self.project = project
+
+    @discord.ui.user_select(placeholder="Select any other Project members",
+                            min_values=0)
+    async def member_select_callback(self, select_menu: Select, interaction: discord.Interaction):
+        for member in select_menu.values:
+            member: discord.Member
+            self.project.members = f"{self.project.members}{member.mention}, "
+        await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user, self.project),
+                                                view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.gray,
+                       label="Next",
+                       custom_id="form")
+    async def form_callback(self, button: Button, interaction: discord.Interaction):
+        new_view = ProjectApplicationForm(self.ctx, self.thorny_user, self.project)
+        button = new_view.children[0]
+        button.label = "Confirm Submission"
+        button.style = discord.ButtonStyle.green
+
+        await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user, self.project),
+                                                view=new_view)
+
+
 class ProjectApplicationForm(View):
     def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
         super().__init__(timeout=None)
@@ -288,26 +317,28 @@ class ProjectApplicationForm(View):
         await self.ctx.edit(view=self)
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
-                       label="Start [1/2]",
+                       label="Start [1/4]",
                        custom_id="form")
     async def form_callback(self, button: Button, interaction: discord.Interaction):
-        if "Start" in button.label:
-            modal = modals.ProjectDetails(self.thorny_user, self.project, view=self)
+        if "1" in button.label:
+            modal = modals.ProjectDetailsName(self.thorny_user, self.project, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-            self.project.name = modal.children[0].value
-            self.project.coordinates = modal.children[1].value
-            self.project.road_built = modal.children[2].value
 
-        elif "Next" in button.label:
-            modal = modals.ProjectDetails2(self.thorny_user, self.project, view=self)
+        elif "2" in button.label:
+            modal = modals.ProjectDetailsCoordinates(self.thorny_user, self.project, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-            self.project.description = modal.children[0].value
-            self.project.time_estimation = modal.children[1].value
-            self.project.members = modal.children[2].value
+        elif "3" in button.label:
+            modal = modals.ProjectDetailsDescription(self.thorny_user, self.project, view=self)
+            await interaction.response.send_modal(modal=modal)
+            await modal.wait()
+
+        elif "4/4" in button.label:
+            await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user, self.project),
+                                                    view=ProjectApplicationMembers(self.ctx, self.thorny_user, self.project))
 
         elif "Confirm" in button.label:
             self.project.status = "awaiting approval"
@@ -396,23 +427,18 @@ class SetupWelcome(View):
                                style=discord.InputTextStyle.long)
         await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
 
-    @discord.ui.button(label="Change Channel",
-                       custom_id="edit_channel",
-                       row=2,
-                       style=discord.ButtonStyle.gray)
-    async def channel_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
-                               custom_id="welcome_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('welcome')}")
-        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
-                                               view=SetupWelcome(modal.thorny_guild))
+    @discord.ui.channel_select(placeholder="Change Channel",
+                               min_values=0, max_values=1, row=2)
+    async def channel_callback(self, select_menu: Select, interaction: discord.Interaction):
+        self.thorny_guild.channels.__setattr__("welcome_channel", int(select_menu.values[0].id))
+        await commit(self.thorny_guild)
+
+        await interaction.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['welcome'],
+                                                view=SetupWelcome(self.thorny_guild))
 
     @discord.ui.button(label="Back",
                        custom_id="back",
-                       row=2,
+                       row=3,
                        style=discord.ButtonStyle.red)
     async def back_callback(self, button: Button, interation: discord.Interaction):
         await interation.response.edit_message(content=None,

@@ -52,7 +52,7 @@ class Project:
         self.description = project_data['description']
         self.time_estimation = project_data['time_estimation']
         self.road_built = project_data['road_built']
-        self.members = project_data['members']
+        self.members = project_data['members'] if project_data['members'] is not None else ""
         self.progress = project_data['progress']
         self.accept_date = project_data['accepted_on']
         self.complete_date = project_data['completed_on']
