@@ -159,34 +159,19 @@ async def get_player_statistics(request: Request):
     ...
 
 
-@app.post('/player/stats/block')
-async def log_block_statistics(request: Request):
+@app.post('/player/stats')
+async def log_player_statistics(request: Request):
     """
-    Arguments: gamertag, guild_id, operation(PLACE or BREAK), block_id, amount
+    Arguments: gamertag, guild_id, posx, posy, posz, type, ref, mainhand
+
+    type must be either one of: place, mine, kill, die
+    ref will be either the block affected, entity affected or the cause of death if it is a fall for example
+
+    Logs a player statistic. Based on world events.
     :param request:
     :return:
     """
-    ...
-
-
-@app.post('/player/stats/death')
-async def log_death_statistics(request: Request):
-    """
-    Arguments: gamertag, guild_id, death_type
-    :param request:
-    :return:
-    """
-    ...
-
-
-@app.post('/player/stats/kills')
-async def log_kill_statistics(request: Request):
-    """
-    Arguments: gamertag, guild_id, entity_type (OPTIONAL), death_gamertag (OPTIONAL)
-    :param request:
-    :return:
-    """
-    ...
+    return text("OK!")
 
 
 @app.listener('after_server_start')
