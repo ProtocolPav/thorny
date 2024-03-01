@@ -1,4 +1,4 @@
-from sanic import Sanic, Request
+from sanic import Sanic, Request, text
 from sanic.response import json as sanicjson
 from datetime import datetime
 import asyncio
@@ -7,6 +7,16 @@ import json
 import httpx
 
 app = Sanic("thorny-bot-app")
+
+"""
+GET retrieve all or just one resource.
+
+POST is normally for create a new resource.
+
+PUT used to update a resource
+
+DELETE delete a resource
+"""
 
 class PoolWrapper:
     __pool: pg.Pool
@@ -35,76 +45,133 @@ async def test(request: Request):
 
 @app.route('/preemption/warning')
 async def preempt(request: Request):
+    """
+    Called by the GCP to warn the systems of preemption
+    """
     async with httpx.AsyncClient() as client:
         r = await client.get(f"http://thorny-bds:8000/server/preempt", timeout=None)
 
     return sanicjson({'server': 'preempted'})
 
 
-@app.post('/<guild_id:str>/<gamertag:str>/connect')
-async def connect(request: Request, gamertag: str, guild_id: str):
+@app.post('/connect')
+async def log_connect(request: Request):
+    """
+    Arguments: gamertag, guild_id
+    :param request:
+    :return:
+    """
     async with webserver_pool.connection() as conn:
-        gamertag = gamertag[12:-3].replace("%20", " ")
-        guild_id = int(guild_id[12:-3])
+        if request.args.get('gamertag', None) and request.args.get('guild_id', None):
+            gamertag = request.args['gamertag'][0]
+            try:
+                guild_id = int(request.args['guild_id'][0])
 
-        await conn.execute("""
-                           INSERT INTO webserver.webevent(event_time, event, description)
-                           VALUES($1, $2, $3)
-                           """,
-                           datetime.now(), 'connect', f'{guild_id},{gamertag}')
+                await conn.execute("""
+                                   INSERT INTO webserver.webevent(event_time, event, description)
+                                   VALUES($1, $2, $3)
+                                   """,
+                                   datetime.now(), 'connect', f'{guild_id},{gamertag}')
 
-        print(f'[WEBSERVER] Sent Connect Event for processing...')
+                print(f'[WEBSERVER] Sent Connect Event for processing...')
+
+            except TypeError:
+                return text('Make sure guild_id is an integer')
+        else:
+            return text('Include args gamertag and guild_id. Example: thorny-wbs:8000/connect?gamertag=ABC&guild_id=123')
     return sanicjson({"Accept": True})
 
 
-@app.post('/<guild_id:str>/<gamertag:str>/disconnect')
-async def disconnect(request: Request, gamertag: str, guild_id: str):
+@app.post('/disconnect')
+async def log_disconnect(request: Request):
+    """
+    Arguments: gamertag, guild_id
+    :param request:
+    :return:
+    """
     async with webserver_pool.connection() as conn:
-        gamertag = gamertag[12:-3].replace("%20", " ")
-        guild_id = int(guild_id[12:-3])
+        if request.args.get('gamertag', None) and request.args.get('guild_id', None):
+            gamertag = request.args['gamertag'][0]
+            try:
+                guild_id = int(request.args['guild_id'][0])
 
-        await conn.execute("""
-                           INSERT INTO webserver.webevent(event_time, event, description)
-                           VALUES($1, $2, $3)
-                           """,
-                           datetime.now(), 'disconnect', f'{guild_id},{gamertag}')
+                await conn.execute("""
+                                   INSERT INTO webserver.webevent(event_time, event, description)
+                                   VALUES($1, $2, $3)
+                                   """,
+                                   datetime.now(), 'disconnect', f'{guild_id},{gamertag}')
 
-        print(f'[WEBSERVER] Sent Disconnect Event for processing...')
+                print(f'[WEBSERVER] Sent Connect Event for processing...')
 
+            except TypeError:
+                return text('Make sure guild_id is an integer')
+        else:
+            return text('Include args gamertag and guild_id. Example: thorny-wbs:8000/connect?gamertag=ABC&guild_id=123')
     return sanicjson({"Accept": True})
 
 
-@app.post('/<guild_id:str>/disconnect/all')
-async def disconnect_all(request: Request, guild_id: str):
+@app.post('/disconnect/all')
+async def log_disconnect_all(request: Request):
+    """
+    Arguments: guild_id
+    :param request:
+    :return:
+    """
     async with webserver_pool.connection() as conn:
-        guild_id = int(guild_id[12:-3])
+        if request.args.get('guild_id', None):
+            try:
+                guild_id = int(request.args['guild_id'][0])
 
-        await conn.execute("""
-                           INSERT INTO webserver.webevent(event_time, event, description)
-                           VALUES($1, $2, $3)
-                           """,
-                           datetime.now(), 'disconnect all', f'{guild_id}')
+                await conn.execute("""
+                                   INSERT INTO webserver.webevent(event_time, event, description)
+                                   VALUES($1, $2, $3)
+                                   """,
+                                   datetime.now(), 'disconnect all', f'{guild_id}')
 
-        print(f'[WEBSERVER] Sent Disconnect All Event for processing...')
+                print(f'[WEBSERVER] Sent Connect Event for processing...')
 
+            except TypeError:
+                return text('Make sure guild_id is an integer')
+        else:
+            return text('Include args guild_id. Example: thorny-wbs:8000/connect?gamertag=ABC&guild_id=123')
     return sanicjson({"Accept": True})
 
 
-@app.get('/<guild_id:str>/commands/server')
-async def server_commands(request: Request, guild_id: str):
-    async with webserver_pool.connection() as conn:
-        guild_id = int(guild_id[12:-3])
+@app.get('/player/playtime')
+async def get_playtime(request: Request):
+    """
+    Arguments: gamertag, guild_id
+    :param request:
+    :return:
+    """
+    ...
 
-        command_list = await conn.fetch("""
-                                        SELECT * FROM webserver.commands
-                                        WHERE type = 'server'
-                                        AND executed = false
-                                        AND failed = false
-                                        AND guild_id = $1
-                                        ORDER BY schedule ASC
-                                        """, guild_id)
 
-    return sanicjson({"commands": command_list})
+@app.get('/player/stats')
+async def get_player_statistics(request: Request):
+    """
+    Arguments: gamertag, guild_id
+
+    Returns the entirety of the player's statistics (blocks placed/broken, kills, deaths)
+    :param request:
+    :return:
+    """
+    ...
+
+
+@app.post('/player/stats')
+async def log_player_statistics(request: Request):
+    """
+    Arguments: gamertag, guild_id, posx, posy, posz, type, ref, mainhand
+
+    type must be either one of: place, mine, kill, die
+    ref will be either the block affected, entity affected or the cause of death if it is a fall for example
+
+    Logs a player statistic. Based on world events.
+    :param request:
+    :return:
+    """
+    return text("OK!")
 
 
 @app.listener('after_server_start')
