@@ -171,7 +171,45 @@ async def log_player_statistics(request: Request):
     :param request:
     :return:
     """
-    return text("OK!")
+    async with webserver_pool.connection() as conn:
+        if request.args.get('gamertag', None) and request.args.get('guild_id', None):
+            gamertag = request.args['gamertag'][0]
+            try:
+                guild_id = int(request.args['guild_id'][0])
+
+                thorny_user = await conn.fetchrow("""
+                                                  SELECT thorny.user.thorny_user_id FROM thorny.user
+                                                  INNER JOIN thorny.profile
+                                                  ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
+                                                  WHERE whitelisted_gamertag = $1
+                                                  AND thorny.user.guild_id = $2
+                                                  """,
+                                                  gamertag, guild_id)
+
+                type = request.args.get('type', None)
+                posx = int(request.args.get('posx', None))
+                posy = int(request.args.get('posy', None))
+                posz = int(request.args.get('posz', None))
+                ref = request.args.get('ref', None)
+                mainhand = request.args.get('mainhand', None)
+
+                await conn.execute("""
+                                   INSERT INTO thorny.gamestats(thorny_id, type, position_x, position_y, position_z, 
+                                                                reference, mainhand, time)
+                                   VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+                                   """,
+                                   int(thorny_user['thorny_user_id']), type, posx, posy, posz, ref, mainhand, datetime.now()
+                                   )
+
+
+                print(f'[WEBSERVER] Log game stat {type}, {ref}')
+
+            except TypeError:
+                return text('Make sure guild_id is an integer')
+        else:
+            return text('Include args gamertag and guild_id. Example: thorny-wbs:8000/connect?gamertag=ABC&guild_id=123')
+    return sanicjson({"Accept": True})
+
 
 
 @app.listener('after_server_start')
