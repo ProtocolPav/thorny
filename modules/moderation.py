@@ -1,4 +1,5 @@
 import asyncio
+import math
 import random
 from datetime import datetime, timedelta
 
@@ -18,6 +19,8 @@ config = json.load(open("./../thorny_data/config.json", "r"))
 class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
+
+        self.pages = []
 
     @commands.slash_command(description='Strike someone for bad behaviour')
     @commands.has_permissions(administrator=True)
@@ -150,15 +153,9 @@ class Moderation(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext):
         gamertags = await UserFactory.get_gamertags(ctx.guild.id)
 
-        whitelist = []
-        for tag in gamertags:
-            whitelist.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
+        self.pages = []
 
-        gamertag_embed = discord.Embed(colour=0x64d5ac)
-        gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
-                                 value="\n".join(whitelist[0:1000]))
-
-        total_pages = len(gamertags) // 10
+        total_pages = math.ceil(len(gamertags) / 10)
         for page in range(1, total_pages + 1):
             start = page * 10 - 10
             stop = page * 10
