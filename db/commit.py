@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from thorny_core.db.user import User, InventorySlot, Strike
+from thorny_core.db.user import User, Strike
 from thorny_core.db.guild import Guild
 from thorny_core.db.project import Project
 
