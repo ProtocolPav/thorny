@@ -190,8 +190,8 @@ def redeem_items(thorny_user: User):
 
     return return_list
 
-def all_quests():
-    quests = asyncio.get_event_loop().run_until_complete(QuestFactory.fetch_available_quests())
+async def all_quests():
+    quests = await QuestFactory.fetch_available_quests()
 
     return_list = []
     for quest in quests:
