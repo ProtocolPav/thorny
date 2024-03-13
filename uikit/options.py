@@ -8,6 +8,8 @@ Make everything a function which returns the things needed, and rename the file 
 import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
+
+from thorny_core.db.factory import QuestFactory
 from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core.db import User
 
@@ -185,5 +187,15 @@ def redeem_items(thorny_user: User):
             return_list.append(SelectOption(label=item.item_display_name,
                                             value=item.item_id,
                                             description=item.description))
+
+    return return_list
+
+def all_quests():
+    quests = asyncio.get_event_loop().run_until_complete(QuestFactory.fetch_available_quests())
+
+    return_list = []
+    for quest in quests:
+        return_list.append(SelectOption(label=quest.title,
+                                        value=str(quest.id)))
 
     return return_list

@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
 from thorny_core.db.project import Project
+from thorny_core.db.quest import Quest
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core import errors
@@ -517,3 +518,30 @@ class ProjectFactory:
                                                  thorny_user.thorny_id, "building application")
 
                 return await ProjectFactory.build(project_id[0], thorny_user)
+
+
+class QuestFactory:
+    @classmethod
+    async def build(cls, quest_id: int):
+        async with pool_wrapper.connection() as conn:
+            quest_data = await conn.fetchrow("""
+                                             SELECT * FROM thorny.quests
+                                             WHERE id = $1
+                                             """,
+                                             quest_id)
+
+            return Quest(quest_data)
+
+    @classmethod
+    async def fetch_available_quests(cls):
+        async with pool_wrapper.connection() as conn:
+            quest_ids = await conn.fetch("""
+                                         SELECT id FROM thorny.quests
+                                         WHERE end_time > now()
+                                         """)
+
+            quests = []
+            for i in quest_ids:
+                quests.append(await QuestFactory.build(i['id']))
+
+            return quests

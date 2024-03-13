@@ -4,6 +4,9 @@ from thorny_core import uikit
 from thorny_core.db import GuildFactory, UserFactory, ProjectFactory
 from datetime import datetime
 
+from thorny_core.db.factory import QuestFactory
+
+
 class Other(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -54,8 +57,6 @@ class Other(commands.Cog):
 
         await ctx.respond(embed=uikit.project_embed(project))
 
-
-
     @project.command(description="COMING SOON! Give a project progress update",
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def progress(self, ctx: discord.ApplicationContext):
@@ -65,3 +66,13 @@ class Other(commands.Cog):
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def complete(self, ctx: discord.ApplicationContext):
         ...
+
+    quests = discord.SlashCommandGroup("quests", "Quest Commands")
+
+    @quests.command(description="View the currently available quests",
+                    guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def view(self, ctx: discord.ApplicationContext):
+        quests = await QuestFactory.fetch_available_quests()
+
+        await ctx.respond(embed=uikit.quests_overview(quests),
+                          view=uikit.QuestPanel(ctx))
