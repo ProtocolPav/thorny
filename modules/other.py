@@ -74,5 +74,7 @@ class Other(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext):
         quests = await QuestFactory.fetch_available_quests()
 
+        view = uikit.QuestPanel(ctx)
+        await view.update_view()
         await ctx.respond(embed=uikit.quests_overview(quests),
-                          view=uikit.QuestPanel(ctx))
+                          view=view)

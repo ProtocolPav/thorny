@@ -689,8 +689,10 @@ class QuestPanel(View):
         self.ctx = context
         self.quest_id = 0
 
-    @discord.ui.select(placeholder="View more info about a Quest",
-                       options=options.all_quests())
+    async def update_view(self):
+        self.children[0].options = await options.all_quests()
+
+    @discord.ui.select(placeholder="View more info about a Quest")
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
         self.quest_id = int(select_menu.values[0])
 
