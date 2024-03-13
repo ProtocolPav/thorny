@@ -5,6 +5,7 @@ from discord.ui import View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
+from thorny_core.db.factory import QuestFactory
 from thorny_core.uikit import embeds, options
 from thorny_core.db import User, UserFactory, GuildFactory, Guild, Project, ProjectFactory
 from thorny_core import errors
@@ -680,6 +681,21 @@ class ServerSetup(View):
             case "currency":
                 await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
                                                         view=SetupCurrency(thorny_guild))
+
+
+class QuestPanel(View):
+    def __init__(self, context: discord.ApplicationContext):
+        super().__init__(timeout=30.0)
+        self.ctx = context
+        self.quest_id = 0
+
+    @discord.ui.select(placeholder="View more info about a Quest",
+                       options=options.all_quests())
+    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
+        self.quest_id = int(select_menu.values[0])
+
+        await interaction.response.edit_message(view=self,
+                                                embed=embeds.quest(await QuestFactory.build(self.quest_id)))
 
 
 class Store(View):

@@ -7,6 +7,8 @@ from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
 import random
 
+from thorny_core.db.quest import Quest
+
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
 config = json.load(open('../thorny_data/config.json', 'r+'))
@@ -668,5 +670,36 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
     elif online_text != "":
         embed.add_field(name="**Connected Players**\n",
                         value=online_text, inline=False)
+
+    return embed
+
+
+def quests_overview(quests: list[Quest]):
+    embed = discord.Embed(colour=0x800080, title="Available Quests",
+                          description="To see more details about a certain quest, select it in the selector!")
+
+    TEXTLIMIT = 50
+
+    for quest in quests:
+        if len(quest.description) > TEXTLIMIT:
+            description = f'{quest.description[0:TEXTLIMIT]}...'
+        else:
+            description = quest.description
+
+        embed.add_field(name=quest.title,
+                        value=f"```{description}```",
+                        inline=False)
+
+    return embed
+
+
+def quest(quest: Quest):
+    embed = discord.Embed(colour=0x800080, title=quest.title)
+
+    embed.add_field(name='Description',
+                    value=f"```{quest.description}```",
+                    inline=False)
+    embed.add_field(name='Objective',
+                    value=quest.get_objective())
 
     return embed
