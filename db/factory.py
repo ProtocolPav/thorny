@@ -556,3 +556,12 @@ class QuestFactory:
                 quests.append(await QuestFactory.build(i['id']))
 
             return quests
+
+    @classmethod
+    async def create_new_user_quest(cls, quest_id: int, thorny_id: int):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.userquests(quest_id, accepted_on, thorny_id)
+                               VALUES($1, $2, $3)
+                               """,
+                               quest_id, datetime.now(), thorny_id)
