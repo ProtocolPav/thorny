@@ -2,12 +2,13 @@ import discord
 import json
 
 from datetime import datetime, timedelta
+import time
 from dateutil.relativedelta import relativedelta
 from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
 import random
 
-from thorny_core.db.quest import Quest
+from thorny_core.db.quest import PlayerQuest, Quest
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -675,7 +676,8 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
 
 def quests_overview(quests: list[Quest]):
-    embed = discord.Embed(colour=0x800080, title="Available Quests",
+    embed = discord.Embed(colour=0xE0B0FF,
+                          title="Available Quests",
                           description="To see more details about a certain quest, select it in the selector!")
 
     TEXTLIMIT = 50
@@ -693,13 +695,49 @@ def quests_overview(quests: list[Quest]):
     return embed
 
 
-def quest(quest: Quest):
-    embed = discord.Embed(colour=0x800080, title=quest.title)
+def view_quest(quest: Quest, money_symbol: str):
+    times = quest.end - datetime.now()
+    embed = discord.Embed(colour=0xE0B0FF,
+                          title=quest.title,
+                          description=f"*This quest will become unavailable <t:{int(time.time() + times.total_seconds())}:R>. "
+                                      f"Accept it before time runs out!*")
 
-    embed.add_field(name='Description',
+    embed.add_field(name='🔖 Description',
                     value=f"```{quest.description}```",
                     inline=False)
-    embed.add_field(name='Objective',
-                    value=quest.get_objective())
+    embed.add_field(name='🎯 Objective',
+                    value=quest.get_objective(),
+                    inline=False)
+    embed.add_field(name='💎 Rewards',
+                    value=quest.get_rewards(money_symbol),
+                    inline=False)
+
+    return embed
+
+
+def quest_progress(quest: PlayerQuest, money_symbol: str):
+    embed = discord.Embed(colour=0xE0B0FF,
+                          title=quest.title)
+
+    time_left =''
+    if quest.timer and quest.started_on:
+        time_left = f"\n**Time Left:** {quest.started_on - quest.timer}"
+    elif quest.timer and not quest.started_on:
+        time_left = (f"\n**Time Left:** {quest.timer}\n"
+                     f"*Timer starts when you start the quest. e.g when you kill your first mob*")
+
+    embed.add_field(name='🔖 Description',
+                    value=f"```{quest.description}```",
+                    inline=False)
+    embed.add_field(name='🎯 Objective',
+                    value=quest.get_objective(),
+                    inline=False)
+    embed.add_field(name='⏱️ Progress',
+                    value=f"{quest.completion_count}/{quest.objective_count}{time_left}"
+                          f"",
+                    inline=False)
+    embed.add_field(name='💎 Rewards',
+                    value=quest.get_rewards(money_symbol),
+                    inline=False)
 
     return embed

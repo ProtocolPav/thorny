@@ -118,11 +118,21 @@ class UserFactory:
                                        WHERE thorny_user_id = $1
                                        """,
                                        thorny_id)
+
             counters = await conn.fetch("""
                                         SELECT * from thorny.counter
                                         WHERE thorny_user_id = $1
                                         """,
                                         thorny_id)
+
+            current_quest = await conn.fetchrow("""
+                                                SELECT * FROM thorny.userquests
+                                                INNER JOIN thorny.quests ON thorny.quests.id = thorny.userquests.quest_id
+                                                WHERE thorny.userquests.thorny_id = $1
+                                                AND thorny.userquests.status is null
+                                                """,
+                                                thorny_id)
+
             return User(pool=pool_wrapper,
                         member=member,
                         thorny_user=thorny_user,
@@ -136,7 +146,8 @@ class UserFactory:
                         current_connection=current_connection,
                         unfulfilled_connections=unfulfilled_connections,
                         strikes=strikes,
-                        counters=counters)
+                        counters=counters,
+                        current_quest=current_quest)
 
     @classmethod
     async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:

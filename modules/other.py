@@ -72,9 +72,14 @@ class Other(commands.Cog):
     @quests.command(description="View the currently available quests",
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def view(self, ctx: discord.ApplicationContext):
-        quests = await QuestFactory.fetch_available_quests()
+        thorny_user = await UserFactory.build(ctx.user)
 
-        view = uikit.QuestPanel(ctx)
-        await view.update_view()
-        await ctx.respond(embed=uikit.quests_overview(quests),
-                          view=view)
+        if thorny_user.quest:
+            await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji))
+        else:
+            quests = await QuestFactory.fetch_available_quests()
+
+            view = uikit.QuestPanel(ctx, thorny_user.guild)
+            await view.update_view()
+            await ctx.respond(embed=uikit.quests_overview(quests),
+                              view=view)

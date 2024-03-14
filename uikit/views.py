@@ -684,10 +684,14 @@ class ServerSetup(View):
 
 
 class QuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild):
         super().__init__(timeout=30.0)
         self.ctx = context
+        self.thorny_guild = thorny_guild
         self.quest_id = 0
+
+    async def on_timeout(self):
+        self.disable_all_items()
 
     async def update_view(self):
         self.children[0].options = await options.all_quests()
@@ -697,7 +701,16 @@ class QuestPanel(View):
         self.quest_id = int(select_menu.values[0])
 
         await interaction.response.edit_message(view=self,
-                                                embed=embeds.quest(await QuestFactory.build(self.quest_id)))
+                                                embed=embeds.view_quest(await QuestFactory.build(self.quest_id),
+                                                                        self.thorny_guild.currency.emoji))
+
+    @discord.ui.button(label="Accept Quest",
+                       custom_id="accept",
+                       emoji="✨",
+                       style=discord.ButtonStyle.blurple,
+                       disabled=True)
+    async def accept_callback(self, button: Button, interaction: discord.Interaction):
+        ...
 
 
 class Store(View):
