@@ -1,9 +1,7 @@
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, date
-from thorny_core.db.poolwrapper import PoolWrapper
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 import asyncpg as pg
-from thorny_core.db.user import User
 import discord
 
 
@@ -50,8 +48,30 @@ class Quest:
             mainhand = self.mainhand.split('minecraft:')[1].capitalize().replace('_', ' ')
             extra_requirements.append(f'using **{mainhand}**')
         if self.location:
-            extra_requirements.append(f'around the coordinates **{self.location[0]}x, {self.location[1]}z**')
+            extra_requirements.append(f'around the coordinates **{int(self.location[0])}, {int(self.location[1])}**')
         if self.timer:
             extra_requirements.append(f'with a time limit of {self.timer}')
 
-        return f'{self.objective_type.capitalize()} {self.objective_count} **{objective}** {" ".join(extra_requirements)}'
+        return f'{self.objective_type.capitalize()} {self.objective_count} **{objective}(s)** {" ".join(extra_requirements)}'
+
+    def get_rewards(self, money_symbol: str):
+        if self.nugs_reward:
+            return f"{self.nugs_reward} {money_symbol}"
+        elif self.item_reward:
+            item = self.item_reward.split('minecraft:')[1].capitalize().replace('_', ' ')
+            return f"{self.item_reward_count} {item}(s)"
+        else:
+            return "There are no rewards available for this quest."
+
+
+@dataclass
+class PlayerQuest(Quest):
+    completion_count: int
+    accepted_on: datetime
+    started_on: datetime
+
+    def __init__(self, record: pg.Record):
+        super().__init__(record)
+        self.completion_count = record['completion_count']
+        self.started_on = record['started_on']
+        self.accepted_on = record['accepted_on']

@@ -9,6 +9,7 @@ import discord
 from thorny_core import errors
 from thorny_core.db.guild import Guild
 from thorny_core.db.poolwrapper import PoolWrapper
+from thorny_core.db.quest import PlayerQuest
 
 
 class Time:
@@ -252,6 +253,7 @@ class User:
     playtime: Playtime
     strikes: Strikes
     counters: Counters
+    quest: PlayerQuest = None
 
     def __init__(self,
                  pool: PoolWrapper,
@@ -267,7 +269,8 @@ class User:
                  current_connection: pg.Record,
                  unfulfilled_connections: pg.Record,
                  strikes: pg.Record,
-                 counters: pg.Record
+                 counters: pg.Record,
+                 current_quest: pg.Record
                  ):
         self.connection_pool = pool
         self.discord_member = member
@@ -290,6 +293,8 @@ class User:
                                  unfulfilled_connections=unfulfilled_connections, daily_playtime=daily_playtime)
         self.strikes = Strikes(strikes=strikes)
         self.counters = Counters(counters=counters)
+        if current_quest is not None:
+            self.quest = PlayerQuest(current_quest)
 
     async def update(self, attribute, value):
         self.__setattr__(attribute, value)
