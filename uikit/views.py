@@ -684,10 +684,11 @@ class ServerSetup(View):
 
 
 class QuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
         super().__init__(timeout=30.0)
         self.ctx = context
         self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
         self.quest_id = 0
 
     async def on_timeout(self):
@@ -696,9 +697,16 @@ class QuestPanel(View):
     async def update_view(self):
         self.children[0].options = await options.all_quests()
 
+    async def update_buttons(self):
+        accept_button = [x for x in self.children if x.custom_id == "accept"][0]
+
+        if self.quest_id != 0 and self.thorny_user.quest is None:
+            accept_button.disabled = False
+
     @discord.ui.select(placeholder="View more info about a Quest")
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
         self.quest_id = int(select_menu.values[0])
+        await self.update_buttons()
 
         await interaction.response.edit_message(view=self,
                                                 embed=embeds.view_quest(await QuestFactory.build(self.quest_id),
@@ -710,7 +718,13 @@ class QuestPanel(View):
                        style=discord.ButtonStyle.blurple,
                        disabled=True)
     async def accept_callback(self, button: Button, interaction: discord.Interaction):
-        ...
+        if self.thorny_user.quest is None and interaction.user.id == self.thorny_user.user_id:
+            await QuestFactory.create_new_user_quest(self.quest_id, self.thorny_user.thorny_id)
+            self.thorny_user = await UserFactory.build(self.thorny_user.discord_member)
+
+        await interaction.response.edit_message(view=None,
+                                                embed=embeds.quest_progress(self.thorny_user.quest,
+                                                                            self.thorny_guild.currency.emoji))
 
 
 class Store(View):

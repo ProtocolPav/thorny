@@ -75,11 +75,13 @@ class Other(commands.Cog):
         thorny_user = await UserFactory.build(ctx.user)
 
         if thorny_user.quest:
-            await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji))
+            await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
+                              ephemeral=True)
         else:
             quests = await QuestFactory.fetch_available_quests()
 
-            view = uikit.QuestPanel(ctx, thorny_user.guild)
+            view = uikit.QuestPanel(ctx, thorny_user.guild, thorny_user)
             await view.update_view()
             await ctx.respond(embed=uikit.quests_overview(quests),
-                              view=view)
+                              view=view,
+                              ephemeral=True)
