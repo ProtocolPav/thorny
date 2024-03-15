@@ -721,7 +721,8 @@ def quest_progress(quest: PlayerQuest, money_symbol: str):
 
     time_left =''
     if quest.timer and quest.started_on:
-        time_left = f"\n**Time Left:** {quest.started_on - quest.timer}"
+        subtraction = datetime.now().replace(microsecond=0) - quest.started_on.replace(microsecond=0)
+        time_left = f"\n**Time Left:** {quest.timer - subtraction}"
     elif quest.timer and not quest.started_on:
         time_left = (f"\n**Time Left:** {quest.timer}\n"
                      f"*Timer starts when you start the quest. e.g when you kill your first mob*")
