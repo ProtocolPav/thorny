@@ -164,6 +164,12 @@ async def on_message(message: discord.Message):
 
             await gain_xp_event.log()
 
+        if message.channel.id == thorny_guild.channels.get_channel('thorny_updates') and message.content:
+            if 'http' not in message.content:
+                async with httpx.AsyncClient() as client:
+                    r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+                                         params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
+
 
 @thorny.event
 async def on_message_delete(message: discord.Message):

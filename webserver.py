@@ -322,6 +322,19 @@ async def log_player_statistics(request: Request):
     return sanicjson({"Accept": True})
 
 
+@app.post('/chat/message')
+async def relay_chat(request: Request):
+    body = request.json
+    WEBHOOK_URL = 'https://discord.com/api/webhooks/1218258578003984445/zhuqJ3pUYTdvt-YNC1D82fPE9uV-mVguqdun1-3mjV8jKGuunAZt8xmAb1-W0F3QLSJE'
+
+    async with httpx.AsyncClient() as client:
+        r = await client.post(WEBHOOK_URL, timeout=None,
+                              data={'content': f"{body['content']}",
+                                    'username': f"[Server] {body['name']}"})
+
+    return text('OK!')
+
+
 
 @app.listener('after_server_start')
 async def start_bot(application: Sanic, loop: asyncio.AbstractEventLoop):
