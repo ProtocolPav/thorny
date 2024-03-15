@@ -173,7 +173,9 @@ async def check_quest_progress(thorny_id: int, pos: tuple[int, int, int], event_
                                             thorny_id)
 
         if current_quest is not None and event_type == current_quest['objective_type']:
-            ref_check = ref == current_quest['objective']
+            # Checks if the objective is a part of the reference. Meaning, if the objective is copper_block
+            # then weathered_copper_block would also be accepted
+            ref_check = current_quest['objective'].split('minecraft:')[1] in ref
 
             # Check if a mainhand exists, the kill was done with that in hand
             if current_quest['required_mainhand'] is None:
@@ -215,8 +217,9 @@ async def check_quest_progress(thorny_id: int, pos: tuple[int, int, int], event_
                                             AND position_y = $2
                                             AND position_z = $3
                                             AND type = 'place'
+                                            AND reference = $4
                                             """,
-                                            pos[0], pos[1], pos[2])
+                                            pos[0], pos[1], pos[2], ref)
 
                 if block:
                     block_check = False
