@@ -190,8 +190,8 @@ def redeem_items(thorny_user: User):
 
     return return_list
 
-async def all_quests():
-    quests = await QuestFactory.fetch_available_quests()
+async def all_quests(thorny_id: int):
+    quests = await QuestFactory.fetch_available_quests(thorny_id)
 
     return_list = []
     for quest in quests:

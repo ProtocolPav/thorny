@@ -78,7 +78,7 @@ class Other(commands.Cog):
             await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
                               ephemeral=True)
         else:
-            quests = await QuestFactory.fetch_available_quests()
+            quests = await QuestFactory.fetch_available_quests(thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_user.guild, thorny_user)
             await view.update_view()

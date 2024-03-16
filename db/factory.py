@@ -544,12 +544,17 @@ class QuestFactory:
             return Quest(quest_data)
 
     @classmethod
-    async def fetch_available_quests(cls):
+    async def fetch_available_quests(cls, thorny_id: int):
         async with pool_wrapper.connection() as conn:
             quest_ids = await conn.fetch("""
                                          SELECT id FROM thorny.quests
                                          WHERE end_time > now()
-                                         """)
+                                         AND id NOT IN (
+                                         	SELECT quest_id FROM thorny.userquests
+                                         	WHERE thorny_id = $1
+                                         )
+                                         """,
+                                         thorny_id)
 
             quests = []
             for i in quest_ids:
