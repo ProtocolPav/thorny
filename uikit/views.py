@@ -695,7 +695,7 @@ class QuestPanel(View):
         self.disable_all_items()
 
     async def update_view(self):
-        self.children[0].options = await options.all_quests()
+        self.children[0].options = await options.all_quests(self.thorny_user.thorny_id)
 
     async def update_buttons(self):
         accept_button = [x for x in self.children if x.custom_id == "accept"][0]
