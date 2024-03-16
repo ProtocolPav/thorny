@@ -267,6 +267,14 @@ async def check_quest_progress(thorny_id: int, pos: tuple[int, int, int], event_
                                        """,
                                        thorny_id, current_quest['quest_id'])
 
+                    if current_quest['balance_reward']:
+                        await conn.execute("""
+                                           UPDATE thorny.user
+                                           SET balance = balance + $1
+                                           WHERE thorny_user_id = $2
+                                           """,
+                                           current_quest['balance_reward'], thorny_id)
+
 
 @app.post('/player/stats')
 async def log_player_statistics(request: Request):

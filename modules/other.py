@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from thorny_core import uikit
 from thorny_core.db import GuildFactory, UserFactory, ProjectFactory
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from thorny_core.db.factory import QuestFactory
 
@@ -89,17 +89,40 @@ class Other(commands.Cog):
     @quests.command(description="CM ONLY | Create a new quest",
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
-    async def create(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
-
-        if thorny_user.quest:
-            await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
-                              ephemeral=True)
+    async def create(self, ctx: discord.ApplicationContext,
+                     title: discord.Option(str, "Make a cool title for this quest"),
+                     description: discord.Option(str, "Give it an interesting description"),
+                     objective: discord.Option(str, "Use minecraft IDs!!! Include minecraft: as a prefix"),
+                     amount: discord.Option(int, "How much of the objective should people have to complete?"),
+                     objective_type: discord.Option(str, "Select a type", choices=['mine', 'kill']),
+                     nugs: discord.Option(int, "How many nugs to give as a reward") = None,
+                     item: discord.Option(str, "Use minecraft IDs!!! The item to give out as reward") = None,
+                     item_amount: discord.Option(int, "The amount of the item to give as a reward") = 1,
+                     mainhand: discord.Option(str, "Use minecraft IDs!!! Include minecraft: as a prefix") = None,
+                     location: discord.Option(str, "Please write X, Y, Z separated by commas") = None,
+                     radius: discord.Option(int, "The radius of the location area") = 100,
+                     timer: discord.Option(str, "Write a number with either m or h. e.g: 45m, 5h, 12h") = None):
+        if item and 'minecraft:' not in item:
+            item = f"minecraft:{item}"
+        if mainhand and 'minecraft:' not in mainhand:
+            mainhand = f"minecraft:{mainhand}"
+        if location:
+            splitted = location.split(',')
+            position = (int(splitted[0]), int(splitted[2]))
         else:
-            quests = await QuestFactory.fetch_available_quests()
+            position = None
+        if timer:
+            if 'm' in timer:
+                delta = timedelta(minutes=int(timer.split('m')[0]))
+            elif 'h' in timer:
+                delta = timedelta(hours=int(timer.split('h')[0]))
+            else:
+                delta = timedelta(hours=12)
+        else:
+            delta = None
 
-            view = uikit.QuestPanel(ctx, thorny_user.guild, thorny_user)
-            await view.update_view()
-            await ctx.respond(embed=uikit.quests_overview(quests),
-                              view=view,
-                              ephemeral=True)
+        await QuestFactory.create_new_quest(title, description, objective, amount, objective_type, nugs, item, item_amount,
+                                            mainhand, position, radius, delta)
+
+        await ctx.respond("Successfully created the quest. Run /quests view to check it out!",
+                          ephemeral=True)

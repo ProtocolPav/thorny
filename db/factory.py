@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 import discord
@@ -565,3 +565,17 @@ class QuestFactory:
                                VALUES($1, $2, $3)
                                """,
                                quest_id, datetime.now(), thorny_id)
+
+    @classmethod
+    async def create_new_quest(cls, title, description, objective, objective_amount, objective_type, nugs, item_reward,
+                               item_count, mainhand, location, radius, timer):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.quests(title, description, objective, objective_count, objective_type,
+                                                         balance_reward, item_reward, item_reward_count, required_mainhand,
+                                                         required_location, location_radius, required_timer, start_time,
+                                                         end_time)
+                               VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                               """,
+                               title, description, objective, objective_amount, objective_type, nugs, item_reward, item_count,
+                               mainhand, location, radius, timer, datetime.now(), datetime.now() + timedelta(weeks=1))
