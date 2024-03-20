@@ -75,3 +75,11 @@ class PlayerQuest(Quest):
         self.completion_count = record['completion_count']
         self.started_on = record['started_on']
         self.accepted_on = record['accepted_on']
+
+    def quest_fail_check(self) -> bool:
+        if self.timer:
+            if self.started_on is not None:
+                if datetime.now() - self.started_on >= self.timer:
+                    return False
+
+        return True

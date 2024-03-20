@@ -584,3 +584,14 @@ class QuestFactory:
                                """,
                                title, description, objective, objective_amount, objective_type, nugs, item_reward, item_count,
                                mainhand, location, radius, timer, datetime.now(), datetime.now() + timedelta(weeks=1))
+
+    @classmethod
+    async def fail_user_quest(cls, quest_id: int, thorny_id: int):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               UPDATE thorny.userquests
+                               SET status = False
+                               WHERE thorny_id = $2
+                               AND quest_id = $1
+                               """,
+                               quest_id, thorny_id)

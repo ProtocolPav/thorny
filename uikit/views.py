@@ -722,9 +722,40 @@ class QuestPanel(View):
             await QuestFactory.create_new_user_quest(self.quest_id, self.thorny_user.thorny_id)
             self.thorny_user = await UserFactory.build(self.thorny_user.discord_member)
 
-        await interaction.response.edit_message(view=None,
+        await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user),
                                                 embed=embeds.quest_progress(self.thorny_user.quest,
                                                                             self.thorny_guild.currency.emoji))
+
+
+class CurrentQuestPanel(View):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+        super().__init__(timeout=30.0)
+        self.ctx = context
+        self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
+        self.warned = False
+
+    async def on_timeout(self):
+        self.disable_all_items()
+
+    @discord.ui.button(label="Drop Quest",
+                       custom_id="drop",
+                       style=discord.ButtonStyle.red)
+    async def drop_callback(self, button: Button, interaction: discord.Interaction):
+        if not self.warned:
+            self.warned = True
+            await interaction.response.edit_message(embed=None,
+                                                    content=f"Are you sure you want to drop **{self.thorny_user.quest.title}**? "
+                                                            f"You won't be able to re-accept this quest ever again!!!\n\n"
+                                                            f"Press the **Drop Quest** button again if you want to drop it, or "
+                                                            f"dismiss this message to keep your quest going.")
+        else:
+            await QuestFactory.fail_user_quest(self.thorny_user.quest.id, self.thorny_user.thorny_id)
+
+            await interaction.response.edit_message(view=None,
+                                                    embed=None,
+                                                    content=f"You dropped **{self.thorny_user.quest.title}**. "
+                                                            f"Run `/quests view` to accept another quest!")
 
 
 class Store(View):
