@@ -333,7 +333,8 @@ async def log_player_statistics(request: Request):
 @app.post('/chat/message')
 async def relay_chat(request: Request):
     body = request.json
-    WEBHOOK_URL = 'https://discord.com/api/webhooks/1218471204524916780/hR-9wNCvJwJwHcSN7Au6b9U_irY8_8JZlg8_YCKQNBzlf4lnHr74gnYnw-C67LPlDHZG'
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    WEBHOOK_URL = config['webhook']
 
     async with httpx.AsyncClient() as client:
         r = await client.post(WEBHOOK_URL, timeout=None,
