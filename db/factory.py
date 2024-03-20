@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 import discord
@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
 from thorny_core.db.project import Project
+from thorny_core.db.quest import Quest
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
 from thorny_core import errors
@@ -117,11 +118,21 @@ class UserFactory:
                                        WHERE thorny_user_id = $1
                                        """,
                                        thorny_id)
+
             counters = await conn.fetch("""
                                         SELECT * from thorny.counter
                                         WHERE thorny_user_id = $1
                                         """,
                                         thorny_id)
+
+            current_quest = await conn.fetchrow("""
+                                                SELECT * FROM thorny.userquests
+                                                INNER JOIN thorny.quests ON thorny.quests.id = thorny.userquests.quest_id
+                                                WHERE thorny.userquests.thorny_id = $1
+                                                AND thorny.userquests.status is null
+                                                """,
+                                                thorny_id)
+
             return User(pool=pool_wrapper,
                         member=member,
                         thorny_user=thorny_user,
@@ -135,7 +146,8 @@ class UserFactory:
                         current_connection=current_connection,
                         unfulfilled_connections=unfulfilled_connections,
                         strikes=strikes,
-                        counters=counters)
+                        counters=counters,
+                        current_quest=current_quest)
 
     @classmethod
     async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
@@ -517,3 +529,69 @@ class ProjectFactory:
                                                  thorny_user.thorny_id, "building application")
 
                 return await ProjectFactory.build(project_id[0], thorny_user)
+
+
+class QuestFactory:
+    @classmethod
+    async def build(cls, quest_id: int):
+        async with pool_wrapper.connection() as conn:
+            quest_data = await conn.fetchrow("""
+                                             SELECT * FROM thorny.quests
+                                             WHERE id = $1
+                                             """,
+                                             quest_id)
+
+            return Quest(quest_data)
+
+    @classmethod
+    async def fetch_available_quests(cls, thorny_id: int):
+        async with pool_wrapper.connection() as conn:
+            quest_ids = await conn.fetch("""
+                                         SELECT id FROM thorny.quests
+                                         WHERE end_time > now()
+                                         AND id NOT IN (
+                                         	SELECT quest_id FROM thorny.userquests
+                                         	WHERE thorny_id = $1
+                                         )
+                                         """,
+                                         thorny_id)
+
+            quests = []
+            for i in quest_ids:
+                quests.append(await QuestFactory.build(i['id']))
+
+            return quests
+
+    @classmethod
+    async def create_new_user_quest(cls, quest_id: int, thorny_id: int):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.userquests(quest_id, accepted_on, thorny_id)
+                               VALUES($1, $2, $3)
+                               """,
+                               quest_id, datetime.now(), thorny_id)
+
+    @classmethod
+    async def create_new_quest(cls, title, description, objective, objective_amount, objective_type, nugs, item_reward,
+                               item_count, mainhand, location, radius, timer):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               INSERT INTO thorny.quests(title, description, objective, objective_count, objective_type,
+                                                         balance_reward, item_reward, item_reward_count, required_mainhand,
+                                                         required_location, location_radius, required_timer, start_time,
+                                                         end_time)
+                               VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                               """,
+                               title, description, objective, objective_amount, objective_type, nugs, item_reward, item_count,
+                               mainhand, location, radius, timer, datetime.now(), datetime.now() + timedelta(weeks=1))
+
+    @classmethod
+    async def fail_user_quest(cls, quest_id: int, thorny_id: int):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               UPDATE thorny.userquests
+                               SET status = False
+                               WHERE thorny_id = $2
+                               AND quest_id = $1
+                               """,
+                               quest_id, thorny_id)
