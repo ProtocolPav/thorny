@@ -73,11 +73,17 @@ class Other(commands.Cog):
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def view(self, ctx: discord.ApplicationContext):
         thorny_user = await UserFactory.build(ctx.user)
+        display_quests_overview = True
 
         if thorny_user.quest:
-            await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
-                              ephemeral=True)
-        else:
+            if thorny_user.quest.quest_fail_check():
+                await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
+                                  ephemeral=True)
+                display_quests_overview = False
+            else:
+                await QuestFactory.fail_user_quest(thorny_user.quest.id, thorny_user.thorny_id)
+
+        if display_quests_overview:
             quests = await QuestFactory.fetch_available_quests(thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_user.guild, thorny_user)
