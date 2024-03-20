@@ -1085,7 +1085,7 @@ class HelpDropdown(View):
             self.commands[cog_name] = []
 
             for command in client.get_cog(cog_name).walk_commands():
-                if isinstance(command, discord.SlashCommand) and guild_id in command.guild_ids:
+                if isinstance(command, discord.SlashCommand) and command.guild_ids and guild_id in command.guild_ids:
                     self.commands[cog_name].append({"command_name": f'</{command.qualified_name}:{command.qualified_id}>',
                                                     "description": command.description})
 
