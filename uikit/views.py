@@ -5,6 +5,7 @@ from discord.ui import View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.db.commit import commit
+from thorny_core.db.factory import QuestFactory
 from thorny_core.uikit import embeds, options
 from thorny_core.db import User, UserFactory, GuildFactory, Guild, Project, ProjectFactory
 from thorny_core import errors
@@ -682,6 +683,87 @@ class ServerSetup(View):
                                                         view=SetupCurrency(thorny_guild))
 
 
+class QuestPanel(View):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+        super().__init__(timeout=30.0)
+        self.ctx = context
+        self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
+        self.quest_id = 0
+
+    async def on_timeout(self):
+        self.disable_all_items()
+
+    async def update_view(self):
+        all_quests = await options.all_quests(self.thorny_user.thorny_id)
+        if len(all_quests) == 0:
+            self.children[0].options = [discord.SelectOption(label='No quests!',
+                                                             value='none...')]
+            self.disable_all_items()
+        else:
+            self.children[0].options = await options.all_quests(self.thorny_user.thorny_id)
+
+    async def update_buttons(self):
+        accept_button = [x for x in self.children if x.custom_id == "accept"][0]
+
+        if self.quest_id != 0 and self.thorny_user.quest is None:
+            accept_button.disabled = False
+
+    @discord.ui.select(placeholder="View more info about a Quest")
+    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
+        self.quest_id = int(select_menu.values[0])
+        await self.update_buttons()
+
+        await interaction.response.edit_message(view=self,
+                                                embed=embeds.view_quest(await QuestFactory.build(self.quest_id),
+                                                                        self.thorny_guild.currency.emoji))
+
+    @discord.ui.button(label="Accept Quest",
+                       custom_id="accept",
+                       emoji="✨",
+                       style=discord.ButtonStyle.blurple,
+                       disabled=True)
+    async def accept_callback(self, button: Button, interaction: discord.Interaction):
+        if self.thorny_user.quest is None and interaction.user.id == self.thorny_user.user_id:
+            await QuestFactory.create_new_user_quest(self.quest_id, self.thorny_user.thorny_id)
+            self.thorny_user = await UserFactory.build(self.thorny_user.discord_member)
+
+        await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user),
+                                                embed=embeds.quest_progress(self.thorny_user.quest,
+                                                                            self.thorny_guild.currency.emoji))
+
+
+class CurrentQuestPanel(View):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+        super().__init__(timeout=30.0)
+        self.ctx = context
+        self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
+        self.warned = False
+
+    async def on_timeout(self):
+        self.disable_all_items()
+
+    @discord.ui.button(label="Drop Quest",
+                       custom_id="drop",
+                       style=discord.ButtonStyle.red)
+    async def drop_callback(self, button: Button, interaction: discord.Interaction):
+        if not self.warned:
+            self.warned = True
+            await interaction.response.edit_message(embed=None,
+                                                    content=f"Are you sure you want to drop **{self.thorny_user.quest.title}**? "
+                                                            f"You won't be able to re-accept this quest ever again!!!\n\n"
+                                                            f"Press the **Drop Quest** button again if you want to drop it, or "
+                                                            f"dismiss this message to keep your quest going.")
+        else:
+            await QuestFactory.fail_user_quest(self.thorny_user.quest.id, self.thorny_user.thorny_id)
+
+            await interaction.response.edit_message(view=None,
+                                                    embed=None,
+                                                    content=f"You dropped **{self.thorny_user.quest.title}**. "
+                                                            f"Run `/quests view` to accept another quest!")
+
+
 class Store(View):
     def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
         super().__init__(timeout=30.0)
@@ -1003,7 +1085,7 @@ class HelpDropdown(View):
             self.commands[cog_name] = []
 
             for command in client.get_cog(cog_name).walk_commands():
-                if isinstance(command, discord.SlashCommand) and guild_id in command.guild_ids:
+                if isinstance(command, discord.SlashCommand) and command.guild_ids and guild_id in command.guild_ids:
                     self.commands[cog_name].append({"command_name": f'</{command.qualified_name}:{command.qualified_id}>',
                                                     "description": command.description})
 
