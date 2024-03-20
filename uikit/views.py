@@ -695,7 +695,13 @@ class QuestPanel(View):
         self.disable_all_items()
 
     async def update_view(self):
-        self.children[0].options = await options.all_quests(self.thorny_user.thorny_id)
+        all_quests = await options.all_quests(self.thorny_user.thorny_id)
+        if len(all_quests) == 0:
+            self.children[0].options = [discord.SelectOption(label='No quests!',
+                                                             value='none...')]
+            self.disable_all_items()
+        else:
+            self.children[0].options = await options.all_quests(self.thorny_user.thorny_id)
 
     async def update_buttons(self):
         accept_button = [x for x in self.children if x.custom_id == "accept"][0]

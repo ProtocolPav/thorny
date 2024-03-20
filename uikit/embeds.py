@@ -692,6 +692,11 @@ def quests_overview(quests: list[Quest]):
                         value=f"```{description}```",
                         inline=False)
 
+    if len(quests) == 0:
+        embed.add_field(name='No quests available!',
+                        value=f"Quests usually get refreshed every week, so check back in a bit to see new ones!",
+                        inline=False)
+
     return embed
 
 
