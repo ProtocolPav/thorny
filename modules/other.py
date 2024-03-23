@@ -77,7 +77,9 @@ class Other(commands.Cog):
 
         if thorny_user.quest:
             if thorny_user.quest.quest_fail_check():
+                view = uikit.CurrentQuestPanel(ctx, thorny_user.guild, thorny_user)
                 await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
+                                  view=view,
                                   ephemeral=True)
                 display_quests_overview = False
             else:
@@ -131,4 +133,13 @@ class Other(commands.Cog):
                                             mainhand, position, radius, delta)
 
         await ctx.respond("Successfully created the quest. Run /quests view to check it out!",
+                          ephemeral=True)
+
+    @commands.slash_command(description="Place a bid in copper blocks",
+                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    async def bid(self, ctx: discord.ApplicationContext, amount: discord.Option(int, "Enter a bid amount in Copper Blocks.")):
+        chennel = ctx.guild.get_channel(1221157464225874071)
+        await chennel.send(content=f'**NEW BID**\nFrom: {ctx.user.mention} ({ctx.user.name})\nAmount: {amount} Copper Blocks')
+        await ctx.respond(content=f'You have placed a bid of {amount} Copper Blocks!'
+                                  f'Remember this bid because this message will not show again :))',
                           ephemeral=True)
