@@ -137,9 +137,22 @@ class Other(commands.Cog):
 
     @commands.slash_command(description="Place a bid in copper blocks",
                             guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def bid(self, ctx: discord.ApplicationContext, amount: discord.Option(int, "Enter a bid amount in Copper Blocks.")):
+    async def bid(self, ctx: discord.ApplicationContext,
+                  amount: discord.Option(int,
+                                         "Enter a bid amount in Copper Blocks."),
+                  unit: discord.Option(int,
+                                       "Put the number of the unit you are bidding on. Available: 1-8")):
         chennel = ctx.guild.get_channel(1221157464225874071)
-        await chennel.send(content=f'**NEW BID**\nFrom: {ctx.user.mention} ({ctx.user.name})\nAmount: {amount} Copper Blocks')
-        await ctx.respond(content=f'You have placed a bid of {amount} Copper Blocks!'
-                                  f'Remember this bid because this message will not show again :))',
+        await chennel.send(content=f'**Unit {unit}**\nFrom: {ctx.user.mention} ({ctx.user.name})\nAmount: {amount} Copper Blocks')
+        await ctx.respond(content=f'You have placed a bid of {amount} Copper Blocks for **Unit {unit}**!\n'
+                                  f'Use bluffing tactics to ensure that you will be the winner for this unit! '
+                                  f'Remember, it is storage WARS.\n'
+                                  f'## **Storage Wars: The Blind Bid Rules**'
+                                  f'- Nobody else knows how much you *actually* bid. So feel free to bluff!\n'
+                                  f'- Your most recent bid counts. You can bid higher or less than your previous bids\n'
+                                  f'- Make sure you can pay off your bid within 1 week of bidding closing, otherwise '
+                                  f'the unit will be sold to the second highest bidder\n'
+                                  f'- Bidding ends on <t:1713024000:f>. Bids placed after that will not count\n'
+                                  f'- Hint: There are many quests that give out Copper Blocks! Use `/quests view` to accept!\n'
+                                  f'*You should probably note down your bids since this message will disappear soon.*',
                           ephemeral=True)
