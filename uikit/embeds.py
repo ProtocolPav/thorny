@@ -67,7 +67,7 @@ async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embe
                               value=f'"{profile.aboutme or profile.default_aboutme}"',
                               inline=False)
 
-    main_page_embed.set_footer(text=f"{v} | Main Page")
+    main_page_embed.set_footer(text=f"Main Page")
 
     return main_page_embed
 
@@ -105,7 +105,7 @@ async def profile_lore_embed(thorny_user: user.User) -> discord.Embed:
                               value=f'"{thorny_user.profile.lore}"',
                               inline=False)
 
-    lore_page_embed.set_footer(text=f"{v} | Lore")
+    lore_page_embed.set_footer(text=f"Lore")
 
     return lore_page_embed
 
@@ -122,28 +122,50 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
 
     leaderboard, rank = await generator.activity_leaderboard(thorny_user, datetime.now())
 
-    stats_page_embed.add_field(name=f"**:clock8: Today's Roundup**",
-                               value=f"You played for **{thorny_user.playtime.todays_playtime}** today",
-                               inline=True)
-
     stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
                                value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
                                      f"**{last_month}:** {thorny_user.playtime.previous_playtime}\n"
-                                     f"**{two_months_ago}:** {thorny_user.playtime.expiring_playtime}\n"
-                                     f"**Total:** {thorny_user.playtime.total_playtime}\n",
+                                     f"**{two_months_ago}:** {thorny_user.playtime.expiring_playtime}\n",
                                inline=True)
 
-    stats_page_embed.add_field(name=f"**:clock8: Monthly Roundup**",
+    stats_page_embed.add_field(name=f"**:clock8: Playtime Roundup**",
                                value=f"You played for **{thorny_user.playtime.todays_playtime}** today\n"
-                                     f"You are #{rank} on {datetime.now().strftime('%B')}'s Leaderboard\n",
-                               inline=False)
+                                     f"You are #{rank} on {datetime.now().strftime('%B')}'s Leaderboard\n"
+                                     f"You played for a total of **{thorny_user.playtime.total_playtime}** on Everthorn!\n",
+                               inline=True)
 
-    stats_page_embed.add_field(name=f"**🔜 More Stats Coming Soon...**",
-                               value=f"I'm working *really* hard at analyzing your playtime. Soon I'll come back with"
-                                     f" more cool stats, and even a graph!",
-                               inline=False)
+    stats_page_embed.add_field(name=f"\t",
+                               value=f"\t")
 
-    stats_page_embed.set_footer(text=f"{v} | Playtime Stats")
+    stats_page_embed.add_field(name=f"**<:Gatherer:997595498963800145> Blocks Mined**",
+                               value=f"**Block 1:** ???\n"
+                                     f"**Block 2:** ???\n"
+                                     f"**Block 3:** ???\n"
+                                     f"**Total:** {45000:,}",
+                               inline=True)
+
+    stats_page_embed.add_field(name=f"**<:grassblock:1222769432774840340> Blocks Placed**",
+                               value=f"**Block 1:** ???\n"
+                                     f"**Block 2:** ???\n"
+                                     f"**Block 3:** ???\n"
+                                     f"**Total:** {45000:,}",
+                               inline=True)
+
+    stats_page_embed.add_field(name=f"\t",
+                               value=f"\t")
+
+    stats_page_embed.add_field(name=f"**<:Knight:997595500901568574> Kills**",
+                               value=f"**Total Kills:** {45000:,}",
+                               inline=True)
+
+    stats_page_embed.add_field(name=f"**:skull: Deaths**",
+                               value=f"**Total Deaths:** {123:,}",
+                               inline=True)
+
+    stats_page_embed.add_field(name=f"\t",
+                               value=f"\t")
+
+    stats_page_embed.set_footer(text=f"Playtime Stats")
 
     return stats_page_embed
 
@@ -154,9 +176,9 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
 
     edit_embed.add_field(name="It's simple, really!",
                          value=f"The Profile is separated into 3 pages:\n"
-                               f"<:_pink:921708790322192396> The Main Page, all about **YOU**\n"
-                               f"<:_purple:921708790368309269> The Lore Page, all about your character\n"
-                               f"<:_orange:921708790099898419> The Playtime Stats Page, which gives deep insight\n"
+                               f"- The Main Page, all about **YOU**\n"
+                               f"- The Lore Page, all about your character\n"
+                               f"- The Playtime Stats Page, which gives deep insight\n"
                                f"\nAnd so, the **Editing Menus** are split up just the same!\n"
                                f"You have 3 **select Menus** to choose from, for each of the 3 **pages**!\n\n"
                                f"**Now, just choose a section from the menus below and start editing!**")
