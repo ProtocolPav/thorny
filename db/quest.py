@@ -41,24 +41,30 @@ class Quest:
         self.item_reward_count = record['item_reward_count']
 
     def get_objective(self):
-        objective = self.objective.split('minecraft:')[1].capitalize().replace('_', ' ')
+        objective = self.objective.split(':')[1].capitalize().replace('_', ' ')
         extra_requirements = []
+        notes = []
 
         if self.mainhand:
-            mainhand = self.mainhand.split('minecraft:')[1].capitalize().replace('_', ' ')
+            mainhand = self.mainhand.split(':')[1].capitalize().replace('_', ' ')
             extra_requirements.append(f'using **{mainhand}**')
         if self.location:
             extra_requirements.append(f'around the coordinates **{int(self.location[0])}, {int(self.location[1])}**')
+            notes.append(f'*Note: The quest area is a circle with radius {self.location_radius} around the coordinates given*')
         if self.timer:
-            extra_requirements.append(f'with a time limit of {self.timer}')
+            hours, remainder = divmod(self.timer.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            extra_requirements.append(f'with a time limit of **{hours}h{minutes}m**')
+            notes.append(f'*Note: The time limit only begins when you {self.objective_count} 1 {objective}*')
 
-        return f'{self.objective_type.capitalize()} {self.objective_count} **{objective}(s)** {" ".join(extra_requirements)}'
+        return (f'{self.objective_type.capitalize()} {self.objective_count} **{objective}(s)** {" ".join(extra_requirements)}'
+                f'{"\n".join(notes)}')
 
     def get_rewards(self, money_symbol: str):
         if self.nugs_reward:
             return f"{self.nugs_reward} {money_symbol}"
         elif self.item_reward:
-            item = self.item_reward.split('minecraft:')[1].capitalize().replace('_', ' ')
+            item = self.item_reward.split(':')[1].capitalize().replace('_', ' ')
             return f"{self.item_reward_count} {item}(s)"
         else:
             return "There are no rewards available for this quest."
