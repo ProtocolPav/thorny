@@ -50,15 +50,15 @@ class Quest:
             extra_requirements.append(f'using **{mainhand}**')
         if self.location:
             extra_requirements.append(f'around the coordinates **{int(self.location[0])}, {int(self.location[1])}**')
-            notes.append(f'*Note: The quest area is a circle with radius {self.location_radius} around the coordinates given*')
+            notes.append(f'\n*Note: The quest area is a circle with radius {self.location_radius} around the coordinates given*')
         if self.timer:
             hours, remainder = divmod(self.timer.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             extra_requirements.append(f'with a time limit of **{hours}h{minutes}m**')
-            notes.append(f'*Note: The time limit only begins when you {self.objective_count} 1 {objective}*')
+            notes.append(f'\n*Note: The time limit only begins when you {self.objective_count} 1 {objective}*')
 
         return (f'{self.objective_type.capitalize()} {self.objective_count} **{objective}(s)** {" ".join(extra_requirements)}'
-                f'{"\n".join(notes)}')
+                f'{"".join(notes)}')
 
     def get_rewards(self, money_symbol: str):
         if self.nugs_reward:
