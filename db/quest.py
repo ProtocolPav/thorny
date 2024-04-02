@@ -55,10 +55,10 @@ class Quest:
             hours, remainder = divmod(self.timer.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             extra_requirements.append(f'with a time limit of **{hours}h{minutes}m**')
-            notes.append(f'\n*Note: The time limit only begins when you {self.objective_count} 1 {objective}*')
+            notes.append(f'\n*Note: The time limit only begins when you {self.objective_type.lower()} 1 {objective}*')
 
         return (f'{self.objective_type.capitalize()} {self.objective_count} **{objective}(s)** {" ".join(extra_requirements)}'
-                f'{"".join(notes)}')
+                f'\n{"".join(notes)}')
 
     def get_rewards(self, money_symbol: str):
         if self.nugs_reward:
