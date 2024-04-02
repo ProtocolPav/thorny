@@ -80,7 +80,7 @@ class Other(commands.Cog):
                 view = uikit.CurrentQuestPanel(ctx, thorny_user.guild, thorny_user)
                 await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
                                   view=view,
-                                  ephemeral=True)
+                                  ephemeral=False)
                 display_quests_overview = False
             else:
                 await QuestFactory.fail_user_quest(thorny_user.quest.id, thorny_user.thorny_id)
@@ -92,7 +92,7 @@ class Other(commands.Cog):
             await view.update_view()
             await ctx.respond(embed=uikit.quests_overview(quests),
                               view=view,
-                              ephemeral=True)
+                              ephemeral=False)
 
     @quests.command(description="CM ONLY | Create a new quest",
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
