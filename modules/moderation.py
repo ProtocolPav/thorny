@@ -212,44 +212,6 @@ class Moderation(commands.Cog):
 
             await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
 
-    @server_command.command(description="Redeem your Lottery Ticket!",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def redeem(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
-        if thorny_user.balance == 0 and thorny_user.playtime.todays_playtime.time >= timedelta(minutes=10):
-            thorny_user.balance += 1
-            await ctx.respond("You have redeemed a Lottery Ticket", ephemeral=True)
-
-            async with httpx.AsyncClient() as client:
-                gt = thorny_user.profile.whitelisted_gamertag
-                egg = random.choices(["minecraft:pig_spawn_egg", "minecraft:salmon_spawn_egg",
-                                      "minecraft:zombie_spawn_egg", "minecraft:drowned_spawn_egg", "minecraft:slime_spawn_egg"],
-                                     [20, 21, 7, 2, 0.1])[0]
-                r = await client.get(f"http://thorny-bds:8000/commands/give/{gt}/{egg}/1", timeout=None)
-
-        elif thorny_user.balance != 0:
-            await ctx.respond("You already redeemed a ticket before.", ephemeral=True)
-        elif thorny_user.playtime.todays_playtime.time <= timedelta(minutes=10):
-            await ctx.respond("You need to have a minimum of 10 minutes of playtime today to redeem a ticket!",
-                              ephemeral=True)
-
-    @server_command.command(description="Test Command",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    @commands.has_permissions(administrator=True)
-    async def give_test(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
-        gamertag = thorny_user.profile.whitelisted_gamertag
-
-        async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/commands/clear/{gamertag}/dirt/1", timeout=None)
-            response = f"Send Clear Command Response: {r.json()}"
-
-            if gamertag in r.json()['response']:
-                r = await client.get(f"http://thorny-bds:8000/commands/give/{gamertag}/sand/1", timeout=None)
-                response = f"{response}\nSend Give Command Response: {r.json()}"
-
-        await ctx.respond(response, ephemeral=True)
-
     @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
                             guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
     async def authenticate(self, ctx: discord.ApplicationContext):
