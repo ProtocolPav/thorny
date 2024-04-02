@@ -176,6 +176,20 @@ class AccessDenied(ThornyError):
         return self.error
 
 
+class WrongUser(ThornyError):
+    """Raised when a user tries to use an interaction that can only be used by the sender of the message"""
+
+    def __init__(self, module: str):
+        super().__init__()
+        self.feature = module
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Not so fast",
+                             value=f"This is not your button to press, run your own command!")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
 class RedeemError(ThornyError):
     """Raised when a redeemable does not have a redemption function (This would be rare)"""
 
