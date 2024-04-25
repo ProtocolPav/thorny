@@ -94,6 +94,20 @@ class Other(commands.Cog):
                               view=view,
                               ephemeral=False)
 
+    @quests.command(description="CM ONLY | Manage Quests",
+                    guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.has_permissions(administrator=True)
+    async def manage(self, ctx: discord.ApplicationContext):
+        thorny_user = await UserFactory.build(ctx.user)
+
+        quests = await QuestFactory.fetch_all_quests()
+
+        view = uikit.QuestAdminPanel(ctx, thorny_user.guild, thorny_user)
+        await view.update_view()
+        await ctx.respond(embed=uikit.quests_admin_overview(quests),
+                          view=view,
+                          ephemeral=True)
+
     @quests.command(description="CM ONLY | Create a new quest",
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     @commands.has_permissions(administrator=True)
