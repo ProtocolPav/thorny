@@ -139,22 +139,10 @@ async def log_disconnect_all(request: Request):
     return sanicjson({"Accept": True})
 
 
-@app.get('/player/playtime')
-async def get_playtime(request: Request):
+@app.get('/user/patreon/status')
+async def get_user_patreon_status(request: Request):
     """
     Arguments: gamertag, guild_id
-    :param request:
-    :return:
-    """
-    ...
-
-
-@app.get('/player/stats')
-async def get_player_statistics(request: Request):
-    """
-    Arguments: gamertag, guild_id
-
-    Returns the entirety of the player's statistics (blocks placed/broken, kills, deaths)
     :param request:
     :return:
     """
@@ -343,6 +331,24 @@ async def relay_chat(request: Request):
 
     return text('OK!')
 
+
+@app.post('/chat/event')
+async def relay_event(request: Request):
+    body = request.json
+    config = json.load(open('../thorny_data/config.json', 'r+'))
+    WEBHOOK_URL = config['webhook']
+
+    async with httpx.AsyncClient() as client:
+        r = await client.post(WEBHOOK_URL, timeout=None,
+                              data={'username': f"Server",
+                                    'embeds': [
+                                        {
+                                            "title": f"{body['content']}",
+                                            "color": body['colour']
+                                        }
+                                    ]})
+
+    return text('OK!')
 
 
 @app.listener('after_server_start')

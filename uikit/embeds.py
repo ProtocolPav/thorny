@@ -722,6 +722,27 @@ def quests_overview(quests: list[Quest]):
     return embed
 
 
+def quests_admin_overview(quests: list[Quest]):
+    embed = discord.Embed(colour=0xE0B0FF,
+                          title="Manage Quests",
+                          description="To manage a specific quest, select it in the selector.\n"
+                                      "For now you can only Expire a specific quest.")
+
+    TEXTLIMIT = 50
+
+    for quest in quests:
+        embed.add_field(name=quest.title,
+                        value=f"```{quest.objective_type} {quest.objective}```",
+                        inline=False)
+
+    if len(quests) == 0:
+        embed.add_field(name='All quests are expired!',
+                        value=f"You must create new quests! New quests should be created every Friday.",
+                        inline=False)
+
+    return embed
+
+
 def view_quest(quest: Quest, money_symbol: str):
     times = quest.end - datetime.now()
     embed = discord.Embed(colour=0xE0B0FF,

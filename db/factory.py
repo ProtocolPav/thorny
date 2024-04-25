@@ -563,6 +563,20 @@ class QuestFactory:
             return quests
 
     @classmethod
+    async def fetch_all_quests(cls):
+        async with pool_wrapper.connection() as conn:
+            quest_ids = await conn.fetch("""
+                                         SELECT id FROM thorny.quests
+                                         WHERE end_time > now()
+                                         """)
+
+            quests = []
+            for i in quest_ids:
+                quests.append(await QuestFactory.build(i['id']))
+
+            return quests
+
+    @classmethod
     async def create_new_user_quest(cls, quest_id: int, thorny_id: int):
         async with pool_wrapper.connection() as conn:
             await conn.execute("""
@@ -595,3 +609,13 @@ class QuestFactory:
                                AND quest_id = $1
                                """,
                                quest_id, thorny_id)
+
+    @classmethod
+    async def expire_quest(cls, quest_id: int):
+        async with pool_wrapper.connection() as conn:
+            await conn.execute("""
+                               UPDATE thorny.quests
+                               SET end_time = now()
+                               WHERE id = $1
+                               """,
+                               quest_id)
