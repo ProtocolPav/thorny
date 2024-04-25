@@ -340,13 +340,17 @@ async def relay_event(request: Request):
 
     async with httpx.AsyncClient() as client:
         r = await client.post(WEBHOOK_URL, timeout=None,
-                              data={'username': f"Server",
-                                    'embeds': [
+                              content=json.dumps({'username': f"Server",
+                                    'content': None,
+                                    'embeds':[
                                         {
                                             "title": f"{body['content']}",
                                             "color": body['colour']
                                         }
-                                    ]})
+                                    ],
+                                    'attachments': []
+                                    }),
+                              headers={'Content-Type': 'application/json'})
 
     return text('OK!')
 
