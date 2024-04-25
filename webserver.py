@@ -341,12 +341,12 @@ async def relay_event(request: Request):
     async with httpx.AsyncClient() as client:
         r = await client.post(WEBHOOK_URL, timeout=None,
                               data={'username': f"Server",
-                                    'embeds': [
+                                    'embed':
                                         {
                                             "title": f"{body['content']}",
                                             "color": body['colour']
                                         }
-                                    ]})
+                                    })
 
     return text('OK!')
 
