@@ -22,19 +22,6 @@ class Moderation(commands.Cog):
 
         self.pages = []
 
-    @commands.slash_command(description='Strike someone for bad behaviour')
-    @commands.has_permissions(administrator=True)
-    async def strike(self, ctx, user: discord.Member, reason):
-        thorny_user = await UserFactory.build(user)
-        await thorny_user.strikes.append(ctx.author.id, reason)
-        strike_embed = discord.Embed(color=0xCD853F)
-        strike_embed.add_field(name=f"**{user} Got Striked!**",
-                               value=f"From: {ctx.author.mention}\n"
-                                     f"Reason: {reason}")
-        strike_embed.set_footer(text=f"Strike ID: {thorny_user.strikes.strikes[-1].strike_id}")
-        await ctx.respond(embed=strike_embed)
-        await commit(thorny_user)
-
     @commands.slash_command(description='Purge messages')
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx: discord.ApplicationContext,
