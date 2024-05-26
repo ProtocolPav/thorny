@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event, GuildFactory, UserFactory, webevent, poolwrapper, generator
+from thorny_core.db import event, GuildFactory, UserFactory, poolwrapper, generator
 import errors
 import traceback
 import json
@@ -64,23 +64,6 @@ async def interruption_check():
 
         except httpx.ConnectError:
             pass
-
-
-@tasks.loop(seconds=1)
-async def webevent_handler():
-    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
-    for pending_event in pending_events:
-        await pending_event.process()
-
-@webevent_handler.error
-async def webevent_error(exception: Exception):
-    print(f"Ignoring exception in task webevent_handler:", file=sys.stderr)
-    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
-
-    pending_events = await webevent.fetch_pending_webevents(pool=poolwrapper.pool_wrapper, client=thorny)
-    await pending_events[0].mark_failed_processing()
-
-    webevent_handler.restart()
 
 
 @tasks.loop(hours=24.0)
@@ -241,7 +224,7 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
 
 @thorny.event
 async def on_member_join(member: discord.Member):
-    await UserFactory.create([member])
+    await UserFactory.create(member)
     thorny_user = await UserFactory.build(member)
     thorny_guild = await GuildFactory.build(member.guild)
 
@@ -266,7 +249,8 @@ async def on_member_remove(member):
 @thorny.event
 async def on_guild_join(guild: discord.Guild):
     member_list = await guild.fetch_members().flatten()
-    await UserFactory.create(member_list)
+    for member in member_list:
+        await UserFactory.create(member)
     await GuildFactory.create(guild)
 
 

@@ -7,6 +7,7 @@ import discord
 from discord import User as DiscordUser, Member as DiscordMember
 import httpx
 from dateutil.relativedelta import relativedelta
+from discord.utils import deprecated
 
 from thorny_core.db.guild import Guild
 from thorny_core.db.user import User
@@ -24,130 +25,26 @@ class UserFactory:
         Build a User class based on the Discord Member object.
         This is used when you know who the person is, e.g. In an application command where `ctx.user` is available
         """
-        async with pool_wrapper.connection() as conn:
+        async with httpx.AsyncClient() as client:
             user_id = member.id
             guild_id = member.guild.id
-            thorny_user = await conn.fetchrow("""
-                                              SELECT * FROM thorny.user
-                                              WHERE user_id = $1 AND guild_id = $2
-                                              """,
-                                              user_id, guild_id)
-            if not thorny_user:
-                await UserFactory.create([member])
 
-                thorny_user = await conn.fetchrow("""
-                                                  SELECT * FROM thorny.user
-                                                  WHERE user_id = $1 AND guild_id = $2
-                                                  """,
-                                                  user_id, guild_id)
+            user = await client.get(f"http://nexuscore:8000/v0.1/api/users/guild/{guild_id}/{user_id}")
 
-            thorny_id = thorny_user['thorny_user_id']
+            if user.status_code != 200:
+                user = await UserFactory.create(member)
+            elif not user.json()['user']['active']:
+                # Run update to the user to re-activate
+                ...
 
-            profile = await conn.fetchrow("""
-                                          SELECT * FROM thorny.profile
-                                          WHERE thorny_user_id = $1
-                                          """,
-                                          thorny_id)
-            profile_column_data = await conn.fetch("""
-                                                   SELECT column_name, data_type, character_maximum_length
-                                                   FROM INFORMATION_SCHEMA.COLUMNS
-                                                   WHERE TABLE_SCHEMA = 'thorny' AND TABLE_NAME = 'profile'
-                                                   """)
-            levels = await conn.fetchrow("""
-                                         SELECT * FROM thorny.levels
-                                         WHERE thorny_user_id = $1
-                                         """,
-                                         thorny_id)
+            thorny_id = user.json()['user']['thorny_id']
+            user = await client.get(f"http://nexuscore:8000/v0.1/api/users/thorny-id/{thorny_id}")
 
-            monthly_playtime = await conn.fetch("""
-                                                SELECT t.year, t.month, sum(t.playtime) as playtime
-                                                FROM (SELECT sum(playtime) as playtime, 
-                                                             date_part('month', connect_time) as month, 
-                                                             date_part('year', connect_time) as year
-                                                      FROM thorny.playtime
-                                                      INNER JOIN thorny.user 
-                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
-                                                      WHERE thorny.playtime.thorny_user_id = $1
-                                                      GROUP BY connect_time 
-                                                      ) as t
-                                                GROUP BY t.year, t.month
-                                                ORDER BY t.year DESC, t.month DESC
-                                                """,
-                                                thorny_id)
-
-            playtime_stats = await conn.fetchrow("""
-                                                 SELECT SUM(playtime) as total_playtime,
-                                                        SUM(case when date(connect_time) = date(now()) then playtime end) as today
-                                                 FROM thorny.playtime
-                                                 WHERE thorny_user_id = $1
-                                                 GROUP BY thorny_user_id
-                                                 """,
-                                                 thorny_id)
-
-            daily_playtime = await conn.fetch("""
-                                              SELECT t.day, sum(t.playtime) as playtime 
-                                              FROM (SELECT sum(playtime) as playtime, 
-                                                           date(connect_time) as day
-                                                    FROM thorny.playtime
-                                                    INNER JOIN thorny.user
-                                                        ON thorny.playtime.thorny_user_id = thorny.user.thorny_user_id 
-                                                    WHERE thorny.playtime.thorny_user_id = $1
-                                                    GROUP BY day 
-                                                    ) as t
-                                              GROUP BY t.day
-                                              ORDER BY t.day desc
-                                              """,
-                                              thorny_id)
-
-            current_connection = await conn.fetchrow("""
-                                                     SELECT * FROM thorny.playtime
-                                                     WHERE thorny_user_id = $1
-                                                     ORDER BY connect_time DESC
-                                                     """,
-                                                     thorny_id)
-
-            unfulfilled_connections = await conn.fetch("""
-                                                       SELECT * FROM thorny.playtime
-                                                       WHERE thorny_user_id = $1 AND disconnect_time is NULL
-                                                       ORDER BY connect_time ASC
-                                                       """,
-                                                       thorny_id)
-
-            strikes = await conn.fetch("""
-                                       SELECT * from thorny.strikes
-                                       WHERE thorny_user_id = $1
-                                       """,
-                                       thorny_id)
-
-            counters = await conn.fetch("""
-                                        SELECT * from thorny.counter
-                                        WHERE thorny_user_id = $1
-                                        """,
-                                        thorny_id)
-
-            current_quest = await conn.fetchrow("""
-                                                SELECT * FROM thorny.userquests
-                                                INNER JOIN thorny.quests ON thorny.quests.id = thorny.userquests.quest_id
-                                                WHERE thorny.userquests.thorny_id = $1
-                                                AND thorny.userquests.status is null
-                                                """,
-                                                thorny_id)
-
-            return User(pool=pool_wrapper,
-                        member=member,
-                        thorny_user=thorny_user,
+            return User(discord_member=member,
                         thorny_guild=await GuildFactory.build(member.guild),
-                        profile=profile,
-                        profile_columns=profile_column_data,
-                        levels=levels,
-                        monthly_playtime=monthly_playtime,
-                        daily_playtime=daily_playtime,
-                        total_playtime=playtime_stats,
-                        current_connection=current_connection,
-                        unfulfilled_connections=unfulfilled_connections,
-                        strikes=strikes,
-                        counters=counters,
-                        current_quest=current_quest)
+                        user=user.json()['user'],
+                        profile=user.json()['profile'],
+                        playtime=user.json()['playtime'])
 
     @classmethod
     async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
@@ -158,37 +55,13 @@ class UserFactory:
         guild: Guild
         thorny_id: int
         """
-        async with pool_wrapper.connection() as conn:
-            thorny_user = await conn.fetchrow("""
-                                              SELECT user_id FROM thorny.user
-                                              WHERE thorny_user_id = $1
-                                              """,
-                                              thorny_id)
-            member = guild.discord_guild.get_member(thorny_user['user_id'])
+        async with httpx.AsyncClient() as client:
+            user = await client.get(f"http://nexuscore:8000/v0.1/api/users/thorny-id/{thorny_id}")
+            member = guild.discord_guild.get_member(user.json()['user']['user_id'])
         return await UserFactory.build(member)
 
     @classmethod
-    async def fetch_by_gamertag(cls, guild: Guild, gamertag: str) -> User:
-        """
-        Fetch a User object based on the gamertag of the user. This requires you to know the Guild the user is in.
-        --------
-        Parameters:
-        guild: Guild
-        gamertag: str
-        """
-        async with pool_wrapper.connection() as conn:
-            thorny_user = await conn.fetchrow("""
-                                              SELECT thorny.user.user_id FROM thorny.user
-                                              INNER JOIN thorny.profile
-                                              ON thorny.user.thorny_user_id = thorny.profile.thorny_user_id
-                                              WHERE whitelisted_gamertag = $1
-                                              """,
-                                              gamertag)
-            member = guild.discord_guild.get_member(thorny_user['user_id'])
-        return await UserFactory.build(member)
-
-    @classmethod
-    async def create(cls, members: list[discord.Member]):
+    async def create(cls, member: discord.Member) -> httpx.Response:
         """
         Create or re-activate a new User object in the database. This does not return the User object.
 
@@ -200,62 +73,20 @@ class UserFactory:
         Parameters:
         members: list[discord.Member]
         """
-        async with pool_wrapper.connection() as conn:
-            for member in members:
-                user_id = member.id
-                guild_id = member.guild.id
-                user = await conn.fetchrow("""
-                                           SELECT * FROM thorny.user
-                                           WHERE user_id = $1 AND guild_id = $2
-                                           """,
-                                           user_id, guild_id)
-                if user is None:
-                    await conn.execute("""
-                                       INSERT INTO thorny.user(user_id, guild_id, join_date, balance, username)
-                                       VALUES($1, $2, $3, $4, $5)
-                                       """,
-                                       user_id, guild_id, member.joined_at, 0, member.name)
-                    thorny_id = await conn.fetchrow("""
-                                                    SELECT thorny_user_id FROM thorny.user
-                                                    WHERE user_id=$1 AND guild_id=$2
-                                                    """,
-                                                    user_id, guild_id)
-                    await conn.execute("""
-                                       INSERT INTO thorny.profile(thorny_user_id)
-                                       VALUES($1)
-                                       """,
-                                       thorny_id[0])
-                    await conn.execute("""
-                                       INSERT INTO thorny.levels(thorny_user_id)
-                                       VALUES($1)
-                                       """,
-                                       thorny_id[0])
-                    await conn.execute("""
-                                       INSERT INTO thorny.counter(thorny_user_id, counter_name, count)
-                                       VALUES($1, $2, $3)
-                                       """,
-                                       thorny_id[0], 'ticket_count', 0)
-                    await conn.execute("""
-                                       INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
-                                       VALUES($1, $2, $3)
-                                       """,
-                                       thorny_id[0], 'ticket_last_purchase', datetime.now())
-                    await conn.execute("""
-                                       INSERT INTO thorny.counter(thorny_user_id, counter_name, datetime)
-                                       VALUES($1, $2, $3)
-                                       """,
-                                       thorny_id[0], 'level_last_message', datetime.now())
-                    print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] User profile created with Thorny ID",
-                          thorny_id[0])
+        async with httpx.AsyncClient() as client:
+            user_id = member.id
+            guild_id = member.guild.id
 
-                else:
-                    await conn.execute("""
-                                       UPDATE thorny.user
-                                       SET active = True WHERE thorny_user_id = $1
-                                       """,
-                                       user['thorny_user_id'])
-                    print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Reactivated account of "
-                          f"{user['username']}, Thorny ID {user['thorny_user_id']}")
+            data = {'guild_id': guild_id, 'discord_user_id': user_id, 'username': member.name}
+
+            user = await client.post("http://nexuscore:8000/v0.1/api/users/",
+                                     json=data)
+
+            if user.status_code == 201:
+                return user
+            else:
+                # Raise error since user already exists
+                ...
 
     @classmethod
     async def deactivate(cls, members: list[discord.Member]):
@@ -265,30 +96,28 @@ class UserFactory:
         Parameters:
         members: list[discord.Member]
         """
-        async with pool_wrapper.connection() as conn:
+        async with httpx.AsyncClient() as client:
             for member in members:
                 thorny_user = await UserFactory.build(member)
 
                 if thorny_user.profile.whitelisted_gamertag is not None:
-                    async with httpx.AsyncClient() as client:
-                        r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
+                    r: httpx.Response = await client.get("http://thorny-bds:8000/status", timeout=None)
 
-                        if r.json()['server_online']:
-                            removed_gamertag = thorny_user.profile.whitelisted_gamertag
-                            thorny_user.profile.whitelisted_gamertag = None
-                            await commit(thorny_user)
+                    if r.json()['server_online']:
+                        removed_gamertag = thorny_user.profile.whitelisted_gamertag
+                        thorny_user.profile.whitelisted_gamertag = None
+                        await commit(thorny_user)
 
-                            await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
+                        await client.post(f"http://thorny-bds:8000/<gamertag:{removed_gamertag}>/whitelist/remove")
 
-                await conn.execute("""
-                                   UPDATE thorny.user
-                                   SET active = False WHERE thorny_user_id = $1
-                                   """,
-                                   thorny_user.thorny_id)
+                await client.patch(f"http://nexuscore:8000/v0.1/api/users/thorny-id/{thorny_user.thorny_id}",
+                                   json={'active': False})
+
                 print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Deactivated account of "
                       f"{thorny_user.username}, Thorny ID {thorny_user.thorny_id}")
 
     @classmethod
+    @deprecated
     async def get_gamertags(cls, guild_id: int, gamertag: str = None):
         """
         Leave gamertag blank to get all gamertags in the database.
