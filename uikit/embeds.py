@@ -1,14 +1,13 @@
 import discord
 import json
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 from dateutil.relativedelta import relativedelta
-from thorny_core.db import user, guild, GuildFactory, generator, Project
 import giphy_client
 import random
 
-from thorny_core.db.quest import PlayerQuest, Quest
+from thorny_core import nexus, utils
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -33,38 +32,65 @@ def ping_embed(client: discord.Bot, bot_started_on: datetime):
     return embed
 
 
-async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embed:
-    thorny_guild = await GuildFactory.build(thorny_user.discord_member.guild)
+async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
 
-    main_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
+    main_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                     color=thorny_user.discord_member.color)
     main_page_embed.set_author(name=thorny_user.discord_member, icon_url=thorny_user.discord_member.display_avatar.url)
     main_page_embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
 
     profile = thorny_user.profile
-    last_month = (datetime.now() - relativedelta(months=1)).strftime('%B')
-    two_months_ago = (datetime.now() - relativedelta(months=2)).strftime('%B')
+
+    if thorny_user.birthday:
+        today = datetime.now()
+        age = today.year - thorny_user.birthday.year - (
+                    (today.month, today.day) < (thorny_user.birthday.month, thorny_user.birthday.day))
+    else:
+        age = 0
 
     main_page_embed.add_field(name=f"**:card_index: Information**",
-                              value=f"{is_donator}\n"
-                                    f"**Gamertag:** {profile.gamertag or profile.default_gamertag}\n"
-                                    f"**Level:** {thorny_user.level.level}\n"
-                                    f"**Balance:** {thorny_guild.currency.emoji} {thorny_user.balance}\n"
-                                    f"**Birthday:** {thorny_user.birthday}\n"
-                                    f"**Age:** {thorny_user.age}\n"
-                                    f"**Joined on:** {thorny_user.join_date}"
+                              value=f"**Gamertag:** {thorny_user.gamertag}\n"
+                                    f"**Level:** {thorny_user.level}\n"
+                                    f"**Balance:** {thorny_guild.currency_emoji} {thorny_user.balance}\n"
+                                    f"**Birthday:** {utils.datetime_to_string(thorny_user.birthday)}\n"
+                                    f"**Age:** {age}\n"
+                                    f"**Joined on:** {utils.datetime_to_string(thorny_user.join_date)}"
                               )
 
+    if len(thorny_user.playtime.monthly) >= 1:
+        m = thorny_user.playtime.monthly[0]
+        current_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
+    else:
+        current_month = ''
+
+    if len(thorny_user.playtime.monthly) >= 2:
+        m = thorny_user.playtime.monthly[1]
+        next_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
+    else:
+        next_month = ''
+
+    if len(thorny_user.playtime.monthly) >= 3:
+        m = thorny_user.playtime.monthly[2]
+        last_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
+    else:
+        last_month = ''
+
+    if len(thorny_user.playtime.daily) >= 1:
+        m = thorny_user.playtime.daily[0]
+        today = f"**Today:** {utils.datetime_to_string(m.playtime)}\n"
+    else:
+        today = f'**Today:** 0h0m\n'
+
+    total_playtime = f'{utils.datetime_to_string(thorny_user.playtime.total)}'
+
     main_page_embed.add_field(name=f"**:clock8: Quick Stats**",
-                              value=f"**Today:** {thorny_user.playtime.todays_playtime}\n"
-                                    f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
-                                    f"**{last_month}:** {thorny_user.playtime.previous_playtime}\n"
-                                    f"**{two_months_ago}:** {thorny_user.playtime.expiring_playtime}\n"
-                                    f"**Total:** {thorny_user.playtime.total_playtime}\n",
+                              value=f"{today}"
+                                    f"{current_month}{next_month}{last_month}"
+                                    f"**Total:** {total_playtime}\n",
                               inline=True)
 
     main_page_embed.add_field(name=f"**:person_raising_hand: About Me**",
-                              value=f'"{profile.aboutme or profile.default_aboutme}"',
+                              value=f'"{profile.aboutme}"',
                               inline=False)
 
     main_page_embed.set_footer(text=f"Main Page")
@@ -72,7 +98,7 @@ async def profile_main_embed(thorny_user: user.User, is_donator) -> discord.Embe
     return main_page_embed
 
 
-async def profile_lore_embed(thorny_user: user.User) -> discord.Embed:
+async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     lore_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
                                     color=thorny_user.discord_member.color)
 
@@ -110,7 +136,7 @@ async def profile_lore_embed(thorny_user: user.User) -> discord.Embed:
     return lore_page_embed
 
 
-async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
+async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
                                      color=thorny_user.discord_member.color)
 
@@ -170,7 +196,7 @@ async def profile_stats_embed(thorny_user: user.User) -> discord.Embed:
     return stats_page_embed
 
 
-async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
+async def profile_edit_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     edit_embed = discord.Embed(title="Editing Your Profile",
                                colour=thorny_user.discord_member.colour)
 
@@ -186,7 +212,7 @@ async def profile_edit_embed(thorny_user: user.User) -> discord.Embed:
     return edit_embed
 
 
-def project_application_builder_embed(thorny_user: user.User, project: Project) -> discord.Embed:
+def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: ...) -> discord.Embed:
     embed = discord.Embed(title="Project Application Builder",
                           colour=0xFDDA0D)
     embed.set_author(name=thorny_user.username,
@@ -217,7 +243,7 @@ def project_application_builder_embed(thorny_user: user.User, project: Project) 
     return embed
 
 
-def project_application_embed(project: Project, thorny_user: user.User) -> discord.Embed:
+def project_application_embed(project: ..., thorny_user: nexus.ThornyUser) -> discord.Embed:
     info_embed = discord.Embed(title=f"{project.name}",
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
@@ -246,7 +272,7 @@ def project_application_embed(project: Project, thorny_user: user.User) -> disco
     return info_embed
 
 
-def project_embed(project: Project) -> discord.Embed:
+def project_embed(project: ...) -> discord.Embed:
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
     info_embed = discord.Embed(title=f"{project.name}",
@@ -270,7 +296,7 @@ def project_embed(project: Project) -> discord.Embed:
     return info_embed
 
 
-def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
+def configure_embed(thorny_guild: nexus.ThornyGuild) -> dict[str, discord.Embed]:
     feature_embed = discord.Embed(title="Configuring Thorny Modules",
                                   colour=0xD7E99A)
     # TODO: Make the features embed
@@ -377,8 +403,8 @@ def configure_embed(thorny_guild: guild.Guild) -> dict[str, discord.Embed]:
             "currency": currency_embed}
 
 
-def level_up_embed(thorny_user: user.User, thorny_guild: guild.Guild) -> discord.Embed:
-    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level.level}", limit=10)
+def level_up_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
+    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level}", limit=10)
     gifs_list = list(api_response.data)
     gif = random.choice(gifs_list)
 
@@ -386,8 +412,8 @@ def level_up_embed(thorny_user: user.User, thorny_guild: guild.Guild) -> discord
     embed.set_author(name=thorny_user.username,
                      icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f":partying_face: Congrats!",
-                    value=f"You leveled up to **Level {thorny_user.level.level}!**\n"
-                          f"{thorny_guild.level_message}")
+                    value=f"You leveled up to **Level {thorny_user.level}!**\n"
+                          f"{thorny_guild.level_up_message}")
     embed.set_image(url=gif.images.original.url)
 
     return embed
@@ -414,7 +440,7 @@ def message_edit_embed(message: discord.Message, message_after: discord.Message,
     return embed
 
 
-def user_join(thorny_user: user.User, thorny_guild: guild.Guild):
+def user_join(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     def ordinaltg(n):
         return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
 
@@ -433,7 +459,7 @@ def user_join(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
-def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
+def user_leave(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     embed = discord.Embed(colour=0xc34184)
     embed.add_field(name=f"**{thorny_user.username} has left**",
                     value=f"{thorny_guild.leave_message}")
@@ -441,7 +467,7 @@ def user_leave(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
-def balance_embed(thorny_user: user.User, thorny_guild: guild.Guild):
+def balance_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     embed = discord.Embed(color=0xE0115F)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f'**Financials:**',
@@ -450,7 +476,7 @@ def balance_embed(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
-def balance_edit_embed(thorny_user: user.User, thorny_guild: guild.Guild, amount: int):
+def balance_edit_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, amount: int):
     embed = discord.Embed(color=0x7CFC00)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f"Successfully {'Added' if amount > 0 else 'Removed'} {abs(amount)} {thorny_guild.currency.name}",
@@ -460,7 +486,7 @@ def balance_edit_embed(thorny_user: user.User, thorny_guild: guild.Guild, amount
     return embed
 
 
-def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: guild.Guild, amount: int, reason: str):
+def payment_embed(thorny_user: nexus.ThornyUser, receivable: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, amount: int, reason: str):
     embed = discord.Embed(color=0xF4C430)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f'{thorny_guild.currency.emoji} Payment Successful!',
@@ -472,7 +498,7 @@ def payment_embed(thorny_user: user.User, receivable: user.User, thorny_guild: g
     return embed
 
 
-def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transaction_type: str, amount: int, reason: str,
+def transaction_log(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, transaction_type: str, amount: int, reason: str,
                     time: datetime):
     embed = discord.Embed(color=0xF4C430)
     embed.add_field(name=f"**Transaction - {transaction_type}**",
@@ -484,7 +510,7 @@ def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transacti
     return embed
 
 
-def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
+def store_items(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     embed = discord.Embed(colour=0xFFBF00,
                           title="Shop Catalogue",
                           description="Select an item from the menu to buy!")
@@ -499,7 +525,7 @@ def store_items(thorny_user: user.User, thorny_guild: guild.Guild):
     return embed
 
 
-def store_selected_item(thorny_user: user.User, thorny_guild: guild.Guild, item_id: str):
+def store_selected_item(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, item_id: str):
     embed = discord.Embed(colour=0xFFBF00,
                           title="Shop Catalogue")
 
@@ -514,7 +540,7 @@ def store_selected_item(thorny_user: user.User, thorny_guild: guild.Guild, item_
 
     return embed
 
-def store_receipt(thorny_user: user.User, thorny_guild: guild.Guild, history: dict):
+def store_receipt(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, history: dict):
     embed = discord.Embed(colour=0xFFBF00,
                           title="Receipt")
 
@@ -530,7 +556,7 @@ def store_receipt(thorny_user: user.User, thorny_guild: guild.Guild, history: di
 
     return embed
 
-def secret_santa_message(gift_receiver: user.User, request: str):
+def secret_santa_message(gift_receiver: nexus.ThornyUser, request: str):
     embed = discord.Embed(color=0xD70040)
 
     embed.add_field(name="**Secret Santa**",
@@ -572,7 +598,7 @@ def roa_embed():
     return embed
 
 
-def roa_panel(thorny_user: user.User, image: str):
+def roa_panel(thorny_user: nexus.ThornyUser, image: str):
     embed = discord.Embed(color=0xFDDA0D,
                           title=f"Authentication Request")
     embed.add_field(name="Request sent by:",
@@ -593,7 +619,7 @@ def roa_panel(thorny_user: user.User, image: str):
     return embed
 
 
-def connect_embed(time: datetime, thorny_user: user.User):
+def connect_embed(time: datetime, thorny_user: nexus.ThornyUser):
     timestamp = round(time.timestamp())
 
     embed = discord.Embed(title='Player Connected', colour=0x44ef56)
@@ -608,7 +634,7 @@ def connect_embed(time: datetime, thorny_user: user.User):
     return embed
 
 
-def disconnect_embed(time: datetime, thorny_user: user.User):
+def disconnect_embed(time: datetime, thorny_user: nexus.ThornyUser):
     timestamp = round(time.timestamp())
 
     embed = discord.Embed(title='Player Disconnected', colour=0xA52A2A)
@@ -697,7 +723,7 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
     return embed
 
 
-def quests_overview(quests: list[Quest]):
+def quests_overview(quests: list[...]):
     embed = discord.Embed(colour=0xE0B0FF,
                           title="Available Quests",
                           description="To see more details about a certain quest, select it in the selector!")
@@ -722,7 +748,7 @@ def quests_overview(quests: list[Quest]):
     return embed
 
 
-def quests_admin_overview(quests: list[Quest]):
+def quests_admin_overview(quests: list[...]):
     embed = discord.Embed(colour=0xE0B0FF,
                           title="Manage Quests",
                           description="To manage a specific quest, select it in the selector.\n"
@@ -743,7 +769,7 @@ def quests_admin_overview(quests: list[Quest]):
     return embed
 
 
-def view_quest(quest: Quest, money_symbol: str):
+def view_quest(quest: ..., money_symbol: str):
     times = quest.end - datetime.now()
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title,
@@ -763,7 +789,7 @@ def view_quest(quest: Quest, money_symbol: str):
     return embed
 
 
-def quest_progress(quest: PlayerQuest, money_symbol: str):
+def quest_progress(quest: ..., money_symbol: str):
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title)
 

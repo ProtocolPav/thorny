@@ -28,6 +28,14 @@ class UserAlreadyExists(ThornyError):
 
 
 class UserUpdateError(ThornyError):
+    """ Raised when there is an issue with updating the user on the API """
+
+
+class GuildAlreadyExists(ThornyError):
+    """ Raised when creating a guild which already exists """
+
+
+class GuildUpdateError(ThornyError):
     """ Raised when creating a user which already exists """
 
 
