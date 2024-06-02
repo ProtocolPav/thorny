@@ -88,7 +88,7 @@ class Profile(View):
                                                     view=ProfileEdit(self.profile_owner, edit_embed),
                                                     ephemeral=True)
         else:
-            raise errors.WrongUser
+            raise thorny_errors.WrongUser
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
                        label="Lore >",

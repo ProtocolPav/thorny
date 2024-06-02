@@ -443,7 +443,7 @@ def balance_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild
     embed = discord.Embed(color=0xE0115F)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
     embed.add_field(name=f'**Financials:**',
-                    value=f"**Personal Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}")
+                    value=f"**Personal Balance:** {thorny_guild.currency_emoji}{thorny_user.balance}")
 
     return embed
 
@@ -451,9 +451,9 @@ def balance_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild
 def balance_edit_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, amount: int):
     embed = discord.Embed(color=0x7CFC00)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
-    embed.add_field(name=f"Successfully {'Added' if amount > 0 else 'Removed'} {abs(amount)} {thorny_guild.currency.name}",
-                    value=f"Balance was **{thorny_guild.currency.emoji}{thorny_user.balance - amount}**\n"
-                          f"Balance is now **{thorny_guild.currency.emoji}{thorny_user.balance}**")
+    embed.add_field(name=f"Successfully {'Added' if amount > 0 else 'Removed'} {abs(amount)} {thorny_guild.currency_name}",
+                    value=f"Balance was **{thorny_guild.currency_emoji}{thorny_user.balance - amount}**\n"
+                          f"Balance is now **{thorny_guild.currency_emoji}{thorny_user.balance}**")
 
     return embed
 
@@ -461,8 +461,8 @@ def balance_edit_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.Thorny
 def payment_embed(thorny_user: nexus.ThornyUser, receivable: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, amount: int, reason: str):
     embed = discord.Embed(color=0xF4C430)
     embed.set_author(name=thorny_user.username, icon_url=thorny_user.discord_member.display_avatar.url)
-    embed.add_field(name=f'{thorny_guild.currency.emoji} Payment Successful!',
-                    value=f'**Amount paid:** {thorny_guild.currency.emoji}{amount}\n'
+    embed.add_field(name=f'{thorny_guild.currency_emoji} Payment Successful!',
+                    value=f'**Amount paid:** {thorny_guild.currency_emoji}{amount}\n'
                           f'**Paid to:** {receivable.discord_member.mention}\n\n'
                           f'**Reason:** {reason}')
     embed.set_footer(text=f"Your balance: {thorny_user.balance} | {receivable.username}'s balance: {receivable.balance}")
@@ -470,12 +470,12 @@ def payment_embed(thorny_user: nexus.ThornyUser, receivable: nexus.ThornyUser, t
     return embed
 
 
-def transaction_log(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, transaction_type: str, amount: int, reason: str,
-                    time: datetime):
+def transaction_log(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild,
+                    transaction_type: str, amount: int, reason: str, time: datetime):
     embed = discord.Embed(color=0xF4C430)
     embed.add_field(name=f"**Transaction - {transaction_type}**",
-                    value=f"**ThornyUser:** <@{thorny_user.discord_member.id}>\n"
-                          f"**Amount:** {thorny_guild.currency.emoji}{amount}\n"
+                    value=f"**User:** {thorny_user.discord_member.mention}\n"
+                          f"**Amount:** {thorny_guild.currency_emoji}{amount}\n"
                           f"**Reason:** {reason}")
     embed.set_footer(text=f"{time}")
 
@@ -649,7 +649,7 @@ def server_update_embed(update_version: str):
     return embed
 
 
-def server_status(online: bool, status: str, uptime: str, load: dict, online_players: dict, everthorn_guilds: bool):
+def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[dict], everthorn_guilds: bool):
     embed = discord.Embed(color=0x6495ED)
 
     if everthorn_guilds:
@@ -685,8 +685,8 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
                       f"connected {time[0]}h{time[1]}m ago"
 
     if online_text == "":
-        embed.add_field(name="**Empty!**",
-                        value="*Seems like nobody's online. Perfect time to pull a prank on somebody!*", inline=False)
+        embed.add_field(name="**Oops!**",
+                        value="*This feature is disabled for the time being, sorry!*", inline=False)
 
     elif online_text != "":
         embed.add_field(name="**Connected Players**\n",
