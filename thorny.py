@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 
 import giphy_client
 from thorny_core import nexus
-import thorny_core.thorny_errors
+from thorny_core import thorny_errors
 import traceback
 import json
 import sys
