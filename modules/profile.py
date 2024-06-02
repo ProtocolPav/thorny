@@ -27,9 +27,10 @@ class Profile(commands.Cog):
             user = ctx.author
         thorny_user = await nexus.ThornyUser.build(user)
 
-        pages = [await uikit.profile_main_embed(thorny_user, thorny_guild)]
-        # await uikit.profile_lore_embed(thorny_user),
-        # await uikit.profile_stats_embed(thorny_user)
+        pages = [await uikit.profile_main_embed(thorny_user, thorny_guild),
+                 await uikit.profile_lore_embed(thorny_user),
+                 await uikit.profile_stats_embed(thorny_user)
+                 ]
         await ctx.respond(embed=pages[0], view=uikit.Profile(thorny_user, pages, ctx))
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
