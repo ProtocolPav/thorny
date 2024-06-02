@@ -99,7 +99,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
 
 
 async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
-    lore_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
+    lore_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                     color=thorny_user.discord_member.color)
 
     lore_page_embed.set_author(name=thorny_user.discord_member,
@@ -137,31 +137,11 @@ async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
 
 
 async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
-    stats_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan or thorny_user.profile.default_slogan}",
+    stats_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                      color=thorny_user.discord_member.color)
 
     stats_page_embed.set_author(name=thorny_user.discord_member,
                                 icon_url=thorny_user.discord_member.display_avatar.url)
-
-    last_month = (datetime.now() - relativedelta(months=1)).strftime('%B')
-    two_months_ago = (datetime.now() - relativedelta(months=2)).strftime('%B')
-
-    leaderboard, rank = await generator.activity_leaderboard(thorny_user, datetime.now())
-
-    stats_page_embed.add_field(name=f"**:clock8: Monthly Hours**",
-                               value=f"**{datetime.now().strftime('%B')}:** {thorny_user.playtime.current_playtime}\n"
-                                     f"**{last_month}:** {thorny_user.playtime.previous_playtime}\n"
-                                     f"**{two_months_ago}:** {thorny_user.playtime.expiring_playtime}\n",
-                               inline=True)
-
-    stats_page_embed.add_field(name=f"**:clock8: Playtime Roundup**",
-                               value=f"You played for **{thorny_user.playtime.todays_playtime}** today\n"
-                                     f"You are #{rank} on {datetime.now().strftime('%B')}'s Leaderboard\n"
-                                     f"You played for a total of **{thorny_user.playtime.total_playtime}** on Everthorn!\n",
-                               inline=True)
-
-    stats_page_embed.add_field(name=f"\t",
-                               value=f"\t")
 
     stats_page_embed.add_field(name=f"**<:Gatherer:997595498963800145> Blocks Mined**",
                                value=f"**Block 1:** ???\n"
