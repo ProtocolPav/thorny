@@ -22,7 +22,7 @@ class UserFactory:
     @classmethod
     async def build(cls, member: DiscordMember | DiscordUser) -> User:
         """
-        Build a User class based on the Discord Member object.
+        Build a ThornyUser class based on the Discord Member object.
         This is used when you know who the person is, e.g. In an application command where `ctx.user` is available
         """
         async with httpx.AsyncClient() as client:
@@ -49,7 +49,7 @@ class UserFactory:
     @classmethod
     async def fetch_by_id(cls, guild: Guild, thorny_id: int) -> User:
         """
-        Fetch a User object based on the ThornyID of the user. This requires you also knowing the Guild the user is in.
+        Fetch a ThornyUser object based on the ThornyID of the user. This requires you also knowing the Guild the user is in.
         --------
         Parameters:
         guild: Guild
@@ -63,12 +63,12 @@ class UserFactory:
     @classmethod
     async def create(cls, member: discord.Member) -> httpx.Response:
         """
-        Create or re-activate a new User object in the database. This does not return the User object.
+        Create or re-activate a new ThornyUser object in the database. This does not return the ThornyUser object.
 
-        Creating a User: If a new user joins a guild, it will create a new ThornyID for them
-        Re-Activating a User: If a user left and re-joined the guild, it will activate the ThornyID account
+        Creating a ThornyUser: If a new user joins a guild, it will create a new ThornyID for them
+        Re-Activating a ThornyUser: If a user left and re-joined the guild, it will activate the ThornyID account
 
-        This should only be used in Thorny Events. If you need to create a User and return it, use `UserFactory.build()` instead
+        This should only be used in Thorny Events. If you need to create a ThornyUser and return it, use `UserFactory.build()` instead
         --------
         Parameters:
         members: list[discord.Member]

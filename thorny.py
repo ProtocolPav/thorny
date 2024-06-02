@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.db import event, GuildFactory, UserFactory, poolwrapper, generator
+from thorny_core.nexus.user import ThornyUser
 import errors
 import traceback
 import json
@@ -66,22 +66,22 @@ async def interruption_check():
             pass
 
 
-@tasks.loop(hours=24.0)
-async def birthday_checker():
-    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
-    upcoming_bdays = await generator.upcoming_birthdays(pool=poolwrapper.pool_wrapper)
-    for user in upcoming_bdays:
-        for guild in thorny.guilds:
-            if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
-                thorny_guild = await GuildFactory.build(guild)
-                thorny_user = await UserFactory.fetch_by_id(thorny_guild, user['thorny_user_id'])
-
-                birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
-                await birthday_event.log()
-
-@birthday_checker.before_loop
-async def before_check():
-    await thorny.wait_until_ready()
+# @tasks.loop(hours=24.0)
+# async def birthday_checker():
+#     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
+#     upcoming_bdays = await generator.upcoming_birthdays(pool=poolwrapper.pool_wrapper)
+#     for user in upcoming_bdays:
+#         for guild in thorny.guilds:
+#             if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
+#                 thorny_guild = await GuildFactory.build(guild)
+#                 thorny_user = await UserFactory.fetch_by_id(thorny_guild, user['thorny_user_id'])
+#
+#                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
+#                 await birthday_event.log()
+#
+# @birthday_checker.before_loop
+# async def before_check():
+#     await thorny.wait_until_ready()
 
 
 @tasks.loop(time=time(hour=16))
@@ -119,39 +119,39 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
         await context.respond(embed=error.return_embed())
 
 
-@thorny.event
-async def on_message(message: discord.Message):
-    if not message.author.bot:
-        thorny_guild = await GuildFactory.build(message.guild)
-        trigger = message.content.lower()
-
-        if trigger in thorny_guild.responses.exact:
-            response = random.choice(thorny_guild.responses.exact[trigger])
-            await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
-
-        else:
-            for invoker in thorny_guild.responses.wildcard:
-                if invoker in trigger:
-                    response = random.choice(thorny_guild.responses.wildcard[invoker])
-                    await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
+# @thorny.event
+# async def on_message(message: discord.Message):
+#     if not message.author.bot:
+#         thorny_guild = await GuildFactory.build(message.guild)
+#         trigger = message.content.lower()
+#
+#         if trigger in thorny_guild.responses.exact:
+#             response = random.choice(thorny_guild.responses.exact[trigger])
+#             await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
+#
+#         else:
+#             for invoker in thorny_guild.responses.wildcard:
+#                 if invoker in trigger:
+#                     response = random.choice(thorny_guild.responses.wildcard[invoker])
+#                     await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
 
 @thorny.listen()
 async def on_message(message: discord.Message):
     if not message.author.bot:
-        thorny_user = await UserFactory.build(message.author)
-        thorny_guild = await GuildFactory.build(message.guild)
+        thorny_user = await ThornyUser.build(message.author)
+        # thorny_guild = await GuildFactory.build(message.guild)
 
-        if thorny_guild.levels_enabled:
-            gain_xp_event = event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
-
-            await gain_xp_event.log()
-
-        if message.channel.id == thorny_guild.channels.get_channel('thorny_updates') and message.content:
-            if 'http' not in message.content:
-                async with httpx.AsyncClient() as client:
-                    r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
-                                         params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
+        # if thorny_guild.levels_enabled:
+        #     gain_xp_event = event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
+        #
+        #     await gain_xp_event.log()
+        #
+        # if message.channel.id == thorny_guild.channels.get_channel('thorny_updates') and message.content:
+        #     if 'http' not in message.content:
+        #         async with httpx.AsyncClient() as client:
+        #             r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+        #                                  params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
 
 
 @thorny.event
@@ -272,8 +272,7 @@ thorny.add_cog(modules.Leaderboard(thorny))
 thorny.add_cog(modules.Other(thorny))
 
 # Start Tasks
-webevent_handler.start()
-birthday_checker.start()
+# birthday_checker.start()
 day_counter.start()
 interruption_check.start()
 
