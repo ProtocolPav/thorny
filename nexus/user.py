@@ -1,7 +1,9 @@
+import random
+
 import discord
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 import httpx
@@ -20,8 +22,8 @@ class ThornyUser:
     user_id: int
     guild_id: int
     username: str
-    join_date: date
-    birthday: Optional[date]
+    join_date: datetime
+    birthday: Optional[datetime]
     balance: int
     active: bool
     role: str
@@ -106,6 +108,12 @@ class ThornyUser:
             user_class.active = True
             user_class.role, user_class.patron = cls.__get_roles(member)
 
+            user_class.last_message = datetime.strptime(user_dict['user']['last_message'], "%Y-%m-%d %H:%M:%S.%f")
+            user_class.join_date = datetime.strptime(user_dict['user']['join_date'], "%Y-%m-%d")
+
+            if user_class.birthday:
+                user_class.birthday = datetime.strptime(user_dict['user']['birthday'], "%Y-%m-%d")
+
             await user_class.update()
 
             return user_class
@@ -115,7 +123,7 @@ class ThornyUser:
         async with httpx.AsyncClient() as client:
             data = {
                       "username": self.username,
-                      "birthday": self.birthday,
+                      "birthday": str(self.birthday) if self.birthday else None,
                       "balance": self.balance,
                       "active": self.active,
                       "role": self.role,
@@ -123,7 +131,7 @@ class ThornyUser:
                       "level": self.level,
                       "xp": self.xp,
                       "required_xp": self.required_xp,
-                      "last_message": self.last_message,
+                      "last_message": str(self.last_message),
                       "gamertag": self.gamertag,
                       "whitelist": self.whitelist
                     }
@@ -133,3 +141,21 @@ class ThornyUser:
 
             if user.status_code != 200:
                 raise thorny_errors.UserUpdateError
+
+    async def level_up(self, xp_multiplier: float) -> bool:
+        level_up = False
+        time = datetime.now()
+
+        if time - self.last_message > timedelta(minutes=1):
+            self.xp += round(random.uniform(5.0*xp_multiplier, 16*xp_multiplier))
+            self.last_message = time
+
+            while self.xp > self.required_xp:
+                self.level += 1
+                self.required_xp += (self.level ** 2) * 4 + (50 * self.level) + 100
+
+                level_up = True
+
+            await self.update()
+
+        return level_up

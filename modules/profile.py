@@ -3,8 +3,9 @@ import discord
 from discord.ext import commands
 from discord import utils
 import json
+from thorny_core import errors as thorny_errors
 import thorny_core.uikit as uikit
-from thorny_core.db import UserFactory, commit, GuildFactory, generator
+from thorny_core import nexus
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -18,107 +19,101 @@ class Profile(commands.Cog):
     async def profile(self, ctx: discord.ApplicationContext,
                       user: discord.Option(discord.Member, "See someone's profile. Leave blank to see yours.",
                                            default=None)):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+
+        if not thorny_guild.has_feature('profile'): raise thorny_errors.AccessDenied
 
         if user is None:
             user = ctx.author
-        thorny_user = await UserFactory.build(user)
+        thorny_user = await nexus.ThornyUser.build(user)
 
-        if discord.utils.find(lambda r: r.name == 'Legacy Donator Role', ctx.guild.roles) in user.roles:
-            is_donator = f'I donated to Everthorn!'
-        elif discord.utils.find(lambda r: r.name == 'Patreon Supporter', ctx.guild.roles) in user.roles:
-            is_donator = 'I am an Everthorn Patreon Supporter!'
-        else:
-            is_donator = ''
-
-        pages = [await uikit.profile_main_embed(thorny_user, is_donator),
-                 await uikit.profile_lore_embed(thorny_user),
-                 await uikit.profile_stats_embed(thorny_user)]
+        pages = [await uikit.profile_main_embed(thorny_user, thorny_guild)]
+        # await uikit.profile_lore_embed(thorny_user),
+        # await uikit.profile_stats_embed(thorny_user)
         await ctx.respond(embed=pages[0], view=uikit.Profile(thorny_user, pages, ctx))
 
     birthday = discord.SlashCommandGroup("birthday", "Birthday commands")
 
-    @birthday.command(description="Set your birthday")
-    async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
-                                                   autocomplete=utils.basic_autocomplete(uikit.all_months())),
-                  day: discord.Option(int, "Pick or type a day",
-                                      autocomplete=utils.basic_autocomplete(uikit.days_of_the_month())),
-                  year: discord.Option(int, "Pick or type a year",
-                                       autocomplete=utils.basic_autocomplete(uikit.years()))):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
-
-        if year is not None:
-            date = f'{month} {day} {year}'
-            date_system = datetime.strptime(date, "%B %d %Y")
-        else:
-            date = f'{month} {day}'
-            date_system = datetime.strptime(date, "%B %d")
-
-        thorny_user = await UserFactory.build(ctx.author)
-        thorny_user.birthday.time = date_system
-        await commit(thorny_user)
-        await ctx.respond(f"Your Birthday is set to: **{thorny_user.birthday}**", ephemeral=True)
-
-    @birthday.command(description="Remove your birthday")
-    async def remove(self, ctx):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
-
-        thorny_user = await UserFactory.build(ctx.author)
-        thorny_user.birthday.time = None
-        await commit(thorny_user)
-        await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages :(",
-                          ephemeral=True)
-
-    gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands")
-
-    @gamertag.command(description="Search the database for gamertags",
-                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def search(self, ctx: discord.ApplicationContext, gamertag: discord.Option(str, "Enter parts of a gamertag")):
-        gamertags = await UserFactory.get_gamertags(ctx.guild.id, gamertag[0:4])
-        send_text = []
-        for tag in gamertags:
-            send_text.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
-        if not send_text:
-            send_text.append("No matches found!")
-
-        gamertag_embed = discord.Embed(colour=0x64d5ac)
-        gamertag_embed.add_field(name=f"**Gamertags matching `{gamertag}`:**",
-                                 value="\n".join(send_text))
-        await ctx.respond(embed=gamertag_embed)
-
-    @commands.slash_command(description="See all upcoming birthdays!")
-    async def birthdays(self, ctx: discord.ApplicationContext):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
-
-        thorny_user = await UserFactory.build(ctx.user)
-        upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
-        events_embed = discord.Embed(title="Birthdays", colour=0xFF69B4)
-        for user in upcoming_bdays:
-            if user['guild_id'] == thorny_user.guild.guild_id:
-                temp_thorny_user = await UserFactory.fetch_by_id(thorny_user.guild, user['thorny_user_id'])
-
-                if str(temp_thorny_user.age + 1)[-1] == "1":
-                    suffix = "st"
-                elif str(temp_thorny_user.age + 1)[-1] == "2":
-                    suffix = "nd"
-                elif str(temp_thorny_user.age + 1)[-1] == "3":
-                    suffix = "rd"
-                else:
-                    suffix = "th"
-
-                birthday_found = False
-                for field in events_embed.fields:
-                    if str(temp_thorny_user.birthday).split(',')[0] == field.name:
-                        field.value = f"{field.value}\n{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday"
-                        birthday_found = True
-
-                if not birthday_found:
-                    events_embed.add_field(name=str(temp_thorny_user.birthday).split(',')[0],
-                                           value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday",
-                                           inline=True)
-
-        await ctx.respond(embed=events_embed)
+    # @birthday.command(description="Set your birthday")
+    # async def set(self, ctx, month: discord.Option(str, "Pick or type a month",
+    #                                                autocomplete=utils.basic_autocomplete(uikit.all_months())),
+    #               day: discord.Option(int, "Pick or type a day",
+    #                                   autocomplete=utils.basic_autocomplete(uikit.days_of_the_month())),
+    #               year: discord.Option(int, "Pick or type a year",
+    #                                    autocomplete=utils.basic_autocomplete(uikit.years()))):
+    #     thorny_guild = await GuildFactory.build(ctx.guild)
+    #     GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+    #
+    #     if year is not None:
+    #         date = f'{month} {day} {year}'
+    #         date_system = datetime.strptime(date, "%B %d %Y")
+    #     else:
+    #         date = f'{month} {day}'
+    #         date_system = datetime.strptime(date, "%B %d")
+    #
+    #     thorny_user = await UserFactory.build(ctx.author)
+    #     thorny_user.birthday.time = date_system
+    #     await commit(thorny_user)
+    #     await ctx.respond(f"Your Birthday is set to: **{thorny_user.birthday}**", ephemeral=True)
+    #
+    # @birthday.command(description="Remove your birthday")
+    # async def remove(self, ctx):
+    #     thorny_guild = await GuildFactory.build(ctx.guild)
+    #     GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+    #
+    #     thorny_user = await UserFactory.build(ctx.author)
+    #     thorny_user.birthday.time = None
+    #     await commit(thorny_user)
+    #     await ctx.respond(f"I've removed your birthday! You'll lose out on Birthday messages :(",
+    #                       ephemeral=True)
+    #
+    # gamertag = discord.SlashCommandGroup("gamertag", "Gamertag commands")
+    #
+    # @gamertag.command(description="Search the database for gamertags",
+    #                   guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    # async def search(self, ctx: discord.ApplicationContext, gamertag: discord.Option(str, "Enter parts of a gamertag")):
+    #     gamertags = await UserFactory.get_gamertags(ctx.guild.id, gamertag[0:4])
+    #     send_text = []
+    #     for tag in gamertags:
+    #         send_text.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
+    #     if not send_text:
+    #         send_text.append("No matches found!")
+    #
+    #     gamertag_embed = discord.Embed(colour=0x64d5ac)
+    #     gamertag_embed.add_field(name=f"**Gamertags matching `{gamertag}`:**",
+    #                              value="\n".join(send_text))
+    #     await ctx.respond(embed=gamertag_embed)
+    #
+    # @commands.slash_command(description="See all upcoming birthdays!")
+    # async def birthdays(self, ctx: discord.ApplicationContext):
+    #     thorny_guild = await GuildFactory.build(ctx.guild)
+    #     GuildFactory.check_guild_feature(thorny_guild, 'PROFILE')
+    #
+    #     thorny_user = await UserFactory.build(ctx.user)
+    #     upcoming_bdays = await generator.upcoming_birthdays(thorny_user.connection_pool)
+    #     events_embed = discord.Embed(title="Birthdays", colour=0xFF69B4)
+    #     for user in upcoming_bdays:
+    #         if user['guild_id'] == thorny_user.guild.guild_id:
+    #             temp_thorny_user = await UserFactory.fetch_by_id(thorny_user.guild, user['thorny_user_id'])
+    #
+    #             if str(temp_thorny_user.age + 1)[-1] == "1":
+    #                 suffix = "st"
+    #             elif str(temp_thorny_user.age + 1)[-1] == "2":
+    #                 suffix = "nd"
+    #             elif str(temp_thorny_user.age + 1)[-1] == "3":
+    #                 suffix = "rd"
+    #             else:
+    #                 suffix = "th"
+    #
+    #             birthday_found = False
+    #             for field in events_embed.fields:
+    #                 if str(temp_thorny_user.birthday).split(',')[0] == field.name:
+    #                     field.value = f"{field.value}\n{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday"
+    #                     birthday_found = True
+    #
+    #             if not birthday_found:
+    #                 events_embed.add_field(name=str(temp_thorny_user.birthday).split(',')[0],
+    #                                        value=f"{temp_thorny_user.username} • {temp_thorny_user.age + 1}{suffix} birthday",
+    #                                        inline=True)
+    #
+    #     await ctx.respond(embed=events_embed)

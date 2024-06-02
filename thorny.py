@@ -5,11 +5,10 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core.nexus.user import ThornyUser
-import errors
+from thorny_core import nexus
+import thorny_core.errors as thorny_errors
 import traceback
 import json
-import random
 import sys
 import httpx
 import modules
@@ -44,28 +43,6 @@ async def on_ready():
     thorny.add_view(uikit.ROAVerificationPanel())
 
 
-@tasks.loop(seconds=5)
-async def interruption_check():
-    global shutdown_notice_received
-
-    async with httpx.AsyncClient() as client:
-        try:
-            r = await client.get("http://169.254.169.254/latest/meta-data/spot/instance-action", timeout=None)
-            if r.status_code != 404 and not shutdown_notice_received:
-                channel = thorny.get_channel(687720871972044826)
-
-                await channel.send("I have received a shutdown notice. The server will be going offline in around 2 minutes.\n"
-                                   "Please wait patiently for the server to start back up.")
-
-                shutdown_notice_received = True
-
-            elif r.status_code == 404:
-                shutdown_notice_received = False
-
-        except httpx.ConnectError:
-            pass
-
-
 # @tasks.loop(hours=24.0)
 # async def birthday_checker():
 #     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
@@ -95,7 +72,7 @@ async def day_counter():
 
 
 @thorny.event
-async def on_application_command_error(context: discord.ApplicationContext, exception: errors.ThornyError):
+async def on_application_command_error(context: discord.ApplicationContext, exception: thorny_errors.ThornyError):
     print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
     traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
@@ -111,56 +88,39 @@ async def on_application_command_error(context: discord.ApplicationContext, exce
         await context.respond(embed=exception.return_embed(), ephemeral=True)
 
     except discord.NotFound:
-        error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
+        error = thorny_errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())
 
     except AttributeError:
-        error = errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
+        error = thorny_errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
         await context.respond(embed=error.return_embed())
-
-
-# @thorny.event
-# async def on_message(message: discord.Message):
-#     if not message.author.bot:
-#         thorny_guild = await GuildFactory.build(message.guild)
-#         trigger = message.content.lower()
-#
-#         if trigger in thorny_guild.responses.exact:
-#             response = random.choice(thorny_guild.responses.exact[trigger])
-#             await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
-#
-#         else:
-#             for invoker in thorny_guild.responses.wildcard:
-#                 if invoker in trigger:
-#                     response = random.choice(thorny_guild.responses.wildcard[invoker])
-#                     await message.reply(response, allowed_mentions=discord.AllowedMentions.none())
 
 
 @thorny.listen()
 async def on_message(message: discord.Message):
     if not message.author.bot:
-        thorny_user = await ThornyUser.build(message.author)
-        # thorny_guild = await GuildFactory.build(message.guild)
+        thorny_user = await nexus.ThornyUser.build(message.author)
+        thorny_guild = await nexus.ThornyGuild.build(message.guild)
 
-        # if thorny_guild.levels_enabled:
-        #     gain_xp_event = event.GainXP(thorny, datetime.now(), thorny_user, thorny_guild, message)
-        #
-        #     await gain_xp_event.log()
-        #
-        # if message.channel.id == thorny_guild.channels.get_channel('thorny_updates') and message.content:
-        #     if 'http' not in message.content:
-        #         async with httpx.AsyncClient() as client:
-        #             r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
-        #                                  params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
+        if thorny_guild.has_feature('levels'):
+            level_up = await thorny_user.level_up(thorny_guild.xp_multiplier)
+            if level_up:
+                await message.channel.send(embed=uikit.level_up_embed(thorny_user, thorny_guild))
+
+        if message.channel.id == thorny_guild.get_channel_id('thorny_updates') and message.content:
+            if 'http' not in message.content:
+                async with httpx.AsyncClient() as client:
+                    r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+                                         params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
 
 
 @thorny.event
 async def on_message_delete(message: discord.Message):
     if not message.author.bot and message.content is not None:
-        thorny_guild = await GuildFactory.build(message.guild)
+        thorny_guild = await nexus.ThornyGuild.build(message.guild)
 
-        if thorny_guild.channels.get_channel('logs'):
-            logs_channel = thorny.get_channel(thorny_guild.channels.get_channel('logs'))
+        if thorny_guild.get_channel_id('logs'):
+            logs_channel = thorny.get_channel(thorny_guild.get_channel_id('logs'))
 
             await logs_channel.send(embed=uikit.message_delete_embed(message, datetime.now()))
 
@@ -168,80 +128,35 @@ async def on_message_delete(message: discord.Message):
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
     if not before.author.bot and before.content != after.content:
-        thorny_guild = await GuildFactory.build(before.guild)
+        thorny_guild = await nexus.ThornyGuild.build(after.guild)
 
-        if thorny_guild.channels.get_channel('logs'):
-            logs_channel = thorny.get_channel(thorny_guild.channels.get_channel('logs'))
+        if thorny_guild.get_channel_id('logs'):
+            logs_channel = thorny.get_channel(thorny_guild.get_channel_id('logs'))
 
             await logs_channel.send(embed=uikit.message_edit_embed(before, after, datetime.now()))
 
 
 @thorny.event
-async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
-
-    for reaction_role in thorny_guild.reactions:
-        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
-            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
-            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
-
-            if role_to_add is None and role_name_search is not None:
-                role_to_add = role_name_search
-                reaction_role.role_id = role_to_add.id
-                reaction_role.role_name = role_to_add.name
-            elif role_name_search is None and role_to_add is not None:
-                reaction_role.role_id = role_to_add.id
-                reaction_role.role_name = role_to_add.name
-
-            member = thorny_guild.discord_guild.get_member(payload.user_id)
-
-            if role_to_add is not None and member != thorny.user:
-                await member.add_roles(role_to_add)
-
-
-@thorny.event
-async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
-    thorny_guild = await GuildFactory.build(thorny.get_guild(payload.guild_id))
-
-    for reaction_role in thorny_guild.reactions:
-        if reaction_role.message_id == payload.message_id and reaction_role.emoji == payload.emoji.name:
-            role_to_add = discord.utils.get(thorny_guild.discord_guild.roles, id=reaction_role.role_id)
-            role_name_search = discord.utils.get(thorny_guild.discord_guild.roles, name=reaction_role.role_name)
-
-            if role_to_add is None and role_name_search is not None:
-                role_to_add = role_name_search
-                reaction_role.role_id = role_to_add.id
-                reaction_role.role_name = role_to_add.name
-            elif role_name_search is None and role_to_add is not None:
-                reaction_role.role_id = role_to_add.id
-                reaction_role.role_name = role_to_add.name
-
-            member = thorny_guild.discord_guild.get_member(payload.user_id)
-
-            if role_to_add is not None and member != thorny.user:
-                await member.remove_roles(role_to_add)
-
-
-@thorny.event
 async def on_member_join(member: discord.Member):
-    await UserFactory.create(member)
-    thorny_user = await UserFactory.build(member)
-    thorny_guild = await GuildFactory.build(member.guild)
+    thorny_user = await nexus.ThornyUser.build(member)
+    thorny_guild = await nexus.ThornyGuild.build(member.guild)
 
-    if thorny_guild.channels.get_channel('welcome'):
-        welcome_channel = thorny.get_channel(thorny_guild.channels.get_channel('welcome'))
+    if thorny_guild.get_channel_id('welcome'):
+        welcome_channel = thorny.get_channel(thorny_guild.get_channel_id('welcome'))
 
         await welcome_channel.send(embed=uikit.user_join(thorny_user, thorny_guild))
 
 
 @thorny.event
 async def on_member_remove(member):
-    await UserFactory.deactivate([member])
-    thorny_user = await UserFactory.build(member)
-    thorny_guild = await GuildFactory.build(member.guild)
+    thorny_user = await nexus.ThornyUser.build(member)
+    thorny_guild = await nexus.ThornyGuild.build(member.guild)
 
-    if thorny_guild.channels.get_channel('welcome'):
-        welcome_channel = thorny.get_channel(thorny_guild.channels.get_channel('welcome'))
+    thorny_user.active = False
+    await thorny_user.update()
+
+    if thorny_guild.get_channel_id('welcome'):
+        welcome_channel = thorny.get_channel(thorny_guild.get_channel_id('welcome'))
 
         await welcome_channel.send(embed=uikit.user_leave(thorny_user, thorny_guild))
 
@@ -250,21 +165,27 @@ async def on_member_remove(member):
 async def on_guild_join(guild: discord.Guild):
     member_list = await guild.fetch_members().flatten()
     for member in member_list:
-        await UserFactory.create(member)
-    await GuildFactory.create(guild)
+        await nexus.ThornyUser.build(member)
+
+    await nexus.ThornyGuild.build(guild)
 
 
 @thorny.event
-async def on_guild_remove(guild):
+async def on_guild_remove(guild: discord.Guild):
     member_list = guild.members
-    await UserFactory.deactivate(member_list)
-    await GuildFactory.deactivate(guild)
+    for member in member_list:
+        thorny_user = await nexus.ThornyUser.build(member)
+        thorny_user.active = False
+
+        await thorny_user.update()
+
+    # await nexus.ThornyGuild.build(guild)
+    # Deactivate guild here. Not implemented yet
 
 
 # Load all cogs
 thorny.add_cog(modules.Moderation(thorny))
 thorny.add_cog(modules.Money(thorny))
-# thorny.add_cog(modules.Inventory(thorny))
 thorny.add_cog(modules.Profile(thorny))
 thorny.add_cog(modules.Playtime(thorny))
 thorny.add_cog(modules.Level(thorny))
@@ -274,7 +195,6 @@ thorny.add_cog(modules.Other(thorny))
 # Start Tasks
 # birthday_checker.start()
 day_counter.start()
-interruption_check.start()
 
 
 if __name__ == "__main__":
