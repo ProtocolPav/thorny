@@ -13,6 +13,7 @@ import thorny_core.errors as thorny_errors
 from thorny_core.nexus.playtime import Playtime
 from thorny_core.nexus.profile import Profile
 from thorny_core.nexus.quest import UserQuest
+from thorny_core.nexus.interactions import Interactions
 
 
 @dataclass
@@ -37,6 +38,7 @@ class ThornyUser:
     profile: Profile
     playtime: Playtime
     quest: Optional[UserQuest]
+    interactions: Interactions = Interactions
 
 
     @staticmethod

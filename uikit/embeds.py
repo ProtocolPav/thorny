@@ -143,29 +143,49 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed.set_author(name=thorny_user.discord_member,
                                 icon_url=thorny_user.discord_member.display_avatar.url)
 
+    interactions = await thorny_user.interactions.build(thorny_user.thorny_id)
+
+    blocks_mined = []
+    for block in interactions.blocks_mined:
+        if len(blocks_mined) == 3:
+            break
+        else:
+            blocks_mined.append(f'**{block.reference.replace("minecraft:", "")}:** {block.count:,}')
+
+    mined_text = '\n'.join(blocks_mined)
+
+    blocks_placed = []
+    for block in interactions.blocks_placed:
+        if len(blocks_placed) == 3:
+            break
+        else:
+            blocks_placed.append(f'**{block.reference.replace("minecraft:", "")}:** {block.count:,}')
+
+    placed_text = '\n'.join(blocks_placed)
+
     stats_page_embed.add_field(name=f"**<:Gatherer:997595498963800145> Blocks Mined**",
-                               value=f"**Block 1:** ???\n"
-                                     f"**Block 2:** ???\n"
-                                     f"**Block 3:** ???\n"
-                                     f"**Total:** {45000:,}",
+                               value=f"{mined_text}\n"
+                                     f"**Total:** "
+                                     f"{interactions.totals['mine'] if interactions.totals['mine'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"**<:grassblock:1222769432774840340> Blocks Placed**",
-                               value=f"**Block 1:** ???\n"
-                                     f"**Block 2:** ???\n"
-                                     f"**Block 3:** ???\n"
-                                     f"**Total:** {45000:,}",
+                               value=f"{placed_text}\n"
+                                     f"**Total:** " 
+                                     f"{interactions.totals['place'] if interactions.totals['place'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"\t",
                                value=f"\t")
 
     stats_page_embed.add_field(name=f"**<:Knight:997595500901568574> Kills**",
-                               value=f"**Total Kills:** {45000:,}",
+                               value=f"**Total Kills:** " 
+                                     f"{interactions.totals['kill'] if interactions.totals['kill'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"**:skull: Deaths**",
-                               value=f"**Total Deaths:** {123:,}",
+                               value=f"**Total Deaths:** " 
+                                     f"{interactions.totals['die'] if interactions.totals['die'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"\t",
