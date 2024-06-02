@@ -476,7 +476,7 @@ def transaction_log(thorny_user: user.User, thorny_guild: guild.Guild, transacti
                     time: datetime):
     embed = discord.Embed(color=0xF4C430)
     embed.add_field(name=f"**Transaction - {transaction_type}**",
-                    value=f"**User:** <@{thorny_user.discord_member.id}>\n"
+                    value=f"**ThornyUser:** <@{thorny_user.discord_member.id}>\n"
                           f"**Amount:** {thorny_guild.currency.emoji}{amount}\n"
                           f"**Reason:** {reason}")
     embed.set_footer(text=f"{time}")

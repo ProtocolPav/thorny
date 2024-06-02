@@ -23,6 +23,14 @@ class ThornyError(discord.ApplicationCommandError):
         pass
 
 
+class UserAlreadyExists(ThornyError):
+    """ Raised when creating a user which already exists """
+
+
+class UserUpdateError(ThornyError):
+    """ Raised when creating a user which already exists """
+
+
 class NotConnectedError(ThornyError):
     """ Raised when somebody tries disconnecting when they are not connected """
 

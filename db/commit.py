@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from thorny_core.db.user import User, Strike
+from thorny_core.db.user import User
 from thorny_core.db.guild import Guild
 from thorny_core.db.project import Project
 
@@ -71,24 +71,6 @@ async def update_counters(thorny_user: User):
                            counters.level_last_message, thorny_user.thorny_id)
 
 
-async def insert_strike(thorny_user: User, strike: Strike):
-    async with thorny_user.connection_pool.connection() as conn:
-        await conn.execute("""
-                           INSERT INTO thorny.strikes(thorny_user_id, manager_id, reason)
-                           VALUES($1, $2, $3)
-                           """,
-                           strike.strike_id, strike.manager_id, strike.reason)
-
-
-async def delete_strike(thorny_user: User, strike: Strike):
-    async with thorny_user.connection_pool.connection() as conn:
-        await conn.execute("""
-                           DELETE FROM thorny.strikes
-                           WHERE strike_id = $1
-                           """,
-                           strike.strike_id)
-
-
 async def update_guild(thorny_guild: Guild):
     async with thorny_guild.connection_pool.connection() as conn:
         await conn.set_type_codec(
@@ -138,10 +120,10 @@ async def update_project(project: Project):
 async def commit(object_to_commit: User | Guild | Project):
     """
     Commit an object to the database. This saves the object's files in the database. Currently you can only commit
-    User, Guild and Project objects.
+    ThornyUser, Guild and Project objects.
     --------
     Parameters:
-        object_to_commit: User or Guild or Project
+        object_to_commit: ThornyUser or Guild or Project
     """
     async with object_to_commit.connection_pool.connection() as conn:
 
@@ -151,17 +133,6 @@ async def commit(object_to_commit: User | Guild | Project):
                 await update_profile(object_to_commit)
                 await update_levels(object_to_commit)
                 await update_counters(object_to_commit)
-
-                original_strikes = object_to_commit.strikes.original_strikes
-                strikes = object_to_commit.strikes.strikes
-                if len(original_strikes) > len(strikes):
-                    for strike in original_strikes:
-                        if strike not in strikes:
-                            await delete_strike(object_to_commit, strike)
-                elif len(strikes) > len(original_strikes):
-                    for strike in strikes:
-                        if strike not in original_strikes:
-                            await insert_strike(object_to_commit, strike)
 
                 print(f"[{datetime.now().replace(microsecond=0)}] [DATABASE] Committed ThornyUser with "
                       f"Thorny ID", object_to_commit.thorny_id)
