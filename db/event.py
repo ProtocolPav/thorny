@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import discord
 import giphy_client
 
-from thorny_core import errors
+from thorny_core import thorny_errors
 from thorny_core.db import User, Guild, commit
 from thorny_core.uikit import embeds
 

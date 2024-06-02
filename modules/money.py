@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-from thorny_core import errors
+from thorny_core import thorny_errors
 from thorny_core.db import UserFactory, commit, GuildFactory
 from thorny_core.db import event
 from thorny_core.uikit import embeds

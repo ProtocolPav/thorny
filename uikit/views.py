@@ -8,11 +8,13 @@ from thorny_core.db.commit import commit
 from thorny_core.db.factory import QuestFactory
 from thorny_core.uikit import embeds, options
 from thorny_core.db import User, UserFactory, GuildFactory, Guild, Project, ProjectFactory
-from thorny_core import errors
+from thorny_core import thorny_errors
+
+from thorny_core import nexus
 
 
 class ProfileEdit(View):
-    def __init__(self, thorny_user: User, embed: discord.Embed):
+    def __init__(self, thorny_user: nexus.ThornyUser, embed: discord.Embed):
         super().__init__(timeout=None)
         self.profile_owner = thorny_user
         self.edit_embed = embed
@@ -20,12 +22,8 @@ class ProfileEdit(View):
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
                        options=options.profile_main_select())
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        if select_menu.values[0] == 'birthday':
-            await interaction.response.send_message("Please use the `/birthday set` command to set your birthday!",
-                                                    ephemeral=True)
-        else:
-            await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
-                                                                         self.edit_embed))
+        await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                                     self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
                        options=options.profile_lore_select())
@@ -33,15 +31,9 @@ class ProfileEdit(View):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
-    @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=options.profile_stats_select())
-    async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
-                                                                     self.edit_embed))
-
 
 class Profile(View):
-    def __init__(self, thorny_user: User, pages: list, ctx: discord.ApplicationContext):
+    def __init__(self, thorny_user: nexus.ThornyUser, pages: list, ctx: discord.ApplicationContext):
         super().__init__(timeout=120.0)
         self.profile_owner = thorny_user
         self.page = 0

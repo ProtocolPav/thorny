@@ -3,7 +3,6 @@ import json
 
 from datetime import datetime
 import time
-from dateutil.relativedelta import relativedelta
 import giphy_client
 import random
 
@@ -57,43 +56,22 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
                                     f"**Joined on:** {utils.datetime_to_string(thorny_user.join_date)}"
                               )
 
-    if len(thorny_user.playtime.monthly) >= 1:
-        m = thorny_user.playtime.monthly[0]
-        current_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
-    else:
-        current_month = ''
+    playtime = thorny_user.playtime
 
-    if len(thorny_user.playtime.monthly) >= 2:
-        m = thorny_user.playtime.monthly[1]
-        next_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
-    else:
-        next_month = ''
-
-    if len(thorny_user.playtime.monthly) >= 3:
-        m = thorny_user.playtime.monthly[2]
-        last_month = f"**{m.month.strftime('%B')}:** {utils.datetime_to_string(m.playtime)}\n"
-    else:
-        last_month = ''
-
-    if len(thorny_user.playtime.daily) >= 1:
-        m = thorny_user.playtime.daily[0]
-        today = f"**Today:** {utils.datetime_to_string(m.playtime)}\n"
-    else:
-        today = f'**Today:** 0h0m\n'
-
-    total_playtime = f'{utils.datetime_to_string(thorny_user.playtime.total)}'
+    second_month = datetime.now().replace(month=datetime.now().month-1).strftime('%B')
+    third_month = datetime.now().replace(month=datetime.now().month-2).strftime('%B')
 
     main_page_embed.add_field(name=f"**:clock8: Quick Stats**",
-                              value=f"{today}"
-                                    f"{current_month}{next_month}{last_month}"
-                                    f"**Total:** {total_playtime}\n",
+                              value=f"**Today:** {utils.datetime_to_string(playtime.today)}\n"
+                                    f"**{datetime.now().strftime('%B')}:** {utils.datetime_to_string(playtime.current_month)}\n"
+                                    f"**{second_month}:** {utils.datetime_to_string(playtime.second_month)}\n"
+                                    f"**{third_month}:** {utils.datetime_to_string(playtime.third_month)}\n"
+                                    f"**Total:** {utils.datetime_to_string(thorny_user.playtime.total)}\n",
                               inline=True)
 
     main_page_embed.add_field(name=f"**:person_raising_hand: About Me**",
                               value=f'"{profile.aboutme}"',
                               inline=False)
-
-    main_page_embed.set_footer(text=f"Main Page")
 
     return main_page_embed
 
@@ -131,8 +109,6 @@ async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
                               value=f'"{thorny_user.profile.lore}"',
                               inline=False)
 
-    lore_page_embed.set_footer(text=f"Lore")
-
     return lore_page_embed
 
 
@@ -150,7 +126,7 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
         if len(blocks_mined) == 3:
             break
         else:
-            blocks_mined.append(f'**{block.reference.replace("minecraft:", "")}:** {block.count:,}')
+            blocks_mined.append(f'**{block.reference}:** {block.count:,}')
 
     mined_text = '\n'.join(blocks_mined)
 
@@ -159,7 +135,7 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
         if len(blocks_placed) == 3:
             break
         else:
-            blocks_placed.append(f'**{block.reference.replace("minecraft:", "")}:** {block.count:,}')
+            blocks_placed.append(f'**{block.reference}:** {block.count:,}')
 
     placed_text = '\n'.join(blocks_placed)
 
@@ -191,8 +167,6 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed.add_field(name=f"\t",
                                value=f"\t")
 
-    stats_page_embed.set_footer(text=f"Playtime Stats")
-
     return stats_page_embed
 
 
@@ -200,14 +174,12 @@ async def profile_edit_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     edit_embed = discord.Embed(title="Editing Your Profile",
                                colour=thorny_user.discord_member.colour)
 
-    edit_embed.add_field(name="It's simple, really!",
-                         value=f"The Profile is separated into 3 pages:\n"
+    edit_embed.add_field(name="It's simple. No, really!",
+                         value=f"You can edit 2 pages of your profile:\n"
                                f"- The Main Page, all about **YOU**\n"
-                               f"- The Lore Page, all about your character\n"
-                               f"- The Playtime Stats Page, which gives deep insight\n"
-                               f"\nAnd so, the **Editing Menus** are split up just the same!\n"
-                               f"You have 3 **select Menus** to choose from, for each of the 3 **pages**!\n\n"
-                               f"**Now, just choose a section from the menus below and start editing!**")
+                               f"- The Lore Page, all about your character\n\n"
+                               f"To start editing, just select something from the **Select Menus** "
+                               f"and start editing!")
 
     return edit_embed
 
