@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 import json
-from thorny_core import errors
+from thorny_core import thorny_errors
 from thorny_core.db import UserFactory, commit, GuildFactory
 import thorny_core.uikit as uikit
 

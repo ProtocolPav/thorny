@@ -17,7 +17,9 @@ class Interaction:
 
     @classmethod
     def build(cls, data: dict):
-        return cls(**data)
+        return cls(reference=data['reference'].replace('_', ' ').replace('minecraft:', '').capitalize(),
+                   type=data['type'],
+                   count=data['count'])
 
 
 @dataclass

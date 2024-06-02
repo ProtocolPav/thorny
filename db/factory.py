@@ -15,7 +15,7 @@ from thorny_core.db.project import Project
 from thorny_core.db.quest import Quest
 from thorny_core.db.commit import commit
 from thorny_core.db.poolwrapper import pool_wrapper
-from thorny_core import errors
+from thorny_core import thorny_errors
 
 
 class UserFactory:

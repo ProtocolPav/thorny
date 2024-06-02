@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import asyncpg as pg
 import discord
 
-from thorny_core import errors
+from thorny_core import thorny_errors
 from thorny_core.db.guild import Guild
 from thorny_core.db.poolwrapper import PoolWrapper
 from thorny_core.db.quest import PlayerQuest

@@ -1,7 +1,7 @@
 import discord
 
 from dataclasses import dataclass
-import thorny_core.errors as thorny_errors
+import thorny_core.thorny_errors as thorny_errors
 
 import httpx
 
@@ -50,7 +50,7 @@ class Profile:
                       "ingenuity": self.ingenuity
                     }
 
-            user = await client.patch(f"http://nexuscore:8000/v0.1/api/users/thorny-id/{self.thorny_id}/profile",
+            user = await client.patch(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{self.thorny_id}/profile",
                                       json=data)
 
             if user.status_code != 200:

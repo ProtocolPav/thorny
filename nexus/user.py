@@ -8,7 +8,7 @@ from typing import Optional
 
 import httpx
 
-import thorny_core.errors as thorny_errors
+import thorny_core.thorny_errors as thorny_errors
 
 from thorny_core.nexus.playtime import Playtime
 from thorny_core.nexus.profile import Profile
