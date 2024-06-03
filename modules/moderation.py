@@ -26,13 +26,8 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def purge(self, ctx: discord.ApplicationContext,
                     amount: int = discord.Option(int, "The amount of messages to delete")):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        # Make this usable by everyone, but if a mod uses it, then it deletes messages sent by all
-        # if a normal user uses this, only their messages
-
         messages = await ctx.channel.purge(limit=amount)
-        await ctx.respond(f"Deleted {len(messages)} messages.\n"
-                          f"Check Mod Logs (<#{thorny_guild.channels.get_channel('logs')}>) for the list of deleted messages.",
+        await ctx.respond(f"Deleted {len(messages)} messages.",
                           ephemeral=True)
 
     @commands.slash_command(description='Send someone to the Gulag')
@@ -64,7 +59,7 @@ class Moderation(commands.Cog):
         async with httpx.AsyncClient() as client:
             status = await client.get("http://thorny-bds:8000/server/start", timeout=None)
             if status.json()['server_online']:
-                raise errors.ServerStartStop(starting=True)
+                raise thorny_errors.ServerStartStop(starting=True)
             elif status.json()['update'] is not None:
                 await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
             elif not status.json()['server_online']:
@@ -198,13 +193,3 @@ class Moderation(commands.Cog):
                                  params={'msg': message})
 
             await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
-
-    @commands.slash_command(description="Authenticate your Realm or Server in the ROA",
-                            guild_ids=GuildFactory.get_guilds_by_feature('ROA'))
-    async def authenticate(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
-        thorny_guild = await GuildFactory.build(ctx.guild)
-
-        await ctx.respond(embed=embeds.roa_embed(),
-                          view=views.ROAVerification(thorny_user, thorny_guild, ctx),
-                          ephemeral=True)

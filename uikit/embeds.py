@@ -482,115 +482,6 @@ def transaction_log(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGui
     return embed
 
 
-def store_items(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
-    embed = discord.Embed(colour=0xFFBF00,
-                          title="Shop Catalogue",
-                          description="Select an item from the menu to buy!")
-
-    for item in thorny_user.inventory.all_items:
-        if item.item_cost != 0:
-            embed.add_field(name=f"**{item.item_display_name}** | {thorny_guild.currency.emoji}{item.item_cost}\n",
-                            value=f"```{item.description} You can hold a maximum of "
-                                  f"{item.item_max_count} {item.item_display_name}s```",
-                            inline=False)
-
-    return embed
-
-
-def store_selected_item(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, item_id: str):
-    embed = discord.Embed(colour=0xFFBF00,
-                          title="Shop Catalogue")
-
-    item = thorny_user.inventory.get_item(item_id)
-
-    embed.add_field(name=f"**About {item.item_display_name}**",
-                    value=f"```{item.description}```\n"
-                          f"**Cost:** {thorny_guild.currency.emoji}{item.item_cost}\n"
-                          f"**Your Balance:** {thorny_guild.currency.emoji}{thorny_user.balance}\n\n"
-                          f"**You can have maximum** {item.item_max_count} of `{item.item_display_name}`\n"
-                          f"**You currently have** {item.item_count} of `{item.item_display_name}`\n")
-
-    return embed
-
-def store_receipt(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild, history: dict):
-    embed = discord.Embed(colour=0xFFBF00,
-                          title="Receipt")
-
-    if len(history) > 0:
-        receipt_text = ""
-        for key, value in history.items():
-            receipt_text = f"{receipt_text}x{value} {key}\n"
-    else:
-        receipt_text = "You bought nothing this session"
-
-    embed.add_field(name="Your Shopping Session:",
-                    value=receipt_text)
-
-    return embed
-
-def secret_santa_message(gift_receiver: nexus.ThornyUser, request: str):
-    embed = discord.Embed(color=0xD70040)
-
-    embed.add_field(name="**Secret Santa**",
-                    value=f"Thank you for participating in this year's Secret Santa!\n"
-                          f"You are to give a gift to {gift_receiver.discord_member.mention}! "
-                          f"(That's `{gift_receiver.username}` in case you can't see the user's @)\n\n"
-                          f"To help you pick the perfect gift, here is what they asked for: **{request}.** "
-                          f"You don't have to get them exactly that, it just serves as an idea of what you *could* get :))\n\n"
-                          f"`Delivery date:` by <t:1672441140:f>\n"
-                          f"`Delivery location:` At the spawn Christmas Tree\n"
-                          f"`Instructions:` Label the chest with the person's name. Run </delivered:0> in discord when you "
-                          f"deliver the gift.")
-
-    return embed
-
-def roa_embed():
-    embed = discord.Embed(color=0xD70040,
-                          title="Authenticate your Realm or Server")
-
-    embed.add_field(name="<:_pink:921708790322192396> Instructions for Owners",
-                    value=f"<:_yellow:921708790313791529> Send an image of your Realm settings as shown in the gif below.\n"
-                          f"<:_yellow:921708790313791529> You must then **Copy** the image **link** by pressing the 'Copy Link' "
-                          f"button.\n"
-                          f"<:_yellow:921708790313791529> Then, click the green `Authenticate` button and paste the image link\n"
-                          f"\nNOTE: Please ensure that your Xbox account is connected to Discord. "
-                          f"You will not be verified otherwise.")
-    embed.add_field(name="<:_pink:921708790322192396> Instructions for Moderators/Admins",
-                    value="<:_yellow:921708790313791529> Please ask your **Owner** to confirm your position as Realm Moderator "
-                          "or Admin with us. "
-                          "It is best if your Owner DM's a ROA Admin.\n"
-                          "<:_yellow:921708790313791529> We will then manually verify you.",
-                    inline=False)
-    embed.add_field(name="Note",
-                    value="If you run a Minecraft BDS (Bedrock Dedicated Server), please DM an admin for manual verification.",
-                    inline=False)
-
-    embed.set_image(url="https://i.imgur.com/AZPvDjE.gif")
-
-    return embed
-
-
-def roa_panel(thorny_user: nexus.ThornyUser, image: str):
-    embed = discord.Embed(color=0xFDDA0D,
-                          title=f"Authentication Request")
-    embed.add_field(name="Request sent by:",
-                    value=f"<@{thorny_user.user_id}>",
-                    inline=False)
-
-    embed.add_field(name="Instructions:",
-                    value=f"1. Check that the user has their Xbox account is connected to Discord.\n"
-                          f"2. Ensure the Xbox account is the same as in the image.\n"
-                          f"3. Verify the authenticity of the image.\n\n"
-                          f"**Note** that pressing `Deny & Kick` will kick the member from the server and they will have to "
-                          f"join again.",
-                    inline=False)
-
-    embed.set_image(url=image)
-    embed.set_footer(text=thorny_user.user_id)
-
-    return embed
-
-
 def connect_embed(time: datetime, thorny_user: nexus.ThornyUser):
     timestamp = round(time.timestamp())
 
@@ -761,30 +652,64 @@ def view_quest(quest: ..., money_symbol: str):
     return embed
 
 
-def quest_progress(quest: ..., money_symbol: str):
+def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symbol: str):
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title)
-
-    time_left =''
-    if quest.timer and quest.started_on:
-        subtraction = datetime.now().replace(microsecond=0) - quest.started_on.replace(microsecond=0)
-        time_left = f"\n**Time Left:** {quest.timer - subtraction}"
-    elif quest.timer and not quest.started_on:
-        time_left = (f"\n**Time Left:** {quest.timer}\n"
-                     f"*Timer starts when you start the quest. e.g when you kill your first mob*")
 
     embed.add_field(name='🔖 Description',
                     value=f"```{quest.description}```",
                     inline=False)
-    embed.add_field(name='🎯 Objective',
-                    value=quest.get_objective(),
+
+    objective_string = ''
+    reward_string = ''
+    counter = 1
+    for objective in quest.objectives:
+        name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
+        objective_type = objective.objective_type.capitalize()
+        requirements = objective.get_objective_requirement_string()
+
+        objective_rewards = []
+        for reward in objective.rewards:
+            objective_rewards.append(reward.get_reward_display(money_symbol))
+
+        if not objective_rewards:
+            objective_rewards.append("No rewards available")
+
+        reward_string = f'{reward_string}{counter}. {", ".join(objective_rewards)}\n'
+
+        for user_objective in thorny_user.quest.objectives:
+            progress = objective.objective_count - user_objective.completion
+
+            if user_objective.objective_id == objective.objective_id and user_objective.status != 'in_progress':
+                objective_string = f'{objective_string}{counter}. ~~{objective_type} {progress} **{name}** {requirements}~~\n'
+            elif user_objective.objective_id == objective.objective_id:
+                objective_string = f'{objective_string}{counter}. {objective_type} {progress} **{name}** {requirements}\n'
+
+        counter += 1
+
+    embed.add_field(name=f':dart: Objectives',
+                    value=f'{objective_string}\n',
                     inline=False)
-    embed.add_field(name='⏱️ Progress',
-                    value=f"{quest.completion_count}/{quest.objective_count}{time_left}"
-                          f"",
-                    inline=False)
+
     embed.add_field(name='💎 Rewards',
-                    value=quest.get_rewards(money_symbol),
+                    value=f'{reward_string}\n',
                     inline=False)
+
+    embed.add_field(name='⏱️ Notes',
+                    value=f"- *Objectives must be completed in order*\n"
+                          f"- *Rewards are given after each objective!*\n"
+                          f"- *Timers start upon your first block mined or enemy killed*\n"
+                          f"- *Failing any objective fails the entire quest!*",
+                    inline=False)
+
+    return embed
+
+
+def quest_fail_warn(quest: nexus.Quest):
+    embed = discord.Embed(colour=0xEC5800,
+                          title="Admit Your Defeat",
+                          description=f":bangbang: **THIS QUEST WILL BE GONE FOREVER** :bangbang:\n\n"
+                                      f"Are you sure you want to admit your defeat? "
+                                      f"**{quest.title}** will be ***gone forever*** an you'll lose out on the sweet rewards!")
 
     return embed
