@@ -96,9 +96,15 @@ class ThornyGuild:
 
         return False
 
-    def get_channel_id(self, channel_type: str) -> int:
+    def get_channel_id(self, channel_type: str) -> Optional[int]:
         for i in self.channels:
             if i.channel_type == channel_type:
                 return i.channel_id
 
         return None
+
+    async def get_playtime_leaderboard(self, month: date) -> list[dict]:
+        async with httpx.AsyncClient() as client:
+            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/playtime/{month}")
+
+            return lb.json()['leaderboard']

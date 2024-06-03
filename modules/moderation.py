@@ -1,17 +1,10 @@
-import asyncio
-import math
-import random
-from datetime import datetime, timedelta
-
 import discord
-from discord.ext import commands, pages
-from thorny_core.uikit.views import ProjectApplicationForm
+from discord.ext import commands
 import httpx
 
 import json
-from thorny_core.db import UserFactory, commit, GuildFactory, event
-from thorny_core.uikit import embeds, views
-from thorny_core import thorny_errors
+from thorny_core.uikit import embeds
+from thorny_core import nexus, thorny_errors
 
 config = json.load(open("./../thorny_data/config.json", "r"))
 
@@ -50,11 +43,13 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(description='Start the server if it is stopped',
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.slash_command(description='Start the server if it is stopped')
     @commands.has_permissions(administrator=True)
     async def start(self, ctx: discord.ApplicationContext):
         await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
             status = await client.get("http://thorny-bds:8000/server/start", timeout=None)
@@ -65,113 +60,109 @@ class Moderation(commands.Cog):
             elif not status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_start_embed())
 
-    @commands.slash_command(description='Stop the server if it is currently running',
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @commands.slash_command(description='Stop the server if it is currently running')
     @commands.has_permissions(administrator=True)
     async def stop(self, ctx):
         await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
             status = await client.get("http://thorny-bds:8000/server/stop", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_stop_embed())
             else:
-                raise errors.ServerStartStop(starting=False)
+                raise thorny_errors.ServerStartStop(starting=False)
 
     whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands")
 
-    @whitelist.command(description="Add somebody to the server whitelist",
-                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @whitelist.command(description="Add somebody to the server whitelist")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx: discord.ApplicationContext, user: discord.Member):
-        thorny_user = await UserFactory.build(user)
-        gamertags = await UserFactory.get_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        if not gamertags and thorny_user.profile.whitelisted_gamertag is None:
+        thorny_user = await nexus.ThornyUser.build(user)
+        # gamertags = await UserFactory.get_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
+        # Gets all gamertags to ensure that this is a unique gamertag being added. Not implemented.
+
+        if thorny_user.whitelist is None:
             async with httpx.AsyncClient() as client:
                 r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
-                    thorny_user.profile.whitelisted_gamertag = thorny_user.profile.gamertag
-                    await commit(thorny_user)
+                    thorny_user.whitelist = thorny_user.gamertag
 
                     await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.profile.gamertag}")
 
-                    await ctx.respond(f"Added <@{thorny_user.user_id}> to the whitelist "
-                                      f"under the gamertag **{thorny_user.profile.gamertag}**")
-                else:
-                    raise errors.ServerNotOnline()
-        elif gamertags:
-            raise errors.GamertagAlreadyAdded(thorny_user.profile.gamertag, gamertags[0]['user_id'])
-        elif thorny_user.profile.whitelisted_gamertag is not None:
-            raise errors.AlreadyWhitelisted()
+                    await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
+                                      f"under the gamertag **{thorny_user.whitelist}**")
 
-    @whitelist.command(description="Remove somebody from the server whitelist",
-                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+                    await thorny_user.update()
+                else:
+                    raise thorny_errors.ServerNotOnline()
+        # elif gamertags:
+        #     raise errors.GamertagAlreadyAdded(thorny_user.profile.gamertag, gamertags[0]['user_id'])
+        elif thorny_user.whitelist is not None:
+            raise thorny_errors.AlreadyWhitelisted()
+
+    @whitelist.command(description="Remove somebody from the server whitelist")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member):
-        thorny_user = await UserFactory.build(user)
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        if thorny_user.profile.whitelisted_gamertag is not None:
+        thorny_user = await nexus.ThornyUser.build(user)
+
+        if thorny_user.whitelist is not None:
             async with httpx.AsyncClient() as client:
                 r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
-                    removed_gamertag = thorny_user.profile.whitelisted_gamertag
-                    thorny_user.profile.whitelisted_gamertag = None
-                    await commit(thorny_user)
+                    removed_gamertag = thorny_user.whitelist
+                    thorny_user.whitelist = None
 
                     await client.get(f"http://thorny-bds:8000/whitelist/remove/{removed_gamertag}")
 
                     await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
-                else:
-                    raise errors.ServerNotOnline()
-        else:
-            raise errors.NotWhitelisted()
 
-    @whitelist.command(description="See the whitelist",
-                       guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+                    await thorny_user.update()
+                else:
+                    raise thorny_errors.ServerNotOnline()
+        else:
+            raise thorny_errors.NotWhitelisted()
+
+    @whitelist.command(description="See the whitelist")
     @commands.has_permissions(administrator=True)
     async def view(self, ctx: discord.ApplicationContext):
-        gamertags = await UserFactory.get_gamertags(ctx.guild.id)
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        self.pages = []
-
-        total_pages = math.ceil(len(gamertags) / 10)
-        for page in range(1, total_pages + 1):
-            start = page * 10 - 10
-            stop = page * 10
-            whitelist = []
-            for tag in gamertags[start:stop]:
-                whitelist.append(f"<@{tag['user_id']}> • {tag['whitelisted_gamertag']}")
-
-            if page != total_pages + 1:
-                gamertag_embed = discord.Embed(colour=0x64d5ac)
-                gamertag_embed.add_field(name=f"**Everthorn Whitelist**",
-                                         value="\n".join(whitelist))
-                gamertag_embed.set_footer(text=f'Page {page}/{total_pages}')
-                self.pages.append(gamertag_embed)
-        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
-        await paginator.respond(ctx.interaction)
+        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
 
     server_command = discord.SlashCommandGroup("send", "Minecraft BDS Commands")
 
-    @server_command.command(description='Kick someone from the server',
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @server_command.command(description='Kick someone from the server')
     @commands.has_permissions(administrator=True)
     async def boot(self, ctx, user: discord.Member):
-        thorny_user = await UserFactory.build(user)
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        thorny_user = await nexus.ThornyUser.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.profile.whitelisted_gamertag}")
+            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.whitelist}")
             if r.json()["kicked"]:
-                await ctx.respond(f"Kicked {thorny_user.profile.whitelisted_gamertag}")
+                await ctx.respond(f"Kicked {thorny_user.whitelist}")
             else:
                 await ctx.respond(f"Couldn't Kick")
 
-    @server_command.command(description="Send a message or set of messages to the server",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @server_command.command(description="Send a message or set of messages to the server")
     @commands.has_permissions(administrator=True)
     async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
         async with httpx.AsyncClient() as client:
             if repetitions != 0:
                 r = await client.get(f"http://thorny-bds:8000/commands/message/schedule", timeout=None,
@@ -184,10 +175,12 @@ class Moderation(commands.Cog):
 
                 await ctx.respond(f"## Message Sent!\n**Message:** {message}")
 
-    @server_command.command(description="Send an announcement to the server",
-                            guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @server_command.command(description="Send an announcement to the server")
     @commands.has_permissions(administrator=True)
     async def announcement(self, ctx: discord.ApplicationContext, message: str):
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
         async with httpx.AsyncClient() as client:
             r = await client.get(f"http://thorny-bds:8000/commands/announce", timeout=None,
                                  params={'msg': message})
