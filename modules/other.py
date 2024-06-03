@@ -4,7 +4,7 @@ from thorny_core import uikit
 from thorny_core.db import GuildFactory, UserFactory, ProjectFactory
 from datetime import datetime, timedelta
 
-from thorny_core.db.factory import QuestFactory
+from thorny_core import nexus
 
 
 class Other(commands.Cog):
@@ -42,7 +42,7 @@ class Other(commands.Cog):
     @project.command(description="Apply for a Project!",
                      guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def apply(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
+        thorny_user = await nexus.ThornyUser.build(ctx.user)
         project = await ProjectFactory.create(thorny_user)
         await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, project),
                           embed=uikit.project_application_builder_embed(thorny_user, project),
@@ -72,23 +72,23 @@ class Other(commands.Cog):
     @quests.command(description="View the currently available quests",
                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
     async def view(self, ctx: discord.ApplicationContext):
-        thorny_user = await UserFactory.build(ctx.user)
-        display_quests_overview = True
+        await ctx.defer()
+
+        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
 
         if thorny_user.quest:
-            if thorny_user.quest.quest_fail_check():
-                view = uikit.CurrentQuestPanel(ctx, thorny_user.guild, thorny_user)
-                await ctx.respond(embed=uikit.quest_progress(thorny_user.quest, thorny_user.guild.currency.emoji),
-                                  view=view,
-                                  ephemeral=False)
-                display_quests_overview = False
-            else:
-                await QuestFactory.fail_user_quest(thorny_user.quest.id, thorny_user.thorny_id)
+            quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
 
-        if display_quests_overview:
+            view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
+            await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user, thorny_guild.currency_emoji),
+                              view=view,
+                              ephemeral=False)
+
+        else:
             quests = await QuestFactory.fetch_available_quests(thorny_user.thorny_id)
 
-            view = uikit.QuestPanel(ctx, thorny_user.guild, thorny_user)
+            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user)
             await view.update_view()
             await ctx.respond(embed=uikit.quests_overview(quests),
                               view=view,

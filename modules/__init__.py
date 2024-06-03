@@ -1,5 +1,4 @@
 from .other import Other
-from .inventory import Inventory
 from .leaderboards import Leaderboard
 from .level import Level
 from .moderation import Moderation

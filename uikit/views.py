@@ -722,44 +722,75 @@ class QuestPanel(View):
 
             await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user),
                                                     embed=embeds.quest_progress(self.thorny_user.quest,
-                                                                                self.thorny_guild.currency.emoji))
+                                                                                self.thorny_guild.currency_emoji))
         else:
             raise errors.WrongUser
 
 
 class CurrentQuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser,
+                 quest_info: nexus.Quest):
         super().__init__(timeout=None)
         self.ctx = context
         self.thorny_guild = thorny_guild
         self.thorny_user = thorny_user
-        self.warned = False
+        self.quest = quest_info
 
     async def on_timeout(self):
         self.disable_all_items()
 
-    @discord.ui.button(label="Drop Quest",
+    @discord.ui.button(label="Admit Defeat",
                        custom_id="drop",
                        style=discord.ButtonStyle.red)
     async def drop_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            if not self.warned:
-                self.warned = True
-                await interaction.response.edit_message(embed=None,
-                                                        content=f"Are you sure you want to drop "
-                                                                f"**{self.thorny_user.quest.title}**? You won't be able to "
-                                                                f"re-accept this quest ever again!!!\n\n"
-                                                                f"Press the **Drop Quest** button again if you want to drop it, "
-                                                                f"or dismiss this message to keep your quest going.")
-            else:
-                await QuestFactory.fail_user_quest(self.thorny_user.quest.id, self.thorny_user.thorny_id)
-
-                await interaction.response.edit_message(view=None,
-                                                        embed=None,
-                                                        content=f"You dropped **{self.thorny_user.quest.title}**. "
-                                                                f"Run `/quests view` to accept another quest!")
+            await interaction.response.edit_message(embed=embeds.quest_fail_warn(self.quest),
+                                                    view=FailQuest(self.ctx, self.thorny_guild, self.thorny_user,
+                                                                   self.quest))
         else:
-            raise errors.WrongUser
+            raise thorny_errors.WrongUser
+
+
+class FailQuest(View):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser,
+                 quest_info: nexus.Quest):
+        super().__init__(timeout=None)
+        self.ctx = context
+        self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
+        self.quest = quest_info
+
+    async def on_timeout(self):
+        self.disable_all_items()
+
+    @discord.ui.button(label="Confirm Admit Defeat",
+                       custom_id="drop",
+                       style=discord.ButtonStyle.red)
+    async def drop_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user == self.thorny_user.discord_member:
+            await self.thorny_user.quest.fail()
+
+            await interaction.response.edit_message(view=None,
+                                                    embed=None,
+                                                    content=f"## You admitted defeat.\n"
+                                                            f"Run `/quests view` to try your luck at another quest!!")
+        else:
+            raise thorny_errors.WrongUser
+
+    @discord.ui.button(label="Maybe not...",
+                       custom_id="back",
+                       style=discord.ButtonStyle.green)
+    async def back_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user == self.thorny_user.discord_member:
+            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild,
+                                                                           self.thorny_user, self.quest),
+                                                    embed=embeds.quest_progress(self.quest,
+                                                                                self.thorny_user, 
+                                                                                self.thorny_guild.currency_emoji))
+        else:
+            raise thorny_errors.WrongUser
+
+
 
 
 class QuestAdminPanel(View):

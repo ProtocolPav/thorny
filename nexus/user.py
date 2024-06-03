@@ -103,8 +103,9 @@ class ThornyUser:
 
             profile = Profile.build(user_dict['profile'], user_dict['user']['thorny_id'])
             playtime = Playtime.build(user_dict['playtime'])
+            quest = await UserQuest.build(user_dict['user']['thorny_id'])
 
-            user_class = cls(**user_dict['user'], profile=profile, playtime=playtime, discord_member=member, quest=None)
+            user_class = cls(**user_dict['user'], profile=profile, playtime=playtime, discord_member=member, quest=quest)
 
             user_class.username = member.name
             user_class.active = True
