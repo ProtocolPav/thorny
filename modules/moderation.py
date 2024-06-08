@@ -94,7 +94,7 @@ class Moderation(commands.Cog):
                 if r.json()['server_online']:
                     thorny_user.whitelist = thorny_user.gamertag
 
-                    await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.profile.gamertag}")
+                    await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.whitelist}")
 
                     await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
                                       f"under the gamertag **{thorny_user.whitelist}**")
