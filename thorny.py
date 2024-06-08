@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime, time
 
 import discord
@@ -32,7 +31,7 @@ shutdown_notice_received = False
 
 @thorny.event
 async def on_ready():
-    print(config['ascii_thorny'])
+    print('\033[1;32m' + config['ascii_thorny'] + '\033[0m')
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"everything.")
     await thorny.change_presence(activity=bot_activity)
@@ -40,7 +39,6 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(uikit.PersistentProjectAdminButtons())
-    thorny.add_view(uikit.ROAVerificationPanel())
 
 
 # @tasks.loop(hours=24.0)
