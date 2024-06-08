@@ -9,10 +9,6 @@ import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
 
-from thorny_core.db.factory import QuestFactory
-from thorny_core.db.poolwrapper import pool_wrapper
-from thorny_core.db import User
-
 
 def current_month():
     return datetime.now().strftime("%B")
@@ -109,13 +105,6 @@ def profile_lore_select():
     ]
 
 
-def profile_stats_select():
-    return [
-            SelectOption(label="Coming soon...",
-                         description="Just gotta wait a bit!",
-                         emoji=None)]
-
-
 def server_setup():
     return [
             SelectOption(label="Welcome Configuration",
@@ -141,54 +130,6 @@ def server_setup():
                          description="Choose a name & emoji for your currency")
     ]
 
-
-def shop_items():
-    async def get():
-        async with pool_wrapper.connection() as conn:
-            items = await conn.fetch("""
-                                     SELECT * FROM thorny.item_type
-                                     WHERE item_cost > 0
-                                     """)
-            return items
-
-    item_rec = asyncio.get_event_loop().run_until_complete(get())
-
-    return_list = []
-    for item in item_rec:
-        return_list.append(SelectOption(label=item['display_name'],
-                                        value=item['friendly_id'],
-                                        description=item['description']))
-
-    return return_list
-
-
-def slash_command_all_items():
-    async def get():
-        async with pool_wrapper.connection() as conn:
-            items = await conn.fetch("""
-                                     SELECT * FROM thorny.item_type
-                                     """)
-            return items
-
-    item_rec = asyncio.get_event_loop().run_until_complete(get())
-
-    return_list = []
-    for item in item_rec:
-        return_list.append(OptionChoice(name=item['display_name'],
-                                        value=item['friendly_id']))
-
-    return return_list
-
-
-def redeem_items(thorny_user: User):
-    return_list = []
-    for item in thorny_user.inventory.slots:
-        if item.redeemable:
-            return_list.append(SelectOption(label=item.item_display_name,
-                                            value=item.item_id,
-                                            description=item.description))
-
-    return return_list
 
 async def available_quests(thorny_id: int):
     quests = await QuestFactory.fetch_available_quests(thorny_id)
