@@ -1,10 +1,9 @@
 import discord
 from discord.ext import commands
 from thorny_core import uikit
-from thorny_core.db import GuildFactory, UserFactory, ProjectFactory
 from datetime import datetime, timedelta
 
-from thorny_core import nexus
+from thorny_core import nexus, thorny_errors
 
 
 class Other(commands.Cog):
@@ -39,40 +38,36 @@ class Other(commands.Cog):
 
     project = discord.SlashCommandGroup("project", "Project Commands")
 
-    @project.command(description="Apply for a Project!",
-                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @project.command(description="Apply for a Project!")
     async def apply(self, ctx: discord.ApplicationContext):
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
         thorny_user = await nexus.ThornyUser.build(ctx.user)
         project = await ProjectFactory.create(thorny_user)
         await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, project),
                           embed=uikit.project_application_builder_embed(thorny_user, project),
                           ephemeral=True)
 
-    @project.command(description="Use in a Project Thread. View the current project's info",
-                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @project.command(description="Use in a Project Thread. View the current project's info")
     async def view(self, ctx: discord.ApplicationContext):
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
         thorny_user = await UserFactory.build(ctx.user)
         thorny_guild = await GuildFactory.build(ctx.guild)
         project = await ProjectFactory.fetch_by_thread(ctx.channel_id, thorny_guild)
 
         await ctx.respond(embed=uikit.project_embed(project))
 
-    @project.command(description="COMING SOON! Give a project progress update",
-                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def progress(self, ctx: discord.ApplicationContext):
-        ...
-
-    @project.command(description="COMING SOON! Mark your project as complete",
-                     guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
-    async def complete(self, ctx: discord.ApplicationContext):
-        ...
-
     quests = discord.SlashCommandGroup("quests", "Quest Commands")
 
-    @quests.command(description="View the currently available quests",
-                    guild_ids=GuildFactory.get_guilds_by_feature('EVERTHORN'))
+    @quests.command(description="View the currently available quests")
     async def view(self, ctx: discord.ApplicationContext):
         await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
