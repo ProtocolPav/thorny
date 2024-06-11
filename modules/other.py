@@ -81,7 +81,7 @@ class Other(commands.Cog):
                               ephemeral=False)
 
         else:
-            quests = await QuestFactory.fetch_available_quests(thorny_user.thorny_id)
+            quests = await nexus.UserQuest.get_available_quests(thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user)
             await view.update_view()

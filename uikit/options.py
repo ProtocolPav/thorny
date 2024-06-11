@@ -8,6 +8,7 @@ Make everything a function which returns the things needed, and rename the file 
 import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
+from thorny_core import nexus
 
 
 def current_month():
@@ -132,12 +133,13 @@ def server_setup():
 
 
 async def available_quests(thorny_id: int):
-    quests = await QuestFactory.fetch_available_quests(thorny_id)
+    quests = await nexus.UserQuest.get_available_quests(thorny_id)
 
     return_list = []
     for quest in quests:
         return_list.append(SelectOption(label=quest.title,
-                                        value=str(quest.id)))
+                                        description=quest.description[:25] + '...',
+                                        value=str(quest.quest_id)))
 
     return return_list
 

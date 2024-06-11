@@ -76,10 +76,8 @@ class Quest:
     quest_id: int
     start_time: datetime
     end_time: Optional[datetime]
-    timer: timedelta
     title: str
     description: str
-    rewards: Optional[list[Reward]]
     objectives: list[Objective]
 
     @classmethod
@@ -92,28 +90,19 @@ class Quest:
             objectives = []
 
             for obj in quest_dict['objectives']:
-                objective_rewards = []
+                rewards = []
                 for reward in quest_dict['rewards']:
                     if reward['objective_id'] == obj['objective_id']:
-                        objective_rewards.append(reward)
+                        rewards.append(reward)
 
-                objectives.append(Objective.build(obj, objective_rewards))
+                objectives.append(Objective.build(obj, rewards))
 
-            rewards = []
-
-            for reward in quest_dict['rewards']:
-                if reward['objective_id'] is None:
-                    rewards.append(Reward.build(reward))
-
-            quest_class = cls(**quest_dict['quest'], objectives=objectives, rewards=rewards)
+            quest_class = cls(**quest_dict['quest'], objectives=objectives)
 
             quest_class.start_time = datetime.strptime(quest_dict['quest']['start_time'], "%Y-%m-%d %H:%M:%S.%f")
 
             if quest_class.end_time:
                 quest_class.end_time = datetime.strptime(quest_dict['quest']['end_time'], "%Y-%m-%d %H:%M:%S.%f")
-
-            if quest_class.timer:
-                quest_class.timer = timedelta(seconds=quest_dict['quest']['timer'])
 
             return quest_class
 
@@ -143,7 +132,7 @@ class UserQuest:
     objectives: list[UserObjective]
 
     @classmethod
-    async def build(cls, thorny_id: int):
+    async def build(cls, thorny_id: int) -> Optional["UserQuest"]:
         async with httpx.AsyncClient() as client:
             quest = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/active")
 
@@ -154,6 +143,28 @@ class UserQuest:
             else:
                 objectives = [UserObjective.build(i) for i in quest_dict['objectives']]
                 return cls(**quest_dict['quest'], objectives=objectives, thorny_id=thorny_id)
+
+    @classmethod
+    async def get_available_quests(cls, thorny_id: int) -> list[Quest]:
+        async with httpx.AsyncClient() as client:
+            unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/all")
+            quest_list = await client.get(f"http://nexuscore:8000/api/v0.1/quests")
+
+            unavailable_quests = unavailable_quests.json()['quests']
+            quest_list = quest_list.json()['current']
+
+            available_quests = []
+
+            for quest in quest_list:
+                if quest['quest']['quest_id'] not in unavailable_quests:
+                    available_quests.append(await Quest.build(quest['quest']['quest_id']))
+
+            return available_quests
+
+    @classmethod
+    async def accept_quest(cls, thorny_id: int, quest_id: int):
+        async with httpx.AsyncClient() as client:
+            await client.post(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/{quest_id}")
 
     async def fail(self):
         async with httpx.AsyncClient() as client:

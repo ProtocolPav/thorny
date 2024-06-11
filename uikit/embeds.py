@@ -611,8 +611,8 @@ def quests_overview(quests: list[...]):
     return embed
 
 
-def view_quest(quest: ..., money_symbol: str):
-    times = quest.end - datetime.now()
+def view_quest(quest: nexus.Quest, money_symbol: str):
+    times = quest.end_time - datetime.now()
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title,
                           description=f"*This quest will become unavailable <t:{int(time.time() + times.total_seconds())}:R>. "
@@ -621,11 +621,41 @@ def view_quest(quest: ..., money_symbol: str):
     embed.add_field(name='🔖 Description',
                     value=f"```{quest.description}```",
                     inline=False)
-    embed.add_field(name='🎯 Objective',
-                    value=quest.get_objective(),
+
+    objective_string = ''
+    reward_string = ''
+    counter = 1
+    for objective in quest.objectives:
+        name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
+        objective_type = objective.objective_type.capitalize()
+        requirements = objective.get_objective_requirement_string()
+
+        objective_rewards = []
+        for reward in objective.rewards:
+            objective_rewards.append(reward.get_reward_display(money_symbol))
+
+        if not objective_rewards:
+            objective_rewards.append("No rewards available")
+
+        reward_string = f'{reward_string}{counter}. {", ".join(objective_rewards)}\n'
+
+        objective_string = f'{objective_string}{counter}. {objective_type} {objective.objective_count} **{name}** {requirements}\n'
+
+        counter += 1
+
+    embed.add_field(name=f':dart: Objectives',
+                    value=f'{objective_string}\n',
                     inline=False)
+
     embed.add_field(name='💎 Rewards',
-                    value=quest.get_rewards(money_symbol),
+                    value=f'{reward_string}\n',
+                    inline=False)
+
+    embed.add_field(name='⏱️ Notes',
+                    value=f"- *Objectives must be completed in order*\n"
+                          f"- *Rewards are given after each objective!*\n"
+                          f"- *Timers start upon your first block mined or enemy killed*\n"
+                          f"- *Failing any objective fails the entire quest!*",
                     inline=False)
 
     return embed
