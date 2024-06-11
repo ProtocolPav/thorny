@@ -677,7 +677,7 @@ class QuestPanel(View):
         self.ctx = context
         self.thorny_guild = thorny_guild
         self.thorny_user = thorny_user
-        self.quest_id = 0
+        self.selected_quest_id = 0
 
     async def on_timeout(self):
         self.disable_all_items()
@@ -694,17 +694,17 @@ class QuestPanel(View):
     async def update_buttons(self):
         accept_button = [x for x in self.children if x.custom_id == "accept"][0]
 
-        if self.quest_id != 0 and self.thorny_user.quest is None:
+        if self.selected_quest_id != 0 and self.thorny_user.quest is None:
             accept_button.disabled = False
 
     @discord.ui.select(placeholder="View more info about a Quest")
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
-        self.quest_id = int(select_menu.values[0])
+        self.selected_quest_id = int(select_menu.values[0])
         await self.update_buttons()
 
         await interaction.response.edit_message(view=self,
-                                                embed=embeds.view_quest(await QuestFactory.build(self.quest_id),
-                                                                        self.thorny_guild.currency.emoji))
+                                                embed=embeds.view_quest(await nexus.Quest.build(self.selected_quest_id),
+                                                                        self.thorny_guild.currency_emoji))
 
     @discord.ui.button(label="Accept Quest",
                        custom_id="accept",
@@ -713,12 +713,15 @@ class QuestPanel(View):
                        disabled=True)
     async def accept_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            if self.thorny_user.quest is None and interaction.user.id == self.thorny_user.user_id:
-                await QuestFactory.create_new_user_quest(self.quest_id, self.thorny_user.thorny_id)
-                self.thorny_user = await UserFactory.build(self.thorny_user.discord_member)
+            if self.thorny_user.quest is None:
+                await nexus.UserQuest.accept_quest(self.thorny_user.thorny_id, self.selected_quest_id)
+                self.thorny_user.quest = await nexus.UserQuest.build(self.thorny_user.thorny_id)
 
-            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user),
-                                                    embed=embeds.quest_progress(self.thorny_user.quest,
+            quest_info = await nexus.Quest.build(self.thorny_user.quest.quest_id)
+
+            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user,
+                                                                           quest_info),
+                                                    embed=embeds.quest_progress(quest_info, self.thorny_user,
                                                                                 self.thorny_guild.currency_emoji))
         else:
             raise thorny_errors.WrongUser
