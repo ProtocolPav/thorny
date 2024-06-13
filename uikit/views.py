@@ -293,11 +293,12 @@ class ProjectApplicationMembers(View):
 
 
 class ProjectApplicationForm(View):
-    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, project: ...):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.thorny_user = thorny_user
-        self.project = project
+        self.thorny_guild = thorny_guild
+        self.project_data = {'owner_id': thorny_user.thorny_id}
 
         self.step = 0
 
@@ -310,29 +311,34 @@ class ProjectApplicationForm(View):
                        custom_id="form")
     async def form_callback(self, button: Button, interaction: discord.Interaction):
         if "1" in button.label:
-            modal = modals.ProjectDetailsName(self.thorny_user, self.project, view=self)
+            modal = modals.ProjectDetailsName(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
 
         elif "2" in button.label:
-            modal = modals.ProjectDetailsCoordinates(self.thorny_user, self.project, view=self)
+            modal = modals.ProjectDetailsCoordinates(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-        elif "3" in button.label:
-            modal = modals.ProjectDetailsDescription(self.thorny_user, self.project, view=self)
+        elif "3/3" in button.label:
+            modal = modals.ProjectDetailsDescription(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-        elif "4/4" in button.label:
-            await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user, self.project),
-                                                    view=ProjectApplicationMembers(self.ctx, self.thorny_user, self.project))
+        # elif "4/4" in button.label:
+        #     await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user,
+        #                                                                                            self.project_data),
+        #                                             view=ProjectApplicationMembers(self.ctx, self.thorny_user,
+        #                                                                            self.project_data))
 
         elif "Confirm" in button.label:
-            self.project.status = "awaiting approval"
-            channel = interaction.client.get_channel(self.thorny_user.guild.channels.get_channel('project_applications'))
-            await commit(self.project)
+            project = await nexus.Project.create_new_project(self.project_data['name'],
+                                                             self.project_data['description'],
+                                                             self.project_data['coordinates'],
+                                                             self.project_data['owner_id'])
+
+            channel = interaction.client.get_channel(self.thorny_guild.get_channel_id('project_applications'))
 
             await interaction.response.edit_message(content=f"Thanks for submitting your application! You can check the "
                                                             f"progress in {channel.mention}!\n"
@@ -341,7 +347,7 @@ class ProjectApplicationForm(View):
                                                     embed=None,
                                                     view=None)
 
-            await channel.send(embed=embeds.project_application_embed(self.project, self.thorny_user),
+            await channel.send(embed=embeds.project_application_embed(project, self.project_data, self.thorny_user),
                                view=PersistentProjectAdminButtons())
 
 

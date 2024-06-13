@@ -44,13 +44,12 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
-        project = await ProjectFactory.create(thorny_user)
-        await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, project),
-                          embed=uikit.project_application_builder_embed(thorny_user, project),
+        await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, thorny_guild),
+                          embed=uikit.project_application_builder_embed(thorny_user, {}),
                           ephemeral=True)
 
-    @project.command(description="Use in a Project Thread. View the current project's info")
-    async def view(self, ctx: discord.ApplicationContext):
+    @project.command(description="View any project's info")
+    async def view(self, ctx: discord.ApplicationContext, project_id: str):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 

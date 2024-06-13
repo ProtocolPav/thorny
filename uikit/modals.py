@@ -103,7 +103,7 @@ class ProfileEditLore(Modal):
 
 
 class ProjectDetailsName(Modal):
-    def __init__(self, thorny_user: nexus.ThornyUser, project: ..., view: discord.ui.View):
+    def __init__(self, thorny_user: nexus.ThornyUser, project: dict, view: discord.ui.View):
         super().__init__(title="Pick your Project Name",
                          timeout=None)
 
@@ -115,17 +115,17 @@ class ProjectDetailsName(Modal):
                                 placeholder="Get creative, and pick a cool name!"))
 
     async def callback(self, interaction: discord.Interaction):
-        self.project.name = self.children[0].value
+        self.project['name'] = self.children[0].value
 
         button = self.view.children[0]
-        button.label = "Next [2/4]"
+        button.label = "Next [2/3]"
 
         await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
 
 
 class ProjectDetailsCoordinates(Modal):
-    def __init__(self, thorny_user: nexus.ThornyUser, project: ..., view: discord.ui.View):
+    def __init__(self, thorny_user: nexus.ThornyUser, project: dict, view: discord.ui.View):
         super().__init__(title="Mark down your Project Coordinates",
                          timeout=None)
 
@@ -141,17 +141,17 @@ class ProjectDetailsCoordinates(Modal):
                                 placeholder="Coordinates in Minecraft are: X, Y, Z"))
 
     async def callback(self, interaction: discord.Interaction):
-        self.project.coordinates = f"{self.children[0].value}, {self.children[1].value}, {self.children[2].value}"
+        self.project['coordinates'] = [int(self.children[0].value), int(self.children[1].value), int(self.children[2].value)]
 
         button = self.view.children[0]
-        button.label = "Next [3/4]"
+        button.label = "Next [3/3]"
 
         await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
 
 
 class ProjectDetailsDescription(Modal):
-    def __init__(self, thorny_user: nexus.ThornyUser, project, view):
+    def __init__(self, thorny_user: nexus.ThornyUser, project: dict, view: discord.ui.View):
         super().__init__(title="Describe your Project",
                          timeout=None)
 
@@ -169,12 +169,12 @@ class ProjectDetailsDescription(Modal):
                                 placeholder="If not, start now!"))
 
     async def callback(self, interaction: discord.Interaction):
-        self.project.description = self.children[0].value
-        self.project.time_estimation = self.children[1].value
-        self.project.road_built = self.children[2].value
+        self.project['description'] = self.children[0].value
+        self.project['time_estimation'] = self.children[1].value
+        self.project['road_built'] = self.children[2].value
 
         button = self.view.children[0]
-        button.label = "Next [4/4]"
+        button.label = "Confirm"
 
         await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
