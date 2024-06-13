@@ -184,27 +184,27 @@ async def profile_edit_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     return edit_embed
 
 
-def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: ...) -> discord.Embed:
+def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: dict) -> discord.Embed:
     embed = discord.Embed(title="Project Application Builder",
                           colour=0xFDDA0D)
     embed.set_author(name=thorny_user.username,
                      icon_url=thorny_user.discord_member.display_avatar.url)
 
     embed.add_field(name="Project Info:",
-                    value=f"**Name:** `{project.name or '[EMPTY]'}`\n"
-                          f"**Coordinates:** `{project.coordinates or '[EMPTY]'}`\n"
-                          f"**Road Built:** `{project.road_built or '[EMPTY]'}`")
+                    value=f"**Name:** `{project.get('name', '[EMPTY]')}`\n"
+                          f"**Coordinates:** `{project.get('coordinates', '[EMPTY]')}`\n"
+                          f"**Road Built:** `{project.get('road_built', '[EMPTY]')}`")
 
     embed.add_field(name="Project Members:",
-                    value=f"{project.members or '`[Enter any Project Members if you have any. If not, leave this blank!]`'}",
+                    value=f"{project.get('members', '[EMPTY]')}",
                     inline=False)
 
     embed.add_field(name="Project Description:",
-                    value=f"`{project.description or '[Talk in detail about your project.]'}`",
+                    value=f"`{project.get('description', '[EMPTY]')}`",
                     inline=False)
 
     embed.add_field(name="Time Estimation:",
-                    value=f"`{project.time_estimation or '[How long do you estimate the project to take?]'}`",
+                    value=f"`{project.get('time_estimation', '[EMPTY]')}`",
                     inline=False)
 
     embed.add_field(name=":page_facing_up: How To Submit Your Application",
@@ -215,20 +215,20 @@ def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: ..
     return embed
 
 
-def project_application_embed(project: ..., thorny_user: nexus.ThornyUser) -> discord.Embed:
+def project_application_embed(project: nexus.Project, project_data: dict, thorny_user: nexus.ThornyUser) -> discord.Embed:
     info_embed = discord.Embed(title=f"{project.name}",
                                colour=0xFDDA0D)
     info_embed.set_author(name=thorny_user.username,
                           icon_url=thorny_user.discord_member.display_avatar.url)
 
     info_embed.add_field(name="Project Info:",
-                         value=f"**Coordinates:** {project.coordinates}\n"
-                               f"**Road Built:** {project.road_built}\n"
-                               f"**Project Members:** {thorny_user.discord_member.name}, {project.members}")
+                         value=f"**Coordinates:** {project_data['coordinates']}\n"
+                               f"**Road Built:** {project_data['road_built']}\n"
+                               f"**Project Members:** {thorny_user.discord_member.name}")
 
     info_embed.add_field(name="Project Idea & Time Estimation:",
                          value=f"**Description:** {project.description}\n"
-                               f"**Time Estimation:** {project.time_estimation}",
+                               f"**Time Estimation:** {project_data['time_estimation']}",
                          inline=False)
 
     info_embed.add_field(name="CM Comments:",
@@ -239,7 +239,7 @@ def project_application_embed(project: ..., thorny_user: nexus.ThornyUser) -> di
                          value="IN REVIEW...",
                          inline=False)
 
-    info_embed.set_footer(text=f"{thorny_user.thorny_id}PR{project.project_id}")
+    info_embed.set_footer(text=f"{project.project_id}")
 
     return info_embed
 
