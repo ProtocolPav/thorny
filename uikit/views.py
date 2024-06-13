@@ -1,7 +1,8 @@
 import random
 
 import discord
-from discord.ui import View, Select, Button, InputText
+from discord import Interaction
+from discord.ui import Item, View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit import embeds, options
@@ -112,12 +113,8 @@ class PersistentProjectAdminButtons(View):
                        label="Approve",
                        custom_id="approve")
     async def approve_callback(self, button: Button, interaction: discord.Interaction):
-        project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
-        thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
-
         thorny_guild = await nexus.ThornyGuild.build(interaction.guild)
-        thorny_user = await nexus.ThornyUser.fetch_by_id(thorny_guild, thorny_id)
-        project = await ProjectFactory.build(project_id, thorny_user)
+        project = await nexus.Project.build(interaction.message.embeds[0].footer.text)
 
         if self.check_for_community_manager(interaction):
             self.disable_all_items()
@@ -143,7 +140,7 @@ class PersistentProjectAdminButtons(View):
                                                     embed=interaction.message.embeds[0],
                                                     view=None)
 
-            forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.channels.get_channel('project_forum'))
+            forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.get_channel_id('project_forum'))
             new_project_tag = None
 
             for tag in forum.available_tags:
@@ -156,12 +153,10 @@ class PersistentProjectAdminButtons(View):
                                                applied_tags=[new_project_tag])
 
             project.thread_id = thread.id
-            project.status = "accepted"
-            project.accept_date = datetime.now()
-            await commit(project)
+            await project.set_status('ongoing')
+            await project.update()
 
-            await thread.send(f"<@&1079703011451998208>, <@{thorny_user.discord_member.mention}>'s project has "
-                              f"been accepted!")
+            await thread.send(f"<@&1079703011451998208>, A new project has been accepted!")
         else:
             await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
@@ -220,47 +215,47 @@ class PersistentProjectAdminButtons(View):
             await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
 
-    @discord.ui.button(style=discord.ButtonStyle.red,
-                       label="Deny",
-                       custom_id="project_deny")
-    async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
-        project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
-        thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
-
-        thorny_guild = await GuildFactory.build(interaction.guild)
-        thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
-        project = await ProjectFactory.build(project_id, thorny_user)
-
-        if self.check_for_community_manager(interaction):
-            modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
-                                                       label="Why are you denying this project?",
-                                                       placeholder="eg: Invalid Coordinates / Do not trust player to complete")
-            await interaction.response.send_modal(modal=modal)
-            await modal.wait()
-
-            interaction.message.embeds[0].colour = 0xD22B2B
-            interaction.message.embeds[0].set_field_at(2,
-                                                       name="CM Comments:",
-                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
-                                                             f"{interaction.user.mention}: {modal.children[0].value}",
-                                                       inline=False)
-
-            interaction.message.embeds[0].set_field_at(3,
-                                                       name="**STATUS:**",
-                                                       value="DENIED",
-                                                       inline=False)
-
-            self.disable_all_items()
-            await interaction.followup.edit_message(message_id=interaction.message.id,
-                                                    embed=interaction.message.embeds[0],
-                                                    view=None)
-
-            project.status = "denied"
-            project.accept_date = datetime.now()
-            await commit(project)
-        else:
-            await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
-                                                    ephemeral=True)
+    # @discord.ui.button(style=discord.ButtonStyle.red,
+    #                    label="Deny",
+    #                    custom_id="project_deny")
+    # async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
+    #     project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
+    #     thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
+    #
+    #     thorny_guild = await GuildFactory.build(interaction.guild)
+    #     thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
+    #     project = await ProjectFactory.build(project_id, thorny_user)
+    #
+    #     if self.check_for_community_manager(interaction):
+    #         modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
+    #                                                    label="Why are you denying this project?",
+    #                                                    placeholder="eg: Invalid Coordinates / Do not trust player to complete")
+    #         await interaction.response.send_modal(modal=modal)
+    #         await modal.wait()
+    #
+    #         interaction.message.embeds[0].colour = 0xD22B2B
+    #         interaction.message.embeds[0].set_field_at(2,
+    #                                                    name="CM Comments:",
+    #                                                    value=f"{interaction.message.embeds[0].fields[2].value}\n"
+    #                                                          f"{interaction.user.mention}: {modal.children[0].value}",
+    #                                                    inline=False)
+    #
+    #         interaction.message.embeds[0].set_field_at(3,
+    #                                                    name="**STATUS:**",
+    #                                                    value="DENIED",
+    #                                                    inline=False)
+    #
+    #         self.disable_all_items()
+    #         await interaction.followup.edit_message(message_id=interaction.message.id,
+    #                                                 embed=interaction.message.embeds[0],
+    #                                                 view=None)
+    #
+    #         project.status = "denied"
+    #         project.accept_date = datetime.now()
+    #         await commit(project)
+    #     else:
+    #         await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
+    #                                                 ephemeral=True)
 
 
 class ProjectApplicationMembers(View):
@@ -305,6 +300,11 @@ class ProjectApplicationForm(View):
     async def on_timeout(self):
         self.disable_all_items()
         await self.ctx.edit(view=self)
+
+    async def on_error(
+        self, error: thorny_errors.ThornyError, item: Item, interaction: Interaction
+    ) -> None:
+        await interaction.response.edit_message(view=None, embed=error.return_embed())
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
                        label="Start [1/4]",

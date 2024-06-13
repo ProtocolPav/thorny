@@ -244,7 +244,7 @@ def project_application_embed(project: nexus.Project, project_data: dict, thorny
     return info_embed
 
 
-def project_embed(project: ...) -> discord.Embed:
+def project_embed(project: nexus.Project) -> discord.Embed:
     wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
 
     info_embed = discord.Embed(title=f"{project.name}",
@@ -256,13 +256,8 @@ def project_embed(project: ...) -> discord.Embed:
 
     info_embed.add_field(name="🔎 Quick Info",
                          value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
-                               f"**Coordinates:** {project.coordinates}\n"
-                               f"**Road Built:** {project.road_built}\n"
-                               f"**Project Members:** {project.owner.discord_member.name}, {project.members}",
-                         inline=False)
-
-    info_embed.add_field(name="📟 Recent Updates",
-                         value=f"**Progress Updates are coming to the next Thorny Version.**",
+                               f"**Coordinates:** {project.coordinates_x}, {project.coordinates_y}, {project.coordinates_z}\n"
+                               f"**Project Members:** *Coming Soon!*",
                          inline=False)
 
     return info_embed
