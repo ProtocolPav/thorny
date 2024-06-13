@@ -174,7 +174,8 @@ class ProjectDetailsDescription(Modal):
         self.project['road_built'] = self.children[2].value
 
         button = self.view.children[0]
-        button.label = "Confirm"
+        button.label = "Confirm Submission"
+        button.style = discord.ButtonStyle.green
 
         await interaction.response.edit_message(embed=project_application_builder_embed(self.thorny_user, self.project),
                                                 view=self.view)
