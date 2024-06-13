@@ -59,7 +59,7 @@ class ThornyUser:
         if 'patreon supporter' in user_roles:
             patron = True
 
-        return role, patron
+        return role.title(), patron
 
 
     @classmethod
