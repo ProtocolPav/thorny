@@ -1,18 +1,18 @@
 import random
 
 import discord
-from discord.ui import View, Select, Button, InputText
+from discord import Interaction
+from discord.ui import Item, View, Select, Button, InputText
 from datetime import datetime, timedelta
 import thorny_core.uikit.modals as modals
-from thorny_core.db.commit import commit
-from thorny_core.db.factory import QuestFactory
 from thorny_core.uikit import embeds, options
-from thorny_core.db import User, UserFactory, GuildFactory, Guild, Project, ProjectFactory
-from thorny_core import errors
+from thorny_core import thorny_errors
+
+from thorny_core import nexus
 
 
 class ProfileEdit(View):
-    def __init__(self, thorny_user: User, embed: discord.Embed):
+    def __init__(self, thorny_user: nexus.ThornyUser, embed: discord.Embed):
         super().__init__(timeout=None)
         self.profile_owner = thorny_user
         self.edit_embed = embed
@@ -20,12 +20,8 @@ class ProfileEdit(View):
     @discord.ui.select(placeholder="🧑 Main Page | Choose a section to edit",
                        options=options.profile_main_select())
     async def main_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        if select_menu.values[0] == 'birthday':
-            await interaction.response.send_message("Please use the `/birthday set` command to set your birthday!",
-                                                    ephemeral=True)
-        else:
-            await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
-                                                                         self.edit_embed))
+        await interaction.response.send_modal(modals.ProfileEditMain(select_menu.values[0], self.profile_owner,
+                                                                     self.edit_embed))
 
     @discord.ui.select(placeholder="⚔️ Lore Page | Choose a section to edit",
                        options=options.profile_lore_select())
@@ -33,15 +29,9 @@ class ProfileEdit(View):
         await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
                                                                      self.edit_embed))
 
-    @discord.ui.select(placeholder="📊 Stats Page | Choose a section to edit",
-                       options=options.profile_stats_select())
-    async def stats_menu_callback(self, select_menu: Select, interaction: discord.Interaction):
-        await interaction.response.send_modal(modals.ProfileEditLore(select_menu.values[0], self.profile_owner,
-                                                                     self.edit_embed))
-
 
 class Profile(View):
-    def __init__(self, thorny_user: User, pages: list, ctx: discord.ApplicationContext):
+    def __init__(self, thorny_user: nexus.ThornyUser, pages: list, ctx: discord.ApplicationContext):
         super().__init__(timeout=120.0)
         self.profile_owner = thorny_user
         self.page = 0
@@ -96,7 +86,7 @@ class Profile(View):
                                                     view=ProfileEdit(self.profile_owner, edit_embed),
                                                     ephemeral=True)
         else:
-            raise errors.WrongUser
+            raise thorny_errors.WrongUser
 
     @discord.ui.button(style=discord.ButtonStyle.gray,
                        label="Lore >",
@@ -123,12 +113,8 @@ class PersistentProjectAdminButtons(View):
                        label="Approve",
                        custom_id="approve")
     async def approve_callback(self, button: Button, interaction: discord.Interaction):
-        project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
-        thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
-
-        thorny_guild = await GuildFactory.build(interaction.guild)
-        thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
-        project = await ProjectFactory.build(project_id, thorny_user)
+        thorny_guild = await nexus.ThornyGuild.build(interaction.guild)
+        project = await nexus.Project.build(interaction.message.embeds[0].footer.text)
 
         if self.check_for_community_manager(interaction):
             self.disable_all_items()
@@ -154,7 +140,7 @@ class PersistentProjectAdminButtons(View):
                                                     embed=interaction.message.embeds[0],
                                                     view=None)
 
-            forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.channels.get_channel('project_forum'))
+            forum: discord.ForumChannel = interaction.guild.get_channel(thorny_guild.get_channel_id('project_forum'))
             new_project_tag = None
 
             for tag in forum.available_tags:
@@ -167,12 +153,10 @@ class PersistentProjectAdminButtons(View):
                                                applied_tags=[new_project_tag])
 
             project.thread_id = thread.id
-            project.status = "accepted"
-            project.accept_date = datetime.now()
-            await commit(project)
+            await project.set_status('ongoing')
+            await project.update()
 
-            await thread.send(f"<@&1079703011451998208>, <@{thorny_user.discord_member.mention}>'s project has "
-                              f"been accepted!")
+            await thread.send(f"<@&1079703011451998208>, A new project has been accepted!")
         else:
             await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
@@ -231,51 +215,51 @@ class PersistentProjectAdminButtons(View):
             await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
                                                     ephemeral=True)
 
-    @discord.ui.button(style=discord.ButtonStyle.red,
-                       label="Deny",
-                       custom_id="project_deny")
-    async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
-        project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
-        thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
-
-        thorny_guild = await GuildFactory.build(interaction.guild)
-        thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
-        project = await ProjectFactory.build(project_id, thorny_user)
-
-        if self.check_for_community_manager(interaction):
-            modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
-                                                       label="Why are you denying this project?",
-                                                       placeholder="eg: Invalid Coordinates / Do not trust player to complete")
-            await interaction.response.send_modal(modal=modal)
-            await modal.wait()
-
-            interaction.message.embeds[0].colour = 0xD22B2B
-            interaction.message.embeds[0].set_field_at(2,
-                                                       name="CM Comments:",
-                                                       value=f"{interaction.message.embeds[0].fields[2].value}\n"
-                                                             f"{interaction.user.mention}: {modal.children[0].value}",
-                                                       inline=False)
-
-            interaction.message.embeds[0].set_field_at(3,
-                                                       name="**STATUS:**",
-                                                       value="DENIED",
-                                                       inline=False)
-
-            self.disable_all_items()
-            await interaction.followup.edit_message(message_id=interaction.message.id,
-                                                    embed=interaction.message.embeds[0],
-                                                    view=None)
-
-            project.status = "denied"
-            project.accept_date = datetime.now()
-            await commit(project)
-        else:
-            await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
-                                                    ephemeral=True)
+    # @discord.ui.button(style=discord.ButtonStyle.red,
+    #                    label="Deny",
+    #                    custom_id="project_deny")
+    # async def project_deny_callback(self, button: Button, interaction: discord.Interaction):
+    #     project_id = int(interaction.message.embeds[0].footer.text.split("PR")[1])
+    #     thorny_id = int(interaction.message.embeds[0].footer.text.split("PR")[0])
+    #
+    #     thorny_guild = await GuildFactory.build(interaction.guild)
+    #     thorny_user = await UserFactory.fetch_by_id(thorny_guild, thorny_id)
+    #     project = await ProjectFactory.build(project_id, thorny_user)
+    #
+    #     if self.check_for_community_manager(interaction):
+    #         modal = modals.ProjectApplicationExtraInfo(title="Give A Reason",
+    #                                                    label="Why are you denying this project?",
+    #                                                    placeholder="eg: Invalid Coordinates / Do not trust player to complete")
+    #         await interaction.response.send_modal(modal=modal)
+    #         await modal.wait()
+    #
+    #         interaction.message.embeds[0].colour = 0xD22B2B
+    #         interaction.message.embeds[0].set_field_at(2,
+    #                                                    name="CM Comments:",
+    #                                                    value=f"{interaction.message.embeds[0].fields[2].value}\n"
+    #                                                          f"{interaction.user.mention}: {modal.children[0].value}",
+    #                                                    inline=False)
+    #
+    #         interaction.message.embeds[0].set_field_at(3,
+    #                                                    name="**STATUS:**",
+    #                                                    value="DENIED",
+    #                                                    inline=False)
+    #
+    #         self.disable_all_items()
+    #         await interaction.followup.edit_message(message_id=interaction.message.id,
+    #                                                 embed=interaction.message.embeds[0],
+    #                                                 view=None)
+    #
+    #         project.status = "denied"
+    #         project.accept_date = datetime.now()
+    #         await commit(project)
+    #     else:
+    #         await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
+    #                                                 ephemeral=True)
 
 
 class ProjectApplicationMembers(View):
-    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, project: ...):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.thorny_user = thorny_user
@@ -304,11 +288,12 @@ class ProjectApplicationMembers(View):
 
 
 class ProjectApplicationForm(View):
-    def __init__(self, ctx: discord.ApplicationContext, thorny_user: User, project: Project):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.thorny_user = thorny_user
-        self.project = project
+        self.thorny_guild = thorny_guild
+        self.project_data = {'owner_id': thorny_user.thorny_id}
 
         self.step = 0
 
@@ -316,34 +301,44 @@ class ProjectApplicationForm(View):
         self.disable_all_items()
         await self.ctx.edit(view=self)
 
+    async def on_error(
+        self, error: thorny_errors.ThornyError, item: Item, interaction: Interaction
+    ) -> None:
+        await interaction.response.edit_message(view=None, embed=error.return_embed())
+
     @discord.ui.button(style=discord.ButtonStyle.gray,
                        label="Start [1/4]",
                        custom_id="form")
     async def form_callback(self, button: Button, interaction: discord.Interaction):
         if "1" in button.label:
-            modal = modals.ProjectDetailsName(self.thorny_user, self.project, view=self)
+            modal = modals.ProjectDetailsName(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
 
         elif "2" in button.label:
-            modal = modals.ProjectDetailsCoordinates(self.thorny_user, self.project, view=self)
+            modal = modals.ProjectDetailsCoordinates(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-        elif "3" in button.label:
-            modal = modals.ProjectDetailsDescription(self.thorny_user, self.project, view=self)
+        elif "3/3" in button.label:
+            modal = modals.ProjectDetailsDescription(self.thorny_user, self.project_data, view=self)
             await interaction.response.send_modal(modal=modal)
             await modal.wait()
 
-        elif "4/4" in button.label:
-            await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user, self.project),
-                                                    view=ProjectApplicationMembers(self.ctx, self.thorny_user, self.project))
+        # elif "4/4" in button.label:
+        #     await interaction.response.edit_message(embed=embeds.project_application_builder_embed(self.thorny_user,
+        #                                                                                            self.project_data),
+        #                                             view=ProjectApplicationMembers(self.ctx, self.thorny_user,
+        #                                                                            self.project_data))
 
         elif "Confirm" in button.label:
-            self.project.status = "awaiting approval"
-            channel = interaction.client.get_channel(self.thorny_user.guild.channels.get_channel('project_applications'))
-            await commit(self.project)
+            project = await nexus.Project.create_new_project(self.project_data['name'],
+                                                             self.project_data['description'],
+                                                             self.project_data['coordinates'],
+                                                             self.project_data['owner_id'])
+
+            channel = interaction.client.get_channel(self.thorny_guild.get_channel_id('project_applications'))
 
             await interaction.response.edit_message(content=f"Thanks for submitting your application! You can check the "
                                                             f"progress in {channel.mention}!\n"
@@ -352,12 +347,12 @@ class ProjectApplicationForm(View):
                                                     embed=None,
                                                     view=None)
 
-            await channel.send(embed=embeds.project_application_embed(self.project, self.thorny_user),
+            await channel.send(embed=embeds.project_application_embed(project, self.project_data, self.thorny_user),
                                view=PersistentProjectAdminButtons())
 
 
 class SetupFeature(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -383,7 +378,7 @@ class SetupFeature(View):
 
 
 class SetupWelcome(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -447,7 +442,7 @@ class SetupWelcome(View):
 
 
 class SetupLevels(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -507,7 +502,7 @@ class SetupLevels(View):
 
 
 class SetupLogs(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -534,7 +529,7 @@ class SetupLogs(View):
 
 
 class SetupUpdates(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -561,7 +556,7 @@ class SetupUpdates(View):
 
 
 class SetupGulag(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -582,7 +577,7 @@ class SetupGulag(View):
 
 
 class SetupResponses(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -610,7 +605,7 @@ class SetupResponses(View):
 
 
 class SetupCurrency(View):
-    def __init__(self, thorny_guild: Guild):
+    def __init__(self, thorny_guild: nexus.ThornyGuild):
         super().__init__(timeout=None)
         self.thorny_guild = thorny_guild
 
@@ -683,12 +678,12 @@ class ServerSetup(View):
 
 
 class QuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser):
         super().__init__(timeout=None)
         self.ctx = context
         self.thorny_guild = thorny_guild
         self.thorny_user = thorny_user
-        self.quest_id = 0
+        self.selected_quest_id = 0
 
     async def on_timeout(self):
         self.disable_all_items()
@@ -705,17 +700,17 @@ class QuestPanel(View):
     async def update_buttons(self):
         accept_button = [x for x in self.children if x.custom_id == "accept"][0]
 
-        if self.quest_id != 0 and self.thorny_user.quest is None:
+        if self.selected_quest_id != 0 and self.thorny_user.quest is None:
             accept_button.disabled = False
 
     @discord.ui.select(placeholder="View more info about a Quest")
     async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
-        self.quest_id = int(select_menu.values[0])
+        self.selected_quest_id = int(select_menu.values[0])
         await self.update_buttons()
 
         await interaction.response.edit_message(view=self,
-                                                embed=embeds.view_quest(await QuestFactory.build(self.quest_id),
-                                                                        self.thorny_guild.currency.emoji))
+                                                embed=embeds.view_quest(await nexus.Quest.build(self.selected_quest_id),
+                                                                        self.thorny_guild.currency_emoji))
 
     @discord.ui.button(label="Accept Quest",
                        custom_id="accept",
@@ -724,54 +719,86 @@ class QuestPanel(View):
                        disabled=True)
     async def accept_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            if self.thorny_user.quest is None and interaction.user.id == self.thorny_user.user_id:
-                await QuestFactory.create_new_user_quest(self.quest_id, self.thorny_user.thorny_id)
-                self.thorny_user = await UserFactory.build(self.thorny_user.discord_member)
+            if self.thorny_user.quest is None:
+                await nexus.UserQuest.accept_quest(self.thorny_user.thorny_id, self.selected_quest_id)
+                self.thorny_user.quest = await nexus.UserQuest.build(self.thorny_user.thorny_id)
 
-            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user),
-                                                    embed=embeds.quest_progress(self.thorny_user.quest,
-                                                                                self.thorny_guild.currency.emoji))
+            quest_info = await nexus.Quest.build(self.thorny_user.quest.quest_id)
+
+            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user,
+                                                                           quest_info),
+                                                    embed=embeds.quest_progress(quest_info, self.thorny_user,
+                                                                                self.thorny_guild.currency_emoji))
         else:
-            raise errors.WrongUser
+            raise thorny_errors.WrongUser
 
 
 class CurrentQuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser,
+                 quest_info: nexus.Quest):
         super().__init__(timeout=None)
         self.ctx = context
         self.thorny_guild = thorny_guild
         self.thorny_user = thorny_user
-        self.warned = False
+        self.quest = quest_info
 
     async def on_timeout(self):
         self.disable_all_items()
 
-    @discord.ui.button(label="Drop Quest",
+    @discord.ui.button(label="Admit Defeat",
                        custom_id="drop",
                        style=discord.ButtonStyle.red)
     async def drop_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            if not self.warned:
-                self.warned = True
-                await interaction.response.edit_message(embed=None,
-                                                        content=f"Are you sure you want to drop "
-                                                                f"**{self.thorny_user.quest.title}**? You won't be able to "
-                                                                f"re-accept this quest ever again!!!\n\n"
-                                                                f"Press the **Drop Quest** button again if you want to drop it, "
-                                                                f"or dismiss this message to keep your quest going.")
-            else:
-                await QuestFactory.fail_user_quest(self.thorny_user.quest.id, self.thorny_user.thorny_id)
-
-                await interaction.response.edit_message(view=None,
-                                                        embed=None,
-                                                        content=f"You dropped **{self.thorny_user.quest.title}**. "
-                                                                f"Run `/quests view` to accept another quest!")
+            await interaction.response.edit_message(embed=embeds.quest_fail_warn(self.quest),
+                                                    view=FailQuest(self.ctx, self.thorny_guild, self.thorny_user,
+                                                                   self.quest))
         else:
-            raise errors.WrongUser
+            raise thorny_errors.WrongUser
+
+
+class FailQuest(View):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser,
+                 quest_info: nexus.Quest):
+        super().__init__(timeout=None)
+        self.ctx = context
+        self.thorny_guild = thorny_guild
+        self.thorny_user = thorny_user
+        self.quest = quest_info
+
+    async def on_timeout(self):
+        self.disable_all_items()
+
+    @discord.ui.button(label="Confirm Admit Defeat",
+                       custom_id="drop",
+                       style=discord.ButtonStyle.red)
+    async def drop_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user == self.thorny_user.discord_member:
+            await self.thorny_user.quest.fail()
+
+            await interaction.response.edit_message(view=None,
+                                                    embed=None,
+                                                    content=f"## You admitted defeat.\n"
+                                                            f"Run `/quests view` to try your luck at another quest!!")
+        else:
+            raise thorny_errors.WrongUser
+
+    @discord.ui.button(label="Maybe not...",
+                       custom_id="back",
+                       style=discord.ButtonStyle.green)
+    async def back_callback(self, button: Button, interaction: discord.Interaction):
+        if interaction.user == self.thorny_user.discord_member:
+            await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild,
+                                                                           self.thorny_user, self.quest),
+                                                    embed=embeds.quest_progress(self.quest,
+                                                                                self.thorny_user,
+                                                                                self.thorny_guild.currency_emoji))
+        else:
+            raise thorny_errors.WrongUser
 
 
 class QuestAdminPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: Guild, thorny_user: User):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser):
         super().__init__(timeout=None)
         self.ctx = context
         self.thorny_guild = thorny_guild
@@ -839,316 +866,6 @@ class QuestAdminPanel(View):
         await interaction.response.edit_message(view=self,
                                                 embed=embeds.quests_admin_overview(await QuestFactory.fetch_all_quests())
                                                 )
-
-
-class Store(View):
-    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
-        super().__init__(timeout=30.0)
-        self.ctx = context
-        self.user = thorny_user
-        self.guild = thorny_guild
-        self.history = {}
-        self.item_id = None
-
-    async def on_timeout(self):
-        self.disable_all_items()
-        await self.ctx.edit(view=self,
-                            embed=embeds.store_receipt(self.user, self.guild, self.history))
-
-    async def update_view(self, interaction: discord.Interaction):
-        self.user = await UserFactory.build(interaction.user)
-
-        buy_one_button = [x for x in self.children if x.custom_id == "buy_1"][0]
-        buy_three_button = [x for x in self.children if x.custom_id == "buy_3"][0]
-        buy_max_button = [x for x in self.children if x.custom_id == "buy_max"][0]
-
-        buy_one_button.disabled = False
-        buy_three_button.disabled = False
-        buy_max_button.disabled = False
-
-        item = self.user.inventory.get_item(self.item_id)
-        amount_for_max = item.item_max_count - item.item_count
-
-        if item.item_count == item.item_max_count or self.user.balance - item.item_cost * amount_for_max < 0:
-            buy_max_button.disabled = True
-
-        if item.item_count + 3 > item.item_max_count or self.user.balance - item.item_cost * 3 < 0:
-            buy_three_button.disabled = True
-
-        if item.item_count + 1 > item.item_max_count or self.user.balance - item.item_cost < 0:
-            buy_one_button.disabled = True
-
-    @discord.ui.select(placeholder="Select an item to buy",
-                       options=options.shop_items())
-    async def select_callback(self, select_menu: Select, interaction: discord.Interaction):
-        self.item_id = select_menu.values[0]
-
-        await self.update_view(interaction)
-        await interaction.response.edit_message(view=self, embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
-
-    @discord.ui.button(label="Buy Max",
-                       custom_id="buy_max",
-                       style=discord.ButtonStyle.blurple,
-                       disabled=True)
-    async def buy_max_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.get_item(self.item_id)
-        amount = item.item_max_count - item.item_count
-
-        self.user.inventory.add_item(self.item_id, amount)
-        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + amount
-
-        self.user.balance -= item.item_cost * amount
-
-        await commit(self.user)
-
-        await self.update_view(interaction)
-        await interaction.response.edit_message(view=self,
-                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
-
-    @discord.ui.button(label="Buy x1",
-                       custom_id="buy_1",
-                       style=discord.ButtonStyle.green,
-                       disabled=True)
-    async def buy_one_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.get_item(self.item_id)
-
-        self.user.inventory.add_item(self.item_id, 1)
-        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 1
-
-        self.user.balance -= item.item_cost
-
-        await commit(self.user)
-
-        await self.update_view(interaction)
-        await interaction.response.edit_message(view=self,
-                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
-
-    @discord.ui.button(label="Buy x3",
-                       custom_id="buy_3",
-                       style=discord.ButtonStyle.green,
-                       disabled=True)
-    async def buy_three_callback(self, button: Button, interaction: discord.Interaction):
-        item = self.user.inventory.get_item(self.item_id)
-
-        self.user.inventory.add_item(self.item_id, 3)
-        self.history[item.item_display_name] = self.history.get(item.item_display_name, 0) + 3
-
-        self.user.balance -= item.item_cost*3
-
-        await commit(self.user)
-
-        await self.update_view(interaction)
-        await interaction.response.edit_message(view=self,
-                                                embed=embeds.store_selected_item(self.user, self.guild, self.item_id))
-
-
-class RedeemSelectMenu(Select):
-    def __init__(self, placeholder: str, options: list[discord.SelectOption],
-                 thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
-        super().__init__(placeholder=placeholder, options=options)
-        self.ctx = context
-        self.user = thorny_user
-        self.guild = thorny_guild
-
-    async def callback(self, interaction: discord.Interaction):
-        item = self.user.inventory.get_item(self.values[0])
-
-        self.user.inventory.remove_item(item.item_id, 1)
-        self.options = options.redeem_items(self.user)
-
-        if len(self.user.inventory.slots) > 0:
-            view_to_send = self.view
-        else:
-            view_to_send = None
-
-        await interaction.response.edit_message(view=view_to_send, embed=embeds.balance_embed(self.user, self.guild))
-
-        match item.item_id:
-            case "ticket":
-                await self.redeem_ticket()
-
-            case "role":
-                await self.redeem_role()
-
-            case "xmas_gift_2022":
-                await self.ctx.respond("You open the gift. To your surprise, laying within the box is something special. "
-                                       "It's a **Shulker Shell!**")
-
-            case _:
-                raise errors.RedeemError
-
-        await commit(self.user)
-
-    async def redeem_ticket(self):
-        # This function is simply copied from the old functions. It needs changing!
-        def calculate_reward(prize_list, prizes_available):
-            nugs_reward = 0
-            for item in prize_list:
-                nugs_reward += item[1]
-            if prize_list[0] != prize_list[1] != prize_list[2] != prize_list[3] and prizes_available[5] not in prize_list:
-                nugs_reward = nugs_reward * 2
-            return nugs_reward
-
-        ticket_prizes = [[":yellow_heart:", 1], [":gem:", 2], [":dagger:", 4], ["<:grassyE:840170557508026368>", 6],
-                         ["<:goldenE:857714717153689610>", 7], [":dragon_face:", 64]]
-
-        able_to_redeem = True
-        if random.choices([True, False], weights=(2, 98), k=1)[0]:
-            raise errors.FaultyTicketError()
-        else:
-            prizes = []
-            winnings = []
-            for i in range(4):
-                random_icon = random.choices(ticket_prizes, weights=(2.99, 4, 5, 3, 1, 0.01), k=1)
-                prizes.append(random_icon[0])
-                winnings.append(f"||{random_icon[0][0]}||")
-
-            ticket_embed = discord.Embed(color=self.ctx.user.color)
-            ticket_embed.add_field(name="**Scratch Ticket**",
-                                   value=f"Scratch your ticket and see your prize!\n{' '.join(winnings)}")
-            ticket_embed.set_footer(text=f"Ticket #? "
-                                         f"| Use /tickets to see how Prizes work!")
-            if self.user.counters.ticket_count >= 4:
-                if datetime.now() - self.user.counters.ticket_last_purchase <= timedelta(hours=23):
-                    time = datetime.now() - self.user.counters.ticket_last_purchase
-                    able_to_redeem = False
-                    self.user.inventory.add_item("ticket", 1)
-                    await self.ctx.respond(f"You already redeemed 4 tickets! Next time you can redeem is in "
-                                      f"{timedelta(hours=23) - time}")
-                else:
-                    self.user.counters.ticket_count = 0
-            if able_to_redeem:
-                await self.ctx.respond(embed=ticket_embed)
-                self.user.balance += calculate_reward(prizes, ticket_prizes)
-                self.user.counters.ticket_count += 1
-                self.user.counters.ticket_last_purchase = datetime.now().replace(microsecond=0)
-
-    async def redeem_role(self):
-        pass
-
-
-class RedeemMenu(View):
-    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
-        super().__init__(timeout=30.0)
-        self.ctx = context
-        self.user = thorny_user
-        self.guild = thorny_guild
-
-        if len(thorny_user.inventory.slots) > 0:
-            self.add_item(RedeemSelectMenu(placeholder="Select an item to Redeem",
-                                           options=options.redeem_items(self.user),
-                                           thorny_user=thorny_user,
-                                           thorny_guild=thorny_guild,
-                                           context=context))
-
-    async def on_timeout(self):
-        self.disable_all_items()
-        await self.ctx.edit(view=self)
-
-    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
-        if isinstance(error, errors.ThornyError):
-            await interaction.followup.send(embed=error.return_embed(),
-                                            ephemeral=True)
-
-
-class ROAVerificationPanel(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="Verify",
-                       custom_id="verify",
-                       style=discord.ButtonStyle.green)
-    async def verify_callback(self, button: discord.Button, interaction: discord.Interaction):
-        interaction.message.embeds[0].colour = 0x50C878
-        interaction.message.embeds[0].add_field(name="**STATUS:**",
-                                                value=f"APPROVED by {interaction.user.mention}\n"
-                                                      f"on {datetime.now()}",
-                                                inline=False)
-
-        self.disable_all_items()
-        await interaction.response.edit_message(view=None,
-                                                embed=interaction.message.embeds[0])
-        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
-        await thorny_user.discord_member.remove_roles(interaction.guild.get_role(1009931750287364107))
-        await thorny_user.discord_member.add_roles(interaction.guild.get_role(1056302000490414201))
-        await thorny_user.discord_member.send(f"You have been verified by an admin in the ROA. You now have full access "
-                                              f"to the ROA server's channels! Follow the rules, and have fun!")
-
-    @discord.ui.button(label="Deny",
-                       custom_id="roa_deny",
-                       style=discord.ButtonStyle.red)
-    async def roa_deny_callback(self, button: discord.Button, interaction: discord.Interaction):
-        interaction.message.embeds[0].add_field(name="**STATUS:**",
-                                                value=f"DENIED by {interaction.user.mention}\n"
-                                                      f"on {datetime.now()}",
-                                                inline=False)
-
-        self.disable_all_items()
-        await interaction.response.edit_message(view=None,
-                                                embed=interaction.message.embeds[0])
-        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
-        await thorny_user.discord_member.send(f"Your ROA Verification Request has been denied. "
-                                              f"Please re-apply.\n\n"
-                                              f"*Why did this happen?*\n"
-                                              f"There are many reasons it could have happened, here are some common ones:\n"
-                                              f"- You did not connect the correct Xbox account to your Discord\n"
-                                              f"- You did not share the correct image\n"
-                                              f"- The image you shared was hard to authenticate")
-
-    @discord.ui.button(label="Deny & Kick",
-                       custom_id="deny_k",
-                       style=discord.ButtonStyle.red)
-    async def deny_kick_callback(self, button: discord.Button, interaction: discord.Interaction):
-        interaction.message.embeds[0].add_field(name="**STATUS:**",
-                                                value=f"DENIED & KICKED by {interaction.user.mention}\n"
-                                                      f"on {datetime.now()}",
-                                                inline=False)
-
-        self.disable_all_items()
-        await interaction.response.edit_message(view=None,
-                                                embed=interaction.message.embeds[0])
-        thorny_user = await UserFactory.build(interaction.guild.get_member(int(interaction.message.embeds[0].footer.text)))
-        await thorny_user.discord_member.send(f"Your ROA Verification Request has been denied. We are unable to verify your "
-                                              f"realm/server's authenticity. You have been kicked from the ROA.\n\n"
-                                              f"If you believe you were wrongfully denied, please contact a ROA Owner.")
-        await interaction.guild.kick(thorny_user.discord_member, reason=f"ROA Verification Denied by {interaction.user.name}")
-
-
-class ROAVerification(View):
-    def __init__(self, thorny_user: User, thorny_guild: Guild, context: discord.ApplicationContext):
-        super().__init__(timeout=120.0)
-        self.ctx = context
-        self.user = thorny_user
-        self.guild = thorny_guild
-
-    async def on_timeout(self):
-        self.disable_all_items()
-        await self.ctx.edit(view=self)
-
-    async def on_error(self, error: Exception, item: discord.ui.Item, interaction: discord.Interaction) -> None:
-        if isinstance(error, errors.ThornyError):
-            await interaction.edit_original_response(embed=error.return_embed())
-
-    @discord.ui.button(label="Authenticate",
-                       custom_id="auth",
-                       style=discord.ButtonStyle.green)
-    async def auth_callback(self, button: discord.Button, interaction: discord.Interaction):
-        modal = modals.ROAVerification()
-        await interaction.response.send_modal(modal)
-        await modal.wait()
-
-        if "cdn.discordapp.com" in modal.children[0].value or "media.discordapp.net" in modal.children[0].value:
-            await interaction.edit_original_response(content="Thank you for submitting your Realm for verification.\n"
-                                                     "Please wait for an ROA Admin to verify your realm.",
-                                                     embed=None,
-                                                     view=None)
-
-            channel = interaction.guild.get_channel(1056332349383639140)
-            await channel.send(embed=embeds.roa_panel(self.user, modal.children[0].value),
-                               view=ROAVerificationPanel())
-
-        else:
-            raise errors.LinkError()
 
 
 class HelpDropdown(View):
