@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import discord
 from discord.ext import commands, pages
 from discord.utils import basic_autocomplete
 import math
 
-from thorny_core.db import UserFactory, GuildFactory, generator
+from thorny_core import nexus, thorny_errors
 import thorny_core.uikit as uikit
 
 
@@ -20,96 +20,56 @@ class Leaderboard(commands.Cog):
                                                              "to see the current month.",
                                                         autocomplete=basic_autocomplete(uikit.all_months()),
                                                         default='current')):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'PLAYTIME')
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         if month == 'current':
             month = uikit.current_month()
 
         self.pages = []
-        month = datetime.strptime(month[0:3], "%b").replace(year=datetime.now().year)
+        month = datetime.strptime(month, "%B").replace(year=datetime.now().year).date()
 
-        thorny_user = await UserFactory.build(ctx.author)
+        thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        playtime, rank = await generator.activity_leaderboard(thorny_user, month)
+        playtime = await thorny_guild.get_playtime_leaderboard(month)
+
+        rank_text = f"You are not yet on the Leaderboard"
 
         total_pages = math.ceil(len(playtime) / 10)
+        all_texts = []
         for page in range(1, total_pages + 1):
             start = page * 10 - 10
             stop = page * 10
             playtime_text = []
             for user in playtime[start:stop]:
-                time = f"{user['sum']}".split(":")
-                playtime_text.append(f'**{playtime.index(user) + 1}.** <@{user["user_id"]}> • '
+                time = f'{timedelta(seconds=user["value"])}'.split(':')
+                playtime_text.append(f'**{playtime.index(user) + 1}.** <@{user["discord_id"]}> • '
                                      f'**{time[0]}h{time[1]}m**')
-            rank_text = f"You are #{rank} on the Leaderboard"
+
+                if user['thorny_id'] == thorny_user.thorny_id:
+                    rank_text = f"You are #{playtime.index(user) + 1} on the Leaderboard"
 
             if page != total_pages + 1:
-                lb_embed = discord.Embed(title=f'**{datetime.strftime(month, "%B")} Activity Leaderboard**',
-                                         color=0x6495ED)
-                lb_embed.add_field(name=f'**{rank_text}**',
-                                   value='\n'.join(playtime_text), inline=False)
-                lb_embed.set_footer(text=f'Page {page}/{total_pages}')
-                self.pages.append(lb_embed)
+                all_texts.append(playtime_text)
+
+        for text in all_texts:
+            lb_embed = discord.Embed(title=f'**{datetime.strftime(month, "%B")} Activity Leaderboard**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'**{rank_text}**',
+                               value='\n'.join(text), inline=False)
+            lb_embed.set_footer(text=f'Page {all_texts.index(text) + 1}/{total_pages}')
+            self.pages.append(lb_embed)
+
+        if not self.pages:
+            raise thorny_errors.UnexpectedError2("Nobody has played yet this month!!")
+
         paginator = pages.Paginator(pages=self.pages, timeout=30.0)
         await paginator.respond(ctx.interaction)
 
     @leaderboard.command(description="See the Money Leaderboard")
     async def money(self, ctx):
-        thorny_user = await UserFactory.build(ctx.user)
-        thorny_guild = await GuildFactory.build(ctx.guild)
-
-        self.pages = []
-        balances, rank = await generator.money_leaderboard(thorny_user)
-
-        total_pages = math.ceil(len(balances) / 10)
-        for page in range(1, total_pages + 1):
-            start = page * 10 - 10
-            stop = page * 10
-            balance_text = []
-            for user in balances[start:stop]:
-                balance_text.append(f'**{balances.index(user) + 1}.** <@{user["user_id"]}> • '
-                                    f'{thorny_guild.currency.emoji} **{user["balance"]}**')
-            rank_text = f"You are #{rank} on the Leaderboard"
-
-            if page != total_pages + 1:
-                lb_embed = discord.Embed(title=f'**{thorny_guild.currency.name.capitalize()} Leaderboard**',
-                                         color=0x6495ED,
-                                         description=f"**Total {thorny_guild.currency.name} in circulation:** "
-                                                     f"{thorny_guild.currency.emoji} "
-                                                     f"{thorny_guild.currency.total_in_circulation}")
-                lb_embed.add_field(name=f'**{rank_text}**',
-                                   value='\n'.join(balance_text))
-                lb_embed.set_footer(text=f'Page {page}/{total_pages}')
-                self.pages.append(lb_embed)
-        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
-        await paginator.respond(ctx.interaction)
+        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
 
     @leaderboard.command(description="See the levels leaderboard")
     async def levels(self, ctx):
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        GuildFactory.check_guild_feature(thorny_guild, 'LEVELS')
-
-        self.pages = []
-        thorny_user = await UserFactory.build(ctx.author)
-
-        levels, rank = await generator.levels_leaderboard(thorny_user)
-
-        total_pages = math.ceil(len(levels) / 10)
-        for page in range(1, total_pages + 1):
-            start = page * 10 - 10
-            stop = page * 10
-            balance_text = []
-            for user in levels[start:stop]:
-                balance_text.append(f'**{levels.index(user) + 1}.** <@{user["user_id"]}> • '
-                                    f'**Lvl. {user["user_level"]}**')
-            rank_text = f"You are #{rank} on the Leaderboard"
-
-            if page != total_pages + 1:
-                lb_embed = discord.Embed(title=f'**Levels Leaderboard**', color=0x6495ED)
-                lb_embed.add_field(name=f'**{rank_text}**',
-                                   value='\n'.join(balance_text))
-                lb_embed.set_footer(text=f'Page {page}/{total_pages} | Level up by chatting!')
-                self.pages.append(lb_embed)
-        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
-        await paginator.respond(ctx.interaction)
+        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
