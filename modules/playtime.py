@@ -21,7 +21,7 @@ class Playtime(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            status: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
+            status: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
 
         await ctx.respond(embed=uikit.server_status(online=status.json()['server_online'],
                                                     status=status.json()['server_status'],
