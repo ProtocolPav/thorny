@@ -52,7 +52,7 @@ class Moderation(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/server/start", timeout=None)
+            status = await client.get("http://amethyst:8000/server/start", timeout=None)
             if status.json()['server_online']:
                 raise thorny_errors.ServerStartStop(starting=True)
             elif status.json()['update'] is not None:
@@ -69,7 +69,7 @@ class Moderation(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            status = await client.get("http://thorny-bds:8000/server/stop", timeout=None)
+            status = await client.get("http://amethyst:8000/server/stop", timeout=None)
             if status.json()['server_online']:
                 await ctx.respond(embed=embeds.server_stop_embed())
             else:
@@ -89,12 +89,12 @@ class Moderation(commands.Cog):
 
         if thorny_user.whitelist is None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
+                r: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     thorny_user.whitelist = thorny_user.gamertag
 
-                    await client.get(f"http://thorny-bds:8000/whitelist/add/{thorny_user.whitelist}")
+                    await client.get(f"http://amethyst:8000/whitelist/add/{thorny_user.whitelist}")
 
                     await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
                                       f"under the gamertag **{thorny_user.whitelist}**")
@@ -117,13 +117,13 @@ class Moderation(commands.Cog):
 
         if thorny_user.whitelist is not None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://thorny-bds:8000/server/details", timeout=None)
+                r: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
 
                 if r.json()['server_online']:
                     removed_gamertag = thorny_user.whitelist
                     thorny_user.whitelist = None
 
-                    await client.get(f"http://thorny-bds:8000/whitelist/remove/{removed_gamertag}")
+                    await client.get(f"http://amethyst:8000/whitelist/remove/{removed_gamertag}")
 
                     await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
 
@@ -151,7 +151,7 @@ class Moderation(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/kick/{thorny_user.whitelist}")
+            r = await client.get(f"http://amethyst:8000/kick/{thorny_user.whitelist}")
             if r.json()["kicked"]:
                 await ctx.respond(f"Kicked {thorny_user.whitelist}")
             else:
@@ -165,12 +165,12 @@ class Moderation(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             if repetitions != 0:
-                r = await client.get(f"http://thorny-bds:8000/commands/message/schedule", timeout=None,
+                r = await client.get(f"http://amethyst:8000/commands/message/schedule", timeout=None,
                                      params={'msg': message, 'count': repetitions})
 
                 await ctx.respond(f"## Message Scheduled!\n**Message:** {message}\n**Repetitions:** {repetitions}")
             else:
-                r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+                r = await client.get(f"http://amethyst:8000/commands/message", timeout=None,
                                      params={'msg': message})
 
                 await ctx.respond(f"## Message Sent!\n**Message:** {message}")
@@ -182,7 +182,7 @@ class Moderation(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://thorny-bds:8000/commands/announce", timeout=None,
+            r = await client.get(f"http://amethyst:8000/commands/announce", timeout=None,
                                  params={'msg': message})
 
             await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
