@@ -8,10 +8,7 @@ Make everything a function which returns the things needed, and rename the file 
 import asyncio
 from datetime import datetime
 from discord import SelectOption, OptionChoice
-
-from thorny_core.db.factory import QuestFactory
-from thorny_core.db.poolwrapper import pool_wrapper
-from thorny_core.db import User
+from thorny_core import nexus
 
 
 def current_month():
@@ -39,15 +36,15 @@ def profile_main_select():
                          emoji="💬"),
             SelectOption(label="Gamertag",
                          value="gamertag",
-                         description="Your in-game gamertag. It is CAP and s p a c e  sensitive.",
+                         description="Your in-game gamertag. It is CAP and s p a c e  sensitive",
                          emoji="🏷️"),
             SelectOption(label="Birthday",
                          value="birthday",
-                         description="Your birthday! Let everyone know when it is!",
+                         description="Your birthday! Format: YYYY/MM/DD",
                          emoji="🎉"),
             SelectOption(label="About Me",
                          value="aboutme",
-                         description="A paragraph all about you! Max. 300 characters.",
+                         description="A paragraph all about you! Max. 300 characters",
                          emoji="🙋")
     ]
 
@@ -72,7 +69,7 @@ def profile_lore_select():
                         emoji="🧙"),
            SelectOption(label="Character Data: Origin",
                         value="character_origin",
-                        description="Where did they come from? Eg. A town, another world.",
+                        description="Where did they come from? Eg. A town, another world",
                         emoji="🪐"),
            SelectOption(label="Character Data: Beliefs",
                         value="character_beliefs",
@@ -80,40 +77,33 @@ def profile_lore_select():
                         emoji="☯️"),
            SelectOption(label="Character Skills: Agility",
                         value="agility",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Skills: Valor",
                         value="valor",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Skills: Strength",
                         value="strength",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Skills: Charisma",
                         value="charisma",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Skills: Creativity",
                         value="creativity",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Skills: Ingenuity",
                         value="ingenuity",
-                        description="From 0 to 6.",
+                        description="From 0 to 6",
                         emoji="🏹"),
            SelectOption(label="Character Backstory",
                         value="lore",
-                        description="Who doesn't love a good character backstory? Max. 300 characters.",
+                        description="Who doesn't love a good character backstory? Max. 300 characters",
                         emoji="📜")
     ]
-
-
-def profile_stats_select():
-    return [
-            SelectOption(label="Coming soon...",
-                         description="Just gotta wait a bit!",
-                         emoji=None)]
 
 
 def server_setup():
@@ -142,61 +132,14 @@ def server_setup():
     ]
 
 
-def shop_items():
-    async def get():
-        async with pool_wrapper.connection() as conn:
-            items = await conn.fetch("""
-                                     SELECT * FROM thorny.item_type
-                                     WHERE item_cost > 0
-                                     """)
-            return items
-
-    item_rec = asyncio.get_event_loop().run_until_complete(get())
-
-    return_list = []
-    for item in item_rec:
-        return_list.append(SelectOption(label=item['display_name'],
-                                        value=item['friendly_id'],
-                                        description=item['description']))
-
-    return return_list
-
-
-def slash_command_all_items():
-    async def get():
-        async with pool_wrapper.connection() as conn:
-            items = await conn.fetch("""
-                                     SELECT * FROM thorny.item_type
-                                     """)
-            return items
-
-    item_rec = asyncio.get_event_loop().run_until_complete(get())
-
-    return_list = []
-    for item in item_rec:
-        return_list.append(OptionChoice(name=item['display_name'],
-                                        value=item['friendly_id']))
-
-    return return_list
-
-
-def redeem_items(thorny_user: User):
-    return_list = []
-    for item in thorny_user.inventory.slots:
-        if item.redeemable:
-            return_list.append(SelectOption(label=item.item_display_name,
-                                            value=item.item_id,
-                                            description=item.description))
-
-    return return_list
-
 async def available_quests(thorny_id: int):
-    quests = await QuestFactory.fetch_available_quests(thorny_id)
+    quests = await nexus.UserQuest.get_available_quests(thorny_id)
 
     return_list = []
     for quest in quests:
         return_list.append(SelectOption(label=quest.title,
-                                        value=str(quest.id)))
+                                        description=quest.description[:25] + '...',
+                                        value=str(quest.quest_id)))
 
     return return_list
 
