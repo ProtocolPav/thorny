@@ -150,13 +150,13 @@ class UserQuest:
             unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/all")
             quest_list = await client.get(f"http://nexuscore:8000/api/v0.1/quests")
 
-            unavailable_quests = unavailable_quests.json().get('quests', [])
+            unavailable_quests = unavailable_quests.json()['quests']
             quest_list = quest_list.json()['current']
 
             available_quests = []
 
             for quest in quest_list:
-                if quest['quest']['quest_id'] not in unavailable_quests:
+                if unavailable_quests and quest['quest']['quest_id'] not in unavailable_quests:
                     available_quests.append(await Quest.build(quest['quest']['quest_id']))
 
             return available_quests
