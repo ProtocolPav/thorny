@@ -20,6 +20,8 @@ class Leaderboard(commands.Cog):
                                                              "to see the current month.",
                                                         autocomplete=basic_autocomplete(uikit.all_months()),
                                                         default='current')):
+        await ctx.defer()
+
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 

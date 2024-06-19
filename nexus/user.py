@@ -97,7 +97,7 @@ class ThornyUser:
             try:
                 user = await cls.__create_new_user(member)
             except thorny_errors.UserAlreadyExists:
-                user = await client.get(f"http://nexuscore:8000/api/v0.1/users/guild/{guild_id}/{user_id}")
+                user = await client.get(f"http://nexuscore:8000/api/v0.1/users/guild/{guild_id}/{user_id}", timeout=None)
 
             user_dict = user.json()
 

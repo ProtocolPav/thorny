@@ -105,6 +105,7 @@ class ThornyGuild:
 
     async def get_playtime_leaderboard(self, month: date) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/playtime/{month}")
+            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/playtime/{month}",
+                                  timeout=None)
 
             return lb.json()['leaderboard']
