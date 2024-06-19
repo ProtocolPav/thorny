@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import asyncpg as pg
 import discord
 
-from thorny_core import errors
+from thorny_core import thorny_errors
 from thorny_core.db.guild import Guild
 from thorny_core.db.poolwrapper import PoolWrapper
 from thorny_core.db.quest import PlayerQuest
@@ -39,16 +39,10 @@ class Time:
 
 @dataclass
 class Profile:
-    column_data: pg.Record = field(repr=False)
-    default_slogan: str = field(repr=False, default="Your Slogan Goes Here")
-    default_gamertag: str = field(repr=False, default="Set Your GT!")
-    default_role: str = field(repr=False, default="Wandering Traveler")
-    default_aboutme: str = field(repr=False, default="A **REALLY** cool person!")
-    default_lore: str = field(repr=False, default="I came from a distant land, far, far away...")
     slogan: str = None
+    aboutme: str = None
     gamertag: str = None
     whitelisted_gamertag: str = None
-    aboutme: str = None
     character_name: str = None
     character_age: int = None
     character_race: str = None
@@ -63,35 +57,27 @@ class Profile:
     stats_ingenuity: int = None
     lore: str = None
 
-    def __init__(self, profile_data, column_data):
-        self.column_data = column_data
-        self.slogan = profile_data['slogan']
-        self.gamertag = profile_data['gamertag']
-        self.whitelisted_gamertag = profile_data['whitelisted_gamertag']
-        self.role = None
-        self.aboutme = profile_data['aboutme']
-        self.character_name = profile_data['character_name']
-        self.character_age = profile_data['character_age']
-        self.character_race = profile_data['character_race']
-        self.character_role = profile_data['character_role']
-        self.character_origin = profile_data['character_origin']
-        self.character_beliefs = profile_data['character_beliefs']
-        self.agility = profile_data['agility'] if profile_data['agility'] <= 6 else 6
-        self.valor = profile_data['valor'] if profile_data['valor'] <= 6 else 6
-        self.strength = profile_data['strength'] if profile_data['strength'] <= 6 else 6
-        self.charisma = profile_data['charisma'] if profile_data['charisma'] <= 6 else 6
-        self.creativity = profile_data['creativity'] if profile_data['creativity'] <= 6 else 6
-        self.ingenuity = profile_data['ingenuity'] if profile_data['ingenuity'] <= 6 else 6
-        self.lore = profile_data['lore']
+    def __init__(self, profile: dict, gamertag, whitelist):
+        self.slogan = profile['slogan']
+        self.gamertag = gamertag
+        self.whitelisted_gamertag = whitelist
+        self.aboutme = profile['aboutme']
+        self.character_name = profile['character_name']
+        self.character_age = profile['character_age']
+        self.character_race = profile['character_race']
+        self.character_role = profile['character_role']
+        self.character_origin = profile['character_origin']
+        self.character_beliefs = profile['character_beliefs']
+        self.agility = profile['agility'] if profile['agility'] <= 6 else 6
+        self.valor = profile['valor'] if profile['valor'] <= 6 else 6
+        self.strength = profile['strength'] if profile['strength'] <= 6 else 6
+        self.charisma = profile['charisma'] if profile['charisma'] <= 6 else 6
+        self.creativity = profile['creativity'] if profile['creativity'] <= 6 else 6
+        self.ingenuity = profile['ingenuity'] if profile['ingenuity'] <= 6 else 6
+        self.lore = profile['lore']
 
     def update(self, attribute, value=None):
-        for data in self.column_data:
-            if data["column_name"] == str(attribute) and (data["character_maximum_length"] is None or
-                                                          data["character_maximum_length"] >= len(value)):
-                self.__setattr__(attribute, value)
-                break
-            elif data["column_name"] == str(attribute) and data["character_maximum_length"] < len(value):
-                raise errors.DataTooLongError(len(value), data["character_maximum_length"])
+        self.__setattr__(attribute, value)
 
 
 @dataclass
@@ -99,145 +85,53 @@ class Level:
     level: int
     xp: int
     required_xp: int
+    last_message: datetime
 
-    def __init__(self, level_data):
-        self.level = level_data['user_level']
-        self.xp = level_data['xp']
-        self.required_xp = level_data['required_xp']
+    def __init__(self, level, xp, required_xp, last_message):
+        self.level = level
+        self.xp = xp
+        self.required_xp = required_xp
+        self.last_message = last_message
 
 
 @dataclass
 class Playtime:
-    weekly_ratio: float
-    current_connection: pg.Record
-    loose_connections: pg.Record
-    daily_playtime: pg.Record
     total_playtime: Time = Time(timedelta(hours=0))
     current_playtime: Time = Time(timedelta(hours=0))
     previous_playtime: Time = Time(timedelta(hours=0))
     expiring_playtime: Time = Time(timedelta(hours=0))
     todays_playtime: Time = Time(timedelta(hours=0))
 
-    def __init__(self, monthly_data, stats, current_connection, unfulfilled_connections, daily_playtime):
+    def __init__(self, playtime: dict):
+        monthly_data = playtime['monthly']
+
         if monthly_data:
-            if monthly_data[0]['month'] == datetime.now().month:
-                self.current_playtime = Time(monthly_data[0]['playtime'])
+            if len(monthly_data) >= 1:
+                data_month = datetime.strptime(monthly_data[0]['month'], "%Y-%m-%d")
+                if data_month.month == datetime.now().month:
+                    self.current_playtime = Time(timedelta(seconds=monthly_data[0]['playtime']))
 
-            if len(monthly_data) >= 2 and monthly_data[1]['month'] == datetime.now().month - 1:
-                self.previous_playtime = Time(monthly_data[1]['playtime'])
+            if len(monthly_data) >= 2:
+                data_month = datetime.strptime(monthly_data[1]['month'], "%Y-%m-%d")
+                if data_month.month == datetime.now().month - 1:
+                    self.previous_playtime = Time(timedelta(seconds=monthly_data[1]['playtime']))
 
-            if len(monthly_data) >= 3 and monthly_data[2]['month'] == datetime.now().month - 2:
-                self.expiring_playtime = Time(monthly_data[2]['playtime'])
+            if len(monthly_data) >= 3:
+                data_month = datetime.strptime(monthly_data[2]['month'], "%Y-%m-%d")
+                if data_month.month == datetime.now().month - 2:
+                    self.expiring_playtime = Time(timedelta(seconds=monthly_data[2]['playtime']))
 
-        if stats:
-            if stats['total_playtime'] is not None:
-                self.total_playtime = Time(stats['total_playtime'])
-            if stats['today'] is not None:
-                self.todays_playtime = Time(stats['today'])
+        self.total_playtime = Time(timedelta(seconds=playtime['total']))
 
-        self.current_connection = current_connection
-        self.loose_connections = unfulfilled_connections
-        self.daily_playtime = daily_playtime
+        if playtime['daily']:
+            latest_day = datetime.strptime(playtime['daily'][0]['day'], "%Y-%m-%d")
 
-        # self.generate_bar_chart()
-
-    def generate_bar_chart(self):
-        x_axis = []
-        y_axis = []
-        print(self.daily_playtime)
-
-        for i in range(0,7):
-            day = datetime.today() - timedelta(days=i)
-            x_axis.insert(0, f"{day.day}/{day.month}")
-
-            record = self.daily_playtime[i]
-            record_day = f"{record['day'].day}/{record['day'].month}"
-
-            print(record, record_day, x_axis[-i])
-            if record_day == x_axis[-i]:
-                y_axis.insert(0, round(record['playtime'].total_seconds()/3600, 1))
-            else:
-                y_axis.insert(0, 0)
-
-        plt.bar(x=x_axis, height=y_axis, edgecolor='none')
-
-        ax = plt.axes()
-        ax.set_xticks(range(7))
-        ax.set_xticklabels(x_axis)
-        ax.set_yticklabels([])
-
-        ax.set_axis_bgcolor('dark_grey')
-
-        plt.title('Playtime Graph')
-        plt.xlabel('Day')
-        plt.ylabel('Hours')
-        plt.savefig('pav.png')
-
-
-@dataclass
-class Strike:
-    strike_id: int
-    manager_id: int
-    reason: str
-
-    def __init__(self, strike):
-        self.strike_id = strike['strike_id']
-        self.manager_id = strike['manager_id']
-        self.reason = strike['reason']
-
-
-@dataclass
-class Strikes:
-    original_strikes: list[Strike] = field(repr=False)
-    strikes: list[Strike]
-
-    def __init__(self, strikes):
-        self.strikes = []
-        self.original_strikes = []
-        for strike in strikes:
-            self.strikes.append(Strike(strike))
-            self.original_strikes.append(Strike(strike))
-
-    def append(self, manager_id, reason):
-        strike = {
-            "strike_id": 0,
-            "manager_id": manager_id,
-            "reason": reason
-        }
-        self.strikes.append(Strike(strike))
-
-    def soft_remove(self, strike_id):
-        strike_found = True
-        for strike in self.strikes:
-            if strike.strike_id == strike_id:
-                strike.reason = f"[FORGIVEN] {strike.reason}"
-                strike_found = True
-                break
-            else:
-                strike_found = False
-        if not strike_found:
-            raise errors.IncorrectStrikeID
-
-
-@dataclass
-class Counters:
-    ticket_count: int
-    ticket_last_purchase: datetime
-    level_last_message: datetime
-
-    def __init__(self, counters):
-        for counter in counters:
-            if counter['counter_name'] == 'ticket_count':
-                self.ticket_count = counter['count']
-            elif counter['counter_name'] == 'ticket_last_purchase':
-                self.ticket_last_purchase = counter['datetime']
-            elif counter['counter_name'] == 'level_last_message':
-                self.level_last_message = counter['datetime']
+            if latest_day == datetime.now():
+                self.todays_playtime = Time(timedelta(seconds=playtime['daily'][0]['playtime']))
 
 
 @dataclass
 class User:
-    connection_pool: PoolWrapper = field(repr=False)
     discord_member: discord.Member = field(repr=False)
     thorny_id: int
     user_id: int
@@ -248,53 +142,37 @@ class User:
     join_date: Time
     birthday: Time
     age: int
+    gamertag: str
+    whitelisted_gamertag: str
     profile: Profile
     level: Level
     playtime: Playtime
-    strikes: Strikes
-    counters: Counters
     quest: PlayerQuest = None
 
-    def __init__(self,
-                 pool: PoolWrapper,
-                 member: discord.Member,
-                 thorny_user: pg.Record,
-                 thorny_guild: Guild,
-                 profile: pg.Record,
-                 profile_columns: pg.Record,
-                 levels: pg.Record,
-                 monthly_playtime: pg.Record,
-                 daily_playtime: pg.Record,
-                 total_playtime: pg.Record,
-                 current_connection: pg.Record,
-                 unfulfilled_connections: pg.Record,
-                 strikes: pg.Record,
-                 counters: pg.Record,
-                 current_quest: pg.Record
-                 ):
-        self.connection_pool = pool
-        self.discord_member = member
+    def __init__(self, discord_member: discord.Member, thorny_guild: Guild, user: dict,
+                 profile: dict, playtime: dict, quests: dict = None):
+        self.discord_member = discord_member
         self.username = self.discord_member.name
-        self.thorny_id = thorny_user['thorny_user_id']
-        self.guild_id = thorny_user['guild_id']
+        self.thorny_id = user['thorny_id']
+        self.guild_id = user['guild_id']
         self.guild = thorny_guild
-        self.user_id = thorny_user['user_id']
-        self.balance = thorny_user['balance']
-        self.join_date = Time(thorny_user['join_date'])
-        self.birthday = Time(thorny_user['birthday'])
+        self.user_id = user['user_id']
+        self.balance = user['balance']
+        self.join_date = Time(user['join_date'])
+        self.birthday = Time(user['birthday'])
+        self.gamertag = user['gamertag']
+        self.whitelisted_gamertag = user['whitelist']
         if self.birthday.time is not None:
             today = datetime.now()
             self.age = today.year - self.birthday.time.year - ((today.month, today.day) < (self.birthday.time.month, self.birthday.time.day))
         else:
             self.age = 0
-        self.profile = Profile(profile_data=profile, column_data=profile_columns)
-        self.level = Level(level_data=levels)
-        self.playtime = Playtime(monthly_data=monthly_playtime, stats=total_playtime, current_connection=current_connection,
-                                 unfulfilled_connections=unfulfilled_connections, daily_playtime=daily_playtime)
-        self.strikes = Strikes(strikes=strikes)
-        self.counters = Counters(counters=counters)
-        if current_quest is not None:
-            self.quest = PlayerQuest(current_quest)
+        self.profile = Profile(profile=profile, gamertag=self.gamertag, whitelist=self.whitelisted_gamertag)
+        self.level = Level(level=user['level'], xp=user['xp'], required_xp=user['required_xp'],
+                           last_message=user['last_message'])
+        self.playtime = Playtime(playtime=playtime)
+        # if current_quest is not None:
+        #     self.quest = PlayerQuest(current_quest)
 
     async def update(self, attribute, value):
         self.__setattr__(attribute, value)
