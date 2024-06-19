@@ -1,0 +1,2 @@
+# thorny
+A discord bot 
