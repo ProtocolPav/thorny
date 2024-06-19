@@ -108,7 +108,7 @@ async def on_message(message: discord.Message):
         if message.channel.id == thorny_guild.get_channel_id('thorny_updates') and message.content:
             if 'http' not in message.content:
                 async with httpx.AsyncClient() as client:
-                    r = await client.get(f"http://thorny-bds:8000/commands/message", timeout=None,
+                    r = await client.get(f"http://amethyst:8000/commands/message", timeout=None,
                                          params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
 
 
