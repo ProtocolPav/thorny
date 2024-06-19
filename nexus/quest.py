@@ -150,7 +150,7 @@ class UserQuest:
             unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/all")
             quest_list = await client.get(f"http://nexuscore:8000/api/v0.1/quests")
 
-            unavailable_quests = unavailable_quests.json()['quests']
+            unavailable_quests = unavailable_quests.json().get('quests', [])
             quest_list = quest_list.json()['current']
 
             available_quests = []
