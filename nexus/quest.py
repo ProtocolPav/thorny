@@ -156,7 +156,7 @@ class UserQuest:
             available_quests = []
 
             for quest in quest_list:
-                if unavailable_quests and quest['quest']['quest_id'] not in unavailable_quests:
+                if not unavailable_quests or quest['quest']['quest_id'] not in unavailable_quests:
                     available_quests.append(await Quest.build(quest['quest']['quest_id']))
 
             return available_quests
