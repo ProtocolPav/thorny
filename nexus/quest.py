@@ -99,10 +99,10 @@ class Quest:
 
             quest_class = cls(**quest_dict['quest'], objectives=objectives)
 
-            quest_class.start_time = datetime.strptime(quest_dict['quest']['start_time'], "%Y-%m-%d %H:%M:%S.%f")
+            quest_class.start_time = datetime.strptime(quest_dict['quest']['start_time'], "%Y-%m-%d %H:%M:%S")
 
             if quest_class.end_time:
-                quest_class.end_time = datetime.strptime(quest_dict['quest']['end_time'], "%Y-%m-%d %H:%M:%S.%f")
+                quest_class.end_time = datetime.strptime(quest_dict['quest']['end_time'], "%Y-%m-%d %H:%M:%S")
 
             return quest_class
 
