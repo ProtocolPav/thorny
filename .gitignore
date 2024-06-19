@@ -162,5 +162,5 @@ cython_debug/
 .idea/
 
 # Thorny specific directories
-./docker-compose.yml
-./config.json
+docker-compose.yml
+config.json
