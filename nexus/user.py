@@ -44,7 +44,7 @@ class ThornyUser:
     @staticmethod
     def __get_roles(member: discord.Member) -> tuple[str, bool]:
         accepted_roles = ['owner', 'community manager', 'new recruit',
-                          'knight', 'builder', 'merchant', 'gatherer', 'stoner', 'bard', 'excavator']
+                          'knight', 'builder', 'merchant', 'gatherer', 'stoner', 'bard', 'miner']
 
         user_roles = [role.name.lower() for role in member.roles]
 
