@@ -105,6 +105,9 @@ async def on_message(message: discord.Message):
             if level_up:
                 await message.channel.send(embed=uikit.level_up_embed(thorny_user, thorny_guild))
 
+        if message.content == 'pls map':
+            await message.channel.send("Yo! You can access the map now through the `/map` command! How sweet!")
+
         if message.channel.id == thorny_guild.get_channel_id('thorny_updates') and message.content:
             if 'http' not in message.content:
                 async with httpx.AsyncClient() as client:
