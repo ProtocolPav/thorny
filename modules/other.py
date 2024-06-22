@@ -87,3 +87,8 @@ class Other(commands.Cog):
             await ctx.respond(embed=uikit.quests_overview(quests),
                               view=view,
                               ephemeral=False)
+
+
+    @commands.slash_command(description="Get a link to the world map")
+    async def map(self, ctx: discord.ApplicationContext):
+        await ctx.respond(content="https://everthorn.fandom.com/wiki/Map:Everthorn")
