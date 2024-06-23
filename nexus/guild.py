@@ -109,3 +109,10 @@ class ThornyGuild:
                                   timeout=None)
 
             return lb.json()['leaderboard']
+
+    async def get_online_players(self) -> list[dict]:
+        async with httpx.AsyncClient() as client:
+            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/online",
+                                  timeout=None)
+
+            return lb.json()['users']

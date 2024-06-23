@@ -22,10 +22,11 @@ class Playtime(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             status: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
+            online_players = await thorny_guild.get_online_players()
 
         await ctx.respond(embed=uikit.server_status(online=status.json()['server_online'],
                                                     status=status.json()['server_status'],
                                                     uptime=status.json()['uptime'],
                                                     load=status.json()['usage'],
-                                                    online_players=[],
+                                                    online_players=online_players,
                                                     everthorn_guilds=True))
