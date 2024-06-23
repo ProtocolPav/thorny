@@ -564,15 +564,15 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
     online_text = ''
     for player in online_players:
-        time = datetime.now() - player['connect_time']
+        time = datetime.now() - datetime.strptime(player['session'], "%Y-%m-%d %H:%M:%S.%f")
         time = str(time).split(":")
         online_text = f"{online_text}\n" \
-                      f"<@{player['user_id']}> • " \
+                      f"<@{player['discord_id']}> • " \
                       f"connected {time[0]}h{time[1]}m ago"
 
     if online_text == "":
-        embed.add_field(name="**Oops!**",
-                        value="*This feature is disabled for the time being, sorry!*", inline=False)
+        embed.add_field(name="**Aha!**",
+                        value="*The server is empty. This is the PERFECT time to hop on and prank somebody!*", inline=False)
 
     elif online_text != "":
         embed.add_field(name="**Connected Players**\n",
