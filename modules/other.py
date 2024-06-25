@@ -53,11 +53,7 @@ class Other(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await UserFactory.build(ctx.user)
-        thorny_guild = await GuildFactory.build(ctx.guild)
-        project = await ProjectFactory.fetch_by_thread(ctx.channel_id, thorny_guild)
-
-        await ctx.respond(embed=uikit.project_embed(project))
+        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
 
     quests = discord.SlashCommandGroup("quests", "Quest Commands")
 
