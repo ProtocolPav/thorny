@@ -417,7 +417,7 @@ def user_join(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     gif = random.choice(gifs_list)
 
     embed = discord.Embed(colour=0x57945c)
-    embed.add_field(name=f"**Welcome to {thorny_guild.guild_name}, {thorny_user.username}!**",
+    embed.add_field(name=f"**Welcome to {thorny_guild.name}, {thorny_user.username}!**",
                     value=f"You are the **{ordinaltg(thorny_guild.discord_guild.member_count)}** member!\n\n"
                           f"{thorny_guild.join_message}")
     embed.set_thumbnail(url=thorny_user.discord_member.display_avatar.url)
