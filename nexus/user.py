@@ -68,7 +68,7 @@ class ThornyUser:
             user_id = member.id
             guild_id = member.guild.id
 
-            data = {'guild_id': guild_id, 'discord_user_id': user_id, 'username': member.name}
+            data = {'guild_id': guild_id, 'discord_id': user_id, 'username': member.name}
 
             user = await client.post("http://nexuscore:8000/api/v0.1/users/",
                                      json=data)
@@ -95,27 +95,28 @@ class ThornyUser:
             guild_id = member.guild.id
 
             try:
-                user = await cls.__create_new_user(member)
+                user_response = await cls.__create_new_user(member)
             except thorny_errors.UserAlreadyExists:
-                user = await client.get(f"http://nexuscore:8000/api/v0.1/users/guild/{guild_id}/{user_id}", timeout=None)
+                user_response = await client.get(f"http://nexuscore:8000/api/v0.1/users/guild/{guild_id}/{user_id}",
+                                                 timeout=None)
 
-            user_dict = user.json()
+            user = user_response.json()
 
-            profile = Profile.build(user_dict['profile'], user_dict['user']['thorny_id'])
-            playtime = Playtime.build(user_dict['playtime'])
-            quest = await UserQuest.build(user_dict['user']['thorny_id'])
+            profile = await Profile.build(user['thorny_id'])
+            playtime = await Playtime.build(user['thorny_id'])
+            quest = await UserQuest.build(user['thorny_id'])
 
-            user_class = cls(**user_dict['user'], profile=profile, playtime=playtime, discord_member=member, quest=quest)
+            user_class = cls(**user, profile=profile, playtime=playtime, discord_member=member, quest=quest)
 
             user_class.username = member.name
             user_class.active = True
             user_class.role, user_class.patron = cls.__get_roles(member)
 
-            user_class.last_message = datetime.strptime(user_dict['user']['last_message'], "%Y-%m-%d %H:%M:%S.%f")
-            user_class.join_date = datetime.strptime(user_dict['user']['join_date'], "%Y-%m-%d")
+            user_class.last_message = datetime.strptime(user['last_message'], "%Y-%m-%d %H:%M:%S.%f")
+            user_class.join_date = datetime.strptime(user['join_date'], "%Y-%m-%d")
 
             if user_class.birthday:
-                user_class.birthday = datetime.strptime(user_dict['user']['birthday'], "%Y-%m-%d")
+                user_class.birthday = datetime.strptime(user['birthday'], "%Y-%m-%d")
 
             await user_class.update()
 
@@ -139,7 +140,7 @@ class ThornyUser:
                       "whitelist": self.whitelist
                     }
 
-            user = await client.patch(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{self.thorny_id}",
+            user = await client.patch(f"http://nexuscore:8000/api/v0.1/users/{self.thorny_id}",
                                       json=data)
 
             if user.status_code != 200:

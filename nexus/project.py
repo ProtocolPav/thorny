@@ -12,9 +12,7 @@ class Project:
     project_id: str
     name: str
     description: str
-    coordinates_x: int
-    coordinates_y: int
-    coordinates_z: int
+    coordinates: tuple[int, int, int]
     thread_id: int
     started_on: date
     completed_on: date
@@ -29,36 +27,48 @@ class Project:
             project = await client.post(f"http://nexuscore:8000/api/v0.1/projects",
                                           json={'name': name,
                                                 'description': description,
-                                                'coordinates_x': coordinates[0],
-                                                'coordinates_y': coordinates[1],
-                                                'coordinates_z': coordinates[2],
-                                                'owner_id': owner_id,
-                                                'thread_id': None,
-                                                'completed_on': None})
+                                                'coordinates': coordinates,
+                                                'owner_id': owner_id})
 
             if project.status_code != 200:
                 raise thorny_errors.UnexpectedError2('There was an issue creating your project. '
                                                      'Most likely, the project ID is already taken.')
 
-            return cls(**project.json()['project'], members=project.json()['members'],
-                       status=project.json()['status']['status'], status_since=project.json()['status']['status_since'])
+            project_json = project.json()
+            members = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/members")
+            status = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/status")
+            owner = project.json()['owner']
+
+            del project_json['owner']
+            return cls(**project_json, members=members.json(),
+                       status=status.json()['status'], status_since=status.json()['status_since'],
+                       owner_id=owner['thorny_id'])
 
     @classmethod
     async def build(cls, project_id: str):
         async with httpx.AsyncClient() as client:
             project = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project_id}")
 
-            return cls(**project.json()['project'], members=project.json()['members'],
-                       status=project.json()['status']['status'], status_since=project.json()['status']['status_since'])
+            if project.status_code != 200:
+                raise thorny_errors.UnexpectedError2('There was an issue fetching your project. '
+                                                     'Most likely, the project ID is already taken.')
+
+            project_json = project.json()
+            members = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/members")
+            status = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/status")
+            owner = project.json()['owner']
+
+            del project_json['owner']
+            return cls(**project_json, members=members.json(),
+                       status=status.json()['status'], status_since=status.json()['status_since'],
+                       owner_id=owner['thorny_id'])
 
     async def update(self):
         async with httpx.AsyncClient() as client:
             data = {
                      'name': self.name,
                      'description': self.description,
-                     'coordinates_x': self.coordinates_x,
-                     'coordinates_y': self.coordinates_y,
-                     'coordinates_z': self.coordinates_z,
+                     'coordinates': self.coordinates,
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
                      'completed_on': self.completed_on
