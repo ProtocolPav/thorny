@@ -33,7 +33,7 @@ class Interactions:
     @classmethod
     async def build(cls, thorny_id: int):
         async with httpx.AsyncClient() as client:
-            interactions = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/interactions",
+            interactions = await client.get(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/interactions",
                                             timeout=None)
 
             interaction_dict = interactions.json()

@@ -127,30 +127,32 @@ class UserQuest:
     quest_id: int
     accepted_on: datetime
     started_on: datetime
-    objectives_completed: int
     status: str
     objectives: list[UserObjective]
 
     @classmethod
     async def build(cls, thorny_id: int) -> Optional["UserQuest"]:
         async with httpx.AsyncClient() as client:
-            quest = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/active")
+            quest = await client.get(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/quest/active")
+
+            if quest.status_code == 404:
+                return None
 
             quest_dict = quest.json()
 
-            if quest_dict['quest'] is None:
-                return None
-            else:
-                objectives = [UserObjective.build(i) for i in quest_dict['objectives']]
-                return cls(**quest_dict['quest'], objectives=objectives, thorny_id=thorny_id)
+            objectives = [UserObjective.build(i) for i in quest_dict['objectives']]
+
+            del quest_dict['objectives']
+
+            return cls(**quest_dict, objectives=objectives, thorny_id=thorny_id)
 
     @classmethod
     async def get_available_quests(cls, thorny_id: int) -> list[Quest]:
         async with httpx.AsyncClient() as client:
-            unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/all")
+            unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/quest/all")
             quest_list = await client.get(f"http://nexuscore:8000/api/v0.1/quests")
 
-            unavailable_quests = unavailable_quests.json()['quests']
+            unavailable_quests = unavailable_quests.json()
             quest_list = quest_list.json()['current']
 
             available_quests = []
@@ -164,8 +166,8 @@ class UserQuest:
     @classmethod
     async def accept_quest(cls, thorny_id: int, quest_id: int):
         async with httpx.AsyncClient() as client:
-            await client.post(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{thorny_id}/quest/{quest_id}")
+            await client.post(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/quest/{quest_id}")
 
     async def fail(self):
         async with httpx.AsyncClient() as client:
-            await client.delete(f"http://nexuscore:8000/api/v0.1/users/thorny-id/{self.thorny_id}/quest/active")
+            await client.delete(f"http://nexuscore:8000/api/v0.1/users/{self.thorny_id}/quest/active")
