@@ -124,7 +124,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        leaderboard = await thorny_guild.get_money_leaderboard()
+        leaderboard = await thorny_guild.get_levels_leaderboard()
 
         rank_text = f"You are not yet on the Leaderboard"
 
