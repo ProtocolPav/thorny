@@ -114,7 +114,8 @@ async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
 
 async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
-                                     color=thorny_user.discord_member.color)
+                                     color=thorny_user.discord_member.color,
+                                     description="*Stats shown are from March 7th 2024 onwards*")
 
     stats_page_embed.set_author(name=thorny_user.discord_member,
                                 icon_url=thorny_user.discord_member.display_avatar.url)
