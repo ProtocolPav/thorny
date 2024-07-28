@@ -101,9 +101,28 @@ class ThornyGuild:
             guild_class.name = guild.name
             guild_class.active = True
 
-            # await guild_class.update()
+            await guild_class.update()
 
             return guild_class
+
+    async def update(self):
+        async with httpx.AsyncClient() as client:
+            data = {
+                      "name": self.name,
+                      "currency_name": self.currency_name,
+                      "currency_emoji": self.currency_emoji,
+                      "level_up_message": self.level_up_message,
+                      "join_message": self.join_message,
+                      "leave_message": self.leave_message,
+                      "xp_multiplier": self.xp_multiplier,
+                      "active": self.active
+                    }
+
+            guild = await client.patch(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}",
+                                       json=data)
+
+            if guild.status_code != 200:
+                raise thorny_errors.GuildUpdateError
 
     def has_feature(self, feature: Literal["levels", "playtime", "basic", "beta", "everthorn", "roa"]) -> bool:
         for i in self.features:
