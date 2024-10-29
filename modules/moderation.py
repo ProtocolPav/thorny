@@ -58,7 +58,7 @@ class Moderation(commands.Cog):
             elif status.json()['update'] is not None:
                 await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
             elif not status.json()['server_online']:
-                await ctx.respond(embed=embeds.server_start_embed())
+                await ctx.respond(embed=embeds.server_start_embed(), ephemeral=True)
 
     @commands.slash_command(description='Stop the server if it is currently running')
     @commands.has_permissions(administrator=True)
@@ -71,7 +71,7 @@ class Moderation(commands.Cog):
         async with httpx.AsyncClient() as client:
             status = await client.get("http://amethyst:8000/server/stop", timeout=None)
             if status.json()['server_online']:
-                await ctx.respond(embed=embeds.server_stop_embed())
+                await ctx.respond(embed=embeds.server_stop_embed(), ephemeral=True)
             else:
                 raise thorny_errors.ServerStartStop(starting=False)
 
