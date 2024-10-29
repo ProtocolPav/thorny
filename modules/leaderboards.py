@@ -70,8 +70,135 @@ class Leaderboard(commands.Cog):
 
     @leaderboard.command(description="See the Money Leaderboard")
     async def money(self, ctx):
-        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        self.pages = []
+
+        thorny_user = await nexus.ThornyUser.build(ctx.author)
+
+        leaderboard = await thorny_guild.get_money_leaderboard()
+
+        rank_text = f"You are not yet on the Leaderboard"
+
+        total_pages = math.ceil(len(leaderboard) / 10)
+        all_texts = []
+        for page in range(1, total_pages + 1):
+            start = page * 10 - 10
+            stop = page * 10
+            leaderboard_text = []
+            for user in leaderboard[start:stop]:
+                leaderboard_text.append(f'**{leaderboard.index(user) + 1}.** <@{user["discord_id"]}> • '
+                                     f'**{user["value"]} {thorny_guild.currency_emoji}**')
+
+                if user['thorny_id'] == thorny_user.thorny_id:
+                    rank_text = f"You are #{leaderboard.index(user) + 1} on the Leaderboard"
+
+            if page != total_pages + 1:
+                all_texts.append(leaderboard_text)
+
+        for text in all_texts:
+            lb_embed = discord.Embed(title=f'**{thorny_guild.currency_name.capitalize()} Leaderboard**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'**{rank_text}**',
+                               value='\n'.join(text), inline=False)
+            lb_embed.set_footer(text=f'Page {all_texts.index(text) + 1}/{total_pages}')
+            self.pages.append(lb_embed)
+
+        if not self.pages:
+            raise thorny_errors.UnexpectedError2("No money data!!!")
+
+        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
+        await paginator.respond(ctx.interaction)
 
     @leaderboard.command(description="See the levels leaderboard")
     async def levels(self, ctx):
-        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        self.pages = []
+
+        thorny_user = await nexus.ThornyUser.build(ctx.author)
+
+        leaderboard = await thorny_guild.get_levels_leaderboard()
+
+        rank_text = f"You are not yet on the Leaderboard"
+
+        total_pages = math.ceil(len(leaderboard) / 10)
+        all_texts = []
+        for page in range(1, total_pages + 1):
+            start = page * 10 - 10
+            stop = page * 10
+            leaderboard_text = []
+            for user in leaderboard[start:stop]:
+                leaderboard_text.append(f'**{leaderboard.index(user) + 1}.** <@{user["discord_id"]}> • '
+                                     f'**Lvl.{user["value"]}**')
+
+                if user['thorny_id'] == thorny_user.thorny_id:
+                    rank_text = f"You are #{leaderboard.index(user) + 1} on the Leaderboard"
+
+            if page != total_pages + 1:
+                all_texts.append(leaderboard_text)
+
+        for text in all_texts:
+            lb_embed = discord.Embed(title=f'**Levels Leaderboard**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'**{rank_text}**',
+                               value='\n'.join(text), inline=False)
+            lb_embed.set_footer(text=f'Page {all_texts.index(text) + 1}/{total_pages}')
+            self.pages.append(lb_embed)
+
+        if not self.pages:
+            raise thorny_errors.UnexpectedError2("No level data!!!")
+
+        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
+        await paginator.respond(ctx.interaction)
+
+    @leaderboard.command(description="See the quests leaderboard")
+    async def quests(self, ctx):
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        self.pages = []
+
+        thorny_user = await nexus.ThornyUser.build(ctx.author)
+
+        leaderboard = await thorny_guild.get_quests_leaderboard()
+
+        rank_text = f"You are not yet on the Leaderboard"
+
+        total_pages = math.ceil(len(leaderboard) / 10)
+        all_texts = []
+        for page in range(1, total_pages + 1):
+            start = page * 10 - 10
+            stop = page * 10
+            leaderboard_text = []
+            for user in leaderboard[start:stop]:
+                leaderboard_text.append(f'**{leaderboard.index(user) + 1}.** <@{user["discord_id"]}> • '
+                                     f'**{user["value"]} Quests**')
+
+                if user['thorny_id'] == thorny_user.thorny_id:
+                    rank_text = f"You are #{leaderboard.index(user) + 1} on the Leaderboard"
+
+            if page != total_pages + 1:
+                all_texts.append(leaderboard_text)
+
+        for text in all_texts:
+            lb_embed = discord.Embed(title=f'**Quests Leaderboard**',
+                                     color=0x6495ED)
+            lb_embed.add_field(name=f'**{rank_text}**',
+                               value='\n'.join(text), inline=False)
+            lb_embed.set_footer(text=f'Page {all_texts.index(text) + 1}/{total_pages}')
+            self.pages.append(lb_embed)
+
+        if not self.pages:
+            raise thorny_errors.UnexpectedError2("No level data!!!")
+
+        paginator = pages.Paginator(pages=self.pages, timeout=30.0)
+        await paginator.respond(ctx.interaction)
