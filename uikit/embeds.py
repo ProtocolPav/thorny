@@ -509,19 +509,21 @@ def disconnect_embed(time: datetime, thorny_user: nexus.ThornyUser):
 
 
 def server_start_embed():
-    embed = discord.Embed(colour=0x44ef56)
+    embed = discord.Embed(colour=0x6495ED)
 
-    embed.add_field(name='The Server is Running',
-                    value=f"The server has successfully started! You may now join.")
+    embed.add_field(name='Server start sent!',
+                    value=f"I have sent a server start request to Amethyst!\n"
+                          f"*Note: The server has not started yet! Check the <#1219710096976646175> channel for the start log.*")
 
     return embed
 
 
 def server_stop_embed():
-    embed = discord.Embed(colour=0xA52A2A)
+    embed = discord.Embed(colour=0x6495ED)
 
-    embed.add_field(name='The Server is Stopped',
-                    value=f"I have successfully stopped the server")
+    embed.add_field(name='Server stop sent!',
+                    value=f"I have sent a server stop request to Amethyst!\n"
+                          f"*Note: The server has not stopped yet! Check the <#1219710096976646175> channel for the stop log.*")
 
     return embed
 
@@ -618,39 +620,21 @@ def view_quest(quest: nexus.Quest, money_symbol: str):
                     value=f"```{quest.description}```",
                     inline=False)
 
-    objective_string = ''
-    reward_string = ''
-    counter = 1
+    rewards = []
     for objective in quest.objectives:
-        name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
-        objective_type = objective.objective_type.capitalize()
-        requirements = objective.get_objective_requirement_string()
-
-        objective_rewards = []
         for reward in objective.rewards:
-            objective_rewards.append(reward.get_reward_display(money_symbol))
+            rewards.append(reward.get_reward_display(money_symbol))
 
-        if not objective_rewards:
-            objective_rewards.append("No rewards available")
+    more_hint = ', *and more...*' if len(rewards) > 3 else ''
 
-        reward_string = f'{reward_string}{counter}. {", ".join(objective_rewards)}\n'
-
-        objective_string = f'{objective_string}{counter}. {objective_type} {objective.objective_count} **{name}** {requirements}\n'
-
-        counter += 1
-
-    embed.add_field(name=f':dart: Objectives',
-                    value=f'{objective_string}\n',
-                    inline=False)
-
-    embed.add_field(name='💎 Rewards',
-                    value=f'{reward_string}\n',
+    embed.add_field(name=f'📋 More Info',
+                    value=f'**Objectives:** {len(quest.objectives)}\n'
+                          f'**Rewards:** {", ".join(random.choices(rewards, k=3))}{more_hint}',
                     inline=False)
 
     embed.add_field(name='⏱️ Notes',
-                    value=f"- *Objectives must be completed in order*\n"
-                          f"- *Rewards are given after each objective!*\n"
-                          f"- *Timers start upon your first block mined or enemy killed*\n"
+                    value=f"- *Quests are now story-driven*\n"
+                          f"- *You can't see the objectives until you reach them!*\n"
                           f"- *Failing any objective fails the entire quest!*",
                     inline=False)
 
@@ -658,56 +642,51 @@ def view_quest(quest: nexus.Quest, money_symbol: str):
 
 
 def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symbol: str):
-    embed = discord.Embed(colour=0xE0B0FF,
-                          title=quest.title)
-
-    embed.add_field(name='🔖 Description',
-                    value=f"```{quest.description}```",
-                    inline=False)
-
-    objective_string = ''
-    reward_string = ''
     counter = 1
     for objective in quest.objectives:
-        name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
-        objective_type = objective.objective_type.capitalize()
-        requirements = objective.get_objective_requirement_string()
-
-        objective_rewards = []
-        for reward in objective.rewards:
-            objective_rewards.append(reward.get_reward_display(money_symbol))
-
-        if not objective_rewards:
-            objective_rewards.append("No rewards available")
-
-        reward_string = f'{reward_string}{counter}. {", ".join(objective_rewards)}\n'
-
         for user_objective in thorny_user.quest.objectives:
-            progress = objective.objective_count - user_objective.completion
+            if user_objective.objective_id == objective.objective_id and user_objective.status == 'in_progress':
+                name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
+                objective_type = objective.objective_type.capitalize()
+                requirements = objective.get_objective_requirement_string()
 
-            if user_objective.objective_id == objective.objective_id and user_objective.status != 'in_progress':
-                objective_string = f'{objective_string}{counter}. ~~{objective_type} {progress} **{name}** {requirements}~~\n'
-            elif user_objective.objective_id == objective.objective_id:
-                objective_string = f'{objective_string}{counter}. {objective_type} {progress} **{name}** {requirements}\n'
+                objective_rewards = []
+                for reward in objective.rewards:
+                    objective_rewards.append(reward.get_reward_display(money_symbol))
+
+                progress = objective.objective_count - user_objective.completion
+
+                completed_objectives = [":green_square:" for i in range(counter-1)]
+                objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
+
+                embed = discord.Embed(colour=0xE0B0FF,
+                                      title=f'{quest.title} | Objective {counter}')
+
+                embed.add_field(name='🔖 The Story',
+                                value=f"```{objective.description}```",
+                                inline=False)
+
+                embed.add_field(name=f':dart: Your Objective:',
+                                value=f'{objective_type} **{progress}** {name}\n',
+                                inline=False)
+
+                if requirements:
+                    embed.add_field(name=f':dart: Objective Info:',
+                                    value=f'{requirements}\n',
+                                    inline=False)
+
+                if objective_rewards:
+                    embed.add_field(name='💎 Objective Rewards',
+                                    value=f'{", ".join(objective_rewards)}\n',
+                                    inline=False)
+
+                embed.add_field(name=f'🎛️ Quest Progress | {counter}/{len(quest.objectives)}',
+                                value=f'{"".join(completed_objectives)}:yellow_square:{"".join(objectives_left)}',
+                                inline=False)
+
+                return embed
 
         counter += 1
-
-    embed.add_field(name=f':dart: Objectives',
-                    value=f'{objective_string}\n',
-                    inline=False)
-
-    embed.add_field(name='💎 Rewards',
-                    value=f'{reward_string}\n',
-                    inline=False)
-
-    embed.add_field(name='⏱️ Notes',
-                    value=f"- *Objectives must be completed in order*\n"
-                          f"- *Rewards are given after each objective!*\n"
-                          f"- *Timers start upon your first block mined or enemy killed*\n"
-                          f"- *Failing any objective fails the entire quest!*",
-                    inline=False)
-
-    return embed
 
 
 def quest_fail_warn(quest: nexus.Quest):
