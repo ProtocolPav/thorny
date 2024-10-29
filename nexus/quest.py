@@ -11,6 +11,7 @@ import httpx
 class Reward:
     reward_id: int
     quest_id: int
+    display_name: Optional[str]
     objective_id: Optional[int]
     balance: Optional[int]
     item: Optional[str]
@@ -21,7 +22,9 @@ class Reward:
         return cls(**data)
 
     def get_reward_display(self, money_symbol: str):
-        if self.balance:
+        if self.display_name:
+            return self.display_name
+        elif self.balance:
             return f"{self.balance} {money_symbol}"
         elif self.item:
             item = self.item.split(':')[1].capitalize().replace('_', ' ')
@@ -33,9 +36,11 @@ class Objective:
     objective_id: int
     quest_id: int
     objective: str
+    description: str
     order: int
     objective_count: int
     objective_type: str
+    natural_block: bool
     objective_timer: Optional[timedelta]
     required_mainhand: Optional[str]
     required_location: Optional[list]
@@ -55,20 +60,26 @@ class Objective:
 
     def get_objective_requirement_string(self) -> str:
         extra_requirements = []
+        block_or_mob = self.objective.replace("minecraft:", "").replace('_', ' ').capitalize()
 
+        if self.natural_block and self.objective_type == 'mine':
+            extra_requirements.append(f'- The {block_or_mob} '
+                                      f'must be **naturally generated**')
         if self.required_mainhand:
             mainhand = self.required_mainhand.split(':')[1].capitalize().replace('_', ' ')
-            extra_requirements.append(f'using **{mainhand}** ')
+            extra_requirements.append(f'- Must use **{mainhand}**')
         if self.required_location:
-            extra_requirements.append(f'around the coordinates '
-                                      f'**{int(self.required_location[0])}, {int(self.required_location[1])}** ')
-            extra_requirements.append(f'(radius {self.location_radius}) ')
+            extra_requirements.append(f'- Around the coordinates '
+                                      f'**{int(self.required_location[0])}, {int(self.required_location[1])}** '
+                                      f'(radius {self.location_radius})')
         if self.objective_timer:
             hours, remainder = divmod(self.objective_timer.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
-            extra_requirements.append(f'within **{hours}h{minutes}m{seconds}s**')
+            extra_requirements.append(f'- Timer: **{hours}h{minutes}m{seconds}s** '
+                                      f'(starts when you {self.objective_type} '
+                                      f'the first {block_or_mob})')
 
-        return "".join(extra_requirements)
+        return "\n".join(extra_requirements) if extra_requirements else None
 
 
 @dataclass
