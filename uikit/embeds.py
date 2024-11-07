@@ -666,9 +666,14 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                                 value=f"```{objective.description}```",
                                 inline=False)
 
-                embed.add_field(name=f':dart: Your Objective:',
-                                value=f'{objective_type} **{progress}** {name}\n',
-                                inline=False)
+                if objective_type != 'Encounter':
+                    embed.add_field(name=f':dart: Your Objective:',
+                                    value=f'{objective_type} **{progress}** {name}\n',
+                                    inline=False)
+                else:
+                    embed.add_field(name=f':dart: Your Objective:',
+                                    value=f'{objective.display}\n**Progress:** {progress}/{objective.objective_count}\n',
+                                    inline=False)
 
                 if requirements:
                     embed.add_field(name=f':dart: Objective Info:',
