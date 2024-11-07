@@ -38,6 +38,7 @@ class Objective:
     objective: str
     description: str
     order: int
+    display: Optional[str]
     objective_count: int
     objective_type: str
     natural_block: bool
