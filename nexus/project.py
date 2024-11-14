@@ -83,11 +83,9 @@ class Project:
                      'coordinates': self.coordinates,
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
-                     'started_on': self.started_on,
-                     'completed_on': self.completed_on
+                     'started_on': str(self.started_on),
+                     'completed_on': str(self.completed_on)
                     }
-
-            print(data)
 
             project = await client.patch(f"http://nexuscore:8000/api/v0.1/projects/{self.project_id}",
                                          json=data)

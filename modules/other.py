@@ -6,7 +6,6 @@ from thorny_core import uikit
 from datetime import datetime, timedelta
 
 from thorny_core import nexus, thorny_errors
-from thorny_core.nexus import Project
 from thorny_core.uikit import ProjectCommandOptions
 
 
@@ -53,7 +52,16 @@ class Other(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        await ctx.respond(embed=uikit.project_embed(await Project.build(project)))
+        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        project_model = await nexus.Project.build(project)
+
+        if project_model.status != 'completed':
+            view = uikit.Project(ctx, thorny_user, thorny_guild, project_model)
+        else:
+            view = None
+
+        await ctx.respond(embed=uikit.project_embed(project_model),
+                          view=view)
 
     quests = discord.SlashCommandGroup("quests", "Quest Commands")
 

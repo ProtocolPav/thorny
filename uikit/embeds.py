@@ -250,7 +250,7 @@ def project_embed(project: nexus.Project) -> discord.Embed:
     members = [f"<@{x}>" for x in project.members]
     status = f"Project is {project.status.capitalize()}"
 
-    if project.status == 'complete':
+    if project.status == 'completed':
         status = f"Project Completed on {utils.datetime_to_string(project.completed_on)}"
 
     info_embed = discord.Embed(title=f"{project.name}",
@@ -601,5 +601,16 @@ def quest_fail_warn(quest: nexus.Quest):
                           description=f":bangbang: **THIS QUEST WILL BE GONE FOREVER** :bangbang:\n\n"
                                       f"Are you sure you want to admit your defeat? "
                                       f"**{quest.title}** will be ***gone forever*** an you'll lose out on the sweet rewards!")
+
+    return embed
+
+
+def project_complete_warn():
+    embed = discord.Embed(colour=0x00FFFF,
+                          title="Mark Project As Complete",
+                          description=f"**Are you sure?**\n\n"
+                                      f"It's great that you're done with your project, but I just wanna make sure "
+                                      f"that you are really, 100% done.\n"
+                                      f"**Once you mark a project as complete, you can't undo it!**")
 
     return embed
