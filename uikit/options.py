@@ -7,6 +7,8 @@ Make everything a function which returns the things needed, and rename the file 
 """
 import asyncio
 from datetime import datetime
+
+import discord
 from discord import SelectOption, OptionChoice
 from thorny_core import nexus
 
@@ -143,12 +145,10 @@ async def available_quests(thorny_id: int):
 
     return return_list
 
-async def all_quests():
-    quests = await QuestFactory.fetch_all_quests()
 
-    return_list = []
-    for quest in quests:
-        return_list.append(SelectOption(label=quest.title,
-                                        value=str(quest.id)))
+class ProjectCommandOptions:
+    @classmethod
+    async def get_options(cls, ctx: discord.AutocompleteContext):
+        options = await nexus.Project.get_all_projects_for_options()
 
-    return return_list
+        return [OptionChoice(x['name'], x['id']) for x in options]

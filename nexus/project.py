@@ -40,7 +40,7 @@ class Project:
             owner = project.json()['owner']
 
             del project_json['owner']
-            return cls(**project_json, members=members.json(),
+            return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
                        status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
 
@@ -51,7 +51,7 @@ class Project:
 
             if project.status_code != 200:
                 raise thorny_errors.UnexpectedError2('There was an issue fetching your project. '
-                                                     'Most likely, the project ID is already taken.')
+                                                     'Most likely, the project ID does not exist')
 
             project_json = project.json()
             members = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/members")
@@ -59,9 +59,21 @@ class Project:
             owner = project.json()['owner']
 
             del project_json['owner']
-            return cls(**project_json, members=members.json(),
+            return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
                        status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
+
+    @classmethod
+    async def get_all_projects_for_options(cls):
+        async with httpx.AsyncClient() as client:
+            projects = await client.get(f"http://nexuscore:8000/api/v0.1/projects")
+
+            if projects.status_code == 200:
+                options = [{'id': x['project_id'], 'name': x['name']} for x in projects.json()['projects']]
+
+                return options
+
+            return None
 
     async def update(self):
         async with httpx.AsyncClient() as client:
@@ -71,7 +83,8 @@ class Project:
                      'coordinates': self.coordinates,
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
-                     'completed_on': self.completed_on
+                     'started_on': str(self.started_on),
+                     'completed_on': str(self.completed_on)
                     }
 
             project = await client.patch(f"http://nexuscore:8000/api/v0.1/projects/{self.project_id}",

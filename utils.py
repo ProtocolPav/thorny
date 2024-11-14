@@ -3,8 +3,7 @@ from datetime import date, datetime, timedelta
 
 def datetime_to_string(time: date | datetime | timedelta | None):
     if type(time) == date or type(time) == datetime:
-        datetime_object = datetime(year=time.year, month=time.month, day=time.day)
-        return f"<t:{int(datetime_object.timestamp())}:D>"
+        return time.strftime("%-d %B %Y")
 
     elif type(time) == timedelta:
         total_seconds = int(time.total_seconds())
