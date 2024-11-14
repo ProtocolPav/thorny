@@ -40,7 +40,7 @@ class Project:
             owner = project.json()['owner']
 
             del project_json['owner']
-            return cls(**project_json, members=members.json(),
+            return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
                        status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
 
@@ -59,7 +59,7 @@ class Project:
             owner = project.json()['owner']
 
             del project_json['owner']
-            return cls(**project_json, members=members.json(),
+            return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
                        status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
 
@@ -83,8 +83,11 @@ class Project:
                      'coordinates': self.coordinates,
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
+                     'started_on': self.started_on,
                      'completed_on': self.completed_on
                     }
+
+            print(data)
 
             project = await client.patch(f"http://nexuscore:8000/api/v0.1/projects/{self.project_id}",
                                          json=data)
