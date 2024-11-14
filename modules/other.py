@@ -33,13 +33,6 @@ class Other(commands.Cog):
     async def ping(self, ctx):
         await ctx.respond(embed=uikit.ping_embed(self.client, self.bot_started))
 
-
-    @commands.slash_command(description="Configure your server settings")
-    @commands.has_permissions(administrator=True)
-    async def configure(self, ctx: discord.ApplicationContext):
-        await ctx.respond(view=uikit.ServerSetup(),
-                          ephemeral=True)
-
     project = discord.SlashCommandGroup("project", "Project Commands")
 
     @project.command(description="Apply for a Project!")
