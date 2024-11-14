@@ -55,7 +55,7 @@ class Other(commands.Cog):
         thorny_user = await nexus.ThornyUser.build(ctx.user)
         project_model = await nexus.Project.build(project)
 
-        if project_model.status != 'completed':
+        if project_model.status != 'completed' and thorny_user.thorny_id == project_model.owner_id:
             view = uikit.Project(ctx, thorny_user, thorny_guild, project_model)
         else:
             view = None
