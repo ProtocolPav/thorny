@@ -112,7 +112,7 @@ class ProjectDetailsName(Modal):
         self.view = view
 
         self.add_item(InputText(label="What would you like to call your Project?",
-                                placeholder="Get creative, and pick a cool name!"))
+                                placeholder="Pick a cool name! You won't be able to change it later."))
 
     async def callback(self, interaction: discord.Interaction):
         self.project['name'] = self.children[0].value
