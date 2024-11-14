@@ -11,7 +11,6 @@ from datetime import datetime
 import discord
 from discord import SelectOption, OptionChoice
 from thorny_core import nexus
-from thorny_core.nexus.project import Project
 
 
 def current_month():
@@ -150,6 +149,6 @@ async def available_quests(thorny_id: int):
 class ProjectCommandOptions:
     @classmethod
     async def get_options(cls, ctx: discord.AutocompleteContext):
-        options = await Project.get_all_projects_for_options()
+        options = await nexus.Project.get_all_projects_for_options()
 
         return [OptionChoice(x['name'], x['id']) for x in options]

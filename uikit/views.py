@@ -3,7 +3,7 @@ import random
 import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button, InputText
-from datetime import datetime, timedelta
+from datetime import date
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit import embeds, options
 from thorny_core import thorny_errors
@@ -349,6 +349,55 @@ class ProjectApplicationForm(View):
 
             await channel.send(embed=embeds.project_application_embed(project, self.project_data, self.thorny_user),
                                view=PersistentProjectAdminButtons())
+
+
+class Project(View):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild,
+                 project: nexus.Project):
+        super().__init__(timeout=30)
+        self.ctx = ctx
+        self.thorny_user = thorny_user
+        self.thorny_guild = thorny_guild
+        self.project = project
+
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=None)
+    
+    @discord.ui.button(label="Mark as Complete",
+                       custom_id='complete',
+                       style=discord.ButtonStyle.green)
+    async def complete(self, button: Button, interaction: Interaction):
+        class ConfirmCompleteView(discord.ui.View):
+            def __init__(self, project: nexus.Project, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
+                super().__init__(timeout=30)
+                self.project = project
+                self.thorny_user = thorny_user
+                self.thorny_guild = thorny_guild
+
+            @discord.ui.button(label="Confirm Completion",
+                               custom_id='confirm_complete',
+                               style=discord.ButtonStyle.green)
+            async def confirm_complete(self, inner_button: Button, inner_interaction: Interaction):
+                await self.project.set_status('completed')
+                self.project.completed_on = date.today()
+                await self.project.update()
+
+                forum = self.thorny_guild.discord_guild.get_channel(self.thorny_guild.get_channel_id('project_forum'))
+                thread = forum.get_thread(self.project.thread_id)
+
+                for tag in forum.available_tags:
+                    if tag.name == 'Complete':
+                        await thread.edit(applied_tags=[tag])
+                        await inner_interaction.response.edit_message(embed=embeds.project_embed(self.project),
+                                                                      view=None)
+
+        if self.thorny_user.thorny_id == self.project.owner_id:
+            await interaction.response.edit_message(embed=embeds.project_complete_warn(),
+                                                    view=ConfirmCompleteView(self.project, self.thorny_user, self.thorny_guild))
+        else:
+            raise thorny_errors.WrongUser
+    
 
 
 class QuestPanel(View):
