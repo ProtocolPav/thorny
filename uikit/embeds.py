@@ -247,8 +247,14 @@ def project_application_embed(project: nexus.Project, project_data: dict, thorny
 
 def project_embed(project: nexus.Project) -> discord.Embed:
     wiki_page = f"https://everthorn.net/wiki/{project.project_id}"
+    members = [f"<@{x}>" for x in project.members]
+    status = f"Project is {project.status.capitalize()}"
+
+    if project.status == 'complete':
+        status = f"Project Completed on {utils.datetime_to_string(project.completed_on)}"
 
     info_embed = discord.Embed(title=f"{project.name}",
+                               description=status,
                                colour=0x50C878)
 
     info_embed.add_field(name=f"ℹ️ About {project.name}",
@@ -256,10 +262,11 @@ def project_embed(project: nexus.Project) -> discord.Embed:
                          inline=False)
 
     info_embed.add_field(name="🔎 Quick Info",
-                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
+                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n\n"
                                f"**Thread:** <#{project.thread_id}>\n"
+                               f"**Started on:** {utils.datetime_to_string(project.started_on)}\n"
                                f"**Coordinates:** {project.coordinates[0]}, {project.coordinates[1]}, {project.coordinates[2]}\n"
-                               f"**Project Members:** *Coming Soon!*",
+                               f"**Project Members:** {', '.join(members)}",
                          inline=False)
 
     return info_embed
