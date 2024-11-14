@@ -12,6 +12,8 @@ import sys
 import httpx
 import modules
 import uikit
+from thorny_core.nexus import Project
+from thorny_core.uikit import ProjectCommandOptions
 
 config = json.load(open('../thorny_data/config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
@@ -67,6 +69,8 @@ async def day_counter():
     if (days_since_start.days + 1) % 10 == 0:
         await storyforge_channel.send(f"*Rise and shine, Everthorn!*\n"
                                       f"**Day {days_since_start.days + 1}** has dawned upon us.")
+
+    # Rework this days counter to send a daily report perhaps? Playtime, etc?
 
 
 @thorny.event
