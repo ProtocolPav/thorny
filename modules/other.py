@@ -1,9 +1,13 @@
 import discord
 from discord.ext import commands
+from discord.utils import basic_autocomplete
+
 from thorny_core import uikit
 from datetime import datetime, timedelta
 
 from thorny_core import nexus, thorny_errors
+from thorny_core.nexus import Project
+from thorny_core.uikit import ProjectCommandOptions
 
 
 class Other(commands.Cog):
@@ -49,11 +53,14 @@ class Other(commands.Cog):
                           ephemeral=True)
 
     @project.command(description="View any project's info")
-    async def view(self, ctx: discord.ApplicationContext, project_id: str):
+    async def view(self, ctx: discord.ApplicationContext,
+                   project: discord.Option(str,
+                                           description='Search for a project to view',
+                                           autocomplete=basic_autocomplete(ProjectCommandOptions.get_options))):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
+        await ctx.respond(embed=uikit.project_embed(await Project.build(project)))
 
     quests = discord.SlashCommandGroup("quests", "Quest Commands")
 
