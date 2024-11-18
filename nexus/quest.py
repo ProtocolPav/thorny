@@ -1,7 +1,5 @@
-import discord
-
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 import httpx
@@ -49,15 +47,19 @@ class Objective:
     rewards: Optional[list[Reward]]
 
     @classmethod
-    def build(cls, data: dict, reward_data: list[dict]):
-        rewards = [Reward.build(r) for r in reward_data]
+    async def build(cls, data: dict):
+        async with httpx.AsyncClient() as client:
+            rewards = await client.get(f"http://nexuscore:8000/api/v0.1/quests/{data['quest_id']}/objectives/{data['objective_id']}/rewards")
+            rewards_dict = rewards.json()
 
-        objective_class = cls(**data, rewards=rewards)
+            data['rewards'] = [Reward.build(r) for r in rewards_dict]
 
-        if objective_class.objective_timer:
-            objective_class.objective_timer = timedelta(seconds=data['objective_timer'])
+            objective_class = cls(**data)
 
-        return objective_class
+            if objective_class.objective_timer:
+                objective_class.objective_timer = timedelta(seconds=data['objective_timer'])
+
+            return objective_class
 
     def get_objective_requirement_string(self) -> str:
         extra_requirements = []
@@ -96,25 +98,19 @@ class Quest:
     async def build(cls, quest_id: int):
         async with httpx.AsyncClient() as client:
             quest = await client.get(f"http://nexuscore:8000/api/v0.1/quests/{quest_id}")
-
             quest_dict = quest.json()
 
-            objectives = []
+            objectives = await client.get(f"http://nexuscore:8000/api/v0.1/quests/{quest_id}/objectives")
+            objectives_dict = objectives.json()
 
-            for obj in quest_dict['objectives']:
-                rewards = []
-                for reward in quest_dict['rewards']:
-                    if reward['objective_id'] == obj['objective_id']:
-                        rewards.append(reward)
+            quest_dict['objectives'] = [await Objective.build(obj) for obj in objectives_dict]
 
-                objectives.append(Objective.build(obj, rewards))
+            quest_class = cls(**quest_dict)
 
-            quest_class = cls(**quest_dict['quest'], objectives=objectives)
-
-            quest_class.start_time = datetime.strptime(quest_dict['quest']['start_time'], "%Y-%m-%d %H:%M:%S")
+            quest_class.start_time = datetime.strptime(quest_dict['start_time'], "%Y-%m-%d %H:%M:%S")
 
             if quest_class.end_time:
-                quest_class.end_time = datetime.strptime(quest_dict['quest']['end_time'], "%Y-%m-%d %H:%M:%S")
+                quest_class.end_time = datetime.strptime(quest_dict['end_time'], "%Y-%m-%d %H:%M:%S")
 
             return quest_class
 
@@ -165,13 +161,13 @@ class UserQuest:
             quest_list = await client.get(f"http://nexuscore:8000/api/v0.1/quests")
 
             unavailable_quests = unavailable_quests.json()
-            quest_list = quest_list.json()['current']
+            quest_list = quest_list.json()
 
             available_quests = []
 
             for quest in quest_list:
-                if not unavailable_quests or quest['quest']['quest_id'] not in unavailable_quests:
-                    available_quests.append(await Quest.build(quest['quest']['quest_id']))
+                if not unavailable_quests or quest['quest_id'] not in unavailable_quests:
+                    available_quests.append(await Quest.build(quest['quest_id']))
 
             return available_quests
 

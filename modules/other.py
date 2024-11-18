@@ -1,9 +1,12 @@
 import discord
 from discord.ext import commands
+from discord.utils import basic_autocomplete
+
 from thorny_core import uikit
 from datetime import datetime, timedelta
 
 from thorny_core import nexus, thorny_errors
+from thorny_core.uikit import ProjectCommandOptions
 
 
 class Other(commands.Cog):
@@ -29,13 +32,6 @@ class Other(commands.Cog):
     async def ping(self, ctx):
         await ctx.respond(embed=uikit.ping_embed(self.client, self.bot_started))
 
-
-    @commands.slash_command(description="Configure your server settings")
-    @commands.has_permissions(administrator=True)
-    async def configure(self, ctx: discord.ApplicationContext):
-        await ctx.respond(view=uikit.ServerSetup(),
-                          ephemeral=True)
-
     project = discord.SlashCommandGroup("project", "Project Commands")
 
     @project.command(description="Apply for a Project!")
@@ -49,11 +45,23 @@ class Other(commands.Cog):
                           ephemeral=True)
 
     @project.command(description="View any project's info")
-    async def view(self, ctx: discord.ApplicationContext, project_id: str):
+    async def view(self, ctx: discord.ApplicationContext,
+                   project: discord.Option(str,
+                                           description='Search for a project to view',
+                                           autocomplete=basic_autocomplete(ProjectCommandOptions.get_options))):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
+        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        project_model = await nexus.Project.build(project)
+
+        if project_model.status != 'completed' and thorny_user.thorny_id == project_model.owner_id:
+            view = uikit.Project(ctx, thorny_user, thorny_guild, project_model)
+        else:
+            view = None
+
+        await ctx.respond(embed=uikit.project_embed(project_model),
+                          view=view)
 
     quests = discord.SlashCommandGroup("quests", "Quest Commands")
 
