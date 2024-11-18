@@ -112,7 +112,7 @@ class ProjectDetailsName(Modal):
         self.view = view
 
         self.add_item(InputText(label="What would you like to call your Project?",
-                                placeholder="Get creative, and pick a cool name!"))
+                                placeholder="Pick a cool name! You won't be able to change it later."))
 
     async def callback(self, interaction: discord.Interaction):
         self.project['name'] = self.children[0].value
@@ -189,79 +189,6 @@ class ProjectApplicationExtraInfo(Modal):
         self.add_item(InputText(label=label,
                                 placeholder=placeholder,
                                 style=discord.InputTextStyle.long))
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-
-
-class ServerEdit(Modal):
-    def __init__(self, texts: InputText | list[InputText], thorny_guild: nexus.ThornyGuild):
-        super().__init__(title="Configuring your Server")
-        self.thorny_guild = thorny_guild
-
-        if type(texts) == list:
-            for text in texts:
-                self.add_item(text)
-        else:
-            self.add_item(texts)
-
-    async def callback(self, interaction: discord.Interaction):
-        self.thorny_guild.__setattr__(self.children[0].custom_id, self.children[0].value)
-        await interaction.response.defer()
-
-
-class ServerChannelEdit(Modal):
-    def __init__(self, texts: InputText | list[InputText], thorny_guild: nexus.ThornyGuild):
-        super().__init__(title="Editing Channel")
-        self.thorny_guild = thorny_guild
-
-        if type(texts) == list:
-            for text in texts:
-                self.add_item(text)
-        else:
-            self.add_item(texts)
-
-    async def callback(self, interaction: discord.Interaction):
-        self.thorny_guild.channels.__setattr__(self.children[0].custom_id, int(self.children[0].value))
-        await interaction.response.defer()
-
-
-class ServerCurrencyEdit(Modal):
-    def __init__(self, texts: InputText | list[InputText], thorny_guild: nexus.ThornyGuild):
-        super().__init__(title="Configuring Currency")
-        self.thorny_guild = thorny_guild
-
-        if type(texts) == list:
-            for text in texts:
-                self.add_item(text)
-        else:
-            self.add_item(texts)
-
-    async def callback(self, interaction: discord.Interaction):
-        self.thorny_guild.currency.__setattr__(self.children[0].custom_id, self.children[0].value)
-        await commit(self.thorny_guild)
-        await interaction.response.defer()
-
-
-class RedeemRole(Modal):
-    def __init__(self):
-        super().__init__(title="Customize Your Role")
-
-        self.add_item(InputText(label="What should your Custom Role be called?",
-                                placeholder="Eg. The Champion, Sniffer, Cool Person Role"))
-        self.add_item(InputText(label="Enter a Hex Code for the role's colour",
-                                placeholder="Eg. #9D5F33"))
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-
-
-class ROAVerification(Modal):
-    def __init__(self):
-        super().__init__(title="Enter the link to your image")
-
-        self.add_item(InputText(label="Image link",
-                                placeholder="In the form: https://cdn.discordapp.com/attachments/.../link.png"))
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
