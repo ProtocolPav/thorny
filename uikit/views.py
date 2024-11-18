@@ -3,7 +3,7 @@ import random
 import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button, InputText
-from datetime import datetime, timedelta
+from datetime import date
 import thorny_core.uikit.modals as modals
 from thorny_core.uikit import embeds, options
 from thorny_core import thorny_errors
@@ -351,330 +351,53 @@ class ProjectApplicationForm(View):
                                view=PersistentProjectAdminButtons())
 
 
-class SetupFeature(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
+class Project(View):
+    def __init__(self, ctx: discord.ApplicationContext, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild,
+                 project: nexus.Project):
+        super().__init__(timeout=30)
+        self.ctx = ctx
+        self.thorny_user = thorny_user
         self.thorny_guild = thorny_guild
+        self.project = project
 
-    @discord.ui.select(placeholder="Manage Server Modules",
-                       options=...)
-    async def callback(self, select_menu: Select, interaction: discord.Interaction):
-        thorny_guild = await GuildFactory.build(interaction.guild)
-
-        # When a user clicks on one of the buttons, if the feature is enabled, it will be removed.
-        # If it is not enabled, it will be added.
-        # Then, the thorny_guild will commit itself to the db, saving the feature changes.
-        # TODO: make the Features setup
-        ...
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       row=2,
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupWelcome(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Edit Join Message",
-                       custom_id="edit_join",
-                       style=discord.ButtonStyle.blurple)
-    async def join_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Join Message",
-                               custom_id="join_message",
-                               placeholder=f"Current Message: {self.thorny_guild.join_message[0:70]}"
-                                           f"{'...' if len(self.thorny_guild.join_message) > 70 else ''}",
-                               style=discord.InputTextStyle.long)
-        modal = modals.ServerEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
-                                               view=SetupWelcome(modal.thorny_guild))
-
-    @discord.ui.button(label="Edit Leave Message",
-                       custom_id="edit_leave",
-                       style=discord.ButtonStyle.blurple)
-    async def leave_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Leave Message",
-                               custom_id="leave_message",
-                               placeholder=f"Current Message: {self.thorny_guild.leave_message[0:70]}"
-                                           f"{'...' if len(self.thorny_guild.leave_message) > 70 else ''}",
-                               style=discord.InputTextStyle.long)
-        modal = modals.ServerEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['welcome'],
-                                               view=SetupWelcome(modal.thorny_guild))
-
-    @discord.ui.button(label="Edit Birthday Message",
-                       custom_id="edit_birthday",
-                       style=discord.ButtonStyle.blurple,
-                       disabled=True)
-    async def birthday_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Birthday Message",
-                               placeholder=f"Current Message: {self.thorny_guild.join_message}",
-                               style=discord.InputTextStyle.long)
-        await interation.response.send_modal(modals.ServerEdit(input_text, self.thorny_guild))
-
-    @discord.ui.channel_select(placeholder="Change Channel",
-                               min_values=0, max_values=1, row=2)
-    async def channel_callback(self, select_menu: Select, interaction: discord.Interaction):
-        self.thorny_guild.channels.__setattr__("welcome_channel", int(select_menu.values[0].id))
-        await commit(self.thorny_guild)
-
-        await interaction.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['welcome'],
-                                                view=SetupWelcome(self.thorny_guild))
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       row=3,
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupLevels(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Edit Level Up Message",
-                       custom_id="edit_level",
-                       style=discord.ButtonStyle.blurple)
-    async def level_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Level Up Message",
-                               custom_id="level_message",
-                               placeholder=f"Current Message: {self.thorny_guild.level_message[0:70]}"
-                                           f"{'...' if len(self.thorny_guild.level_message) > 70 else ''}",
-                               style=discord.InputTextStyle.long)
-        modal = modals.ServerEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
-                                               view=SetupLevels(modal.thorny_guild))
-
-    @discord.ui.button(label="Edit XP Multiplier",
-                       custom_id="edit_xp",
-                       style=discord.ButtonStyle.blurple)
-    async def xp_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit XP Multiplier",
-                               custom_id="xp_multiplier",
-                               placeholder=f"Current Multiplier: x{self.thorny_guild.xp_multiplier}")
-        modal = modals.ServerEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['levels'],
-                                               view=SetupLevels(modal.thorny_guild))
-
-    @discord.ui.button(label="Enable/Disable Leveling",
-                       custom_id="toggle_levels",
+    async def on_timeout(self):
+        self.disable_all_items()
+        await self.ctx.edit(view=None)
+    
+    @discord.ui.button(label="Mark as Complete",
+                       custom_id='complete',
                        style=discord.ButtonStyle.green)
-    async def toggle_callback(self, button: Button, interation: discord.Interaction):
-        self.thorny_guild.levels_enabled = not self.thorny_guild.levels_enabled
-        await commit(self.thorny_guild)
-        await interation.response.edit_message(embed=embeds.configure_embed(self.thorny_guild)['levels'],
-                                               view=SetupLevels(self.thorny_guild))
+    async def complete(self, button: Button, interaction: Interaction):
+        class ConfirmCompleteView(discord.ui.View):
+            def __init__(self, project: nexus.Project, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
+                super().__init__(timeout=30)
+                self.project = project
+                self.thorny_user = thorny_user
+                self.thorny_guild = thorny_guild
 
-    @discord.ui.button(label="Edit XP-Ban Channels",
-                       custom_id="edit_xp_ban",
-                       row=2,
-                       disabled=True,
-                       style=discord.ButtonStyle.gray)
-    async def ban_callback(self, button: Button, interation: discord.Interaction):
-        ...
+            @discord.ui.button(label="Confirm Completion",
+                               custom_id='confirm_complete',
+                               style=discord.ButtonStyle.green)
+            async def confirm_complete(self, inner_button: Button, inner_interaction: Interaction):
+                await self.project.set_status('completed')
+                self.project.completed_on = date.today()
+                await self.project.update()
 
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       row=2,
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
+                forum = self.thorny_guild.discord_guild.get_channel(self.thorny_guild.get_channel_id('project_forum'))
+                thread = forum.get_thread(self.project.thread_id)
 
+                for tag in forum.available_tags:
+                    if tag.name == 'Complete':
+                        await thread.edit(applied_tags=[tag])
+                        await inner_interaction.response.edit_message(embed=embeds.project_embed(self.project),
+                                                                      view=None)
 
-class SetupLogs(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Choose Logs Channel",
-                       custom_id="edit_channel",
-                       style=discord.ButtonStyle.gray)
-    async def channel_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
-                               custom_id="logs_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('logs')}")
-        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['logs'],
-                                               view=SetupLogs(modal.thorny_guild))
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupUpdates(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Choose Updates Channel",
-                       custom_id="edit_channel",
-                       style=discord.ButtonStyle.gray)
-    async def channel_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Channel (Please enter Channel ID)",
-                               custom_id="thorny_updates_channel",
-                               placeholder=f"Current Channel ID: {self.thorny_guild.channels.get_channel('thorny_updates')}")
-        modal = modals.ServerChannelEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['updates'],
-                                               view=SetupUpdates(modal.thorny_guild))
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupGulag(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Create Gulag Channel & Role",
-                       custom_id="create_channel",
-                       disabled=True,
-                       style=discord.ButtonStyle.green)
-    async def channel_callback(self, button: Button, interation: discord.Interaction):
-        ...
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupResponses(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Edit Exact Responses",
-                       custom_id="edit_exact",
-                       disabled=True,
-                       style=discord.ButtonStyle.blurple)
-    async def exact_callback(self, button: Button, interation: discord.Interaction):
-        ...
-
-    @discord.ui.button(label="Edit Wildcard Responses",
-                       custom_id="edit_wildcard",
-                       disabled=True,
-                       style=discord.ButtonStyle.blurple)
-    async def wildcard_callback(self, button: Button, interation: discord.Interaction):
-        ...
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class SetupCurrency(View):
-    def __init__(self, thorny_guild: nexus.ThornyGuild):
-        super().__init__(timeout=None)
-        self.thorny_guild = thorny_guild
-
-    @discord.ui.button(label="Edit Currency Name",
-                       custom_id="edit_name",
-                       style=discord.ButtonStyle.blurple)
-    async def name_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Currency Name",
-                               custom_id="name",
-                               placeholder=f"Current Name: {self.thorny_guild.currency.name}")
-        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
-                                               view=SetupCurrency(modal.thorny_guild))
-
-    @discord.ui.button(label="Edit Currency Emoji",
-                       custom_id="edit_emoji",
-                       style=discord.ButtonStyle.blurple)
-    async def emoji_callback(self, button: Button, interation: discord.Interaction):
-        input_text = InputText(label="Edit Currency Emoji",
-                               custom_id="emoji",
-                               placeholder=f"Current Emoji: {self.thorny_guild.currency.emoji}")
-        modal = modals.ServerCurrencyEdit(input_text, self.thorny_guild)
-        await interation.response.send_modal(modal)
-        await modal.wait()
-        await interation.edit_original_response(embed=embeds.configure_embed(modal.thorny_guild)['currency'],
-                                               view=SetupCurrency(modal.thorny_guild))
-
-    @discord.ui.button(label="Back",
-                       custom_id="back",
-                       style=discord.ButtonStyle.red)
-    async def back_callback(self, button: Button, interation: discord.Interaction):
-        await interation.response.edit_message(content=None,
-                                               embed=None,
-                                               view=ServerSetup())
-
-
-class ServerSetup(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.select(placeholder="Configure your server settings",
-                       options=options.server_setup())
-    async def callback(self, select_menu: Select, interaction: discord.Interaction):
-        thorny_guild = await GuildFactory.build(interaction.guild)
-
-        match select_menu.values[0]:
-            case "welcome":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['welcome'],
-                                                        view=SetupWelcome(thorny_guild))
-            case "levels":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['levels'],
-                                                        view=SetupLevels(thorny_guild))
-            case "logs":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['logs'],
-                                                        view=SetupLogs(thorny_guild))
-            case "updates":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['updates'],
-                                                        view=SetupUpdates(thorny_guild))
-            case "gulag":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['gulag'],
-                                                        view=SetupGulag(thorny_guild))
-            case "responses":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['responses'],
-                                                        view=SetupResponses(thorny_guild))
-            case "currency":
-                await interaction.response.edit_message(embed=embeds.configure_embed(thorny_guild)['currency'],
-                                                        view=SetupCurrency(thorny_guild))
+        if self.thorny_user.thorny_id == self.project.owner_id:
+            await interaction.response.edit_message(embed=embeds.project_complete_warn(),
+                                                    view=ConfirmCompleteView(self.project, self.thorny_user, self.thorny_guild))
+        else:
+            raise thorny_errors.WrongUser
+    
 
 
 class QuestPanel(View):
