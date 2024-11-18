@@ -84,7 +84,7 @@ class Project:
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
                      'started_on': str(self.started_on),
-                     'completed_on': str(self.completed_on)
+                     'completed_on': str(self.completed_on) if self.completed_on else None
                     }
 
             project = await client.patch(f"http://nexuscore:8000/api/v0.1/projects/{self.project_id}",
