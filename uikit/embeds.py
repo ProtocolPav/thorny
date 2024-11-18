@@ -246,9 +246,15 @@ def project_application_embed(project: nexus.Project, project_data: dict, thorny
 
 
 def project_embed(project: nexus.Project) -> discord.Embed:
-    wiki_page = f"https://everthorn.fandom.com/wiki/{project.name.replace(' ', '_')}"
+    wiki_page = f"https://everthorn.net/wiki/{project.project_id}"
+    members = [f"<@{x}>" for x in project.members]
+    status = f"Project is {project.status.capitalize()}"
+
+    if project.status == 'completed':
+        status = f"Project Completed on {utils.datetime_to_string(project.completed_on)}"
 
     info_embed = discord.Embed(title=f"{project.name}",
+                               description=status,
                                colour=0x50C878)
 
     info_embed.add_field(name=f"ℹ️ About {project.name}",
@@ -256,119 +262,14 @@ def project_embed(project: nexus.Project) -> discord.Embed:
                          inline=False)
 
     info_embed.add_field(name="🔎 Quick Info",
-                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n"
-                               f"**Coordinates:** {project.coordinates_x}, {project.coordinates_y}, {project.coordinates_z}\n"
-                               f"**Project Members:** *Coming Soon!*",
+                         value=f"[{project.name}'s Wiki Page]({wiki_page})\n\n"
+                               f"**Thread:** <#{project.thread_id}>\n"
+                               f"**Started on:** {utils.datetime_to_string(project.started_on)}\n"
+                               f"**Coordinates:** {project.coordinates[0]}, {project.coordinates[1]}, {project.coordinates[2]}\n"
+                               f"**Project Members:** {', '.join(members)}",
                          inline=False)
 
     return info_embed
-
-
-def configure_embed(thorny_guild: nexus.ThornyGuild) -> dict[str, discord.Embed]:
-    feature_embed = discord.Embed(title="Configuring Thorny Modules",
-                                  colour=0xD7E99A)
-    # TODO: Make the features embed
-    modules = '\n'.join(thorny_guild.features)
-    feature_embed.add_field(name="Current Enabled Modules",
-                            value=f"{modules}",
-                            inline=False)
-
-    welcome_embed = discord.Embed(title="Configuring Welcome Settings",
-                                  colour=0xD7E99A)
-    welcome_embed.add_field(name="Current Settings",
-                            value=f"**Join, Leave and Birthday Messages Channel:** <#{thorny_guild.channels.get_channel('welcome')}>\n\n"
-                                  f"**Join Message:** {thorny_guild.join_message}\n"
-                                  f"**Leave Message:** {thorny_guild.leave_message}\n"
-                                  f"**Birthday Message:** Currently not available",
-                            inline=False)
-    welcome_embed.add_field(name="Note",
-                            value="When editing the **channel**, enter the channel ID!\n"
-                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
-                            inline=False)
-
-    levels_embed = discord.Embed(title="Configuring Levels",
-                                 colour=0xD7E99A)
-    enabled_disabled = "ENABLED" if thorny_guild.levels_enabled else "DISABLED"
-    levels_embed.add_field(name="Current Settings",
-                           value=f"**Leveling is currently** {enabled_disabled}\n\n"
-                                 f"**Level Up Message:** {thorny_guild.level_message}\n"
-                                 f"**XP Multiplier:** x{thorny_guild.xp_multiplier}\n"
-                                 f"**No XP Channels:** Currently not available")
-
-    logs_embed = discord.Embed(title="Configuring Logs",
-                               colour=0xD7E99A)
-    logs_embed.add_field(name="Current Settings",
-                         value=f"**Logs channel:** <#{thorny_guild.channels.get_channel('logs')}>")
-    logs_embed.add_field(name="Note",
-                         value="When editing the **channel**, enter the channel ID!\n"
-                               "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
-                         inline=False)
-
-    updates_embed = discord.Embed(title="Configuring Updates",
-                                  colour=0xD7E99A)
-    updates_embed.add_field(name="About Updates",
-                            value=f"When Thorny receives new features, or updates to new features, you can choose to receive "
-                                  f"changelogs and tutorials for new features in a channel. You can make it private or "
-                                  f"public for people to see.")
-    updates_embed.add_field(name="Current Settings",
-                            value=f"**Thorny updates channel:** <#{thorny_guild.channels.get_channel('thorny_updates')}>",
-                            inline=False)
-    updates_embed.add_field(name="Note",
-                            value="When editing the **channel**, enter the channel ID!\n"
-                                  "Press and hold (mobile) or right click (PC) on the channel, and copy ID.",
-                            inline=False)
-
-    gulag_embed = discord.Embed(title="Create the Gulag",
-                                colour=0xD7E99A)
-    gulag_embed.add_field(name="About The Gulag",
-                          value="When you have troublemakers in your server, you should do something about them.\n"
-                                "Thorny's Gulag is a perfect place to take these troublemakers to, so you can discuss and "
-                                "help dissolve any arguments they may be having. \n"
-                                "When a user is taken into the gulag, they cannot see any channel except for the gulag.")
-    gulag_embed.add_field(name="Current Settings",
-                          value=f"**Gulag Channel:** <#{thorny_guild.channels.get_channel('gulag')}>\n"
-                                f"**Gulag Role:** <@{thorny_guild.roles.timeout_role}>",
-                          inline=False)
-    gulag_embed.add_field(name="Important Note",
-                          value="Before you press the **Create Channel & Role** button, you should know that Thorny will "
-                                "modify channel permissions in **all** channels. Thorny will require the **Manage Channel** "
-                                "permission in all of them. If it cannot manage permissions in some channels, there is a "
-                                "chance that the Gulag Role will not work properly.",
-                          inline=False)
-
-    response_embed = discord.Embed(title="Edit Responses",
-                                   description="Thorny picks one random response out of each list",
-                                   colour=0xD7E99A)
-    exact = ""
-    for key, val in thorny_guild.responses.exact.items():
-        exact = f"{exact}**{key}** = {','.join(val)}\n"
-    response_embed.add_field(name="Exact Responses",
-                             value=exact)
-    wildcard = ""
-    for key, val in thorny_guild.responses.wildcard.items():
-        wildcard = f"{wildcard}**{key}** = {','.join(val)}\n"
-    response_embed.add_field(name="Wildcard Responses",
-                             value=wildcard,
-                             inline=False)
-
-    currency_embed = discord.Embed(title="Configure Server Currency",
-                                   colour=0xD7E99A)
-    currency_embed.add_field(name="Current Settings",
-                             value=f"**Currency Name:** {thorny_guild.currency.name}\n"
-                                   f"**Currency Emoji:** {thorny_guild.currency.emoji}")
-    currency_embed.add_field(name="Setting Custom Emoji",
-                             value="If you want to set a custom server emoji, it is a bit tricky. You must give it in this form: "
-                                   "**<:EmojiName:ID>**. Luckily, discord provides a quick and easy way to get this.\n"
-                                   "Simply put a backslash and then write your emoji. Press send and then copy it.\n",
-                             inline=False)
-
-    return {"welcome": welcome_embed,
-            "levels": levels_embed,
-            "logs": logs_embed,
-            "updates": updates_embed,
-            "gulag": gulag_embed,
-            "responses": response_embed,
-            "currency": currency_embed}
 
 
 def level_up_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
@@ -700,5 +601,16 @@ def quest_fail_warn(quest: nexus.Quest):
                           description=f":bangbang: **THIS QUEST WILL BE GONE FOREVER** :bangbang:\n\n"
                                       f"Are you sure you want to admit your defeat? "
                                       f"**{quest.title}** will be ***gone forever*** an you'll lose out on the sweet rewards!")
+
+    return embed
+
+
+def project_complete_warn():
+    embed = discord.Embed(colour=0x00FFFF,
+                          title="Mark Project As Complete",
+                          description=f"**Are you sure?**\n\n"
+                                      f"It's great that you're done with your project, but I just wanna make sure "
+                                      f"that you are really, 100% done.\n"
+                                      f"**Once you mark a project as complete, you can't undo it!**")
 
     return embed
