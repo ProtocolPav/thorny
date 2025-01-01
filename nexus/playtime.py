@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from dateutil import relativedelta
 from typing import Optional
 
 import httpx
@@ -39,9 +40,9 @@ class Playtime:
             for i in range(0, len(playtime['monthly']) - 1):
                 if playtime['monthly'][i]['month'] == str(date.today().replace(day=1)):
                     current_month = playtime['monthly'][i]['playtime']
-                elif playtime['monthly'][i]['month'] == str(date.today().replace(day=1, month=date.today().month-1)):
+                elif playtime['monthly'][i]['month'] == str(date.today().replace(day=1, month=(date.today() - relativedelta.relativedelta(months=1)).month)):
                     second_month = playtime['monthly'][i]['playtime']
-                elif playtime['monthly'][i]['month'] == str(date.today().replace(day=1, month=date.today().month-2)):
+                elif playtime['monthly'][i]['month'] == str(date.today().replace(day=1, month=(date.today() - relativedelta.relativedelta(months=2)).month)):
                     third_month = playtime['monthly'][i]['playtime']
 
             return cls(total=timedelta(seconds=playtime['total']),
