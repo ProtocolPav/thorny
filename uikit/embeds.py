@@ -6,6 +6,7 @@ import time
 import giphy_client
 import random
 
+from dateutil import relativedelta
 from thorny_core import nexus, utils
 
 version_json = json.load(open('./version.json', 'r'))
@@ -58,8 +59,8 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
 
     playtime = thorny_user.playtime
 
-    second_month = datetime.now().replace(month=datetime.now().month-1).strftime('%B')
-    third_month = datetime.now().replace(month=datetime.now().month-2).strftime('%B')
+    second_month = (datetime.now() - relativedelta.relativedelta(months=1)).strftime('%B')
+    third_month = (datetime.now() - relativedelta.relativedelta(months=2)).strftime('%B')
 
     main_page_embed.add_field(name=f"**:clock8: Quick Stats**",
                               value=f"**Today:** {utils.datetime_to_string(playtime.today)}\n"
