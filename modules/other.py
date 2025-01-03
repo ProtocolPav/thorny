@@ -95,4 +95,4 @@ class Other(commands.Cog):
 
     @commands.slash_command(description="Get a link to the world map")
     async def map(self, ctx: discord.ApplicationContext):
-        await ctx.respond(content="https://everthorn.fandom.com/wiki/Map:Everthorn")
+        await ctx.respond(content="https://everthorn.net/map")
