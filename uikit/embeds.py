@@ -568,7 +568,7 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                 for reward in objective.rewards:
                     objective_rewards.append(reward.get_reward_display(money_symbol))
 
-                progress = user_objective.completion
+                progress = objective.objective_count - user_objective.completion
 
                 completed_objectives = [":green_square:" for i in range(counter-1)]
                 objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
@@ -590,7 +590,7 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                                     inline=False)
                 else:
                     embed.add_field(name=f':dart: Your Objective:',
-                                    value=f'{objective.display}\n**Progress:** {progress}/{objective.objective_count}\n',
+                                    value=f'{objective.display}\n**Progress:** {user_objective.completion}/{objective.objective_count}\n',
                                     inline=False)
 
                 if requirements:
