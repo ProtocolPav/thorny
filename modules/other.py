@@ -77,11 +77,14 @@ class Other(commands.Cog):
 
         if thorny_user.quest:
             quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
-
-            view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
-            await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user, thorny_guild.currency_emoji),
-                              view=view,
-                              ephemeral=False)
+            if quest_info.end_time < datetime.now():
+                await thorny_user.quest.fail()
+                await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
+            else:
+                view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
+                await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user, thorny_guild.currency_emoji),
+                                  view=view,
+                                  ephemeral=True)
 
         else:
             quests = await nexus.UserQuest.get_available_quests(thorny_user.thorny_id)
