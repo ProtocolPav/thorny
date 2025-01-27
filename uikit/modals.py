@@ -162,7 +162,7 @@ class ProjectDetailsDescription(Modal):
         self.add_item(InputText(label="What's your project idea?",
                                 placeholder="Go into as much detail as possible!",
                                 style=discord.InputTextStyle.long,
-                                min_length=100))
+                                min_length=100, max_length=900))
         self.add_item(InputText(label="How long will the project take you?",
                                 placeholder="This is a time estimation (eg. 2 months, 1 week)"))
         self.add_item(InputText(label="Have you built a road to your project?",

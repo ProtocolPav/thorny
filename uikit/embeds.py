@@ -141,7 +141,25 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
 
     placed_text = '\n'.join(blocks_placed)
 
-    stats_page_embed.add_field(name=f"**<:Gatherer:997595498963800145> Blocks Mined**",
+    kills = []
+    for kill in interactions.kills:
+        if len(kills) == 3:
+            break
+        else:
+            kills.append(f'**{kill.reference}:** {kill.count:,}')
+
+    kills_text = '\n'.join(kills)
+
+    deaths = []
+    for death in interactions.deaths:
+        if len(deaths) == 3:
+            break
+        else:
+            kills.append(f'**{death.reference}:** {deaths.count:,}')
+
+    deaths_text = '\n'.join(deaths)
+
+    stats_page_embed.add_field(name=f"**<:Miner:1253417396480245852> Blocks Mined**",
                                value=f"{mined_text}\n"
                                      f"**Total:** "
                                      f"{interactions.totals['mine'] if interactions.totals['mine'] else 0:,}",
@@ -156,13 +174,15 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed.add_field(name=f"\t",
                                value=f"\t")
 
-    stats_page_embed.add_field(name=f"**<:Knight:997595500901568574> Kills**",
-                               value=f"**Total Kills:** " 
+    stats_page_embed.add_field(name=f"**<:Knight:1253417393494036520> Kills**",
+                               value=f"{kills_text}\n"
+                                     f"**Total:** " 
                                      f"{interactions.totals['kill'] if interactions.totals['kill'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"**:skull: Deaths**",
-                               value=f"**Total Deaths:** " 
+                               value=f"{deaths_text}\n"
+                                     f"**Total:** " 
                                      f"{interactions.totals['die'] if interactions.totals['die'] else 0:,}",
                                inline=True)
 
@@ -515,29 +535,21 @@ def view_quest(quest: nexus.Quest, money_symbol: str):
     times = quest.end_time - datetime.now()
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title,
-                          description=f"*This quest will become unavailable <t:{int(time.time() + times.total_seconds())}:R>. "
-                                      f"Accept it before time runs out!*")
+                          description=f"*This quest expires <t:{int(time.time() + times.total_seconds())}:R>. "
+                                      f"Accept and complete it before time runs out!*")
 
     embed.add_field(name='🔖 Description',
                     value=f"```{quest.description}```",
                     inline=False)
 
-    rewards = []
+    rewards = 0
     for objective in quest.objectives:
         for reward in objective.rewards:
-            rewards.append(reward.get_reward_display(money_symbol))
-
-    more_hint = ', *and more...*' if len(rewards) > 3 else ''
+            rewards += 1
 
     embed.add_field(name=f'📋 More Info',
                     value=f'**Objectives:** {len(quest.objectives)}\n'
-                          f'**Rewards:** {", ".join(random.choices(rewards, k=3))}{more_hint}',
-                    inline=False)
-
-    embed.add_field(name='⏱️ Notes',
-                    value=f"- *Quests are now story-driven*\n"
-                          f"- *You can't see the objectives until you reach them!*\n"
-                          f"- *Failing any objective fails the entire quest!*",
+                          f'**Rewards:** {rewards}',
                     inline=False)
 
     return embed
@@ -556,13 +568,17 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                 for reward in objective.rewards:
                     objective_rewards.append(reward.get_reward_display(money_symbol))
 
-                progress = objective.objective_count - user_objective.completion
+                progress = user_objective.completion
 
                 completed_objectives = [":green_square:" for i in range(counter-1)]
                 objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
+                times = quest.end_time - datetime.now()
 
                 embed = discord.Embed(colour=0xE0B0FF,
-                                      title=f'{quest.title} | Objective {counter}')
+                                      title=f'{quest.title} | Objective {counter}',
+                                      description=f"*This quest expires <t:{int(time.time() + times.total_seconds())}:R>. "
+                                                  f"Complete it before time runs out!*"
+                                      )
 
                 embed.add_field(name='🔖 The Story',
                                 value=f"```{objective.description}```",
