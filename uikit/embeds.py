@@ -155,7 +155,7 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
         if len(deaths) == 3:
             break
         else:
-            kills.append(f'**{death.reference}:** {deaths.count:,}')
+            kills.append(f'**{death.reference}:** {death.count:,}')
 
     deaths_text = '\n'.join(deaths)
 
