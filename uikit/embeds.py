@@ -141,7 +141,25 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
 
     placed_text = '\n'.join(blocks_placed)
 
-    stats_page_embed.add_field(name=f"**<:Gatherer:997595498963800145> Blocks Mined**",
+    kills = []
+    for kill in interactions.kills:
+        if len(kills) == 3:
+            break
+        else:
+            kills.append(f'**{kill.reference}:** {kill.count:,}')
+
+    kills_text = '\n'.join(kills)
+
+    deaths = []
+    for death in interactions.deaths:
+        if len(deaths) == 3:
+            break
+        else:
+            kills.append(f'**{death.reference}:** {deaths.count:,}')
+
+    deaths_text = '\n'.join(deaths)
+
+    stats_page_embed.add_field(name=f"**<:Miner:1253417396480245852> Blocks Mined**",
                                value=f"{mined_text}\n"
                                      f"**Total:** "
                                      f"{interactions.totals['mine'] if interactions.totals['mine'] else 0:,}",
@@ -156,13 +174,15 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed.add_field(name=f"\t",
                                value=f"\t")
 
-    stats_page_embed.add_field(name=f"**<:Knight:997595500901568574> Kills**",
-                               value=f"**Total Kills:** " 
+    stats_page_embed.add_field(name=f"**<:Knight:1253417393494036520> Kills**",
+                               value=f"{kills_text}\n"
+                                     f"**Total:** " 
                                      f"{interactions.totals['kill'] if interactions.totals['kill'] else 0:,}",
                                inline=True)
 
     stats_page_embed.add_field(name=f"**:skull: Deaths**",
-                               value=f"**Total Deaths:** " 
+                               value=f"{deaths_text}\n"
+                                     f"**Total:** " 
                                      f"{interactions.totals['die'] if interactions.totals['die'] else 0:,}",
                                inline=True)
 
