@@ -36,12 +36,10 @@ class Project:
 
             project_json = project.json()
             members = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/members")
-            status = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/status")
             owner = project.json()['owner']
 
             del project_json['owner']
             return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
-                       status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
 
     @classmethod
@@ -55,12 +53,10 @@ class Project:
 
             project_json = project.json()
             members = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/members")
-            status = await client.get(f"http://nexuscore:8000/api/v0.1/projects/{project.json()['project_id']}/status")
             owner = project.json()['owner']
 
             del project_json['owner']
             return cls(**project_json, members=[x['user_id'] for x in members.json()['members']],
-                       status=status.json()['status'], status_since=status.json()['status_since'],
                        owner_id=owner['thorny_id'])
 
     @classmethod
