@@ -1,9 +1,9 @@
 FROM python:3.12.7-bookworm
 
-COPY requirements.txt /thorny/thorny_core/requirements.txt
+COPY requirements.txt /thorny_core/requirements.txt
 
-RUN pip install -r /thorny/thorny_core/requirements.txt
+RUN pip install -r /thorny_core/requirements.txt
 
-ENV PYTHONPATH "${PYTHONPATH}:/thorny/"
+ENV PYTHONPATH "${PYTHONPATH}:/thorny_core/"
 
-WORKDIR /thorny/thorny_core
+WORKDIR /thorny_core

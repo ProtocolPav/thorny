@@ -2,11 +2,11 @@ from datetime import datetime
 
 import discord
 from discord.ui import Modal, InputText
-from thorny_core.uikit.options import profile_main_select, profile_lore_select
-from thorny_core.uikit.embeds import project_application_builder_embed
-import thorny_core.thorny_errors as thorny_errors
+from uikit.options import profile_main_select, profile_lore_select
+from uikit.embeds import project_application_builder_embed
+import thorny_errors as thorny_errors
 
-from thorny_core import nexus
+import nexus
 
 class ProfileEditMain(Modal):
     def __init__(self, section: str, thorny_user: nexus.ThornyUser, embed: discord.Embed):

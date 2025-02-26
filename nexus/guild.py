@@ -6,7 +6,7 @@ from typing import Optional, Literal
 
 import httpx
 
-import thorny_core.thorny_errors as thorny_errors
+import thorny_errors
 
 
 @dataclass
