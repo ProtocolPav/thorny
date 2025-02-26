@@ -2,7 +2,7 @@ import discord
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from thorny_core import thorny_errors
+import thorny_errors
 
 import httpx
 

@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 import json
-from thorny_core import thorny_errors
-import thorny_core.uikit as uikit
-from thorny_core import nexus
+import thorny_errors
+import uikit
+import nexus
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]

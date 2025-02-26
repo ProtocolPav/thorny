@@ -2,11 +2,10 @@ import discord
 from discord.ext import commands
 from discord.utils import basic_autocomplete
 
-from thorny_core import uikit
+import uikit
 from datetime import datetime, timedelta
 
-from thorny_core import nexus, thorny_errors
-from thorny_core.uikit import ProjectCommandOptions
+import nexus, thorny_errors
 
 
 class Other(commands.Cog):
@@ -48,7 +47,7 @@ class Other(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext,
                    project: discord.Option(str,
                                            description='Search for a project to view',
-                                           autocomplete=basic_autocomplete(ProjectCommandOptions.get_options))):
+                                           autocomplete=basic_autocomplete(uikit.ProjectCommandOptions.get_options))):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 

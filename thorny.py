@@ -4,18 +4,16 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core import nexus
-from thorny_core import thorny_errors
+import nexus
+import thorny_errors
 import traceback
 import json
 import sys
 import httpx
 import modules
 import uikit
-from thorny_core.nexus import Project
-from thorny_core.uikit import ProjectCommandOptions
 
-config = json.load(open('../thorny_data/config.json', 'r+'))
+config = json.load(open('./config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
