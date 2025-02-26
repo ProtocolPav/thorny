@@ -79,8 +79,7 @@ class Objective:
             hours, remainder = divmod(self.objective_timer.seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             extra_requirements.append(f'- Timer: **{hours}h{minutes}m{seconds}s** '
-                                      f'(starts when you {self.objective_type} '
-                                      f'the first {block_or_mob})')
+                                      f'(starts immediately!)')
 
         return "\n".join(extra_requirements) if extra_requirements else None
 
