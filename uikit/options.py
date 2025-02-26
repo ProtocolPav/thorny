@@ -10,7 +10,7 @@ from datetime import datetime
 
 import discord
 from discord import SelectOption, OptionChoice
-from thorny_core import nexus
+import nexus
 
 
 def current_month():

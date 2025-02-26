@@ -7,11 +7,11 @@ import giphy_client
 import random
 
 from dateutil import relativedelta
-from thorny_core import nexus, utils
+import nexus, utils
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
-config = json.load(open('../thorny_data/config.json', 'r+'))
+config = json.load(open('./config.json', 'r+'))
 api_instance = giphy_client.DefaultApi()
 giphy_token = config["giphy_token"]
 

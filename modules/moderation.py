@@ -3,10 +3,10 @@ from discord.ext import commands
 import httpx
 
 import json
-from thorny_core.uikit import embeds
-from thorny_core import nexus, thorny_errors
+from uikit import embeds
+import nexus, thorny_errors
 
-config = json.load(open("./../thorny_data/config.json", "r"))
+config = json.load(open("./config.json", "r"))
 
 
 class Moderation(commands.Cog):
