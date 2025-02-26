@@ -1,14 +1,14 @@
 from discord.ext import commands
 import json
-from thorny_core import thorny_errors
-import thorny_core.uikit as uikit
-import thorny_core.nexus as nexus
+import thorny_errors
+import uikit
+import nexus
 import httpx
 
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
 v = version["version"]
-config = json.load(open("./../thorny_data/config.json", "r"))
+config = json.load(open("./config.json", "r"))
 
 
 class Playtime(commands.Cog):

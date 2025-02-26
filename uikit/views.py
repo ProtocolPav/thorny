@@ -4,11 +4,11 @@ import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button, InputText
 from datetime import date
-import thorny_core.uikit.modals as modals
-from thorny_core.uikit import embeds, options
-from thorny_core import thorny_errors
+import uikit.modals as modals
+from uikit import embeds, options
+import thorny_errors
 
-from thorny_core import nexus
+import nexus
 
 
 class ProfileEdit(View):
