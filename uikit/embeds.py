@@ -294,7 +294,7 @@ def project_embed(project: nexus.Project) -> discord.Embed:
 
 
 def level_up_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
-    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level}", limit=10)
+    api_response = api_instance.gifs_search_get(giphy_token, f"{thorny_user.level}", limit=20)
     gifs_list = list(api_response.data)
     gif = random.choice(gifs_list)
 
@@ -353,6 +353,24 @@ def user_leave(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild):
     embed = discord.Embed(colour=0xc34184)
     embed.add_field(name=f"**{thorny_user.username} has left**",
                     value=f"{thorny_guild.leave_message}")
+
+    return embed
+
+
+def user_birthday(thorny_user: nexus.ThornyUser):
+    def ordinaltg(n):
+        return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
+
+    age = datetime.now().year - thorny_user.birthday.year
+
+    api_response = api_instance.gifs_search_get(giphy_token, f'{ordinaltg(age)} birthday', limit=10)
+    gifs_list = list(api_response.data)
+    gif = random.choice(gifs_list)
+
+    embed = discord.Embed(colour=thorny_user.discord_member.colour)
+    embed.add_field(name=f"**Happy birthday, {thorny_user.discord_member.nick}!**",
+                    value=f"Woooo!!! It's {thorny_user.discord_member.mention}'s {ordinaltg(age)} birthday! Go wish them a big, fat, happy birthday!!!")
+    embed.set_image(url=gif.images.original.url)
 
     return embed
 

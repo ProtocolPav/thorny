@@ -36,6 +36,13 @@ class Interactions:
             interactions = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/interactions",
                                             timeout=None)
 
+            if interactions.status_code != 200:
+                return cls(blocks_mined=[],
+                           blocks_placed=[],
+                           kills=[],
+                           deaths=[],
+                           totals={'mine': 0, 'kill': 0, 'place': 0, 'die': 0, 'use': 0})
+
             interaction_dict = interactions.json()
 
             placed = [Interaction.build(i) for i in interaction_dict['blocks_placed']]
@@ -43,5 +50,8 @@ class Interactions:
             kills = [Interaction.build(i) for i in interaction_dict['kills']]
             deaths = [Interaction.build(i) for i in interaction_dict['deaths']]
 
-            return cls(blocks_mined=mined, blocks_placed=placed, kills=kills, deaths=deaths,
+            return cls(blocks_mined=mined,
+                       blocks_placed=placed,
+                       kills=kills,
+                       deaths=deaths,
                        totals=interaction_dict['totals'])
