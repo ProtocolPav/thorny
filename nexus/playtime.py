@@ -18,7 +18,7 @@ class Playtime:
     @classmethod
     async def build(cls, thorny_id: int):
         async with httpx.AsyncClient() as client:
-            playtime_response = await client.get(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/playtime",
+            playtime_response = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/playtime",
                                                  timeout=None)
 
             playtime = playtime_response.json()

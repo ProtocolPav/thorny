@@ -57,7 +57,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
                                     f"**Joined on:** {utils.datetime_to_string(thorny_user.join_date)}"
                               )
 
-    playtime = thorny_user.playtime
+    playtime = await thorny_user.playtime.build(thorny_user.thorny_id)
 
     second_month = (datetime.now() - relativedelta.relativedelta(months=1)).strftime('%B')
     third_month = (datetime.now() - relativedelta.relativedelta(months=2)).strftime('%B')
@@ -67,7 +67,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
                                     f"**{datetime.now().strftime('%B')}:** {utils.datetime_to_string(playtime.current_month)}\n"
                                     f"**{second_month}:** {utils.datetime_to_string(playtime.second_month)}\n"
                                     f"**{third_month}:** {utils.datetime_to_string(playtime.third_month)}\n"
-                                    f"**Total:** {utils.datetime_to_string(thorny_user.playtime.total)}\n",
+                                    f"**Total:** {utils.datetime_to_string(playtime.total)}\n",
                               inline=True)
 
     main_page_embed.add_field(name=f"**:person_raising_hand: About Me**",
