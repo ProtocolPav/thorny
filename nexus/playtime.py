@@ -21,6 +21,14 @@ class Playtime:
             playtime_response = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/playtime",
                                                  timeout=None)
 
+            if playtime_response.status_code != 200:
+                return cls(total=timedelta(seconds=0),
+                           session=None,
+                           today=timedelta(seconds=0),
+                           current_month=timedelta(seconds=0),
+                           second_month=timedelta(seconds=0),
+                           third_month=timedelta(seconds=0))
+
             playtime = playtime_response.json()
 
             session = datetime.strptime(playtime['session'], "%Y-%m-%d %H:%M:%S.%f") if playtime['session'] else None
