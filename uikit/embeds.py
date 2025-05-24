@@ -371,6 +371,7 @@ def user_birthday(thorny_user: nexus.ThornyUser):
     embed.add_field(name=f"**Happy birthday, {thorny_user.discord_member.nick}!**",
                     value=f"Woooo!!! It's {thorny_user.discord_member.mention}'s {ordinaltg(age)} birthday! Go wish them a big, fat, happy birthday!!!")
     embed.set_image(url=gif.images.original.url)
+    embed.set_footer(text=f"The /birthdays command shows you all upcoming birthdays!")
 
     return embed
 
