@@ -75,7 +75,7 @@ class Profile(commands.Cog):
 
                 birthday_text.append(f'{user.discord_member.mention} • '
                                      f'**in {days_left} day{"s" if days_left != 1 else ""}** • '
-                                     f'{user.birthday.strftime("%B %d")}')
+                                     f'{user.birthday.strftime("%B %-d")}')
 
             if page != total_pages + 1:
                 all_texts.append(birthday_text)
