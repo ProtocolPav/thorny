@@ -17,7 +17,7 @@ class Feature:
     @classmethod
     async def build(cls, guild_id: int) -> list["Feature"]:
         async with httpx.AsyncClient() as client:
-            features_response = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{guild_id}/features")
+            features_response = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild_id}/features")
             features = features_response.json()
 
             return_list = []
@@ -35,7 +35,7 @@ class Channel:
     @classmethod
     async def build(cls, guild_id: int) -> list["Channel"]:
         async with httpx.AsyncClient() as client:
-            channels_response = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{guild_id}/channels")
+            channels_response = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild_id}/channels")
             channels = channels_response.json()
 
             return_list = []
@@ -65,7 +65,7 @@ class ThornyGuild:
         async with httpx.AsyncClient() as client:
             data = {'guild_id': guild.id, 'name': guild.name}
 
-            guild_object = await client.post("http://nexuscore:8000/api/v0.1/guilds/",
+            guild_object = await client.post("http://nexuscore:8000/api/v0.2/guilds/",
                                              json=data)
 
             if guild_object.status_code == 201:
@@ -86,10 +86,10 @@ class ThornyGuild:
         :return:
         """
         async with httpx.AsyncClient() as client:
-            try:
+            guild_object = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild.id}")
+
+            if guild_object.status_code == 404:
                 guild_object = await cls.__create_new_guild(guild)
-            except thorny_errors.GuildAlreadyExists:
-                guild_object = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{guild.id}")
 
             guild_dict = guild_object.json()
 
@@ -118,7 +118,7 @@ class ThornyGuild:
                       "active": self.active
                     }
 
-            guild = await client.patch(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}",
+            guild = await client.patch(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}",
                                        json=data)
 
             if guild.status_code != 200:
@@ -140,14 +140,14 @@ class ThornyGuild:
 
     async def get_playtime_leaderboard(self, month: date) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/playtime/{month}",
+            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/playtime/{month}",
                                   timeout=None)
 
             return lb.json()['leaderboard']
 
     async def get_money_leaderboard(self) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/currency",
+            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/currency",
                                   timeout=None)
 
             return lb.json()['leaderboard']
@@ -155,7 +155,7 @@ class ThornyGuild:
 
     async def get_levels_leaderboard(self) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/levels",
+            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/levels",
                                   timeout=None)
 
             return lb.json()['leaderboard']
@@ -163,14 +163,14 @@ class ThornyGuild:
 
     async def get_quests_leaderboard(self) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/leaderboard/quests",
+            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/quests",
                                   timeout=None)
 
             return lb.json()['leaderboard']
 
     async def get_online_players(self) -> list[dict]:
         async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.1/guilds/{self.guild_id}/online",
+            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/online",
                                   timeout=None)
 
             return lb.json()['users']

@@ -4,6 +4,8 @@ import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button, InputText
 from datetime import date
+
+import uikit
 import uikit.modals as modals
 from uikit import embeds, options
 import thorny_errors
@@ -401,24 +403,24 @@ class Project(View):
 
 
 class QuestPanel(View):
-    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser):
+    def __init__(self, context: discord.ApplicationContext, thorny_guild: nexus.ThornyGuild, thorny_user: nexus.ThornyUser, available_quests: list):
         super().__init__(timeout=None)
         self.ctx = context
         self.thorny_guild = thorny_guild
         self.thorny_user = thorny_user
         self.selected_quest_id = 0
+        self.available_quests = available_quests
 
     async def on_timeout(self):
         self.disable_all_items()
 
     async def update_view(self):
-        all_quests = await options.available_quests(self.thorny_user.thorny_id)
-        if len(all_quests) == 0:
+        if len(self.available_quests) == 0:
             self.children[0].options = [discord.SelectOption(label='No quests!',
                                                              value='none...')]
             self.disable_all_items()
         else:
-            self.children[0].options = await options.available_quests(self.thorny_user.thorny_id)
+            self.children[0].options = await options.available_quests(self.available_quests)
 
     async def update_buttons(self):
         accept_button = [x for x in self.children if x.custom_id == "accept"][0]
@@ -518,77 +520,3 @@ class FailQuest(View):
                                                                                 self.thorny_guild.currency_emoji))
         else:
             raise thorny_errors.WrongUser
-
-
-class HelpDropdown(View):
-    def __init__(self, client: discord.Bot, guild_id: int):
-        super().__init__(timeout=0)
-        self.client = client
-
-        self.commands = {}
-
-        for cog_name in client.cogs:
-            self.commands[cog_name] = []
-
-            for command in client.get_cog(cog_name).walk_commands():
-                if isinstance(command, discord.SlashCommand) and command.guild_ids and guild_id in command.guild_ids:
-                    self.commands[cog_name].append({"command_name": f'</{command.qualified_name}:{command.qualified_id}>',
-                                                    "description": command.description})
-
-        self.default = discord.Embed(title="Home | Thorny Help Center",
-                                     description="Use the **Select Menu** to see more about commands!",
-                                     color=0x65b39b)
-        for cog in self.client.cogs:
-            easy_view_text = []
-
-            for command in self.commands[cog]:
-                easy_view_text.append(command['command_name'])
-
-            if len(easy_view_text) > 3:
-                easy_view_text = f"{'**,** '.join(easy_view_text[0:3])}**,** and more"
-            elif len(easy_view_text) <= 3:
-                easy_view_text = f"{'**,** '.join(easy_view_text)}"
-
-            if easy_view_text != "":
-                self.default.add_field(name=f"**{cog} Commands**",
-                                       value=f"{easy_view_text}",
-                                       inline=False)
-
-    help_options = [
-                   discord.SelectOption(label="Home", description="Go to the Thorny Help Center Home", emoji="🏡", default=True),
-                   discord.SelectOption(label="Moderation", description="Commands to moderate your server", emoji="🔎"),
-                   discord.SelectOption(label="Money", description="Commands to do with money", emoji="💳"),
-                   discord.SelectOption(label="Inventory", description="Commands to do with the Inventory and Shop", emoji="🎒"),
-                   discord.SelectOption(label="Profile", description="Commands to do with your profile", emoji="📝"),
-                   discord.SelectOption(label="Playtime", description="Commands to do with playtime", emoji="⏰"),
-                   discord.SelectOption(label="Level", description="Commands to do with levels", emoji="🌟"),
-                   discord.SelectOption(label="Leaderboard", description="Leaderboards... Self explanatory", emoji="🥇"),
-                   discord.SelectOption(label="Other", description="Other commands, like /configure", emoji="⚙️")
-    ]
-
-    @discord.ui.select(placeholder="Click on a category to see its commands",
-                       min_values=1, max_values=1, options=help_options)
-    async def callback(self, select, interaction: discord.Interaction):
-        category = select.values[0]
-        for item in select.options:
-            if item.label == select.values[0]:
-                index = select.options.index(item)
-                select.options[index].default = True
-            else:
-                index = select.options.index(item)
-                select.options[index].default = False
-        if category == "Home":
-            help_embed = self.default
-        else:
-            help_embed = discord.Embed(title=f"{category} | Thorny Help Center",
-                                       description="Click on a command to use it!",
-                                       color=0x65b39b)
-            text = ''
-            category = category.capitalize()
-            for command in self.commands[category]:
-                text = f"{text}{command['command_name']}\n```{command['description']}```\n"
-
-            help_embed.add_field(name=f"**{category} Commands**",
-                                 value=f"{text}")
-
-        await interaction.response.edit_message(embed=help_embed, view=select.view)
