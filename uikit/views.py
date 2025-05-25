@@ -4,12 +4,10 @@ import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button, InputText
 from datetime import date
-
 import uikit
 import uikit.modals as modals
 from uikit import embeds, options
 import thorny_errors
-
 import nexus
 
 
