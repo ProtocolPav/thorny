@@ -4,18 +4,16 @@ import discord
 from discord.ext import commands, tasks
 
 import giphy_client
-from thorny_core import nexus
-from thorny_core import thorny_errors
+import nexus
+import thorny_errors
 import traceback
 import json
 import sys
 import httpx
 import modules
 import uikit
-from thorny_core.nexus import Project
-from thorny_core.uikit import ProjectCommandOptions
 
-config = json.load(open('../thorny_data/config.json', 'r+'))
+config = json.load(open('./config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
@@ -43,22 +41,25 @@ async def on_ready():
     thorny.add_view(uikit.PersistentProjectAdminButtons())
 
 
-# @tasks.loop(hours=24.0)
-# async def birthday_checker():
-#     print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
-#     upcoming_bdays = await generator.upcoming_birthdays(pool=poolwrapper.pool_wrapper)
-#     for user in upcoming_bdays:
-#         for guild in thorny.guilds:
-#             if guild.id == user["guild_id"] and datetime.now().date().replace(year=2000) == user['birthday'].replace(year=2000):
-#                 thorny_guild = await GuildFactory.build(guild)
-#                 thorny_user = await UserFactory.fetch_by_id(thorny_guild, user['thorny_user_id'])
-#
-#                 birthday_event = event.Birthday(thorny, datetime.now(), thorny_user, thorny_guild)
-#                 await birthday_event.log()
-#
-# @birthday_checker.before_loop
-# async def before_check():
-#     await thorny.wait_until_ready()
+@tasks.loop(hours=24.0)
+async def birthday_checker():
+    print(f"[{datetime.now().replace(microsecond=0)}] [LOOP] Ran birthday checker loop")
+    for guild in thorny.guilds:
+        for member in guild.members:
+            if not member.bot:
+                thorny_user = await nexus.ThornyUser.build(member)
+
+                if thorny_user.birthday and datetime.now().date().replace(year=2000) == thorny_user.birthday.date().replace(year=2000):
+                    thorny_guild = await nexus.ThornyGuild.build(guild)
+
+                    if thorny_guild.get_channel_id('welcome'):
+                        welcome_channel = thorny.get_channel(thorny_guild.get_channel_id('welcome'))
+
+                        await welcome_channel.send(embed=uikit.user_birthday(thorny_user), content=f'{member.mention}')
+
+@birthday_checker.before_loop
+async def before_check():
+    await thorny.wait_until_ready()
 
 
 @tasks.loop(time=time(hour=16))
@@ -198,7 +199,7 @@ thorny.add_cog(modules.Leaderboard(thorny))
 thorny.add_cog(modules.Other(thorny))
 
 # Start Tasks
-# birthday_checker.start()
+birthday_checker.start()
 day_counter.start()
 
 

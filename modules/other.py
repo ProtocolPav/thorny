@@ -2,30 +2,16 @@ import discord
 from discord.ext import commands
 from discord.utils import basic_autocomplete
 
-from thorny_core import uikit
+import uikit
 from datetime import datetime, timedelta
 
-from thorny_core import nexus, thorny_errors
-from thorny_core.uikit import ProjectCommandOptions
+import nexus, thorny_errors
 
 
 class Other(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.bot_started = datetime.now().replace(microsecond=0)
-
-    @commands.slash_command(description="Access the Thorny Help Center")
-    async def help(self, ctx: discord.ApplicationContext):
-        view = uikit.HelpDropdown(self.client, ctx.guild.id)
-        for item in view.help_options:
-            if item.label == "Home":
-                index = view.help_options.index(item)
-                view.help_options[index].default = True
-            else:
-                index = view.help_options.index(item)
-                view.help_options[index].default = False
-
-        await ctx.respond(embed=view.default, view=view)
 
 
     @commands.slash_command(description="Get bot stats")
@@ -48,7 +34,7 @@ class Other(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext,
                    project: discord.Option(str,
                                            description='Search for a project to view',
-                                           autocomplete=basic_autocomplete(ProjectCommandOptions.get_options))):
+                                           autocomplete=basic_autocomplete(uikit.ProjectCommandOptions.get_options))):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
@@ -73,10 +59,11 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_user.quest = await thorny_user.quest.build(thorny_user.thorny_id)
 
         if thorny_user.quest:
             quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
+
             if quest_info.end_time < datetime.now():
                 await thorny_user.quest.fail()
                 await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
@@ -89,7 +76,7 @@ class Other(commands.Cog):
         else:
             quests = await nexus.UserQuest.get_available_quests(thorny_user.thorny_id)
 
-            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user)
+            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
             await ctx.respond(embed=uikit.quests_overview(quests),
                               view=view,

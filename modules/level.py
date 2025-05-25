@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from thorny_core import thorny_errors
+import thorny_errors
 
 
 class Level(commands.Cog):
