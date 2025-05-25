@@ -29,7 +29,7 @@ class Profile:
     @classmethod
     async def build(cls, thorny_id: int):
         async with httpx.AsyncClient() as client:
-            profile = await client.get(f"http://nexuscore:8000/api/v0.1/users/{thorny_id}/profile",
+            profile = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/profile",
                                        timeout=None)
 
             return cls(**profile.json(), thorny_id=thorny_id)
@@ -54,7 +54,7 @@ class Profile:
                       "ingenuity": self.ingenuity
                     }
 
-            user = await client.patch(f"http://nexuscore:8000/api/v0.1/users/{self.thorny_id}/profile",
+            user = await client.patch(f"http://nexuscore:8000/api/v0.2/users/{self.thorny_id}/profile",
                                       json=data)
 
             if user.status_code != 200:

@@ -1,4 +1,4 @@
-FROM python:3.12.7-bookworm
+FROM python:3.12.7-alpine
 
 COPY requirements.txt /thorny_core/requirements.txt
 
