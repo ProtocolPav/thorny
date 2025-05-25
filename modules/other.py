@@ -13,19 +13,6 @@ class Other(commands.Cog):
         self.client = client
         self.bot_started = datetime.now().replace(microsecond=0)
 
-    @commands.slash_command(description="Access the Thorny Help Center")
-    async def help(self, ctx: discord.ApplicationContext):
-        view = uikit.HelpDropdown(self.client, ctx.guild.id)
-        for item in view.help_options:
-            if item.label == "Home":
-                index = view.help_options.index(item)
-                view.help_options[index].default = True
-            else:
-                index = view.help_options.index(item)
-                view.help_options[index].default = False
-
-        await ctx.respond(embed=view.default, view=view)
-
 
     @commands.slash_command(description="Get bot stats")
     async def ping(self, ctx):
@@ -72,10 +59,11 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_user.quest = await thorny_user.quest.build(thorny_user.thorny_id)
 
         if thorny_user.quest:
             quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
+
             if quest_info.end_time < datetime.now():
                 await thorny_user.quest.fail()
                 await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
@@ -88,7 +76,7 @@ class Other(commands.Cog):
         else:
             quests = await nexus.UserQuest.get_available_quests(thorny_user.thorny_id)
 
-            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user)
+            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
             await ctx.respond(embed=uikit.quests_overview(quests),
                               view=view,

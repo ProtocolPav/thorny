@@ -134,9 +134,7 @@ def server_setup():
     ]
 
 
-async def available_quests(thorny_id: int):
-    quests = await nexus.UserQuest.get_available_quests(thorny_id)
-
+async def available_quests(quests: list):
     return_list = []
     for quest in quests:
         return_list.append(SelectOption(label=quest.title,
