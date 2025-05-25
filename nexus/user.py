@@ -8,12 +8,12 @@ from typing import Optional
 
 import httpx
 
-import thorny_core.thorny_errors as thorny_errors
+import thorny_errors
 
-from thorny_core.nexus.playtime import Playtime
-from thorny_core.nexus.profile import Profile
-from thorny_core.nexus.quest import UserQuest
-from thorny_core.nexus.interactions import Interactions
+from nexus.playtime import Playtime
+from nexus.profile import Profile
+from nexus.quest import UserQuest
+from nexus.interactions import Interactions
 
 
 @dataclass
@@ -36,8 +36,8 @@ class ThornyUser:
     gamertag: str
     whitelist: str
     profile: Profile
-    playtime: Playtime
-    quest: Optional[UserQuest]
+    playtime: Playtime = Playtime
+    quest: UserQuest = UserQuest
     interactions: Interactions = Interactions
 
 
@@ -68,9 +68,9 @@ class ThornyUser:
             user_id = member.id
             guild_id = member.guild.id
 
-            data = {'guild_id': guild_id, 'discord_id': user_id, 'username': member.name}
+            data = {'guild_id': guild_id, 'user_id': user_id, 'username': member.name}
 
-            user = await client.post("http://nexuscore:8000/api/v0.1/users/",
+            user = await client.post("http://nexuscore:8000/api/v0.2/users/",
                                      json=data)
 
             if user.status_code == 201:
@@ -94,19 +94,17 @@ class ThornyUser:
             user_id = member.id
             guild_id = member.guild.id
 
-            try:
+            user_response = await client.get(f"http://nexuscore:8000/api/v0.2/users/guild/{guild_id}/{user_id}",
+                                             timeout=None)
+
+            if user_response.status_code == 404:
                 user_response = await cls.__create_new_user(member)
-            except thorny_errors.UserAlreadyExists:
-                user_response = await client.get(f"http://nexuscore:8000/api/v0.1/users/guild/{guild_id}/{user_id}",
-                                                 timeout=None)
 
-            user = user_response.json()
+            user: dict = user_response.json()
 
-            profile = await Profile.build(user['thorny_id'])
-            playtime = await Playtime.build(user['thorny_id'])
-            quest = await UserQuest.build(user['thorny_id'])
+            profile = Profile(**user.pop('profile'))
 
-            user_class = cls(**user, profile=profile, playtime=playtime, discord_member=member, quest=quest)
+            user_class = cls(**user, profile=profile, discord_member=member,)
 
             user_class.username = member.name
             user_class.active = True
@@ -140,7 +138,7 @@ class ThornyUser:
                       "whitelist": self.whitelist
                     }
 
-            user = await client.patch(f"http://nexuscore:8000/api/v0.1/users/{self.thorny_id}",
+            user = await client.patch(f"http://nexuscore:8000/api/v0.2/users/{self.thorny_id}",
                                       json=data)
 
             if user.status_code != 200:
