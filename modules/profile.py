@@ -46,6 +46,7 @@ class Profile(commands.Cog):
 
     @commands.slash_command(description="See all upcoming birthdays!")
     async def birthdays(self, ctx: discord.ApplicationContext):
+        await ctx.defer()
         all_pages = []
         birthday_users: list[nexus.ThornyUser] = []
 
