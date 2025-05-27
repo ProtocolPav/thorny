@@ -19,7 +19,6 @@ class Project:
     started_on: date
     completed_on: date
     owner_id: int
-    owner: ThornyUser
     members: list[int]
     status: str
     status_since: datetime
