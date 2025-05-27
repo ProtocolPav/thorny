@@ -6,6 +6,8 @@ import thorny_errors
 
 import httpx
 
+from nexus import ThornyUser
+
 
 @dataclass
 class Project:
@@ -17,6 +19,7 @@ class Project:
     started_on: date
     completed_on: date
     owner_id: int
+    owner: ThornyUser
     members: list[int]
     status: str
     status_since: datetime
@@ -34,8 +37,10 @@ class Project:
                 raise thorny_errors.UnexpectedError2('There was an issue creating your project. '
                                                      'Most likely, the project ID is already taken.')
 
-            project_json = project.json()
+            project_json: dict = project.json()
             members = await client.get(f"http://nexuscore:8000/api/v0.2/projects/{project.json()['project_id']}/members")
+
+            project_json.pop('owner')
 
             return cls(**project_json, members=[x['user_id'] for x in members.json()])
 
@@ -50,6 +55,8 @@ class Project:
 
             project_json = project.json()
             members = await client.get(f"http://nexuscore:8000/api/v0.2/projects/{project.json()['project_id']}/members")
+
+            project_json.pop('owner')
 
             return cls(**project_json, members=[x['user_id'] for x in members.json()])
 
