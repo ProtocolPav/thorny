@@ -97,7 +97,7 @@ class ThornyUser:
             user_response = await client.get(f"http://nexuscore:8000/api/v0.2/users/guild/{guild_id}/{user_id}",
                                              timeout=None)
 
-            if user_response.status_code == 404:
+            if user_response.status_code == 404 or user_response.status_code == 400:
                 user_response = await cls.__create_new_user(member)
 
             user: dict = user_response.json()
