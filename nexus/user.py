@@ -61,7 +61,6 @@ class ThornyUser:
 
         return role.title(), patron
 
-
     @classmethod
     async def __create_new_user(cls, member: discord.Member):
         async with httpx.AsyncClient() as client:
@@ -77,7 +76,6 @@ class ThornyUser:
                 return user
             else:
                 raise thorny_errors.UserAlreadyExists
-
 
     @classmethod
     async def build(cls, member: discord.Member):
@@ -120,6 +118,13 @@ class ThornyUser:
 
             return user_class
 
+    @classmethod
+    async def get_discord_id(cls, thorny_id: int):
+        async with httpx.AsyncClient() as client:
+            user_response = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}",
+                                             timeout=None)
+
+            return user_response.json()['user_id']
 
     async def update(self):
         async with httpx.AsyncClient() as client:

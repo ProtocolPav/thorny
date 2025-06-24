@@ -7,7 +7,10 @@ import giphy_client
 import random
 
 from dateutil import relativedelta
+from discord.ext.commands import Bot
+
 import nexus, utils
+from nexus import Quest
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -525,21 +528,34 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
     return embed
 
 
-def quests_overview(quests: list[...]):
+def quests_overview(quests: list[nexus.Quest], money_symbol: str):
     embed = discord.Embed(colour=0xE0B0FF,
-                          title="Available Quests",
-                          description="To see more details about a certain quest, select it in the selector!")
-
-    TEXTLIMIT = 50
+                          title="Everthorn Quests",
+                          description="🔥 Quests are a fun distraction from the Minecraft Grind\n"
+                                      "📅 New Quests are released weekly\n"
+                                      "⏲️ Each quest is only available for a limited time!\n"
+                                      f"{money_symbol} Nugs & other rewards are available!")
 
     for quest in quests:
-        if len(quest.description) > TEXTLIMIT:
-            description = f'{quest.description[0:TEXTLIMIT]}...'
-        else:
-            description = quest.description
+        match quest.quest_type:
+            case 'side':
+                emoji = '🏄'
+                quest_type = 'Side Quest'
+            case 'story':
+                emoji = '🔖'
+                quest_type = 'Story Quest'
+            case _:
+                emoji = '⏲️'
+                quest_type = 'Minor Quest'
 
-        embed.add_field(name=quest.title,
-                        value=f"```{description}```",
+        times = quest.end_time - datetime.now()
+
+        tags = [x.capitalize() for x in quest.tags]
+
+        embed.add_field(name=f"{quest.title}",
+                        value=f"> `{'` | `'.join(tags)}`\n> \n"
+                              f"> **Rewards:** {quest.get_reward_string(money_symbol)}\n"
+                              f"-# ﹂ {emoji} {quest_type} | Expires <t:{int(time.time() + times.total_seconds())}:R>",
                         inline=False)
 
     if len(quests) == 0:
@@ -550,32 +566,47 @@ def quests_overview(quests: list[...]):
     return embed
 
 
-def view_quest(quest: nexus.Quest, money_symbol: str):
+def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Member):
     times = quest.end_time - datetime.now()
+    tags = [x.capitalize() for x in quest.tags]
+
+    match quest.quest_type:
+        case 'side':
+            emoji = '🏄'
+            quest_type = 'Side Quest'
+        case 'story':
+            emoji = '🔖'
+            quest_type = 'Story Quest'
+        case _:
+            emoji = '⏲️'
+            quest_type = 'Minor Quest'
+
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title,
-                          description=f"*This quest expires <t:{int(time.time() + times.total_seconds())}:R>. "
-                                      f"Accept and complete it before time runs out!*")
+                          description=f"`{'` | `'.join(tags)}`")
 
-    embed.add_field(name='🔖 Description',
+    embed.add_field(name=':page_facing_up: About Quest',
                     value=f"```{quest.description}```",
                     inline=False)
 
-    rewards = 0
-    for objective in quest.objectives:
-        for reward in objective.rewards:
-            rewards += 1
+    embed.add_field(name=':mag_right: Objectives',
+                    value=f"This quest has {len(quest.objectives)} objectives.",
+                    inline=True)
 
-    embed.add_field(name=f'📋 More Info',
-                    value=f'**Objectives:** {len(quest.objectives)}\n'
-                          f'**Rewards:** {rewards}',
+    embed.add_field(name=':money_mouth: Rewards',
+                    value=f"{quest.get_reward_string(money_symbol)}",
+                    inline=True)
+
+    embed.add_field(name='',
+                    value=f"-# {emoji} {quest_type} | Expires <t:{int(time.time() + times.total_seconds())}:R>\n"
+                          f"-# Made with :heart: by {creator_member.mention}",
                     inline=False)
 
     return embed
 
 
 def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symbol: str):
-    counter = 1
+    counter = 0
     for objective in quest.objectives:
         for user_objective in thorny_user.quest.objectives:
             if user_objective.objective_id == objective.objective_id and user_objective.status == 'in_progress':
@@ -593,11 +624,22 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                 objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
                 times = quest.end_time - datetime.now()
 
+                tags = [x.capitalize() for x in quest.tags]
+
+                match quest.quest_type:
+                    case 'side':
+                        emoji = '🏄'
+                        quest_type = 'Side Quest'
+                    case 'story':
+                        emoji = '🔖'
+                        quest_type = 'Story Quest'
+                    case _:
+                        emoji = '⏲️'
+                        quest_type = 'Minor Quest'
+
                 embed = discord.Embed(colour=0xE0B0FF,
-                                      title=f'{quest.title} | Objective {counter}',
-                                      description=f"*This quest expires <t:{int(time.time() + times.total_seconds())}:R>. "
-                                                  f"Complete it before time runs out!*"
-                                      )
+                                      title=f'{quest.title}',
+                                      description=f"`{'` | `'.join(tags)}`")
 
                 embed.add_field(name='🔖 The Story',
                                 value=f"```{objective.description}```",
@@ -626,9 +668,16 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                                 value=f'{"".join(completed_objectives)}:yellow_square:{"".join(objectives_left)}',
                                 inline=False)
 
+                embed.add_field(name='',
+                                value=f"-# {emoji} {quest_type} | Expires <t:{int(time.time() + times.total_seconds())}:R>\n",
+                                inline=False)
+
                 return embed
 
         counter += 1
+
+        return None
+    return None
 
 
 def quest_fail_warn(quest: nexus.Quest):
