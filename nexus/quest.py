@@ -45,6 +45,8 @@ class Objective:
     required_mainhand: Optional[str]
     required_location: Optional[list]
     location_radius: int
+    required_deaths: Optional[int]
+    continue_on_fail: bool
     rewards: Optional[list[Reward]]
 
     @classmethod
@@ -79,6 +81,12 @@ class Objective:
             extra_requirements.append(f'- Timer: **{math.trunc(hours)}h{math.trunc(minutes)}m{math.trunc(seconds)}s** '
                                       f'(starts immediately!)')
 
+        if self.required_deaths:
+            extra_requirements.append(f'- No more than {self.required_deaths} deaths')
+
+        if not self.continue_on_fail and (self.objective_timer or self.required_deaths):
+            extra_requirements.append(f'- Failing this objective will fail the entire quest')
+
         return "\n".join(extra_requirements) if extra_requirements else None
 
 
@@ -90,6 +98,9 @@ class Quest:
     title: str
     description: str
     objectives: list[Objective]
+    tags: list[str]
+    created_by: int
+    quest_type: str
 
     @classmethod
     def __build_from_data(cls, quest_dict: dict):
@@ -125,6 +136,25 @@ class Quest:
     @classmethod
     def build_with_data(cls, quest_dict: dict):
         return cls.__build_from_data(quest_dict)
+
+    def get_reward_string(self, money_symbol: str):
+        nug_rewards = 0
+        item_rewards = 0
+
+        for objective in self.objectives:
+            for reward in objective.rewards:
+                if reward.balance:
+                    nug_rewards += 1
+                else:
+                    item_rewards += 1
+
+        texts = []
+        if nug_rewards:
+            texts.append(f"{nug_rewards} {money_symbol}")
+        if item_rewards:
+            texts.append(f"*+{item_rewards} Item Rewards*")
+
+        return ', '.join(texts)
 
 
 @dataclass
