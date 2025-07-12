@@ -5,8 +5,8 @@ Thorny slash command autocomplete
 UPDATE TO THIS:
 Make everything a function which returns the things needed, and rename the file to generators.py
 """
-import asyncio
 from datetime import datetime
+import time
 
 import discord
 from discord import SelectOption, OptionChoice
@@ -137,8 +137,19 @@ def server_setup():
 async def available_quests(quests: list):
     return_list = []
     for quest in quests:
+        match quest.quest_type:
+            case 'side':
+                emoji = '🏄'
+                quest_type = 'Side Quest'
+            case 'story':
+                emoji = '🔖'
+                quest_type = 'Story Quest'
+            case _:
+                emoji = '⏲️'
+                quest_type = 'Minor Quest'
+
         return_list.append(SelectOption(label=quest.title,
-                                        description=quest.description[:25] + '...',
+                                        description=f"{emoji} {quest_type}",
                                         value=str(quest.quest_id)))
 
     return return_list

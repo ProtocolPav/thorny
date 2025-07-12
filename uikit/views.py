@@ -431,9 +431,14 @@ class QuestPanel(View):
         self.selected_quest_id = int(select_menu.values[0])
         await self.update_buttons()
 
+        quest = await nexus.Quest.build(self.selected_quest_id)
+
+        creator = self.thorny_guild.discord_guild.get_member(await nexus.ThornyUser.get_discord_id(quest.created_by))
+
         await interaction.response.edit_message(view=self,
-                                                embed=embeds.view_quest(await nexus.Quest.build(self.selected_quest_id),
-                                                                        self.thorny_guild.currency_emoji))
+                                                embed=embeds.view_quest(quest,
+                                                                        self.thorny_guild.currency_emoji,
+                                                                        creator))
 
     @discord.ui.button(label="Accept Quest",
                        custom_id="accept",
