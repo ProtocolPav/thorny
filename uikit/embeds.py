@@ -675,8 +675,6 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
                 return embed
 
         counter += 1
-
-        return None
     return None
 
 
