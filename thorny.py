@@ -117,7 +117,7 @@ async def on_message(message: discord.Message):
             if 'http' not in message.content:
                 async with httpx.AsyncClient() as client:
                     r = await client.get(f"http://amethyst:8000/commands/message", timeout=None,
-                                         params={'msg': f'§l§8[§r§5Discord§l§8]§r §7{message.author.name}:§r {message.content}'})
+                                         params={'msg': f' §7{message.author.name}:§r {message.content}'})
 
 
 @thorny.event
