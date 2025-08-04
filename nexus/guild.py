@@ -21,7 +21,7 @@ class Feature:
             features = features_response.json()
 
             return_list = []
-            for i in features['features']:
+            for i in features:
                 return_list.append(cls(**i))
 
             return return_list
@@ -39,7 +39,7 @@ class Channel:
             channels = channels_response.json()
 
             return_list = []
-            for i in channels['channels']:
+            for i in channels:
                 return_list.append(cls(**i))
 
             return return_list
