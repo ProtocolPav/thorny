@@ -46,6 +46,17 @@ class Channel:
 
 
 @dataclass
+class OnlineUser:
+    thorny_id: int
+    discord_id: int
+    session: datetime
+    username: str
+    whitelist: str
+    location: tuple[int, int, int]
+    dimension: str
+
+
+@dataclass
 class ThornyGuild:
     discord_guild: discord.Guild
     guild_id: int
@@ -168,9 +179,15 @@ class ThornyGuild:
 
             return lb.json()['leaderboard']
 
-    async def get_online_players(self) -> list[dict]:
+    async def get_online_players(self) -> list[OnlineUser]:
         async with httpx.AsyncClient() as client:
             lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/online",
                                   timeout=None)
 
-            return lb.json()['users']
+            online_users = []
+            for user in lb.json():
+                user['session'] = datetime.strptime(user['session'], "%Y-%m-%d %H:%M:%S.%f")
+
+                online_users.append(OnlineUser(**user))
+
+            return online_users

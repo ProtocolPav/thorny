@@ -11,6 +11,7 @@ from discord.ext.commands import Bot
 
 import nexus, utils
 from nexus import Quest
+from nexus.guild import OnlineUser
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -482,7 +483,7 @@ def server_update_embed(update_version: str):
     return embed
 
 
-def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[dict], everthorn_guilds: bool):
+def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[OnlineUser], everthorn_guilds: bool):
     embed = discord.Embed(color=0x6495ED)
 
     if everthorn_guilds:
@@ -511,11 +512,11 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
     online_text = ''
     for player in online_players:
-        time = datetime.now() - datetime.strptime(player['session'], "%Y-%m-%d %H:%M:%S.%f")
-        time = str(time).split(":")
+        time_played = datetime.now() - player.session
+        time_played = str(time_played).split(":")
         online_text = f"{online_text}\n" \
-                      f"<@{player['discord_id']}> • " \
-                      f"connected {time[0]}h{time[1]}m ago"
+                      f"<@{player.discord_id}> • " \
+                      f"connected {time_played[0]}h{time_played[1]}m ago"
 
     if online_text == "":
         embed.add_field(name="**Aha!**",
