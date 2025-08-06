@@ -35,6 +35,9 @@ class ThornyUser:
     last_message: datetime
     gamertag: str
     whitelist: str
+    location: Optional[tuple[int, int, int]]
+    dimension: Optional[str]
+    hidden: bool
     profile: Profile
     playtime: Playtime = Playtime
     quest: UserQuest = UserQuest
@@ -129,19 +132,22 @@ class ThornyUser:
     async def update(self):
         async with httpx.AsyncClient() as client:
             data = {
-                      "username": self.username,
-                      "birthday": str(self.birthday) if self.birthday else None,
-                      "balance": self.balance,
-                      "active": self.active,
-                      "role": self.role,
-                      "patron": self.patron,
-                      "level": self.level,
-                      "xp": self.xp,
-                      "required_xp": self.required_xp,
-                      "last_message": str(self.last_message),
-                      "gamertag": self.gamertag,
-                      "whitelist": self.whitelist
-                    }
+                "username": self.username,
+                "birthday": str(self.birthday) if self.birthday else None,
+                "balance": self.balance,
+                "active": self.active,
+                "role": self.role,
+                "patron": self.patron,
+                "level": self.level,
+                "xp": self.xp,
+                "required_xp": self.required_xp,
+                "last_message": str(self.last_message),
+                "gamertag": self.gamertag,
+                "whitelist": self.whitelist,
+                "location": self.location,
+                "dimension": self.dimension,
+                "hidden": self.hidden
+            }
 
             user = await client.patch(f"http://nexuscore:8000/api/v0.2/users/{self.thorny_id}",
                                       json=data)
