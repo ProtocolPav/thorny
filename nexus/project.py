@@ -1,3 +1,5 @@
+from typing import Optional
+
 import discord
 
 from dataclasses import dataclass
@@ -18,6 +20,8 @@ class Project:
     thread_id: int
     started_on: date
     completed_on: date
+    dimension: str
+    pin_id: Optional[int]
     owner_id: int
     members: list[int]
     status: str
