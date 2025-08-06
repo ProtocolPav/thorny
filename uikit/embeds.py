@@ -518,7 +518,7 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
         time_played = datetime.now() - player.session
         time_played = str(time_played).split(":")
         online_text = f"{online_text}\n" \
-                      f"<@{player.discord_id}> • " \
+                      f"<@{player.user_id}> • " \
                       f"connected {time_played[0]}h{time_played[1]}m ago"
 
     if online_text == "":

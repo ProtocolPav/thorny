@@ -48,7 +48,7 @@ class Channel:
 @dataclass
 class OnlineUser:
     thorny_id: int
-    discord_id: int
+    user_id: int
     session: datetime
     username: str
     whitelist: str
