@@ -219,6 +219,7 @@ def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: di
     embed.add_field(name="Project Info:",
                     value=f"**Name:** `{project.get('name', '[EMPTY]')}`\n"
                           f"**Coordinates:** `{project.get('coordinates', '[EMPTY]')}`\n"
+                          f"**Dimension:** `{project.get('dimension', '[EMPTY]').split('minecraft:')[-1]}`\n"
                           f"**Road Built:** `{project.get('road_built', '[EMPTY]')}`")
 
     embed.add_field(name="Project Members:",
@@ -249,6 +250,7 @@ def project_application_embed(project: nexus.Project, project_data: dict, thorny
 
     info_embed.add_field(name="Project Info:",
                          value=f"**Coordinates:** {project_data['coordinates']}\n"
+                               f"**Dimension:** {project_data['dimension'].split('minecraft:')[-1]}\n"
                                f"**Road Built:** {project_data['road_built']}\n"
                                f"**Project Members:** {thorny_user.discord_member.name}")
 
@@ -291,6 +293,7 @@ def project_embed(project: nexus.Project) -> discord.Embed:
                                f"**Thread:** <#{project.thread_id}>\n"
                                f"**Started on:** {utils.datetime_to_string(project.started_on)}\n"
                                f"**Coordinates:** {project.coordinates[0]}, {project.coordinates[1]}, {project.coordinates[2]}\n"
+                               f"**Dimension:** {project.dimension.split('minecraft:')[-1]}\n"
                                f"**Project Members:** {', '.join(members)}",
                          inline=False)
 

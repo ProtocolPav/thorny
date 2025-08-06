@@ -28,13 +28,15 @@ class Project:
     status_since: datetime
 
     @classmethod
-    async def create_new_project(cls, name: str, description: str, coordinates: list[int], owner_id: int):
+    async def create_new_project(cls, name: str, description: str, coordinates: list[int], owner_id: int, dimension: str):
         async with httpx.AsyncClient() as client:
             project = await client.post(f"http://nexuscore:8000/api/v0.2/projects",
                                           json={'name': name,
                                                 'description': description,
                                                 'coordinates': coordinates,
-                                                'owner_id': owner_id})
+                                                'owner_id': owner_id,
+                                                'pin_id': None,
+                                                'dimension': dimension})
 
             if project.status_code != 201:
                 raise thorny_errors.UnexpectedError2('There was an issue creating your project. '
@@ -84,7 +86,8 @@ class Project:
                      'owner_id': self.owner_id,
                      'thread_id': self.thread_id,
                      'started_on': str(self.started_on),
-                     'completed_on': str(self.completed_on) if self.completed_on else None
+                     'completed_on': str(self.completed_on) if self.completed_on else None,
+                     'dimension': self.dimension
                     }
 
             project = await client.patch(f"http://nexuscore:8000/api/v0.2/projects/{self.project_id}",
