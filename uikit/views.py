@@ -156,6 +156,8 @@ class PersistentProjectAdminButtons(View):
             await project.set_status('ongoing')
             await project.update()
 
+            await thread.starting_message.edit(embed=embeds.project_embed(project))
+
             await thread.send(f"<@&1079703011451998208>, A new project has been accepted!")
         else:
             await interaction.response.send_message("You've got to have the Community Manager role to do anything.",
@@ -336,7 +338,8 @@ class ProjectApplicationForm(View):
             project = await nexus.Project.create_new_project(self.project_data['name'],
                                                              self.project_data['description'],
                                                              self.project_data['coordinates'],
-                                                             self.project_data['owner_id'])
+                                                             self.project_data['owner_id'],
+                                                             self.project_data['dimension'])
 
             channel = interaction.client.get_channel(self.thorny_guild.get_channel_id('project_applications'))
 
