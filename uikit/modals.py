@@ -139,9 +139,22 @@ class ProjectDetailsCoordinates(Modal):
                                 placeholder="Coordinates in Minecraft are: X, Y, Z"))
         self.add_item(InputText(label="Put down ONLY the Z coordinate",
                                 placeholder="Coordinates in Minecraft are: X, Y, Z"))
+        self.add_item(InputText(label="What dimension is this project in?",
+                                placeholder="Either: overworld, nether or end"))
 
     async def callback(self, interaction: discord.Interaction):
         self.project['coordinates'] = [int(self.children[0].value), int(self.children[1].value), int(self.children[2].value)]
+
+
+        match self.children[3].value[0].lower():
+            case 'o':
+                self.project['dimension'] = 'minecraft:overworld'
+            case 'n':
+                self.project['dimension'] = 'minecraft:nether'
+            case 'e':
+                self.project['dimension'] = 'minecraft:the_end'
+            case _:
+                self.project['dimension'] = 'minecraft:overworld'
 
         button = self.view.children[0]
         button.label = "Next [3/3]"

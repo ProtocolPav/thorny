@@ -11,6 +11,7 @@ from discord.ext.commands import Bot
 
 import nexus, utils
 from nexus import Quest
+from nexus.guild import OnlineUser
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -218,6 +219,7 @@ def project_application_builder_embed(thorny_user: nexus.ThornyUser, project: di
     embed.add_field(name="Project Info:",
                     value=f"**Name:** `{project.get('name', '[EMPTY]')}`\n"
                           f"**Coordinates:** `{project.get('coordinates', '[EMPTY]')}`\n"
+                          f"**Dimension:** `{project.get('dimension', '[EMPTY]').split('minecraft:')[-1]}`\n"
                           f"**Road Built:** `{project.get('road_built', '[EMPTY]')}`")
 
     embed.add_field(name="Project Members:",
@@ -248,6 +250,7 @@ def project_application_embed(project: nexus.Project, project_data: dict, thorny
 
     info_embed.add_field(name="Project Info:",
                          value=f"**Coordinates:** {project_data['coordinates']}\n"
+                               f"**Dimension:** {project_data['dimension'].split('minecraft:')[-1]}\n"
                                f"**Road Built:** {project_data['road_built']}\n"
                                f"**Project Members:** {thorny_user.discord_member.name}")
 
@@ -290,6 +293,7 @@ def project_embed(project: nexus.Project) -> discord.Embed:
                                f"**Thread:** <#{project.thread_id}>\n"
                                f"**Started on:** {utils.datetime_to_string(project.started_on)}\n"
                                f"**Coordinates:** {project.coordinates[0]}, {project.coordinates[1]}, {project.coordinates[2]}\n"
+                               f"**Dimension:** {project.dimension.split('minecraft:')[-1]}\n"
                                f"**Project Members:** {', '.join(members)}",
                          inline=False)
 
@@ -482,7 +486,7 @@ def server_update_embed(update_version: str):
     return embed
 
 
-def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[dict], everthorn_guilds: bool):
+def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[OnlineUser], everthorn_guilds: bool):
     embed = discord.Embed(color=0x6495ED)
 
     if everthorn_guilds:
@@ -511,11 +515,11 @@ def server_status(online: bool, status: str, uptime: str, load: dict, online_pla
 
     online_text = ''
     for player in online_players:
-        time = datetime.now() - datetime.strptime(player['session'], "%Y-%m-%d %H:%M:%S.%f")
-        time = str(time).split(":")
+        time_played = datetime.now() - player.session
+        time_played = str(time_played).split(":")
         online_text = f"{online_text}\n" \
-                      f"<@{player['discord_id']}> • " \
-                      f"connected {time[0]}h{time[1]}m ago"
+                      f"<@{player.discord_id}> • " \
+                      f"connected {time_played[0]}h{time_played[1]}m ago"
 
     if online_text == "":
         embed.add_field(name="**Aha!**",
