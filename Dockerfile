@@ -8,4 +8,4 @@ ENV PYTHONPATH="${PYTHONPATH}:/thorny_core/"
 
 WORKDIR /thorny_core
 
-CMD python thorny.py
+CMD ["python", "-u", "thorny.py"]
