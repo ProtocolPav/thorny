@@ -1,3 +1,5 @@
+import os
+
 import discord
 import json
 
@@ -15,9 +17,8 @@ from nexus.guild import OnlineUser
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
-config = json.load(open('./config.json', 'r+'))
 api_instance = giphy_client.DefaultApi()
-giphy_token = config["giphy_token"]
+giphy_token = os.environ.get('GIPHY_TOKEN')
 
 
 def ping_embed(client: discord.Bot, bot_started_on: datetime):

@@ -14,7 +14,6 @@ import httpx
 import modules
 import uikit
 
-config = json.load(open('./config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
@@ -32,7 +31,7 @@ shutdown_notice_received = False
 
 @thorny.event
 async def on_ready():
-    print('\033[1;32m' + config['ascii_thorny'] + '\033[0m')
+    print('\033[1;32m' + vers['ascii_thorny'] + '\033[0m')
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"everything.")
     await thorny.change_presence(activity=bot_activity)

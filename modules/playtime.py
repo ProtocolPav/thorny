@@ -8,7 +8,6 @@ import httpx
 version_file = open('./version.json', 'r+')
 version = json.load(version_file)
 v = version["version"]
-config = json.load(open("./config.json", "r"))
 
 
 class Playtime(commands.Cog):
