@@ -9,6 +9,12 @@ steps:
         -t europe-docker.pkg.dev/single-inquiry-391907/everthorn/thorny:latest \
         .
 
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-docker.pkg.dev/single-inquiry-391907/everthorn/thorny:$SHORT_SHA']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-docker.pkg.dev/single-inquiry-391907/everthorn/thorny:latest']
+
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'pubsub'
