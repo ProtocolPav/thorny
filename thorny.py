@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, time
 
 import discord
@@ -17,10 +18,10 @@ config = json.load(open('./config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
-TOKEN = config["token"]
+TOKEN = os.environ.get('BOT_TOKEN')
 
 api_instance = giphy_client.DefaultApi()
-giphy_token = config["giphy_token"]
+giphy_token = os.environ.get('GIPHY_TOKEN')
 
 intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
