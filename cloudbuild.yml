@@ -4,7 +4,7 @@ steps:
     args:
       - '-c'
       - |
-        docker build 
+        docker build \
         -t europe-docker.pkg.dev/single-inquiry-391907/everthorn/thorny:$SHORT_SHA \
         -t europe-docker.pkg.dev/single-inquiry-391907/everthorn/thorny:latest \
         .
