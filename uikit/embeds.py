@@ -487,32 +487,21 @@ def server_update_embed(update_version: str):
     return embed
 
 
-def server_status(online: bool, status: str, uptime: str, load: dict, online_players: list[OnlineUser], everthorn_guilds: bool):
+def server_status(status: str, start_since: str, online_players: list[OnlineUser], everthorn_guilds: bool):
     embed = discord.Embed(color=0x6495ED)
 
     if everthorn_guilds:
         in_game_days = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
+        uptime = datetime.now() - datetime.fromisoformat(start_since)
 
-        if status == "system_clearance":
-            embed.title = f":stopwatch: Restart in 60s || Day {in_game_days.days + 1}"
-
-        elif status == "executing_restart":
-            embed.title = f":star2: Regular Restart in progress... || Day {in_game_days.days + 1}"
-
-        elif status == "server_crashed":
-            embed.title = f":bangbang: The server has crashed! || Day {in_game_days.days + 1}"
-
-        elif status == "responding_to_crash":
-            embed.title = f":star2: Responding to crash... || Day {in_game_days.days + 1}"
-
-        elif online:
-            embed.title = f":green_circle: The server is online || Day {in_game_days.days + 1}"
-
-        else:
+        if status == "stopped":
             embed.title = f":red_circle: The server is offline || Day {in_game_days.days + 1}"
 
-        embed.description = f"**Uptime:** {uptime.split('.')[0] if online else '0:00:00'}\n" \
-                            f"**RAM/CPU Usage:** {load['ram_percentage']}% / {load['cpu_percent']}%\n"
+        else:
+            embed.title = f":green_circle: The server is online || Day {in_game_days.days + 1}"
+
+        embed.description = f"**Uptime:** {str(uptime).split('.')[0] if status == 'started' else '0:00:00'}\n" \
+                            f"**RAM/CPU Usage:** Not available\n"
 
     online_text = ''
     for player in online_players:
