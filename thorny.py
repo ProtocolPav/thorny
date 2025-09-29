@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, time
 
 import discord
@@ -13,14 +14,13 @@ import httpx
 import modules
 import uikit
 
-config = json.load(open('./config.json', 'r+'))
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
 
-TOKEN = config["token"]
+TOKEN = os.environ.get('BOT_TOKEN')
 
 api_instance = giphy_client.DefaultApi()
-giphy_token = config["giphy_token"]
+giphy_token = os.environ.get('GIPHY_TOKEN')
 
 intents = discord.Intents.all()
 thorny = commands.Bot(intents=intents)
@@ -31,7 +31,7 @@ shutdown_notice_received = False
 
 @thorny.event
 async def on_ready():
-    print('\033[1;32m' + config['ascii_thorny'] + '\033[0m')
+    print('\033[1;32m' + vers['ascii_thorny'] + '\033[0m')
     bot_activity = discord.Activity(type=discord.ActivityType.watching,
                                     name=f"everything.")
     await thorny.change_presence(activity=bot_activity)

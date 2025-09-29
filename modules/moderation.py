@@ -6,8 +6,6 @@ import json
 from uikit import embeds
 import nexus, thorny_errors
 
-config = json.load(open("./config.json", "r"))
-
 
 class Moderation(commands.Cog):
     def __init__(self, client):
