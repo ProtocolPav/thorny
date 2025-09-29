@@ -20,12 +20,10 @@ class Playtime(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            status: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
+            status: httpx.Response = await client.get("http://geode:8000/info/", timeout=None)
             online_players = await thorny_guild.get_online_players()
 
-        await ctx.respond(embed=uikit.server_status(online=status.json()['server_online'],
-                                                    status=status.json()['server_status'],
-                                                    uptime=status.json()['uptime'],
-                                                    load=status.json()['usage'],
+        await ctx.respond(embed=uikit.server_status(status=status.json()['status'],
+                                                    start_since=status.json()['server_start'],
                                                     online_players=online_players,
                                                     everthorn_guilds=True))

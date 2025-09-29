@@ -116,8 +116,11 @@ async def on_message(message: discord.Message):
         if message.channel.id == thorny_guild.get_channel_id('thorny_updates') and message.content:
             if 'http' not in message.content:
                 async with httpx.AsyncClient() as client:
-                    r = await client.get(f"http://amethyst:8000/commands/message", timeout=None,
-                                         params={'msg': f' §7{message.author.name}:§r {message.content}'})
+                    r = await client.post(f"http://geode:8000/messages/discord", timeout=None,
+                                          json={
+                                              "content": message,
+                                              "sender": message.author.nick
+                                          })
 
 
 @thorny.event

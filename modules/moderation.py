@@ -41,38 +41,6 @@ class Moderation(commands.Cog):
             await ctx.respond(f"{user.display_name} Has left the Gulag! "
                               f"https://tenor.com/view/ba-sing-se-gif-20976912")
 
-    @commands.slash_command(description='Start the server if it is stopped')
-    @commands.has_permissions(administrator=True)
-    async def start(self, ctx: discord.ApplicationContext):
-        await ctx.defer()
-
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
-        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
-
-        async with httpx.AsyncClient() as client:
-            status = await client.get("http://amethyst:8000/server/start", timeout=None)
-            if status.json()['server_online']:
-                raise thorny_errors.ServerStartStop(starting=True)
-            elif status.json()['update'] is not None:
-                await ctx.respond(embed=embeds.server_update_embed(status.json()['update']))
-            elif not status.json()['server_online']:
-                await ctx.respond(embed=embeds.server_start_embed(), ephemeral=True)
-
-    @commands.slash_command(description='Stop the server if it is currently running')
-    @commands.has_permissions(administrator=True)
-    async def stop(self, ctx):
-        await ctx.defer()
-
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
-        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
-
-        async with httpx.AsyncClient() as client:
-            status = await client.get("http://amethyst:8000/server/stop", timeout=None)
-            if status.json()['server_online']:
-                await ctx.respond(embed=embeds.server_stop_embed(), ephemeral=True)
-            else:
-                raise thorny_errors.ServerStartStop(starting=False)
-
     whitelist = discord.SlashCommandGroup("whitelist", "Whitelist Commands")
 
     @whitelist.command(description="Add somebody to the server whitelist")
@@ -87,17 +55,20 @@ class Moderation(commands.Cog):
 
         if thorny_user.whitelist is None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
+                r: httpx.Response = await client.get("http://geode:8000/info/status", timeout=None)
 
-                if r.json()['server_online']:
+                if r.json()['status'] == 'started':
                     thorny_user.whitelist = thorny_user.gamertag
 
-                    await client.get(f"http://amethyst:8000/whitelist/add/{thorny_user.whitelist}")
+                    r = await client.post(f"http://geode:8000/controls/command",
+                                          json={"command": f'whitelist add "{thorny_user.whitelist}"'})
+                    if r.status_code == 200:
+                        await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
+                                          f"under the gamertag **{thorny_user.whitelist}**")
 
-                    await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
-                                      f"under the gamertag **{thorny_user.whitelist}**")
-
-                    await thorny_user.update()
+                        await thorny_user.update()
+                    else:
+                        await ctx.respond(f"There was an issue in communicating with Geode.")
                 else:
                     raise thorny_errors.ServerNotOnline()
         # elif gamertags:
@@ -115,17 +86,21 @@ class Moderation(commands.Cog):
 
         if thorny_user.whitelist is not None:
             async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://amethyst:8000/server/details", timeout=None)
+                r: httpx.Response = await client.get("http://geode:8000/info/status", timeout=None)
 
-                if r.json()['server_online']:
+                if r.json()['status'] == 'started':
                     removed_gamertag = thorny_user.whitelist
                     thorny_user.whitelist = None
 
-                    await client.get(f"http://amethyst:8000/whitelist/remove/{removed_gamertag}")
+                    r = await client.post(f"http://geode:8000/controls/command",
+                                          json={"command": f'whitelist remove "{removed_gamertag}"'})
+                    if r.status_code == 200:
+                        await ctx.respond(f"Removed {thorny_user.discord_member.mention} from the whitelist "
+                                          f"(gamertag **{removed_gamertag}**)")
 
-                    await ctx.respond(f"The gamertag **{removed_gamertag}** has been removed from the whitelist")
-
-                    await thorny_user.update()
+                        await thorny_user.update()
+                    else:
+                        await ctx.respond(f"There was an issue in communicating with Geode.")
                 else:
                     raise thorny_errors.ServerNotOnline()
         else:
@@ -139,39 +114,68 @@ class Moderation(commands.Cog):
 
         raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
 
-    server_command = discord.SlashCommandGroup("send", "Minecraft BDS Commands")
+    server_command = discord.SlashCommandGroup("geode", "Control the Geode server")
+
+    @server_command.command(description='Start the server if it is stopped')
+    @commands.has_permissions(administrator=True)
+    async def start(self, ctx: discord.ApplicationContext):
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        async with httpx.AsyncClient() as client:
+            status = await client.post("http://geode:8000/controls/start", timeout=None)
+            if status.status_code == 200:
+                await ctx.respond(embed=embeds.server_start_embed(), ephemeral=True)
+            else:
+                raise thorny_errors.ServerStartStop(starting=True)
+
+    @server_command.command(description='Stop the server if it is currently running')
+    @commands.has_permissions(administrator=True)
+    async def stop(self, ctx):
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        async with httpx.AsyncClient() as client:
+            status = await client.post("http://geode:8000/controls/stop", timeout=None)
+            if status.status_code == 200:
+                await ctx.respond(embed=embeds.server_stop_embed(), ephemeral=True)
+            else:
+                raise thorny_errors.ServerStartStop(starting=False)
 
     @server_command.command(description='Kick someone from the server')
     @commands.has_permissions(administrator=True)
-    async def boot(self, ctx, user: discord.Member):
+    async def kick(self, ctx, user: discord.Member):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(user)
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://amethyst:8000/kick/{thorny_user.whitelist}")
-            if r.json()["kicked"]:
+            r = await client.post(f"http://geode:8000/controls/command", json={"command": f'kick "{thorny_user.whitelist}"'})
+            if r.status_code == 200:
                 await ctx.respond(f"Kicked {thorny_user.whitelist}")
             else:
                 await ctx.respond(f"Couldn't Kick")
 
     @server_command.command(description="Send a message or set of messages to the server")
     @commands.has_permissions(administrator=True)
-    async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int):
+    async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int, interval_hours: int = 2):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            if repetitions != 0:
-                r = await client.get(f"http://amethyst:8000/commands/message/schedule", timeout=None,
-                                     params={'msg': message, 'count': repetitions})
+            r = await client.post(f"http://geode:8000/messages/schedule", timeout=None,
+                                  json={
+                                      "content": message,
+                                      "type": 'message',
+                                      "repetitions": repetitions,
+                                      "interval_seconds": interval_hours * 60 * 60
+                                  })
 
-                await ctx.respond(f"## Message Scheduled!\n**Message:** {message}\n**Repetitions:** {repetitions}")
-            else:
-                r = await client.get(f"http://amethyst:8000/commands/message", timeout=None,
-                                     params={'msg': message})
-
-                await ctx.respond(f"## Message Sent!\n**Message:** {message}")
+            await ctx.respond(f"## Message Scheduled!\n**Message:** {message}\n**Repetitions:** {repetitions}")
 
     @server_command.command(description="Send an announcement to the server")
     @commands.has_permissions(administrator=True)
@@ -180,7 +184,12 @@ class Moderation(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
-            r = await client.get(f"http://amethyst:8000/commands/announce", timeout=None,
-                                 params={'msg': message})
+            r = await client.post(f"http://geode:8000/messages/schedule", timeout=None,
+                                  json={
+                                      "content": message,
+                                      "type": 'announcement',
+                                      "repetitions": 1,
+                                      "interval_seconds": 1
+                                  })
 
-            await ctx.respond(f"## Announcement Sent!\n**Contents:** {message}")
+            await ctx.respond(f"## Announcement Scheduled!\n**Message:** {message}\n")
