@@ -118,7 +118,7 @@ async def on_message(message: discord.Message):
                 async with httpx.AsyncClient() as client:
                     r = await client.post(f"http://geode:8000/messages/discord", timeout=None,
                                           json={
-                                              "content": message,
+                                              "content": message.content,
                                               "sender": message.author.nick
                                           })
 
