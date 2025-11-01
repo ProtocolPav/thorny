@@ -461,8 +461,7 @@ def server_start_embed():
     embed = discord.Embed(colour=0x6495ED)
 
     embed.add_field(name='Server start sent!',
-                    value=f"I have sent a server start request to Amethyst!\n"
-                          f"*Note: The server has not started yet! Check the <#1219710096976646175> channel for the start log.*")
+                    value=f"Check the <#1219710096976646175> channel, or the Admin Panel for confirmation")
 
     return embed
 
@@ -471,8 +470,7 @@ def server_stop_embed():
     embed = discord.Embed(colour=0x6495ED)
 
     embed.add_field(name='Server stop sent!',
-                    value=f"I have sent a server stop request to Amethyst!\n"
-                          f"*Note: The server has not stopped yet! Check the <#1219710096976646175> channel for the stop log.*")
+                    value=f"Check the <#1219710096976646175> channel, or the Admin Panel for confirmation")
 
     return embed
 
