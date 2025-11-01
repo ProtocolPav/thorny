@@ -119,7 +119,7 @@ async def on_message(message: discord.Message):
                     r = await client.post(f"http://geode:8000/messages/discord", timeout=None,
                                           json={
                                               "content": message.content,
-                                              "sender": message.author.nick
+                                              "sender": message.author.display_name
                                           })
 
 
