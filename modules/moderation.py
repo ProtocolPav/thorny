@@ -146,6 +146,21 @@ class Moderation(commands.Cog):
             else:
                 raise thorny_errors.ServerStartStop(starting=False)
 
+    @server_command.command(description='Restart the server if it is currently running')
+    @commands.has_permissions(administrator=True)
+    async def restart(self, ctx):
+        await ctx.defer()
+
+        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        async with httpx.AsyncClient() as client:
+            status = await client.post("http://geode:8000/controls/restart", timeout=None)
+            if status.status_code == 201:
+                await ctx.respond(embed=embeds.server_stop_embed(), ephemeral=True)
+            else:
+                raise thorny_errors.ServerStartStop(starting=False)
+
     @server_command.command(description='Kick someone from the server')
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
