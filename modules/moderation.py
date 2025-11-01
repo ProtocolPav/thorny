@@ -126,7 +126,7 @@ class Moderation(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             status = await client.post("http://geode:8000/controls/start", timeout=None)
-            if status.status_code == 200:
+            if status.status_code == 201:
                 await ctx.respond(embed=embeds.server_start_embed(), ephemeral=True)
             else:
                 raise thorny_errors.ServerStartStop(starting=True)
@@ -141,7 +141,7 @@ class Moderation(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             status = await client.post("http://geode:8000/controls/stop", timeout=None)
-            if status.status_code == 200:
+            if status.status_code == 201:
                 await ctx.respond(embed=embeds.server_stop_embed(), ephemeral=True)
             else:
                 raise thorny_errors.ServerStartStop(starting=False)
@@ -155,7 +155,7 @@ class Moderation(commands.Cog):
         thorny_user = await nexus.ThornyUser.build(user)
         async with httpx.AsyncClient() as client:
             r = await client.post(f"http://geode:8000/controls/command", json={"command": f'kick "{thorny_user.whitelist}"'})
-            if r.status_code == 200:
+            if r.status_code == 201:
                 await ctx.respond(f"Kicked {thorny_user.whitelist}")
             else:
                 await ctx.respond(f"Couldn't Kick")
