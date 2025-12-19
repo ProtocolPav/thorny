@@ -3,7 +3,7 @@ import os
 import discord
 import json
 
-from datetime import datetime
+from datetime import UTC, datetime
 import time
 import giphy_client
 import random
@@ -47,7 +47,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
     profile = thorny_user.profile
 
     if thorny_user.birthday:
-        today = datetime.now()
+        today = datetime.now(UTC)
         age = today.year - thorny_user.birthday.year - (
                     (today.month, today.day) < (thorny_user.birthday.month, thorny_user.birthday.day))
     else:
@@ -369,7 +369,7 @@ def user_birthday(thorny_user: nexus.ThornyUser):
     def ordinaltg(n):
         return str(n) + {1: 'st', 2: 'nd', 3: 'rd'}.get(4 if 10 <= n % 100 < 20 else n % 10, "th")
 
-    age = datetime.now().year - thorny_user.birthday.year
+    age = datetime.now(UTC).year - thorny_user.birthday.year
 
     api_response = api_instance.gifs_search_get(giphy_token, f'{ordinaltg(age)} birthday', limit=10)
     gifs_list = list(api_response.data)
@@ -490,7 +490,7 @@ def server_status(status: str, start_since: str, online_players: list[OnlineUser
 
     if everthorn_guilds:
         in_game_days = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-        uptime = datetime.now() - datetime.fromisoformat(start_since)
+        uptime = datetime.now(UTC) - datetime.fromisoformat(start_since)
 
         if status == "stopped":
             embed.title = f":red_circle: The server is offline || Day {in_game_days.days + 1}"
@@ -503,7 +503,7 @@ def server_status(status: str, start_since: str, online_players: list[OnlineUser
 
     online_text = ''
     for player in online_players:
-        time_played = datetime.now() - player.session
+        time_played = datetime.now(UTC) - player.session
         time_played = str(time_played).split(":")
         online_text = f"{online_text}\n" \
                       f"<@{player.user_id}> • " \
@@ -540,7 +540,7 @@ def quests_overview(quests: list[nexus.Quest], money_symbol: str):
                 emoji = '⏲️'
                 quest_type = 'Minor Quest'
 
-        times = quest.end_time - datetime.now()
+        times = quest.end_time - datetime.now(UTC)
 
         tags = [x.capitalize() for x in quest.tags]
 
@@ -559,7 +559,7 @@ def quests_overview(quests: list[nexus.Quest], money_symbol: str):
 
 
 def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Member):
-    times = quest.end_time - datetime.now()
+    times = quest.end_time - datetime.now(UTC)
     tags = [x.capitalize() for x in quest.tags]
 
     match quest.quest_type:
@@ -614,7 +614,7 @@ def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symb
 
                 completed_objectives = [":green_square:" for i in range(counter-1)]
                 objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
-                times = quest.end_time - datetime.now()
+                times = quest.end_time - datetime.now(UTC)
 
                 tags = [x.capitalize() for x in quest.tags]
 

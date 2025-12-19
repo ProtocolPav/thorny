@@ -113,16 +113,8 @@ class Quest:
 
         quest_class = cls(**quest_dict, objectives=objectives)
 
-        try:
-            quest_class.start_time = datetime.strptime(quest_dict['start_time'], "%Y-%m-%d %H:%M:%S.%f")
-        except ValueError:
-            quest_class.start_time = datetime.strptime(quest_dict['start_time'], "%Y-%m-%d %H:%M:%S")
-
-        if quest_class.end_time:
-            try:
-                quest_class.end_time = datetime.strptime(quest_dict['end_time'], "%Y-%m-%d %H:%M:%S.%f")
-            except ValueError:
-                quest_class.end_time = datetime.strptime(quest_dict['end_time'], "%Y-%m-%d %H:%M:%S")
+        quest_class.start_time = datetime.fromisoformat(quest_dict['start_time'])
+        quest_class.end_time = datetime.fromisoformat(quest_dict['end_time'])
 
         return quest_class
 
@@ -201,7 +193,7 @@ class UserQuest:
     async def get_available_quests(cls, thorny_id: int) -> list[Quest]:
         async with httpx.AsyncClient() as client:
             unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/quest/all")
-            quest_list = await client.get(f"http://nexuscore:8000/api/v0.2/quests")
+            quest_list = await client.get(f"http://nexuscore:8000/api/v0.2/quests?active=true")
 
             unavailable_quests = unavailable_quests.json()
             quest_list = quest_list.json()
