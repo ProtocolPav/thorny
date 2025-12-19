@@ -490,7 +490,7 @@ def server_status(status: str, start_since: str, online_players: list[OnlineUser
 
     if everthorn_guilds:
         in_game_days = datetime.now() - datetime.strptime("2022-07-30 16:00", "%Y-%m-%d %H:%M")
-        uptime = datetime.now(UTC) - datetime.fromisoformat(start_since)
+        uptime = datetime.now() - datetime.fromisoformat(start_since)
 
         if status == "stopped":
             embed.title = f":red_circle: The server is offline || Day {in_game_days.days + 1}"
