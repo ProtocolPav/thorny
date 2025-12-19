@@ -3,7 +3,7 @@ import random
 import discord
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Optional
 
 import httpx
@@ -157,7 +157,7 @@ class ThornyUser:
 
     async def level_up(self, xp_multiplier: float) -> bool:
         level_up = False
-        time = datetime.now()
+        time = datetime.now(UTC)
 
         if time - self.last_message > timedelta(minutes=1):
             self.xp += round(random.uniform(5.0*xp_multiplier, 16*xp_multiplier))

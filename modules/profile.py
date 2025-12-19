@@ -1,5 +1,5 @@
 import math
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 import discord
 from discord.ext import commands, pages
@@ -72,7 +72,7 @@ class Profile(commands.Cog):
             stop = page * 10
             birthday_text = []
             for user in birthday_users[start:stop]:
-                days_left = (user.birthday - datetime.now()).days
+                days_left = (user.birthday - datetime.now(UTC)).days
 
                 birthday_text.append(f'{user.discord_member.mention} • '
                                      f'**in {days_left} day{"s" if days_left != 1 else ""}** • '
