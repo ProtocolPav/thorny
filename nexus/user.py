@@ -111,11 +111,11 @@ class ThornyUser:
             user_class.active = True
             user_class.role, user_class.patron = cls.__get_roles(member)
 
-            user_class.last_message = datetime.strptime(user['last_message'], "%Y-%m-%d %H:%M:%S.%f")
-            user_class.join_date = datetime.strptime(user['join_date'], "%Y-%m-%d")
+            user_class.last_message = datetime.fromisoformat(user['last_message'])
+            user_class.join_date = datetime.fromisoformat(user['join_date'])
 
             if user_class.birthday:
-                user_class.birthday = datetime.strptime(user['birthday'], "%Y-%m-%d")
+                user_class.birthday = datetime.fromisoformat(user['birthday'])
 
             await user_class.update()
 
