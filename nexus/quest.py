@@ -193,7 +193,7 @@ class UserQuest:
     async def get_available_quests(cls, thorny_id: int) -> list[Quest]:
         async with httpx.AsyncClient() as client:
             unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/quest/all")
-            quest_list = await client.get(f"http://nexuscore:8000/api/v0.2/quests")
+            quest_list = await client.get(f"http://nexuscore:8000/api/v0.2/quests?active=true")
 
             unavailable_quests = unavailable_quests.json()
             quest_list = quest_list.json()
