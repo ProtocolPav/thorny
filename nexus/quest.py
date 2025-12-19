@@ -113,16 +113,8 @@ class Quest:
 
         quest_class = cls(**quest_dict, objectives=objectives)
 
-        try:
-            quest_class.start_time = datetime.strptime(quest_dict['start_time'], "%Y-%m-%d %H:%M:%S.%f")
-        except ValueError:
-            quest_class.start_time = datetime.strptime(quest_dict['start_time'], "%Y-%m-%d %H:%M:%S")
-
-        if quest_class.end_time:
-            try:
-                quest_class.end_time = datetime.strptime(quest_dict['end_time'], "%Y-%m-%d %H:%M:%S.%f")
-            except ValueError:
-                quest_class.end_time = datetime.strptime(quest_dict['end_time'], "%Y-%m-%d %H:%M:%S")
+        quest_class.start_time = datetime.fromisoformat(quest_dict['start_time'])
+        quest_class.end_time = datetime.fromisoformat(quest_dict['end_time'])
 
         return quest_class
 
