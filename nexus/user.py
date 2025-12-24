@@ -12,7 +12,7 @@ import thorny_errors
 
 from nexus.playtime import Playtime
 from nexus.profile import Profile
-from nexus.quest import UserQuest
+from nexus.quest_progress import QuestProgress
 from nexus.interactions import Interactions
 
 
@@ -40,7 +40,7 @@ class ThornyUser:
     hidden: bool
     profile: Profile
     playtime: Playtime = Playtime
-    quest: UserQuest = UserQuest
+    quest: QuestProgress = QuestProgress
     interactions: Interactions = Interactions
 
 

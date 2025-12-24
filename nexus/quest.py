@@ -1,24 +1,29 @@
 import math
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import LiteralString, Optional
+from typing import LiteralString, Optional, Union
 
 import httpx
+
+from nexus.quests.objective_customizations import Customizations
+from nexus.quests.objective_targets import KillTarget, MineTarget, ScriptEventTarget, TargetBase
 
 
 @dataclass
 class Reward:
     reward_id: int
     quest_id: int
+    objective_id: int
     display_name: Optional[str]
-    objective_id: Optional[int]
     balance: Optional[int]
     item: Optional[str]
     count: Optional[int]
+    item_metadata: list = field(default_factory=list)
 
     @classmethod
     def build(cls, data: dict):
-        return cls(**data)
+        return cls(**{k: v for k, v in data.items() if k in cls.__annotations__})
 
     def get_reward_display(self, money_symbol: str):
         if self.display_name:
@@ -26,68 +31,113 @@ class Reward:
         elif self.balance:
             return f"{self.balance} {money_symbol}"
         elif self.item:
-            item = self.item.split(':')[1].capitalize().replace('_', ' ')
+            item = self.item.split(':')[1].capitalize().replace('_', ' ') if ':' in self.item else self.item
             return f"{self.count} {item}(s)"
+        return "Unknown Reward"
 
 
 @dataclass
 class Objective:
     objective_id: int
     quest_id: int
-    objective: str
     description: str
-    order: int
     display: Optional[str]
-    objective_count: int
+    order_index: int
     objective_type: str
-    natural_block: bool
-    objective_timer: Optional[float]
-    required_mainhand: Optional[str]
-    required_location: Optional[list]
-    location_radius: int
-    required_deaths: Optional[int]
-    continue_on_fail: bool
-    rewards: Optional[list[Reward]]
+    logic: str
+    target_count: Optional[int]
+    targets: list[TargetBase]
+    customizations: Customizations
+    rewards: list[Reward] = field(default_factory=list)
+
+    @classmethod
+    def build_target(cls, t_data: dict) -> TargetBase:
+        """Factory method to create the correct Target subclass"""
+        t_type = t_data.get('target_type')
+        # Ensure UUID is string
+        if 'target_uuid' not in t_data:
+            t_data['target_uuid'] = str(uuid.uuid4())
+
+        if t_type == 'mine':
+            return MineTarget(
+                **{k: v for k, v in t_data.items() if k in MineTarget.__annotations__ or k in TargetBase.__annotations__})
+        elif t_type == 'kill':
+            return KillTarget(
+                **{k: v for k, v in t_data.items() if k in KillTarget.__annotations__ or k in TargetBase.__annotations__})
+        elif t_type == 'scriptevent':
+            return ScriptEventTarget(
+                **{k: v for k, v in t_data.items() if k in ScriptEventTarget.__annotations__ or k in TargetBase.__annotations__})
+        else:
+            # Fallback for unknown types
+            return TargetBase(**{k: v for k, v in t_data.items() if k in TargetBase.__annotations__})
 
     @classmethod
     async def build(cls, data: dict):
         async with httpx.AsyncClient() as client:
-            rewards = await client.get(f"http://nexuscore:8000/api/v0.2/quests/{data['quest_id']}/objectives/{data['objective_id']}/rewards")
-            rewards_dict = rewards.json()
+            rewards_resp = await client.get(
+                f"http://nexuscore:8000/api/v0.2/quests/{data['quest_id']}/objectives/{data['objective_id']}/rewards"
+            )
+            rewards = [Reward.build(r) for r in rewards_resp.json()]
 
-            data['rewards'] = [Reward.build(r) for r in rewards_dict]
+            # Build Customizations using the new nested builder
+            cust_data = data.get('customizations', {})
+            customizations = Customizations.build(cust_data)
 
-            objective_class = cls(**data)
+            raw_targets = data.get('targets', [])
+            targets = [cls.build_target(t) for t in raw_targets]
 
-            return objective_class
+            valid_keys = cls.__annotations__.keys()
+            filtered_data = {k: v for k, v in data.items() if k in valid_keys}
 
-    def get_objective_requirement_string(self) -> LiteralString | None:
-        extra_requirements = []
-        block_or_mob = self.objective.replace("minecraft:", "").replace('_', ' ').capitalize()
+            filtered_data['rewards'] = rewards
+            filtered_data['customizations'] = customizations
+            filtered_data['targets'] = targets
 
-        if self.natural_block and self.objective_type == 'mine':
-            extra_requirements.append(f'- The {block_or_mob} '
-                                      f'must be **naturally generated**')
-        if self.required_mainhand:
-            mainhand = self.required_mainhand.split(':')[1].capitalize().replace('_', ' ')
-            extra_requirements.append(f'- Must use **{mainhand}**')
-        if self.required_location:
-            extra_requirements.append(f'- Around the coordinates '
-                                      f'**{int(self.required_location[0])}, {int(self.required_location[1])}** '
-                                      f'(radius {self.location_radius})')
-        if self.objective_timer:
-            hours, remainder = divmod(self.objective_timer, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            extra_requirements.append(f'- Timer: **{math.trunc(hours)}h{math.trunc(minutes)}m{math.trunc(seconds)}s** '
-                                      f'(starts immediately!)')
+            return cls(**filtered_data)
 
-        if self.required_deaths:
-            extra_requirements.append(f'- No more than {self.required_deaths} deaths')
+    def get_objective_requirement_string(self) -> Optional[str]:
+        reqs = []
+        cust = self.customizations
 
-        if not self.continue_on_fail and (self.objective_timer or self.required_deaths):
-            extra_requirements.append(f'- Failing this objective will fail the entire quest')
+        # 1. Natural Block
+        if cust.natural_block and self.objective_type == 'mine':
+            reqs.append(f'- The blocks must be **naturally generated**')
 
-        return "\n".join(extra_requirements) if extra_requirements else None
+        # 2. Mainhand
+        if cust.mainhand:
+            item_name = cust.mainhand.item.split(':')[1].replace('_',
+                                                                 ' ').title() if ':' in cust.mainhand.item else cust.mainhand.item
+            reqs.append(f'- With **{item_name}**')
+
+        # 3. Location
+        if cust.location:
+            x, y, z = cust.location.coordinates
+            reqs.append(f'- Near **{x}, {y}, {z}** '
+                        f'(Radius: {cust.location.horizontal_radius})')
+
+        # 4. Timer
+        if cust.timer:
+            minutes, seconds = divmod(cust.timer.seconds, 60)
+            hours, minutes = divmod(minutes, 60)
+            time_str = f"{hours}h {minutes}m {seconds}s".replace("0h ", "").replace(" 0m", "")
+            reqs.append(f'- Time Limit: **{time_str}**')
+
+        # 5. Deaths
+        if cust.maximum_deaths:
+            reqs.append(f'- Max Deaths: **{cust.maximum_deaths.deaths}**')
+
+        # 6. Failure Conditions
+        fail_reasons = []
+        if cust.timer and cust.timer.fail:
+            fail_reasons.append("time runs out")
+        if cust.maximum_deaths and cust.maximum_deaths.fail:
+            fail_reasons.append("death limit reached")
+
+        if fail_reasons:
+            reasons_str = " or ".join(fail_reasons)
+            reqs.append(f'- *Failing this objective ({reasons_str}) will fail the entire quest*')
+
+        return "\n".join(reqs) if reqs else None
 
 
 @dataclass
@@ -104,19 +154,37 @@ class Quest:
 
     @classmethod
     def __build_from_data(cls, quest_dict: dict):
-        objectives_dict = quest_dict.pop('objectives')
-
+        objectives_data = quest_dict.pop('objectives', [])
         objectives = []
-        for obj in objectives_dict:
-            rewards_dict = obj.pop('rewards')
-            objectives.append(Objective(**obj, rewards=[Reward(**rew) for rew in rewards_dict]))
 
-        quest_class = cls(**quest_dict, objectives=objectives)
+        for obj_data in objectives_data:
+            # 1. Rewards
+            rewards_list = [Reward.build(r) for r in obj_data.pop('rewards', [])]
 
-        quest_class.start_time = datetime.fromisoformat(quest_dict['start_time'])
-        quest_class.end_time = datetime.fromisoformat(quest_dict['end_time'])
+            # 2. Customizations
+            cust_data = obj_data.pop('customizations', {})
+            customizations = Customizations.build(cust_data)
 
-        return quest_class
+            # 3. Targets
+            targets_list = [Objective.build_target(t) for t in obj_data.pop('targets', [])]
+
+            # 4. Create Objective
+            valid_keys = Objective.__annotations__.keys()
+            filtered_obj = {k: v for k, v in obj_data.items() if k in valid_keys}
+
+            objectives.append(Objective(
+                **filtered_obj,
+                rewards=rewards_list,
+                customizations=customizations,
+                targets=targets_list
+            ))
+
+        if isinstance(quest_dict.get('start_time'), str):
+            quest_dict['start_time'] = datetime.fromisoformat(quest_dict['start_time'])
+        if isinstance(quest_dict.get('end_time'), str):
+            quest_dict['end_time'] = datetime.fromisoformat(quest_dict['end_time'])
+
+        return cls(**quest_dict, objectives=objectives)
 
     @classmethod
     async def build(cls, quest_id: int):
@@ -136,7 +204,7 @@ class Quest:
         for objective in self.objectives:
             for reward in objective.rewards:
                 if reward.balance:
-                    nug_rewards += 1
+                    nug_rewards += reward.balance
                 else:
                     item_rewards += 1
 
@@ -147,75 +215,3 @@ class Quest:
             texts.append(f"*+{item_rewards} Item Rewards*")
 
         return ', '.join(texts)
-
-
-@dataclass
-class UserObjective:
-    thorny_id: int
-    quest_id: int
-    objective_id: int
-    start: datetime
-    end: Optional[datetime]
-    completion: int
-    status: str
-
-    @classmethod
-    def build(cls, data: dict):
-        return cls(**data)
-
-
-@dataclass
-class UserQuest:
-    thorny_id: int
-    quest_id: int
-    accepted_on: datetime
-    started_on: datetime
-    status: str
-    objectives: list[UserObjective]
-
-    @classmethod
-    async def build(cls, thorny_id: int) -> Optional["UserQuest"]:
-        async with httpx.AsyncClient() as client:
-            quest = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/quest/active")
-
-            if quest.status_code == 404:
-                return None
-
-            quest_dict = quest.json()
-
-            objectives = [UserObjective.build(i) for i in quest_dict['objectives']]
-
-            del quest_dict['objectives']
-
-            return cls(**quest_dict, objectives=objectives)
-
-    @classmethod
-    async def get_available_quests(cls, thorny_id: int) -> list[Quest]:
-        async with httpx.AsyncClient() as client:
-            unavailable_quests = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/quest/all")
-            quest_list = await client.get(f"http://nexuscore:8000/api/v0.2/quests?active=true")
-
-            unavailable_quests = unavailable_quests.json()
-            quest_list = quest_list.json()
-
-            available_quests = []
-            unavailable_ids = [x['quest_id'] for x in unavailable_quests]
-
-            if not unavailable_ids:
-                available_quests = [Quest.build_with_data(quest) for quest in quest_list]
-            else:
-                for quest in quest_list:
-                    if quest['quest_id'] not in unavailable_ids:
-                        available_quests.append(Quest.build_with_data(quest))
-
-            return available_quests
-
-    @classmethod
-    async def accept_quest(cls, thorny_id: int, quest_id: int):
-        async with httpx.AsyncClient() as client:
-            await client.post(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/quest",
-                              json={'quest_id': quest_id, 'thorny_id': thorny_id})
-
-    async def fail(self):
-        async with httpx.AsyncClient() as client:
-            await client.delete(f"http://nexuscore:8000/api/v0.2/users/{self.thorny_id}/quest/active")
