@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import discord
 import json
@@ -9,11 +10,10 @@ import giphy_client
 import random
 
 from dateutil import relativedelta
-from discord.ext.commands import Bot
 
 import nexus, utils
-from nexus import Quest
 from nexus.guild import OnlineUser
+from nexus.quest_progress import QuestProgress
 
 version_json = json.load(open('./version.json', 'r'))
 v = version_json["version"]
@@ -529,6 +529,9 @@ def quests_overview(quests: list[nexus.Quest], money_symbol: str):
                                       f"{money_symbol} Nugs & other rewards are available!")
 
     for quest in quests:
+        emoji = '⏲️'
+        quest_type = 'Minor Quest'
+
         match quest.quest_type:
             case 'side':
                 emoji = '🏄'
@@ -536,9 +539,6 @@ def quests_overview(quests: list[nexus.Quest], money_symbol: str):
             case 'story':
                 emoji = '🔖'
                 quest_type = 'Story Quest'
-            case _:
-                emoji = '⏲️'
-                quest_type = 'Minor Quest'
 
         times = quest.end_time - datetime.now(UTC)
 
@@ -562,6 +562,9 @@ def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Me
     times = quest.end_time - datetime.now(UTC)
     tags = [x.capitalize() for x in quest.tags]
 
+    emoji = '⏲️'
+    quest_type = 'Minor Quest'
+
     match quest.quest_type:
         case 'side':
             emoji = '🏄'
@@ -569,9 +572,6 @@ def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Me
         case 'story':
             emoji = '🔖'
             quest_type = 'Story Quest'
-        case _:
-            emoji = '⏲️'
-            quest_type = 'Minor Quest'
 
     embed = discord.Embed(colour=0xE0B0FF,
                           title=quest.title,
@@ -591,82 +591,163 @@ def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Me
 
     embed.add_field(name='',
                     value=f"-# {emoji} {quest_type} | Expires <t:{int(time.time() + times.total_seconds())}:R>\n"
-                          f"-# Made with :heart: by {creator_member.mention}",
+                          f"-# Made with :heart: by {creator_member.mention if creator_member else 'UNKNOWN'}",
                     inline=False)
 
     return embed
 
 
-def quest_progress(quest: nexus.Quest, thorny_user: nexus.ThornyUser, money_symbol: str):
-    counter = 0
-    for objective in quest.objectives:
-        for user_objective in thorny_user.quest.objectives:
-            if user_objective.objective_id == objective.objective_id and user_objective.status == 'in_progress':
-                name = objective.objective.split(':')[1].capitalize().replace('_', ' ')
-                objective_type = objective.objective_type.capitalize()
-                requirements = objective.get_objective_requirement_string()
+def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: str) -> Optional[discord.Embed]:
+    """
+    Generates a Discord embed for the user's current active objective in the given quest.
+    """
 
-                objective_rewards = []
-                for reward in objective.rewards:
-                    objective_rewards.append(reward.get_reward_display(money_symbol))
+    # Sort quest objectives by order_index to ensure display order matches logic
+    sorted_objectives = sorted(quest.objectives, key=lambda x: x.order_index)
+    total_objectives_count = len(sorted_objectives)
 
-                progress = objective.objective_count - user_objective.completion
+    for index, objective in enumerate(sorted_objectives):
+        # Find matching progress for this objective
+        user_objective = user_quest.get_objective_progress(objective.objective_id)
 
-                completed_objectives = [":green_square:" for i in range(counter-1)]
-                objectives_left = [":black_large_square:" for i in range(counter, len(quest.objectives))]
-                times = quest.end_time - datetime.now(UTC)
+        if not user_objective:
+            continue
 
-                tags = [x.capitalize() for x in quest.tags]
+        # We only want to display the 'active' or 'in_progress' objective
+        # Adjust 'active' based on the exact string your API uses (e.g. 'active', 'in_progress')
+        if user_objective.status not in ['active', 'in_progress']:
+            continue
 
-                match quest.quest_type:
-                    case 'side':
-                        emoji = '🏄'
-                        quest_type = 'Side Quest'
-                    case 'story':
-                        emoji = '🔖'
-                        quest_type = 'Story Quest'
-                    case _:
-                        emoji = '⏲️'
-                        quest_type = 'Minor Quest'
+        # --- Data Preparation ---
 
-                embed = discord.Embed(colour=0xE0B0FF,
-                                      title=f'{quest.title}',
-                                      description=f"`{'` | `'.join(tags)}`")
+        # 1. Objective Name & Type
+        # If the objective has a custom display name, use it. Otherwise, derive from type/target.
+        if objective.display:
+            display_title = objective.display
+        else:
+            # Fallback: Capitalize objective type
+            display_title = objective.objective_type.capitalize()
 
-                embed.add_field(name='🔖 The Story',
-                                value=f"```{objective.description}```",
-                                inline=False)
+        objective_type_label = objective.objective_type.capitalize()
 
-                if objective_type != 'Encounter':
-                    embed.add_field(name=f':dart: Your Objective:',
-                                    value=f'{objective_type} **{progress}** {name}\n',
-                                    inline=False)
-                else:
-                    embed.add_field(name=f':dart: Your Objective:',
-                                    value=f'{objective.display}\n**Progress:** {user_objective.completion}/{objective.objective_count}\n',
-                                    inline=False)
+        # 2. Requirements String
+        requirements = objective.get_objective_requirement_string()
 
-                if requirements:
-                    embed.add_field(name=f':dart: Objective Info:',
-                                    value=f'{requirements}\n',
-                                    inline=False)
+        # 3. Rewards String
+        objective_rewards = []
+        for reward in objective.rewards:
+            objective_rewards.append(reward.get_reward_display(money_symbol))
 
-                if objective_rewards:
-                    embed.add_field(name='💎 Objective Rewards',
-                                    value=f'{", ".join(objective_rewards)}\n',
-                                    inline=False)
+        # 4. Progress Calculation
+        # We need to sum up target counts if there are multiple targets
+        # Or handle them individually. For a simple bar, we sum them.
+        total_required = 0
 
-                embed.add_field(name=f'🎛️ Quest Progress | {counter}/{len(quest.objectives)}',
-                                value=f'{"".join(completed_objectives)}:yellow_square:{"".join(objectives_left)}',
-                                inline=False)
+        # Calculate totals from the Quest Blueprint
+        for target in objective.targets:
+            total_required += target.count
 
-                embed.add_field(name='',
-                                value=f"-# {emoji} {quest_type} | Expires <t:{int(time.time() + times.total_seconds())}:R>\n",
-                                inline=False)
+        # Calculate current from User Progress
+        current_progress = user_objective.current_completion_count
 
-                return embed
+        # 5. Visual Progress Bar
+        # Previous objectives are green
+        completed_squares = [":green_square:" for _ in range(index)]
+        # Current is yellow/processing
+        current_square = [":yellow_square:"]
+        # Future are black/empty
+        future_squares = [":black_large_square:" for _ in range(total_objectives_count - index - 1)]
 
-        counter += 1
+        progress_bar = "".join(completed_squares + current_square + future_squares)
+
+        # 6. Time Expiry
+        # Default to quest end time, but objectives might have their own timers (handled in requirements string)
+        expiry_timestamp = ""
+        if quest.end_time:
+            expiry_timestamp = f"Expires <t:{int(quest.end_time.timestamp())}:R>"
+        elif user_quest.end_time:  # Logic for strict user-time limits
+            expiry_timestamp = f"Expires <t:{int(user_quest.end_time.timestamp())}:R>"
+
+        # 7. Quest Type Styling
+        tags = [x.capitalize() for x in quest.tags]
+
+        match quest.quest_type:
+            case 'side':
+                emoji = '🏄'
+                quest_type_label = 'Side Quest'
+            case 'story':
+                emoji = '🔖'
+                quest_type_label = 'Story Quest'
+            case _:
+                emoji = '⏲️'
+                quest_type_label = 'Minor Quest'
+
+        # --- Embed Construction ---
+
+        embed = discord.Embed(
+            colour=0xE0B0FF,
+            title=f'{quest.title}',
+            description=f"`{'` | `'.join(tags)}`" if tags else ""
+        )
+
+        embed.add_field(
+            name='🔖 The Story',
+            value=f"```{objective.description}```",
+            inline=False
+        )
+
+        # Objective Status Field
+        # Different formatting for "Encounter" vs standard "Mine/Kill"
+        if objective.objective_type == 'scriptevent':  # 'scriptevent' maps to what you likely called 'Encounter'
+            embed.add_field(
+                name=f':dart: Your Objective:',
+                value=f'{display_title}\n**Progress:** {current_progress}/{total_required}\n',
+                inline=False
+            )
+        else:
+            # Try to get a specific target name for better UX
+            target_name = "Target"
+            if objective.targets and hasattr(objective.targets[0], 'display_name'):
+                target_name = objective.targets[0].display_name()
+
+            embed.add_field(
+                name=f':dart: Your Objective:',
+                value=f'{objective_type_label} **{total_required - current_progress}** {target_name}\n',
+                inline=False
+            )
+
+        if requirements:
+            embed.add_field(
+                name=f':dart: Objective Info:',
+                value=f'{requirements}\n',
+                inline=False
+            )
+
+        if objective_rewards:
+            embed.add_field(
+                name='💎 Objective Rewards',
+                value=f'{", ".join(objective_rewards)}\n',
+                inline=False
+            )
+
+        embed.add_field(
+            name=f'🎛️ Quest Progress | {index + 1}/{total_objectives_count}',
+            value=progress_bar,
+            inline=False
+        )
+
+        footer_text = f"-# {emoji} {quest_type_label}"
+        if expiry_timestamp:
+            footer_text += f" | {expiry_timestamp}"
+
+        embed.add_field(
+            name='',
+            value=f"{footer_text}\n",
+            inline=False
+        )
+
+        return embed
+
     return None
 
 

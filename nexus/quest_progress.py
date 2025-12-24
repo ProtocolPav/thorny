@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Union
 import uuid
 import httpx
 
-from nexus import Quest
+from nexus.quest import Quest
 from nexus.quests.progress_customizations import CustomizationProgress
 from nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, TargetProgressBase
 
@@ -18,6 +18,11 @@ class ObjectiveProgress:
     status: str
     target_progress: List[TargetProgressBase]
     customization_progress: CustomizationProgress
+
+    @property
+    def current_completion_count(self) -> int:
+        """Sums up the count of all targets in this objective progress."""
+        return sum(t.count for t in self.target_progress)
 
     @classmethod
     def _build_target_progress(cls, t_data: dict) -> TargetProgressBase:
