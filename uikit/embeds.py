@@ -718,14 +718,14 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
 
         if requirements:
             embed.add_field(
-                name=f':dart: Objective Info:',
+                name=f':dart: Extra Requirements:',
                 value=f'{requirements}\n',
                 inline=False
             )
 
         if objective_rewards:
             embed.add_field(
-                name='💎 Objective Rewards',
+                name='💎 Rewards',
                 value=f'{", ".join(objective_rewards)}\n',
                 inline=False
             )
