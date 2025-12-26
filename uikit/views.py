@@ -451,14 +451,14 @@ class QuestPanel(View):
     async def accept_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
             if self.thorny_user.quest is None:
-                await nexus.UserQuest.accept_quest(self.thorny_user.thorny_id, self.selected_quest_id)
-                self.thorny_user.quest = await nexus.UserQuest.build(self.thorny_user.thorny_id)
+                await nexus.QuestProgress.accept_quest(self.thorny_user.thorny_id, self.selected_quest_id)
+                self.thorny_user.quest = await nexus.QuestProgress.build_active(self.thorny_user.thorny_id)
 
             quest_info = await nexus.Quest.build(self.thorny_user.quest.quest_id)
 
             await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user,
                                                                            quest_info),
-                                                    embed=embeds.quest_progress(quest_info, self.thorny_user,
+                                                    embed=embeds.quest_progress(quest_info, self.thorny_user.quest,
                                                                                 self.thorny_guild.currency_emoji))
         else:
             raise thorny_errors.WrongUser
@@ -522,7 +522,7 @@ class FailQuest(View):
             await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild,
                                                                            self.thorny_user, self.quest),
                                                     embed=embeds.quest_progress(self.quest,
-                                                                                self.thorny_user,
+                                                                                self.thorny_user.quest,
                                                                                 self.thorny_guild.currency_emoji))
         else:
             raise thorny_errors.WrongUser

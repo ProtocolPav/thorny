@@ -59,7 +59,7 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
-        thorny_user.quest = await thorny_user.quest.build(thorny_user.thorny_id)
+        thorny_user.quest = await thorny_user.quest.build_active(thorny_user.thorny_id)
 
         if thorny_user.quest:
             quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
@@ -70,12 +70,12 @@ class Other(commands.Cog):
             else:
                 view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
 
-                await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user, thorny_guild.currency_emoji),
+                await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user.quest, thorny_guild.currency_emoji),
                                   view=view,
                                   ephemeral=True)
 
         else:
-            quests = await nexus.UserQuest.get_available_quests(thorny_user.thorny_id)
+            quests = await nexus.QuestProgress.get_available_quests(thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
