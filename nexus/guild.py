@@ -54,6 +54,7 @@ class OnlineUser:
     whitelist: str
     location: tuple[int, int, int]
     dimension: str
+    hidden: bool
 
 
 @dataclass
