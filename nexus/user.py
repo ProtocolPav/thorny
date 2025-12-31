@@ -38,6 +38,7 @@ class ThornyUser:
     location: Optional[tuple[int, int, int]]
     dimension: Optional[str]
     hidden: bool
+    xuid: Optional[str]
     profile: Profile
     playtime: Playtime = Playtime
     quest: QuestProgress = QuestProgress

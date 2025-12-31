@@ -55,6 +55,7 @@ class OnlineUser:
     location: tuple[int, int, int]
     dimension: str
     hidden: bool
+    xuid: Optional[str]
 
 
 @dataclass
