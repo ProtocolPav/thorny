@@ -31,7 +31,7 @@ class Playtime:
 
             playtime = playtime_response.json()
 
-            session = datetime.strptime(playtime['session'], "%Y-%m-%d %H:%M:%S.%f") if playtime['session'] else None
+            session = datetime.fromisoformat(playtime['session']) if playtime['session'] else None
 
             try:
                 if playtime['daily'][0]['day'] == str(date.today()):

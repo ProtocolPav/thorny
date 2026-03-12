@@ -3,7 +3,7 @@ import random
 import discord
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Optional
 
 import httpx
@@ -12,7 +12,7 @@ import thorny_errors
 
 from nexus.playtime import Playtime
 from nexus.profile import Profile
-from nexus.quest import UserQuest
+from nexus.quest_progress import QuestProgress
 from nexus.interactions import Interactions
 
 
@@ -38,9 +38,10 @@ class ThornyUser:
     location: Optional[tuple[int, int, int]]
     dimension: Optional[str]
     hidden: bool
+    xuid: Optional[str]
     profile: Profile
     playtime: Playtime = Playtime
-    quest: UserQuest = UserQuest
+    quest: QuestProgress = QuestProgress
     interactions: Interactions = Interactions
 
 
@@ -111,11 +112,11 @@ class ThornyUser:
             user_class.active = True
             user_class.role, user_class.patron = cls.__get_roles(member)
 
-            user_class.last_message = datetime.strptime(user['last_message'], "%Y-%m-%d %H:%M:%S.%f")
-            user_class.join_date = datetime.strptime(user['join_date'], "%Y-%m-%d")
+            user_class.last_message = datetime.fromisoformat(user['last_message'])
+            user_class.join_date = datetime.fromisoformat(user['join_date'])
 
             if user_class.birthday:
-                user_class.birthday = datetime.strptime(user['birthday'], "%Y-%m-%d")
+                user_class.birthday = datetime.fromisoformat(user['birthday'])
 
             await user_class.update()
 
@@ -157,7 +158,7 @@ class ThornyUser:
 
     async def level_up(self, xp_multiplier: float) -> bool:
         level_up = False
-        time = datetime.now()
+        time = datetime.now(UTC)
 
         if time - self.last_message > timedelta(minutes=1):
             self.xp += round(random.uniform(5.0*xp_multiplier, 16*xp_multiplier))

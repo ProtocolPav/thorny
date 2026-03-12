@@ -54,6 +54,8 @@ class OnlineUser:
     whitelist: str
     location: tuple[int, int, int]
     dimension: str
+    hidden: bool
+    xuid: Optional[str]
 
 
 @dataclass
@@ -186,7 +188,7 @@ class ThornyGuild:
 
             online_users = []
             for user in lb.json():
-                user['session'] = datetime.strptime(user['session'], "%Y-%m-%d %H:%M:%S.%f")
+                user['session'] = datetime.fromisoformat(user['session'])
 
                 online_users.append(OnlineUser(**user))
 
