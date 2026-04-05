@@ -60,7 +60,7 @@ class ThornyUser:
                 role = i
                 break
 
-        if 'patreon supporter' in user_roles:
+        if 'everthorn supporter' in user_roles:
             patron = True
 
         return role.title(), patron
