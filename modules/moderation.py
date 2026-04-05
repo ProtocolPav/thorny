@@ -89,7 +89,6 @@ class Moderation(commands.Cog):
             raise thorny_errors.NotWhitelisted()
 
     @whitelist.command(description="See the whitelist")
-    @commands.has_permissions(administrator=True)
     async def view(self, ctx: discord.ApplicationContext):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
