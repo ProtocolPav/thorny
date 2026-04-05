@@ -273,6 +273,20 @@ class GamertagAlreadyAdded(ThornyError):
         return self.error
 
 
+class NoGamertag(ThornyError):
+    """Raised when the user does not have a gamertag set to be whitelisted"""
+
+    def __init__(self):
+        super().__init__()
+
+    def return_embed(self) -> discord.Embed:
+        self.error.add_field(name="<:_no:921840417362804777> Could not whitelist",
+                             value=f"The user does not have a gamertag set to be whitelisted. "
+                                   f"Please ask them to set a gamertag in the `/profile`")
+        self.error.set_footer(text=f"Error Reference: {self.__class__.__name__}")
+        return self.error
+
+
 class AlreadyWhitelisted(ThornyError):
     """Raised when the user already has a linked gamertag"""
 

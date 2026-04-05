@@ -1,5 +1,7 @@
+import math
+
 import discord
-from discord.ext import commands
+from discord.ext import commands, pages
 import httpx
 
 import json
@@ -53,28 +55,19 @@ class Moderation(commands.Cog):
         # gamertags = await UserFactory.get_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
         # Gets all gamertags to ensure that this is a unique gamertag being added. Not implemented.
 
-        if thorny_user.whitelist is None:
-            async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://geode:8000/info/status", timeout=None)
+        if thorny_user.whitelist is None and thorny_user.gamertag is not None:
+            thorny_user.whitelist = thorny_user.gamertag
 
-                if r.json()['status'] == 'started':
-                    thorny_user.whitelist = thorny_user.gamertag
+            await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
+                              f"under the gamertag **{thorny_user.whitelist}**")
 
-                    r = await client.post(f"http://geode:8000/controls/command",
-                                          json={"command": f'whitelist add "{thorny_user.whitelist}"'})
-                    if r.status_code == 200:
-                        await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
-                                          f"under the gamertag **{thorny_user.whitelist}**")
-
-                        await thorny_user.update()
-                    else:
-                        await ctx.respond(f"There was an issue in communicating with Geode.")
-                else:
-                    raise thorny_errors.ServerNotOnline()
+            await thorny_user.update()
         # elif gamertags:
         #     raise errors.GamertagAlreadyAdded(thorny_user.profile.gamertag, gamertags[0]['user_id'])
         elif thorny_user.whitelist is not None:
             raise thorny_errors.AlreadyWhitelisted()
+        elif thorny_user.gamertag is None:
+            raise thorny_errors.NoGamertag()
 
     @whitelist.command(description="Remove somebody from the server whitelist")
     @commands.has_permissions(administrator=True)
@@ -85,24 +78,13 @@ class Moderation(commands.Cog):
         thorny_user = await nexus.ThornyUser.build(user)
 
         if thorny_user.whitelist is not None:
-            async with httpx.AsyncClient() as client:
-                r: httpx.Response = await client.get("http://geode:8000/info/status", timeout=None)
+            removed_gamertag = thorny_user.whitelist
+            thorny_user.whitelist = None
 
-                if r.json()['status'] == 'started':
-                    removed_gamertag = thorny_user.whitelist
-                    thorny_user.whitelist = None
+            await ctx.respond(f"Removed {thorny_user.discord_member.mention} from the whitelist "
+                              f"(Removed gamertag: **{removed_gamertag}**)")
 
-                    r = await client.post(f"http://geode:8000/controls/command",
-                                          json={"command": f'whitelist remove "{removed_gamertag}"'})
-                    if r.status_code == 200:
-                        await ctx.respond(f"Removed {thorny_user.discord_member.mention} from the whitelist "
-                                          f"(gamertag **{removed_gamertag}**)")
-
-                        await thorny_user.update()
-                    else:
-                        await ctx.respond(f"There was an issue in communicating with Geode.")
-                else:
-                    raise thorny_errors.ServerNotOnline()
+            await thorny_user.update()
         else:
             raise thorny_errors.NotWhitelisted()
 
@@ -112,7 +94,44 @@ class Moderation(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        raise thorny_errors.UnexpectedError2("This command is disabled for now :((")
+        await ctx.defer()
+        all_pages = []
+        whitelisted_users: list[nexus.ThornyUser] = []
+
+        for member in ctx.guild.members:
+            if not member.bot:
+                thorny_user = await nexus.ThornyUser.build(member)
+                if thorny_user.whitelist:
+                    whitelisted_users.append(thorny_user)
+
+        whitelisted_users.sort(key=lambda x: x.whitelist)
+
+        total_pages = math.ceil(len(whitelisted_users) / 10)
+        all_texts = []
+        for page in range(1, total_pages + 1):
+            start = page * 10 - 10
+            stop = page * 10
+            whitelist_text = []
+            for user in whitelisted_users[start:stop]:
+                whitelist_text.append(f'{user.discord_member.mention} • **{user.whitelist}**')
+
+            if page != total_pages + 1:
+                all_texts.append(whitelist_text)
+
+        for text in all_texts:
+            lb_embed = discord.Embed(title=f'**Everthorn Whitelist**',
+                                     description='Check the guidelines to get whitelisted!',
+                                     color=0x8DA5E0)
+            lb_embed.add_field(name=f'',
+                               value='\n'.join(text), inline=False)
+            lb_embed.set_footer(text=f'Page {all_texts.index(text) + 1}/{total_pages}')
+            all_pages.append(lb_embed)
+
+        if not all_pages:
+            raise thorny_errors.UnexpectedError2("No whitelist data")
+
+        paginator = pages.Paginator(pages=all_pages, timeout=30.0)
+        await paginator.respond(ctx.interaction)
 
     server_command = discord.SlashCommandGroup("geode", "Control the Geode server")
 
