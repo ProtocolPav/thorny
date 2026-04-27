@@ -115,7 +115,7 @@ class QuestProgress:
     async def accept_quest(cls, thorny_id: int, quest_id: int):
         """API call to accept a new quest"""
         async with httpx.AsyncClient() as client:
-            await client.post(f"http://nexuscore:8000/api/v0.2/quests/progress/",
+            await client.post(f"http://nexuscore:8000/api/v0.2/quests/progress",
                               json={'quest_id': quest_id, 'thorny_id': thorny_id})
 
     @classmethod
