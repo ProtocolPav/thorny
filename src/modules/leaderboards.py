@@ -31,7 +31,7 @@ class Leaderboard(commands.Cog):
         self.pages = []
         month = datetime.strptime(month, "%B").replace(year=datetime.now().year).date()
 
-        thorny_user = await nexus.ThornyUser.build(ctx.author)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.author)
 
         playtime = await thorny_guild.get_playtime_leaderboard(await self.bot.api.get(ctx.guild.id), month)
 
@@ -77,7 +77,7 @@ class Leaderboard(commands.Cog):
 
         self.pages = []
 
-        thorny_user = await nexus.ThornyUser.build(ctx.author)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.author)
 
         leaderboard = await thorny_guild.get_money_leaderboard(await self.bot.api.get(ctx.guild.id))
 
@@ -122,7 +122,7 @@ class Leaderboard(commands.Cog):
 
         self.pages = []
 
-        thorny_user = await nexus.ThornyUser.build(ctx.author)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.author)
 
         leaderboard = await thorny_guild.get_levels_leaderboard(await self.bot.api.get(ctx.guild.id))
 
@@ -167,7 +167,7 @@ class Leaderboard(commands.Cog):
 
         self.pages = []
 
-        thorny_user = await nexus.ThornyUser.build(ctx.author)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.author)
 
         leaderboard = await thorny_guild.get_quests_leaderboard(await self.bot.api.get(ctx.guild.id))
 

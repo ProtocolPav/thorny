@@ -26,7 +26,7 @@ class Profile(commands.Cog):
 
         if user is None:
             user = ctx.author
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(user.guild.id), user)
 
         pages = [await uikit.profile_main_embed(thorny_user, thorny_guild),
                  await uikit.profile_lore_embed(thorny_user),
@@ -49,7 +49,7 @@ class Profile(commands.Cog):
 
         for member in ctx.guild.members:
             if not member.bot:
-                thorny_user = await nexus.ThornyUser.build(member)
+                thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), member)
 
                 if thorny_user.birthday:
                     birthday = thorny_user.birthday.replace(year=datetime.now().year)

@@ -23,7 +23,7 @@ class Other(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
         await ctx.respond(view=uikit.ProjectApplicationForm(ctx, thorny_user, thorny_guild),
                           embed=uikit.project_application_builder_embed(thorny_user, {}),
                           ephemeral=True)
@@ -36,7 +36,7 @@ class Other(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
         project_model = await nexus.Project.build(project)
 
         if project_model.status != 'completed' and thorny_user.thorny_id == project_model.owner_id:
@@ -56,7 +56,7 @@ class Other(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
         thorny_user.quest = await thorny_user.quest.build_active(thorny_user.thorny_id)
 
         if thorny_user.quest:

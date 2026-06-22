@@ -35,10 +35,10 @@ class ProfileEditMain(Modal):
     async def callback(self, interaction: discord.Interaction):
         if self.section == 'gamertag':
             self.profile_owner.__setattr__(self.section, self.children[0].value)
-            await self.profile_owner.update()
+            await self.profile_owner.update(await interaction.client.api.get(interaction.guild.id))
         elif self.section == 'birthday':
             self.profile_owner.__setattr__(self.section, datetime.strptime(self.children[0].value, '%Y/%m/%d'))
-            await self.profile_owner.update()
+            await self.profile_owner.update(await interaction.client.api.get(interaction.guild.id))
         else:
             self.profile_owner.profile.__setattr__(self.section, self.children[0].value)
             print(self.profile_owner.profile)

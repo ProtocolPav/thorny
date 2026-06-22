@@ -16,7 +16,7 @@ class Money(commands.Cog):
     async def view(self, ctx, user: discord.Member = None):
         if user is None:
             user = ctx.author
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(user.guild.id), user)
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
 
         await ctx.respond(embed=embeds.balance_embed(thorny_user, thorny_guild))
@@ -25,11 +25,11 @@ class Money(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def edit(self, ctx: discord.ApplicationContext, user: discord.Member,
                    amount: discord.Option(int, "Negative number to remove money")):
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(user.guild.id), user)
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
         thorny_user.balance += amount
 
-        await thorny_user.update()
+        await thorny_user.update(await self.bot.api.get(user.guild.id))
 
         await ctx.respond(embed=embeds.balance_edit_embed(thorny_user, thorny_guild, amount),
                           ephemeral=True)
@@ -49,8 +49,8 @@ class Money(commands.Cog):
 
     @commands.slash_command(description="Pay a player using money")
     async def pay(self, ctx: discord.ApplicationContext, user: discord.Member, amount: int, reason: str):
-        receivable_user = await nexus.ThornyUser.build(user)
-        thorny_user = await nexus.ThornyUser.build(ctx.user)
+        receivable_user = await nexus.ThornyUser.build(await self.bot.api.get(user.guild.id), user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
         reason = f"[Payment] {reason}"
 
@@ -62,8 +62,8 @@ class Money(commands.Cog):
             thorny_user.balance -= amount
             receivable_user.balance += amount
 
-            await thorny_user.update()
-            await receivable_user.update()
+            await thorny_user.update(await self.bot.api.get(user.guild.id))
+            await receivable_user.update(await self.bot.api.get(user.guild.id))
 
             await ctx.respond(content=f"{user.mention} You've been paid!",
                               embed=embeds.payment_embed(thorny_user, receivable_user, thorny_guild, amount, reason))

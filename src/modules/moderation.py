@@ -50,7 +50,7 @@ class Moderation(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), user)
         # gamertags = await UserFactory.get_gamertags(thorny_user.guild_id, thorny_user.profile.gamertag)
         # Gets all gamertags to ensure that this is a unique gamertag being added. Not implemented.
 
@@ -60,7 +60,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"Added {thorny_user.discord_member.mention} to the whitelist "
                               f"under the gamertag **{thorny_user.whitelist}**")
 
-            await thorny_user.update()
+            await thorny_user.update(await self.bot.api.get(ctx.guild.id))
         # elif gamertags:
         #     raise errors.GamertagAlreadyAdded(thorny_user.profile.gamertag, gamertags[0]['user_id'])
         elif thorny_user.whitelist is not None:
@@ -74,7 +74,7 @@ class Moderation(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), user)
 
         if thorny_user.whitelist is not None:
             removed_gamertag = thorny_user.whitelist
@@ -83,7 +83,7 @@ class Moderation(commands.Cog):
             await ctx.respond(f"Removed {thorny_user.discord_member.mention} from the whitelist "
                               f"(Removed gamertag: **{removed_gamertag}**)")
 
-            await thorny_user.update()
+            await thorny_user.update(await self.bot.api.get(ctx.guild.id))
         else:
             raise thorny_errors.NotWhitelisted()
 
@@ -98,7 +98,7 @@ class Moderation(commands.Cog):
 
         for member in ctx.guild.members:
             if not member.bot:
-                thorny_user = await nexus.ThornyUser.build(member)
+                thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), member)
                 if thorny_user.whitelist:
                     whitelisted_users.append(thorny_user)
 
@@ -184,7 +184,7 @@ class Moderation(commands.Cog):
         thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
-        thorny_user = await nexus.ThornyUser.build(user)
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), user)
         async with httpx.AsyncClient() as client:
             r = await client.post(f"http://geode:8000/controls/command", json={"command": f'kick "{thorny_user.whitelist}"'})
             if r.status_code == 201:
