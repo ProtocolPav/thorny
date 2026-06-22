@@ -334,7 +334,8 @@ class ProjectApplicationForm(View):
         #                                                                            self.project_data))
 
         elif "Confirm" in button.label:
-            project = await nexus.Project.create_new_project(self.project_data['name'],
+            project = await nexus.Project.create_new_project(await interaction.client.api.get(interaction.guild.id),
+                                                             self.project_data['name'],
                                                              self.project_data['description'],
                                                              self.project_data['coordinates'],
                                                              self.project_data['owner_id'],
