@@ -8,7 +8,7 @@ from src import nexus, thorny_errors
 
 class Money(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.bot = client
 
     balance = discord.SlashCommandGroup("balance", "Balance Commands")
 
@@ -17,7 +17,7 @@ class Money(commands.Cog):
         if user is None:
             user = ctx.author
         thorny_user = await nexus.ThornyUser.build(user)
-        thorny_guild = await nexus.ThornyGuild.build(user.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
 
         await ctx.respond(embed=embeds.balance_embed(thorny_user, thorny_guild))
 
@@ -26,7 +26,7 @@ class Money(commands.Cog):
     async def edit(self, ctx: discord.ApplicationContext, user: discord.Member,
                    amount: discord.Option(int, "Negative number to remove money")):
         thorny_user = await nexus.ThornyUser.build(user)
-        thorny_guild = await nexus.ThornyGuild.build(user.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
         thorny_user.balance += amount
 
         await thorny_user.update()
@@ -51,7 +51,7 @@ class Money(commands.Cog):
     async def pay(self, ctx: discord.ApplicationContext, user: discord.Member, amount: int, reason: str):
         receivable_user = await nexus.ThornyUser.build(user)
         thorny_user = await nexus.ThornyUser.build(ctx.user)
-        thorny_guild = await nexus.ThornyGuild.build(user.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(user.guild.id), user.guild)
         reason = f"[Payment] {reason}"
 
         if user == ctx.author:

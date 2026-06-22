@@ -34,7 +34,7 @@ async def birthday_checker():
                 thorny_user = await nexus.ThornyUser.build(member)
 
                 if thorny_user.birthday and datetime.now().date().replace(year=2000) == thorny_user.birthday.date().replace(year=2000):
-                    thorny_guild = await nexus.ThornyGuild.build(guild)
+                    thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(guild.id), guild)
 
                     if thorny_guild.get_channel_id('welcome'):
                         welcome_channel = thorny.get_channel(thorny_guild.get_channel_id('welcome'))
@@ -62,7 +62,7 @@ async def day_counter():
 async def on_message(message: discord.Message):
     if not message.author.bot:
         thorny_user = await nexus.ThornyUser.build(message.author)
-        thorny_guild = await nexus.ThornyGuild.build(message.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(message.guild.id), message.guild)
 
         if thorny_guild.has_feature('levels'):
             level_up = await thorny_user.level_up(thorny_guild.xp_multiplier)
@@ -85,7 +85,7 @@ async def on_message(message: discord.Message):
 @thorny.event
 async def on_message_delete(message: discord.Message):
     if not message.author.bot and message.content is not None:
-        thorny_guild = await nexus.ThornyGuild.build(message.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(message.guild.id), message.guild)
 
         if thorny_guild.get_channel_id('logs'):
             logs_channel = thorny.get_channel(thorny_guild.get_channel_id('logs'))
@@ -96,7 +96,7 @@ async def on_message_delete(message: discord.Message):
 @thorny.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
     if not before.author.bot and before.content != after.content:
-        thorny_guild = await nexus.ThornyGuild.build(after.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(after.guild.id), after.guild)
 
         if thorny_guild.get_channel_id('logs'):
             logs_channel = thorny.get_channel(thorny_guild.get_channel_id('logs'))
@@ -107,7 +107,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 @thorny.event
 async def on_member_join(member: discord.Member):
     thorny_user = await nexus.ThornyUser.build(member)
-    thorny_guild = await nexus.ThornyGuild.build(member.guild)
+    thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(member.guild.id), member.guild)
 
     if thorny_guild.get_channel_id('welcome'):
         welcome_channel = thorny.get_channel(thorny_guild.get_channel_id('welcome'))
@@ -118,7 +118,7 @@ async def on_member_join(member: discord.Member):
 @thorny.event
 async def on_member_remove(member):
     thorny_user = await nexus.ThornyUser.build(member)
-    thorny_guild = await nexus.ThornyGuild.build(member.guild)
+    thorny_guild = await nexus.ThornyGuild.build(await thorny.api.get(member.guild.id), member.guild)
 
     thorny_user.active = False
     await thorny_user.update()
@@ -135,7 +135,7 @@ async def on_guild_join(guild: discord.Guild):
     for member in member_list:
         await nexus.ThornyUser.build(member)
 
-    await nexus.ThornyGuild.build(guild)
+    await nexus.ThornyGuild.build(await thorny.api.get(guild.id), guild)
 
 
 @thorny.event

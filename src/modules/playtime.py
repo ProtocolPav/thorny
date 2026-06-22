@@ -14,7 +14,7 @@ class Playtime(commands.Cog):
 
     @commands.slash_command(description="See connected players and how much time they've been on for")
     async def online(self, ctx):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:

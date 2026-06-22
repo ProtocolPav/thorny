@@ -20,7 +20,7 @@ class Profile(commands.Cog):
                                            default=None)):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
 
         if not thorny_guild.has_feature('profile'): raise thorny_errors.AccessDenied
 

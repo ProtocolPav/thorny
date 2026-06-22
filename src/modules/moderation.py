@@ -10,7 +10,7 @@ from src import nexus, thorny_errors
 
 class Moderation(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.bot = client
 
         self.pages = []
 
@@ -47,7 +47,7 @@ class Moderation(commands.Cog):
     @whitelist.command(description="Add somebody to the server whitelist")
     @commands.has_permissions(administrator=True)
     async def add(self, ctx: discord.ApplicationContext, user: discord.Member):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(user)
@@ -71,7 +71,7 @@ class Moderation(commands.Cog):
     @whitelist.command(description="Remove somebody from the server whitelist")
     @commands.has_permissions(administrator=True)
     async def remove(self, ctx, user: discord.Member):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(user)
@@ -89,7 +89,7 @@ class Moderation(commands.Cog):
 
     @whitelist.command(description="See the whitelist")
     async def view(self, ctx: discord.ApplicationContext):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         await ctx.defer()
@@ -138,7 +138,7 @@ class Moderation(commands.Cog):
     async def start(self, ctx: discord.ApplicationContext):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
@@ -153,7 +153,7 @@ class Moderation(commands.Cog):
     async def stop(self, ctx):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
@@ -168,7 +168,7 @@ class Moderation(commands.Cog):
     async def restart(self, ctx):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
@@ -181,7 +181,7 @@ class Moderation(commands.Cog):
     @server_command.command(description='Kick someone from the server')
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, user: discord.Member):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(user)
@@ -195,7 +195,7 @@ class Moderation(commands.Cog):
     @server_command.command(description="Send a message or set of messages to the server")
     @commands.has_permissions(administrator=True)
     async def message(self, ctx: discord.ApplicationContext, message: str, repetitions: int, interval_hours: int = 2):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:
@@ -212,7 +212,7 @@ class Moderation(commands.Cog):
     @server_command.command(description="Send an announcement to the server")
     @commands.has_permissions(administrator=True)
     async def announcement(self, ctx: discord.ApplicationContext, message: str):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         async with httpx.AsyncClient() as client:

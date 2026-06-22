@@ -20,7 +20,7 @@ class Other(commands.Cog):
 
     @project.command(description="Apply for a Project!")
     async def apply(self, ctx: discord.ApplicationContext):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
@@ -33,7 +33,7 @@ class Other(commands.Cog):
                    project: discord.Option(str,
                                            description='Search for a project to view',
                                            autocomplete=basic_autocomplete(uikit.ProjectCommandOptions.get_options))):
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)
@@ -53,7 +53,7 @@ class Other(commands.Cog):
     async def view(self, ctx: discord.ApplicationContext):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(ctx.user)

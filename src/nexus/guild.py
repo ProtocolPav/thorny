@@ -6,6 +6,14 @@ from typing import Optional, Literal
 
 import httpx
 
+from nexuscore_client import AuthenticatedClient
+from nexuscore_client.api.guilds import (
+    get_guild_v1_guilds_me_get,
+    partial_update_guild_v1_guilds_me_patch,
+    create_guild_v1_guilds_post
+)
+from nexuscore_client.models import GuildIn, GuildUpdate
+
 from src import thorny_errors
 
 
@@ -14,35 +22,11 @@ class Feature:
     feature: str
     configured: bool
 
-    @classmethod
-    async def build(cls, guild_id: int) -> list["Feature"]:
-        async with httpx.AsyncClient() as client:
-            features_response = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild_id}/features")
-            features = features_response.json()
-
-            return_list = []
-            for i in features:
-                return_list.append(cls(**i))
-
-            return return_list
-
 
 @dataclass
 class Channel:
     channel_type: str
     channel_id: int
-
-    @classmethod
-    async def build(cls, guild_id: int) -> list["Channel"]:
-        async with httpx.AsyncClient() as client:
-            channels_response = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild_id}/channels")
-            channels = channels_response.json()
-
-            return_list = []
-            for i in channels:
-                return_list.append(cls(**i))
-
-            return return_list
 
 
 @dataclass
@@ -74,12 +58,11 @@ class ThornyGuild:
     channels: list[Channel]
 
     @classmethod
-    async def __create_new_guild(cls, guild: discord.Guild):
-        async with httpx.AsyncClient() as client:
-            data = {'guild_id': guild.id, 'name': guild.name}
+    async def __create_new_guild(cls, api: AuthenticatedClient, guild: discord.Guild):
+        async with api as client:
+            data = GuildIn(guild_id=guild.id, name=guild.name)
 
-            guild_object = await client.post("http://nexuscore:8000/api/v0.2/guilds/",
-                                             json=data)
+            guild_object = await create_guild_v1_guilds_post.asyncio_detailed(client=client, body=data)
 
             if guild_object.status_code == 201:
                 return guild_object
@@ -88,7 +71,7 @@ class ThornyGuild:
 
 
     @classmethod
-    async def build(cls, guild: discord.Guild):
+    async def build(cls, api: AuthenticatedClient, guild: discord.Guild):
         """
         Builds the ThornyGuild object from the NexusCore API.
 
@@ -96,43 +79,40 @@ class ThornyGuild:
         - Creates the guild if necessary
         - Updates name and active fields (Not yet implemented by the API)
         :param guild:
+        :param api:
         :return:
         """
-        async with httpx.AsyncClient() as client:
-            guild_object = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{guild.id}")
+        async with api as client:
+            guild_object = await get_guild_v1_guilds_me_get.asyncio_detailed(client=client)
 
             if guild_object.status_code == 404:
-                guild_object = await cls.__create_new_guild(guild)
+                guild_object = await cls.__create_new_guild(api, guild)
 
-            guild_dict = guild_object.json()
+            guild_dict = guild_object.parsed.to_dict()
 
-            features = await Feature.build(guild.id)
-            channels = await Channel.build(guild.id)
-
-            guild_class = cls(**guild_dict, discord_guild=guild, features=features, channels=channels)
+            guild_class = cls(**guild_dict, discord_guild=guild)
 
             guild_class.name = guild.name
             guild_class.active = True
 
-            await guild_class.update()
+            await guild_class.update(api)
 
             return guild_class
 
-    async def update(self):
-        async with httpx.AsyncClient() as client:
-            data = {
-                      "name": self.name,
-                      "currency_name": self.currency_name,
-                      "currency_emoji": self.currency_emoji,
-                      "level_up_message": self.level_up_message,
-                      "join_message": self.join_message,
-                      "leave_message": self.leave_message,
-                      "xp_multiplier": self.xp_multiplier,
-                      "active": self.active
-                    }
+    async def update(self, api: AuthenticatedClient):
+        async with api as client:
+            data = GuildUpdate(
+                name=self.name,
+                active=self.active,
+                currency_name=self.currency_name,
+                currency_emoji=self.currency_emoji,
+                level_up_message=self.level_up_message,
+                join_message=self.join_message,
+                leave_message=self.leave_message,
+                xp_multiplier=self.xp_multiplier
+            )
 
-            guild = await client.patch(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}",
-                                       json=data)
+            guild = await partial_update_guild_v1_guilds_me_patch.asyncio_detailed(client=client, body=data)
 
             if guild.status_code != 200:
                 raise thorny_errors.GuildUpdateError

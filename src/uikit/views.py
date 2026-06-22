@@ -109,7 +109,7 @@ class PersistentProjectAdminButtons(View):
                        label="Approve",
                        custom_id="approve")
     async def approve_callback(self, button: Button, interaction: discord.Interaction):
-        thorny_guild = await nexus.ThornyGuild.build(interaction.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await interaction.client.api.get(interaction.guild.id), interaction.guild)
         project = await nexus.Project.build(interaction.message.embeds[0].footer.text)
 
         if self.check_for_community_manager(interaction):

@@ -5,11 +5,12 @@ from discord.utils import basic_autocomplete
 import math
 
 from src import nexus, thorny_errors, uikit
+from src.thorny_client import ThornyBot
 
 
 class Leaderboard(commands.Cog):
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, bot: ThornyBot):
+        self.bot = bot
         self.pages = []
 
     leaderboard = discord.SlashCommandGroup("lb", "Leaderboard Commands")
@@ -21,7 +22,7 @@ class Leaderboard(commands.Cog):
                                                         default='current')):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         if month == 'current':
@@ -71,7 +72,7 @@ class Leaderboard(commands.Cog):
     async def money(self, ctx):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         self.pages = []
@@ -116,7 +117,7 @@ class Leaderboard(commands.Cog):
     async def levels(self, ctx):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         self.pages = []
@@ -161,7 +162,7 @@ class Leaderboard(commands.Cog):
     async def quests(self, ctx):
         await ctx.defer()
 
-        thorny_guild = await nexus.ThornyGuild.build(ctx.guild)
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         self.pages = []
