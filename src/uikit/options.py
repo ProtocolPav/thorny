@@ -157,6 +157,6 @@ async def available_quests(quests: list):
 class ProjectCommandOptions:
     @classmethod
     async def get_options(cls, ctx: discord.AutocompleteContext):
-        options = await nexus.Project.get_all_projects_for_options()
+        options = await nexus.Project.get_all_projects_for_options(await ctx.interaction.client.api.get(ctx.interaction.guild.id))
 
         return [OptionChoice(x['name'], x['id']) for x in options]

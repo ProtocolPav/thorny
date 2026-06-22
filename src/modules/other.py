@@ -8,13 +8,13 @@ from datetime import UTC, datetime
 
 class Other(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.bot = client
         self.bot_started = datetime.now().replace(microsecond=0)
 
 
     @commands.slash_command(description="Get bot stats")
     async def ping(self, ctx):
-        await ctx.respond(embed=uikit.ping_embed(self.client, self.bot_started))
+        await ctx.respond(embed=uikit.ping_embed(self.bot, self.bot_started))
 
     project = discord.SlashCommandGroup("project", "Project Commands")
 
@@ -37,7 +37,7 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
-        project_model = await nexus.Project.build(project)
+        project_model = await nexus.Project.build(await self.bot.api.get(ctx.guild.id), project)
 
         if project_model.status != 'completed' and thorny_user.thorny_id == project_model.owner_id:
             view = uikit.Project(ctx, thorny_user, thorny_guild, project_model)

@@ -2,6 +2,9 @@ import discord
 from discord import Interaction
 from discord.ui import Item, View, Select, Button
 from datetime import date
+
+from nexuscore_client.models import StatusEnum
+
 import src.uikit.modals as modals
 from src.uikit import embeds, options
 from src import nexus, thorny_errors
@@ -110,7 +113,7 @@ class PersistentProjectAdminButtons(View):
                        custom_id="approve")
     async def approve_callback(self, button: Button, interaction: discord.Interaction):
         thorny_guild = await nexus.ThornyGuild.build(await interaction.client.api.get(interaction.guild.id), interaction.guild)
-        project = await nexus.Project.build(interaction.message.embeds[0].footer.text)
+        project = await nexus.Project.build(await interaction.client.api.get(interaction.guild.id), interaction.message.embeds[0].footer.text)
 
         if self.check_for_community_manager(interaction):
             self.disable_all_items()
@@ -149,8 +152,8 @@ class PersistentProjectAdminButtons(View):
                                                applied_tags=[new_project_tag])
 
             project.thread_id = thread.id
-            await project.set_status('ongoing')
-            await project.update()
+            await project.set_status(await interaction.client.api.get(interaction.guild.id), StatusEnum.ONGOING)
+            await project.update(await interaction.client.api.get(interaction.guild.id))
 
             await thread.starting_message.edit(embed=embeds.project_embed(project))
 
@@ -378,9 +381,9 @@ class Project(View):
                                custom_id='confirm_complete',
                                style=discord.ButtonStyle.green)
             async def confirm_complete(self, inner_button: Button, inner_interaction: Interaction):
-                await self.project.set_status('completed')
+                await self.project.set_status(await interaction.client.api.get(interaction.guild.id), StatusEnum.COMPLETED)
                 self.project.completed_on = date.today()
-                await self.project.update()
+                await self.project.update(await inner_interaction.client.api.get(self.thorny_guild.discord_guild.id))
 
                 forum = self.thorny_guild.discord_guild.get_channel(self.thorny_guild.get_channel_id('project_forum'))
                 thread = forum.get_thread(self.project.thread_id)

@@ -2,9 +2,21 @@ from typing import Optional
 
 from dataclasses import dataclass
 from datetime import date, datetime
+
+from nexuscore_client import AuthenticatedClient
+from nexuscore_client.models import ProjectIn, ProjectUpdate, StatusEnum, StatusIn
+
 from src import thorny_errors
 
 import httpx
+
+from nexuscore_client.api.projects import (
+    list_projects_v1_guilds_me_projects_get,
+    get_project_v1_guilds_me_projects_project_id_get,
+    create_project_v1_guilds_me_projects_post,
+    partial_update_project_v1_guilds_me_projects_project_id_patch,
+    create_project_status_v1_guilds_me_projects_project_id_status_post
+)
 
 
 @dataclass
@@ -24,85 +36,75 @@ class Project:
     status_since: datetime
 
     @classmethod
-    async def create_new_project(cls, name: str, description: str, coordinates: list[int], owner_id: int, dimension: str):
-        async with httpx.AsyncClient() as client:
-            project = await client.post(f"http://nexuscore:8000/api/v0.2/projects",
-                                          json={'name': name,
-                                                'description': description,
-                                                'coordinates': coordinates,
-                                                'owner_id': owner_id,
-                                                'pin_id': None,
-                                                'dimension': dimension})
+    async def create_new_project(cls, api: AuthenticatedClient, name: str, description: str, coordinates: list[int], owner_id: int, dimension: str):
+        data = {'name': name,
+                'description': description,
+                'coordinates': coordinates,
+                'owner_id': owner_id,
+                'pin_id': None,
+                'dimension': dimension}
+        project = await create_project_v1_guilds_me_projects_post.asyncio_detailed(client=api, body=ProjectIn(**data))
 
-            if project.status_code != 201:
-                raise thorny_errors.UnexpectedError2('There was an issue creating your project. '
-                                                     'Most likely, the project ID is already taken.')
+        if project.status_code != 201:
+            raise thorny_errors.UnexpectedError2('There was an issue creating your project. '
+                                                 'Most likely, the project ID is already taken.')
 
-            project_json: dict = project.json()
-            members = await client.get(f"http://nexuscore:8000/api/v0.2/projects/{project.json()['project_id']}/members")
+        project_json: dict = project.parsed.to_dict()
+        members = []
 
-            project_json.pop('owner')
+        project_json['owner_id'] = project_json['owner']['thorny_id']
+        project_json.pop('owner')
 
-            return cls(**project_json, members=[x['user_id'] for x in members.json()])
-
-    @classmethod
-    async def build(cls, project_id: str):
-        async with httpx.AsyncClient() as client:
-            project = await client.get(f"http://nexuscore:8000/api/v0.2/projects/{project_id}")
-
-            if project.status_code != 200:
-                raise thorny_errors.UnexpectedError2('There was an issue fetching your project. '
-                                                     'Most likely, the project ID does not exist')
-
-            project_json = project.json()
-            members = await client.get(f"http://nexuscore:8000/api/v0.2/projects/{project.json()['project_id']}/members")
-
-            project_json.pop('owner')
-
-            return cls(**project_json, members=[x['user_id'] for x in members.json()])
+        return cls(**project_json, members=[x.user_id for x in members])
 
     @classmethod
-    async def get_all_projects_for_options(cls):
-        async with httpx.AsyncClient() as client:
-            projects = await client.get(f"http://nexuscore:8000/api/v0.2/projects")
+    async def build(cls, api: AuthenticatedClient, project_id: str):
+        project = await get_project_v1_guilds_me_projects_project_id_get.asyncio_detailed(project_id, client=api)
 
-            if projects.status_code == 200:
-                options = [{'id': x['project_id'], 'name': x['name']} for x in projects.json()]
+        if project.status_code != 200:
+            raise thorny_errors.UnexpectedError2('There was an issue fetching your project. '
+                                                 'Most likely, the project ID does not exist')
 
-                return options
+        project_json = project.parsed.to_dict()
+        members = [] # API currently does not expose a members endpoint. Add in later.
 
-            return None
+        project_json['owner_id'] = project_json['owner']['thorny_id']
+        project_json.pop('owner')
 
-    async def update(self):
-        async with httpx.AsyncClient() as client:
-            data = {
-                     'name': self.name,
-                     'description': self.description,
-                     'coordinates': self.coordinates,
-                     'owner_id': self.owner_id,
-                     'thread_id': self.thread_id,
-                     'started_on': str(self.started_on),
-                     'completed_on': str(self.completed_on) if self.completed_on else None,
-                     'dimension': self.dimension
-                    }
+        return cls(**project_json, members=[x.user_id for x in members])
 
-            project = await client.patch(f"http://nexuscore:8000/api/v0.2/projects/{self.project_id}",
-                                         json=data)
+    @classmethod
+    async def get_all_projects_for_options(cls, api: AuthenticatedClient):
+        projects = await list_projects_v1_guilds_me_projects_get.asyncio_detailed(client=api)
 
-            if project.status_code != 200:
-                raise thorny_errors.UserUpdateError
+        if projects.status_code == 200:
+            options = [{'id': x.project_id, 'name': x.name} for x in projects.parsed]
 
-    async def set_status(self, status: str):
-        async with httpx.AsyncClient() as client:
-            data = {
-                     'status': status
-                    }
+            return options
 
-            project = await client.post(f"http://nexuscore:8000/api/v0.2/projects/{self.project_id}/status",
-                                        json=data)
+        return None
 
-            if project.status_code != 201:
-                raise thorny_errors.UserUpdateError
+    async def update(self, api: AuthenticatedClient):
+        data = ProjectUpdate(
+            name=self.name,
+            description=self.description,
+            coordinates=list(self.coordinates),
+            owner_id=self.owner_id,
+            thread_id=self.thread_id,
+            completed_on=self.completed_on,
+            dimension=self.dimension
+        )
 
-            self.status = status
-            self.status_since = datetime.now()
+        project = await partial_update_project_v1_guilds_me_projects_project_id_patch.asyncio_detailed(self.project_id, body=data, client=api)
+
+        if project.status_code != 200:
+            raise thorny_errors.UserUpdateError
+
+    async def set_status(self, api: AuthenticatedClient, status: StatusEnum):
+        project = await create_project_status_v1_guilds_me_projects_project_id_status_post.asyncio_detailed(self.project_id, body=StatusIn(status=status), client=api)
+
+        if project.status_code != 201:
+            raise thorny_errors.UserUpdateError
+
+        self.status = status
+        self.status_since = datetime.now()
