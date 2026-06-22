@@ -126,10 +126,9 @@ class ThornyUser:
 
     @classmethod
     async def get_discord_id(cls, api: AuthenticatedClient, thorny_id: int):
-        async with api as client:
-            user_response = await get_user_v1_guilds_me_users_thorny_id_get.asyncio_detailed(thorny_id, client=client)
+        user_response = await get_user_v1_guilds_me_users_thorny_id_get.asyncio_detailed(thorny_id, client=client)
 
-            return user_response.parsed.user_id
+        return user_response.parsed.user_id
 
     async def update(self, api: AuthenticatedClient):
         data = UserUpdate(

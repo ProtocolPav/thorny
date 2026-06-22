@@ -21,8 +21,8 @@ class Reward:
     item_metadata: list = field(default_factory=list)
 
     @classmethod
-    def build(cls, data: dict):
-        return cls(**{k: v for k, v in data.items() if k in cls.__annotations__})
+    def build(cls, data: dict, quest_id: int, objective_id: int):
+        return cls(**{k: v for k, v in data.items() if k in cls.__annotations__}, quest_id=quest_id, objective_id=objective_id)
 
     def get_reward_display(self, money_symbol: str):
         if self.display_name:
@@ -134,7 +134,7 @@ class Quest:
 
         for obj_data in objectives_data:
             # 1. Rewards
-            rewards_list = [Reward.build(r) for r in obj_data.pop('rewards', [])]
+            rewards_list = [Reward.build(r, quest_id=quest_dict["quest_id"], objective_id=obj_data["objective_id"]) for r in obj_data.pop('rewards', [])]
 
             # 2. Customizations
             cust_data = obj_data.pop('customizations', {})
@@ -151,7 +151,8 @@ class Quest:
                 **filtered_obj,
                 rewards=rewards_list,
                 customizations=customizations,
-                targets=targets_list
+                targets=targets_list,
+                quest_id=quest_dict["quest_id"]
             ))
 
         if isinstance(quest_dict.get('start_time'), str):
