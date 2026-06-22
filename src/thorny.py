@@ -5,14 +5,10 @@ import discord
 from discord.ext import tasks
 
 import giphy_client
-import json
 import httpx
 from src import modules, nexus, uikit
 from api_client import ManagedAPIClient
 from thorny_client import ThornyBot
-
-vers = json.load(open('../version.json', 'r'))
-v = vers["version"]
 
 TOKEN = os.environ.get('BOT_TOKEN')
 

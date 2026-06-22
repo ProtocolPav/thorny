@@ -8,20 +8,25 @@ from src import thorny_errors, uikit
 from api_client import ManagedAPIClient
 from src.thorny_errors import ThornyError
 
+from importlib.metadata import version
+
+__version__ = version("thorny")
+
 
 class ThornyBot(discord.Bot):
     api: ManagedAPIClient
 
     def __init__(self, *args, api: ManagedAPIClient, **kwargs):
+        print(f"[{datetime.now().replace(microsecond=0)}] Starting up Thorny...")
         super().__init__(*args, **kwargs)
-        self.version = "v2.0.0"
+        self.version = __version__
         self.presence = discord.Activity(type=discord.ActivityType.custom,
                                          name=f"Oooh Yeah :sunglasses:")
         self.api = api
 
     async def on_ready(self):
         print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {self.user}")
-        print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {self.version}")
+        print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running v{self.version}")
         print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(self.guilds)} Guilds")
 
         self.add_view(uikit.PersistentProjectAdminButtons())
