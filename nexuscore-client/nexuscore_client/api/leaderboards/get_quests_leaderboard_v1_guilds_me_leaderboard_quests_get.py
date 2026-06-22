@@ -5,17 +5,14 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
-from ...models.quest_progress_out import QuestProgressOut
+from ...models.leaderboard_model import LeaderboardModel
 from ...types import Response
 
 
-def _get_kwargs(
-    thorny_id: int,
-) -> dict[str, Any]:
+def _get_kwargs() -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/guilds/me/quests_router/progress/user/{thorny_id}",
+        "url": "/v1/guilds/me/leaderboard/quests",
     }
 
     return _kwargs
@@ -23,20 +20,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+) -> Optional[LeaderboardModel]:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = QuestProgressOut.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = LeaderboardModel.from_dict(response.json())
 
         return response_200
-    if response.status_code == 422:
-        response_422 = HTTPValidationError.from_dict(response.json())
-
-        return response_422
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -45,7 +33,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+) -> Response[LeaderboardModel]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -55,30 +43,22 @@ def _build_response(
 
 
 def sync_detailed(
-    thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
-    """List Quest Progress
+) -> Response[LeaderboardModel]:
+    """Get Quests Leaderboard
 
-     Get All User's Quest Progress
-
-    Returns all quest progress belonging to a user
-
-    Args:
-        thorny_id (int):
+     Returns the guild's playtime leaderboard, in order. Playtime is in seconds.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, list['QuestProgressOut']]]
+        Response[LeaderboardModel]
     """
 
-    kwargs = _get_kwargs(
-        thorny_id=thorny_id,
-    )
+    kwargs = _get_kwargs()
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -88,58 +68,43 @@ def sync_detailed(
 
 
 def sync(
-    thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
-    """List Quest Progress
+) -> Optional[LeaderboardModel]:
+    """Get Quests Leaderboard
 
-     Get All User's Quest Progress
-
-    Returns all quest progress belonging to a user
-
-    Args:
-        thorny_id (int):
+     Returns the guild's playtime leaderboard, in order. Playtime is in seconds.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, list['QuestProgressOut']]
+        LeaderboardModel
     """
 
     return sync_detailed(
-        thorny_id=thorny_id,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
-    """List Quest Progress
+) -> Response[LeaderboardModel]:
+    """Get Quests Leaderboard
 
-     Get All User's Quest Progress
-
-    Returns all quest progress belonging to a user
-
-    Args:
-        thorny_id (int):
+     Returns the guild's playtime leaderboard, in order. Playtime is in seconds.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, list['QuestProgressOut']]]
+        Response[LeaderboardModel]
     """
 
-    kwargs = _get_kwargs(
-        thorny_id=thorny_id,
-    )
+    kwargs = _get_kwargs()
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -147,30 +112,23 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
-    """List Quest Progress
+) -> Optional[LeaderboardModel]:
+    """Get Quests Leaderboard
 
-     Get All User's Quest Progress
-
-    Returns all quest progress belonging to a user
-
-    Args:
-        thorny_id (int):
+     Returns the guild's playtime leaderboard, in order. Playtime is in seconds.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, list['QuestProgressOut']]
+        LeaderboardModel
     """
 
     return (
         await asyncio_detailed(
-            thorny_id=thorny_id,
             client=client,
         )
     ).parsed

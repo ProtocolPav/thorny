@@ -6,21 +6,20 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.quest_in import QuestIn
 from ...models.quest_out import QuestOut
-from ...models.quest_update import QuestUpdate
 from ...types import Response
 
 
 def _get_kwargs(
-    quest_id: int,
     *,
-    body: QuestUpdate,
+    body: QuestIn,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
-        "method": "put",
-        "url": f"/v1/guilds/me/quests_router/{quest_id}",
+        "method": "post",
+        "url": "/v1/guilds/me/quests",
     }
 
     _body = body.to_dict()
@@ -35,10 +34,10 @@ def _get_kwargs(
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
 ) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    if response.status_code == 200:
-        response_200 = QuestOut.from_dict(response.json())
+    if response.status_code == 201:
+        response_201 = QuestOut.from_dict(response.json())
 
-        return response_200
+        return response_201
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -61,20 +60,20 @@ def _build_response(
 
 
 def sync_detailed(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
+    body: QuestIn,
 ) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Create Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Create New Quest
+
+    Creates a new quest based on the information provided.
+    Some fields are optional and can be `null` while others are required.
+    Check the schema for more info on that.
 
     Args:
-        quest_id (int):
-        body (QuestUpdate):
+        body (QuestIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -85,7 +84,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        quest_id=quest_id,
         body=body,
     )
 
@@ -97,20 +95,20 @@ def sync_detailed(
 
 
 def sync(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
+    body: QuestIn,
 ) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Create Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Create New Quest
+
+    Creates a new quest based on the information provided.
+    Some fields are optional and can be `null` while others are required.
+    Check the schema for more info on that.
 
     Args:
-        quest_id (int):
-        body (QuestUpdate):
+        body (QuestIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -121,27 +119,26 @@ def sync(
     """
 
     return sync_detailed(
-        quest_id=quest_id,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
+    body: QuestIn,
 ) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Create Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Create New Quest
+
+    Creates a new quest based on the information provided.
+    Some fields are optional and can be `null` while others are required.
+    Check the schema for more info on that.
 
     Args:
-        quest_id (int):
-        body (QuestUpdate):
+        body (QuestIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -152,7 +149,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        quest_id=quest_id,
         body=body,
     )
 
@@ -162,20 +158,20 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
+    body: QuestIn,
 ) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Create Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Create New Quest
+
+    Creates a new quest based on the information provided.
+    Some fields are optional and can be `null` while others are required.
+    Check the schema for more info on that.
 
     Args:
-        quest_id (int):
-        body (QuestUpdate):
+        body (QuestIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -187,7 +183,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            quest_id=quest_id,
             client=client,
             body=body,
         )

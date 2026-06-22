@@ -102,7 +102,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/v1/guilds/me/quests_router",
+        "url": "/v1/guilds/me/quests",
         "params": params,
     }
 

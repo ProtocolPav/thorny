@@ -7,28 +7,17 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.quest_out import QuestOut
-from ...models.quest_update import QuestUpdate
 from ...types import Response
 
 
 def _get_kwargs(
     quest_id: int,
-    *,
-    body: QuestUpdate,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
     _kwargs: dict[str, Any] = {
-        "method": "patch",
-        "url": f"/v1/guilds/me/quests_router/{quest_id}",
+        "method": "get",
+        "url": f"/v1/guilds/me/quests/{quest_id}",
     }
 
-    _body = body.to_dict()
-
-    _kwargs["json"] = _body
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
@@ -64,17 +53,15 @@ def sync_detailed(
     quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
 ) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Get Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Get Quest
+
+    Returns a specific quest, objectives and rewards
 
     Args:
         quest_id (int):
-        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -86,7 +73,6 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         quest_id=quest_id,
-        body=body,
     )
 
     response = client.get_httpx_client().request(
@@ -100,17 +86,15 @@ def sync(
     quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
 ) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Get Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Get Quest
+
+    Returns a specific quest, objectives and rewards
 
     Args:
         quest_id (int):
-        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -123,7 +107,6 @@ def sync(
     return sync_detailed(
         quest_id=quest_id,
         client=client,
-        body=body,
     ).parsed
 
 
@@ -131,17 +114,15 @@ async def asyncio_detailed(
     quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
 ) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Get Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Get Quest
+
+    Returns a specific quest, objectives and rewards
 
     Args:
         quest_id (int):
-        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -153,7 +134,6 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         quest_id=quest_id,
-        body=body,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -165,17 +145,15 @@ async def asyncio(
     quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestUpdate,
 ) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Partial Update Quest
+    """Get Quest
 
-     Updates quest details and/or objectives. Objectives and rewards are additive-only:
-    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
-    Existing objectives and rewards not present in the payload are left untouched.
+     Get Quest
+
+    Returns a specific quest, objectives and rewards
 
     Args:
         quest_id (int):
-        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -189,6 +167,5 @@ async def asyncio(
         await asyncio_detailed(
             quest_id=quest_id,
             client=client,
-            body=body,
         )
     ).parsed

@@ -6,28 +6,38 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.quest_out import QuestOut
+from ...models.quest_progress_in import QuestProgressIn
+from ...models.quest_progress_out import QuestProgressOut
 from ...types import Response
 
 
 def _get_kwargs(
-    quest_id: int,
+    *,
+    body: QuestProgressIn,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
+
     _kwargs: dict[str, Any] = {
-        "method": "get",
-        "url": f"/v1/guilds/me/quests_router/{quest_id}",
+        "method": "post",
+        "url": "/v1/guilds/me/quests/progress",
     }
 
+    _body = body.to_dict()
+
+    _kwargs["json"] = _body
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    if response.status_code == 200:
-        response_200 = QuestOut.from_dict(response.json())
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    if response.status_code == 201:
+        response_201 = QuestProgressOut.from_dict(response.json())
 
-        return response_200
+        return response_201
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -40,7 +50,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, QuestOut]]:
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -50,29 +60,30 @@ def _build_response(
 
 
 def sync_detailed(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Get Quest
+    body: QuestProgressIn,
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+    r"""Create Quest Progress
 
-     Get Quest
+     Create New Quest Progress
 
-    Returns a specific quest, objectives and rewards
+    Adds a new quest to a user, tracking their progress.
+    Automatically sets the quest progress to \"active\".
 
     Args:
-        quest_id (int):
+        body (QuestProgressIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestOut]]
+        Response[Union[HTTPValidationError, QuestProgressOut]]
     """
 
     kwargs = _get_kwargs(
-        quest_id=quest_id,
+        body=body,
     )
 
     response = client.get_httpx_client().request(
@@ -83,57 +94,59 @@ def sync_detailed(
 
 
 def sync(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Get Quest
+    body: QuestProgressIn,
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    r"""Create Quest Progress
 
-     Get Quest
+     Create New Quest Progress
 
-    Returns a specific quest, objectives and rewards
+    Adds a new quest to a user, tracking their progress.
+    Automatically sets the quest progress to \"active\".
 
     Args:
-        quest_id (int):
+        body (QuestProgressIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestOut]
+        Union[HTTPValidationError, QuestProgressOut]
     """
 
     return sync_detailed(
-        quest_id=quest_id,
         client=client,
+        body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Get Quest
+    body: QuestProgressIn,
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+    r"""Create Quest Progress
 
-     Get Quest
+     Create New Quest Progress
 
-    Returns a specific quest, objectives and rewards
+    Adds a new quest to a user, tracking their progress.
+    Automatically sets the quest progress to \"active\".
 
     Args:
-        quest_id (int):
+        body (QuestProgressIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestOut]]
+        Response[Union[HTTPValidationError, QuestProgressOut]]
     """
 
     kwargs = _get_kwargs(
-        quest_id=quest_id,
+        body=body,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -142,30 +155,31 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    quest_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Get Quest
+    body: QuestProgressIn,
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    r"""Create Quest Progress
 
-     Get Quest
+     Create New Quest Progress
 
-    Returns a specific quest, objectives and rewards
+    Adds a new quest to a user, tracking their progress.
+    Automatically sets the quest progress to \"active\".
 
     Args:
-        quest_id (int):
+        body (QuestProgressIn):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestOut]
+        Union[HTTPValidationError, QuestProgressOut]
     """
 
     return (
         await asyncio_detailed(
-            quest_id=quest_id,
             client=client,
+            body=body,
         )
     ).parsed

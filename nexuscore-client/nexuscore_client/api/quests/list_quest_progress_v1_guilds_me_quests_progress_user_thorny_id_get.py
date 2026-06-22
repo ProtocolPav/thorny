@@ -15,7 +15,7 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/guilds/me/quests_router/progress/user/{thorny_id}/active",
+        "url": f"/v1/guilds/me/quests/progress/user/{thorny_id}",
     }
 
     return _kwargs
@@ -23,9 +23,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
     if response.status_code == 200:
-        response_200 = QuestProgressOut.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = QuestProgressOut.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
     if response.status_code == 422:
@@ -40,7 +45,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -53,12 +58,12 @@ def sync_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
-    """Get Active Quest Progress
+) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+    """List Quest Progress
 
-     Get User's Active Quest
+     Get All User's Quest Progress
 
-    Returns the user's currently active quest.
+    Returns all quest progress belonging to a user
 
     Args:
         thorny_id (int):
@@ -68,7 +73,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[Union[HTTPValidationError, list['QuestProgressOut']]]
     """
 
     kwargs = _get_kwargs(
@@ -86,12 +91,12 @@ def sync(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
-    """Get Active Quest Progress
+) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+    """List Quest Progress
 
-     Get User's Active Quest
+     Get All User's Quest Progress
 
-    Returns the user's currently active quest.
+    Returns all quest progress belonging to a user
 
     Args:
         thorny_id (int):
@@ -101,7 +106,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        Union[HTTPValidationError, list['QuestProgressOut']]
     """
 
     return sync_detailed(
@@ -114,12 +119,12 @@ async def asyncio_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
-    """Get Active Quest Progress
+) -> Response[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+    """List Quest Progress
 
-     Get User's Active Quest
+     Get All User's Quest Progress
 
-    Returns the user's currently active quest.
+    Returns all quest progress belonging to a user
 
     Args:
         thorny_id (int):
@@ -129,7 +134,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[Union[HTTPValidationError, list['QuestProgressOut']]]
     """
 
     kwargs = _get_kwargs(
@@ -145,12 +150,12 @@ async def asyncio(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
-    """Get Active Quest Progress
+) -> Optional[Union[HTTPValidationError, list["QuestProgressOut"]]]:
+    """List Quest Progress
 
-     Get User's Active Quest
+     Get All User's Quest Progress
 
-    Returns the user's currently active quest.
+    Returns all quest progress belonging to a user
 
     Args:
         thorny_id (int):
@@ -160,7 +165,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        Union[HTTPValidationError, list['QuestProgressOut']]
     """
 
     return (

@@ -14,7 +14,7 @@ def _get_kwargs(
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": f"/v1/guilds/me/quests_router/progress/user/{thorny_id}/active",
+        "url": f"/v1/guilds/me/quests/progress/user/{thorny_id}/active",
     }
 
     return _kwargs

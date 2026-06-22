@@ -6,20 +6,21 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.quest_in import QuestIn
-from ...models.quest_out import QuestOut
+from ...models.quest_progress_out import QuestProgressOut
+from ...models.quest_progress_update import QuestProgressUpdate
 from ...types import Response
 
 
 def _get_kwargs(
+    progress_id: int,
     *,
-    body: QuestIn,
+    body: QuestProgressUpdate,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v1/guilds/me/quests_router",
+        "method": "patch",
+        "url": f"/v1/guilds/me/quests/progress/{progress_id}",
     }
 
     _body = body.to_dict()
@@ -33,11 +34,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    if response.status_code == 201:
-        response_201 = QuestOut.from_dict(response.json())
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    if response.status_code == 200:
+        response_200 = QuestProgressOut.from_dict(response.json())
 
-        return response_201
+        return response_200
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -50,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, QuestOut]]:
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -60,30 +61,31 @@ def _build_response(
 
 
 def sync_detailed(
+    progress_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestIn,
-) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Create Quest
+    body: QuestProgressUpdate,
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+    """Partial Update Quest Progress
 
-     Create New Quest
+     Update Specific User's Quest
 
-    Creates a new quest based on the information provided.
-    Some fields are optional and can be `null` while others are required.
-    Check the schema for more info on that.
+    Updates a user's quest.
 
     Args:
-        body (QuestIn):
+        progress_id (int):
+        body (QuestProgressUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestOut]]
+        Response[Union[HTTPValidationError, QuestProgressOut]]
     """
 
     kwargs = _get_kwargs(
+        progress_id=progress_id,
         body=body,
     )
 
@@ -95,60 +97,62 @@ def sync_detailed(
 
 
 def sync(
+    progress_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestIn,
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Create Quest
+    body: QuestProgressUpdate,
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    """Partial Update Quest Progress
 
-     Create New Quest
+     Update Specific User's Quest
 
-    Creates a new quest based on the information provided.
-    Some fields are optional and can be `null` while others are required.
-    Check the schema for more info on that.
+    Updates a user's quest.
 
     Args:
-        body (QuestIn):
+        progress_id (int):
+        body (QuestProgressUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestOut]
+        Union[HTTPValidationError, QuestProgressOut]
     """
 
     return sync_detailed(
+        progress_id=progress_id,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
+    progress_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestIn,
-) -> Response[Union[HTTPValidationError, QuestOut]]:
-    """Create Quest
+    body: QuestProgressUpdate,
+) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+    """Partial Update Quest Progress
 
-     Create New Quest
+     Update Specific User's Quest
 
-    Creates a new quest based on the information provided.
-    Some fields are optional and can be `null` while others are required.
-    Check the schema for more info on that.
+    Updates a user's quest.
 
     Args:
-        body (QuestIn):
+        progress_id (int):
+        body (QuestProgressUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestOut]]
+        Response[Union[HTTPValidationError, QuestProgressOut]]
     """
 
     kwargs = _get_kwargs(
+        progress_id=progress_id,
         body=body,
     )
 
@@ -158,31 +162,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    progress_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestIn,
-) -> Optional[Union[HTTPValidationError, QuestOut]]:
-    """Create Quest
+    body: QuestProgressUpdate,
+) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    """Partial Update Quest Progress
 
-     Create New Quest
+     Update Specific User's Quest
 
-    Creates a new quest based on the information provided.
-    Some fields are optional and can be `null` while others are required.
-    Check the schema for more info on that.
+    Updates a user's quest.
 
     Args:
-        body (QuestIn):
+        progress_id (int):
+        body (QuestProgressUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestOut]
+        Union[HTTPValidationError, QuestProgressOut]
     """
 
     return (
         await asyncio_detailed(
+            progress_id=progress_id,
             client=client,
             body=body,
         )

@@ -6,21 +6,21 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.quest_progress_out import QuestProgressOut
-from ...models.quest_progress_update import QuestProgressUpdate
+from ...models.quest_out import QuestOut
+from ...models.quest_update import QuestUpdate
 from ...types import Response
 
 
 def _get_kwargs(
-    progress_id: int,
+    quest_id: int,
     *,
-    body: QuestProgressUpdate,
+    body: QuestUpdate,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/v1/guilds/me/quests_router/progress/{progress_id}",
+        "url": f"/v1/guilds/me/quests/{quest_id}",
     }
 
     _body = body.to_dict()
@@ -34,9 +34,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Optional[Union[HTTPValidationError, QuestOut]]:
     if response.status_code == 200:
-        response_200 = QuestProgressOut.from_dict(response.json())
+        response_200 = QuestOut.from_dict(response.json())
 
         return response_200
     if response.status_code == 422:
@@ -51,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Response[Union[HTTPValidationError, QuestOut]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -61,31 +61,31 @@ def _build_response(
 
 
 def sync_detailed(
-    progress_id: int,
+    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestProgressUpdate,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
-    """Partial Update Quest Progress
+    body: QuestUpdate,
+) -> Response[Union[HTTPValidationError, QuestOut]]:
+    """Partial Update Quest
 
-     Update Specific User's Quest
-
-    Updates a user's quest.
+     Updates quest details and/or objectives. Objectives and rewards are additive-only:
+    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
+    Existing objectives and rewards not present in the payload are left untouched.
 
     Args:
-        progress_id (int):
-        body (QuestProgressUpdate):
+        quest_id (int):
+        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[Union[HTTPValidationError, QuestOut]]
     """
 
     kwargs = _get_kwargs(
-        progress_id=progress_id,
+        quest_id=quest_id,
         body=body,
     )
 
@@ -97,62 +97,62 @@ def sync_detailed(
 
 
 def sync(
-    progress_id: int,
+    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestProgressUpdate,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
-    """Partial Update Quest Progress
+    body: QuestUpdate,
+) -> Optional[Union[HTTPValidationError, QuestOut]]:
+    """Partial Update Quest
 
-     Update Specific User's Quest
-
-    Updates a user's quest.
+     Updates quest details and/or objectives. Objectives and rewards are additive-only:
+    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
+    Existing objectives and rewards not present in the payload are left untouched.
 
     Args:
-        progress_id (int):
-        body (QuestProgressUpdate):
+        quest_id (int):
+        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        Union[HTTPValidationError, QuestOut]
     """
 
     return sync_detailed(
-        progress_id=progress_id,
+        quest_id=quest_id,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    progress_id: int,
+    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestProgressUpdate,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
-    """Partial Update Quest Progress
+    body: QuestUpdate,
+) -> Response[Union[HTTPValidationError, QuestOut]]:
+    """Partial Update Quest
 
-     Update Specific User's Quest
-
-    Updates a user's quest.
+     Updates quest details and/or objectives. Objectives and rewards are additive-only:
+    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
+    Existing objectives and rewards not present in the payload are left untouched.
 
     Args:
-        progress_id (int):
-        body (QuestProgressUpdate):
+        quest_id (int):
+        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[Union[HTTPValidationError, QuestOut]]
     """
 
     kwargs = _get_kwargs(
-        progress_id=progress_id,
+        quest_id=quest_id,
         body=body,
     )
 
@@ -162,32 +162,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    progress_id: int,
+    quest_id: int,
     *,
     client: AuthenticatedClient,
-    body: QuestProgressUpdate,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
-    """Partial Update Quest Progress
+    body: QuestUpdate,
+) -> Optional[Union[HTTPValidationError, QuestOut]]:
+    """Partial Update Quest
 
-     Update Specific User's Quest
-
-    Updates a user's quest.
+     Updates quest details and/or objectives. Objectives and rewards are additive-only:
+    include an `objective_id`/`reward_id` to update an existing entry, or omit it to create a new one.
+    Existing objectives and rewards not present in the payload are left untouched.
 
     Args:
-        progress_id (int):
-        body (QuestProgressUpdate):
+        quest_id (int):
+        body (QuestUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        Union[HTTPValidationError, QuestOut]
     """
 
     return (
         await asyncio_detailed(
-            progress_id=progress_id,
+            quest_id=quest_id,
             client=client,
             body=body,
         )
