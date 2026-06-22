@@ -86,25 +86,24 @@ class ThornyGuild:
         :param api:
         :return:
         """
-        async with api as client:
-            guild_object = await get_guild_v1_guilds_me_get.asyncio_detailed(client=client)
+        guild_object = await get_guild_v1_guilds_me_get.asyncio_detailed(client=api)
 
-            if guild_object.status_code == 404:
-                guild_object = await cls.__create_new_guild(api, guild)
+        if guild_object.status_code == 404:
+            guild_object = await cls.__create_new_guild(api, guild)
 
-            guild_dict = guild_object.parsed.to_dict()
+        guild_dict = guild_object.parsed.to_dict()
 
-            guild_dict['features'] = [Feature(**f.to_dict()) for f in guild_object.parsed.features]
-            guild_dict['channels'] = [Channel(**c.to_dict()) for c in guild_object.parsed.channels]
+        guild_dict['features'] = [Feature(**f.to_dict()) for f in guild_object.parsed.features]
+        guild_dict['channels'] = [Channel(**c.to_dict()) for c in guild_object.parsed.channels]
 
-            guild_class = cls(**guild_dict, discord_guild=guild)
+        guild_class = cls(**guild_dict, discord_guild=guild)
 
-            guild_class.name = guild.name
-            guild_class.active = True
+        guild_class.name = guild.name
+        guild_class.active = True
 
-            await guild_class.update(api)
+        await guild_class.update(api)
 
-            return guild_class
+        return guild_class
 
     async def update(self, api: AuthenticatedClient):
         data = GuildUpdate(
@@ -139,42 +138,37 @@ class ThornyGuild:
 
     @staticmethod
     async def get_playtime_leaderboard(api: AuthenticatedClient, month: date) -> list[dict]:
-        async with api as client:
-            lb = await get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get.asyncio(client=client, month=month)
+        lb = await get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get.asyncio(client=api, month=month)
 
-            return lb.to_dict()['leaderboard']
+        return lb.to_dict()['leaderboard']
 
     @staticmethod
     async def get_money_leaderboard(api: AuthenticatedClient) -> list[dict]:
-        async with api as client:
-            lb = await get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get.asyncio(client=client)
+        lb = await get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get.asyncio(client=api)
 
-            return lb.to_dict()['leaderboard']
+        return lb.to_dict()['leaderboard']
 
     @staticmethod
     async def get_levels_leaderboard(api: AuthenticatedClient) -> list[dict]:
-        async with api as client:
-            lb = await get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get.asyncio(client=client)
+        lb = await get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get.asyncio(client=api)
 
-            return lb.to_dict()['leaderboard']
+        return lb.to_dict()['leaderboard']
 
     @staticmethod
     async def get_quests_leaderboard(api: AuthenticatedClient) -> list[dict]:
-        async with api as client:
-            lb = await get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get.asyncio(client=client)
+        lb = await get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get.asyncio(client=api)
 
-            return lb.to_dict()['leaderboard']
+        return lb.to_dict()['leaderboard']
 
     @staticmethod
     async def get_online_players(api: AuthenticatedClient) -> list[OnlineUser]:
-        async with api as client:
-            lb = await get_online_members_v1_guilds_me_online_get.asyncio(client=client)
+        lb = await get_online_members_v1_guilds_me_online_get.asyncio(client=api)
 
-            online_users = []
-            for user in lb:
-                user = user.to_dict()
-                user['session'] = datetime.fromisoformat(user['session'])
+        online_users = []
+        for user in lb:
+            user = user.to_dict()
+            user['session'] = datetime.fromisoformat(user['session'])
 
-                online_users.append(OnlineUser(**user))
+            online_users.append(OnlineUser(**user))
 
-            return online_users
+        return online_users
