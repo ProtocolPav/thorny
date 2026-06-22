@@ -434,9 +434,9 @@ class QuestPanel(View):
         self.selected_quest_id = int(select_menu.values[0])
         await self.update_buttons()
 
-        quest = await nexus.Quest.build(self.selected_quest_id)
+        quest = await nexus.Quest.build(await interaction.client.api.get(interaction.guild.id), self.selected_quest_id)
 
-        creator = self.thorny_guild.discord_guild.get_member(await nexus.ThornyUser.get_discord_id(quest.created_by))
+        creator = self.thorny_guild.discord_guild.get_member(await nexus.ThornyUser.get_discord_id(await interaction.client.api.get(interaction.guild.id), quest.created_by))
 
         await interaction.response.edit_message(view=self,
                                                 embed=embeds.view_quest(quest,
@@ -451,10 +451,10 @@ class QuestPanel(View):
     async def accept_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
             if self.thorny_user.quest is None:
-                await nexus.QuestProgress.accept_quest(self.thorny_user.thorny_id, self.selected_quest_id)
-                self.thorny_user.quest = await nexus.QuestProgress.build_active(self.thorny_user.thorny_id)
+                await nexus.QuestProgress.accept_quest(await interaction.client.api.get(interaction.guild.id), self.thorny_user.thorny_id, self.selected_quest_id)
+                self.thorny_user.quest = await nexus.QuestProgress.build_active(await interaction.client.api.get(interaction.guild.id), self.thorny_user.thorny_id)
 
-            quest_info = await nexus.Quest.build(self.thorny_user.quest.quest_id)
+            quest_info = await nexus.Quest.build(await interaction.client.api.get(interaction.guild.id), self.thorny_user.quest.quest_id)
 
             await interaction.response.edit_message(view=CurrentQuestPanel(self.ctx, self.thorny_guild, self.thorny_user,
                                                                            quest_info),
@@ -505,7 +505,7 @@ class FailQuest(View):
                        style=discord.ButtonStyle.red)
     async def drop_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            await self.thorny_user.quest.fail()
+            await self.thorny_user.quest.fail(await interaction.client.api.get(interaction.guild.id))
 
             await interaction.response.edit_message(view=None,
                                                     embed=None,

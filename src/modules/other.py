@@ -57,13 +57,13 @@ class Other(commands.Cog):
         if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
 
         thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
-        thorny_user.quest = await thorny_user.quest.build_active(thorny_user.thorny_id)
+        thorny_user.quest = await thorny_user.quest.build_active(await self.bot.api.get(ctx.guild.id), thorny_user.thorny_id)
 
         if thorny_user.quest:
-            quest_info = await nexus.Quest.build(thorny_user.quest.quest_id)
+            quest_info = await nexus.Quest.build(await self.bot.api.get(ctx.guild.id), thorny_user.quest.quest_id)
 
             if quest_info.end_time < datetime.now(UTC):
-                await thorny_user.quest.fail()
+                await thorny_user.quest.fail(await self.bot.api.get(ctx.guild.id))
                 await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
             else:
                 view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
@@ -73,7 +73,7 @@ class Other(commands.Cog):
                                   ephemeral=True)
 
         else:
-            quests = await nexus.QuestProgress.get_available_quests(thorny_user.thorny_id)
+            quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id), thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()

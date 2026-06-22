@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-import httpx
-
+from nexuscore import AuthenticatedClient
+from nexuscore.api.quests import get_quest_v1_guilds_me_quests_quest_id_get
 from src.nexus.quests.objective_customizations import Customizations
 from src.nexus.quests.objective_targets import KillTarget, MineTarget, ScriptEventTarget, TargetBase
 
@@ -69,30 +69,6 @@ class Objective:
         else:
             # Fallback for unknown types
             return TargetBase(**{k: v for k, v in t_data.items() if k in TargetBase.__annotations__})
-
-    @classmethod
-    async def build(cls, data: dict):
-        async with httpx.AsyncClient() as client:
-            rewards_resp = await client.get(
-                f"http://nexuscore:8000/api/v0.2/quests/{data['quest_id']}/objectives/{data['objective_id']}/rewards"
-            )
-            rewards = [Reward.build(r) for r in rewards_resp.json()]
-
-            # Build Customizations using the new nested builder
-            cust_data = data.get('customizations', {})
-            customizations = Customizations.build(cust_data)
-
-            raw_targets = data.get('targets', [])
-            targets = [cls.build_target(t) for t in raw_targets]
-
-            valid_keys = cls.__annotations__.keys()
-            filtered_data = {k: v for k, v in data.items() if k in valid_keys}
-
-            filtered_data['rewards'] = rewards
-            filtered_data['customizations'] = customizations
-            filtered_data['targets'] = targets
-
-            return cls(**filtered_data)
 
     def get_objective_requirement_string(self) -> Optional[str]:
         reqs = []
@@ -186,11 +162,10 @@ class Quest:
         return cls(**quest_dict, objectives=objectives)
 
     @classmethod
-    async def build(cls, quest_id: int):
-        async with httpx.AsyncClient() as client:
-            quest = await client.get(f"http://nexuscore:8000/api/v0.2/quests/{quest_id}")
-            quest_dict: dict = quest.json()
-            return cls.__build_from_data(quest_dict)
+    async def build(cls, api: AuthenticatedClient, quest_id: int):
+        quest = await get_quest_v1_guilds_me_quests_quest_id_get.asyncio_detailed(quest_id, client=api)
+        quest_dict: dict = quest.parsed.to_dict()
+        return cls.__build_from_data(quest_dict)
 
     @classmethod
     def build_with_data(cls, quest_dict: dict):
