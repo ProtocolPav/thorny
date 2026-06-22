@@ -33,7 +33,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        playtime = await thorny_guild.get_playtime_leaderboard(month)
+        playtime = await thorny_guild.get_playtime_leaderboard(await self.bot.api.get(ctx.guild.id), month)
 
         rank_text = f"You are not yet on the Leaderboard"
 
@@ -79,7 +79,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        leaderboard = await thorny_guild.get_money_leaderboard()
+        leaderboard = await thorny_guild.get_money_leaderboard(await self.bot.api.get(ctx.guild.id))
 
         rank_text = f"You are not yet on the Leaderboard"
 
@@ -124,7 +124,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        leaderboard = await thorny_guild.get_levels_leaderboard()
+        leaderboard = await thorny_guild.get_levels_leaderboard(await self.bot.api.get(ctx.guild.id))
 
         rank_text = f"You are not yet on the Leaderboard"
 
@@ -169,7 +169,7 @@ class Leaderboard(commands.Cog):
 
         thorny_user = await nexus.ThornyUser.build(ctx.author)
 
-        leaderboard = await thorny_guild.get_quests_leaderboard()
+        leaderboard = await thorny_guild.get_quests_leaderboard(await self.bot.api.get(ctx.guild.id))
 
         rank_text = f"You are not yet on the Leaderboard"
 

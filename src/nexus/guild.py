@@ -4,13 +4,18 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Optional, Literal
 
-import httpx
-
 from nexuscore_client import AuthenticatedClient
 from nexuscore_client.api.guilds import (
     get_guild_v1_guilds_me_get,
     partial_update_guild_v1_guilds_me_patch,
-    create_guild_v1_guilds_post
+    create_guild_v1_guilds_post,
+    get_online_members_v1_guilds_me_online_get
+)
+from nexuscore_client.api.leaderboards import (
+    get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get,
+    get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get,
+    get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get,
+    get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get
 )
 from nexuscore_client.models import GuildIn, GuildUpdate
 
@@ -131,43 +136,42 @@ class ThornyGuild:
 
         return None
 
-    async def get_playtime_leaderboard(self, month: date) -> list[dict]:
-        async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/playtime/{month}",
-                                  timeout=None)
+    @staticmethod
+    async def get_playtime_leaderboard(api: AuthenticatedClient, month: date) -> list[dict]:
+        async with api as client:
+            lb = await get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get.asyncio(client=client, month=month)
 
-            return lb.json()['leaderboard']
+            return lb.to_dict()['leaderboard']
 
-    async def get_money_leaderboard(self) -> list[dict]:
-        async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/currency",
-                                  timeout=None)
+    @staticmethod
+    async def get_money_leaderboard(api: AuthenticatedClient) -> list[dict]:
+        async with api as client:
+            lb = await get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get.asyncio(client=client)
 
-            return lb.json()['leaderboard']
+            return lb.to_dict()['leaderboard']
 
+    @staticmethod
+    async def get_levels_leaderboard(api: AuthenticatedClient) -> list[dict]:
+        async with api as client:
+            lb = await get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get.asyncio(client=client)
 
-    async def get_levels_leaderboard(self) -> list[dict]:
-        async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/levels",
-                                  timeout=None)
+            return lb.to_dict()['leaderboard']
 
-            return lb.json()['leaderboard']
+    @staticmethod
+    async def get_quests_leaderboard(api: AuthenticatedClient) -> list[dict]:
+        async with api as client:
+            lb = await get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get.asyncio(client=client)
 
+            return lb.to_dict()['leaderboard']
 
-    async def get_quests_leaderboard(self) -> list[dict]:
-        async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/leaderboard/quests",
-                                  timeout=None)
-
-            return lb.json()['leaderboard']
-
-    async def get_online_players(self) -> list[OnlineUser]:
-        async with httpx.AsyncClient() as client:
-            lb = await client.get(f"http://nexuscore:8000/api/v0.2/guilds/{self.guild_id}/online",
-                                  timeout=None)
+    @staticmethod
+    async def get_online_players(api: AuthenticatedClient) -> list[OnlineUser]:
+        async with api as client:
+            lb = await get_online_members_v1_guilds_me_online_get.asyncio(client=client)
 
             online_users = []
-            for user in lb.json():
+            for user in lb:
+                user = user.to_dict()
                 user['session'] = datetime.fromisoformat(user['session'])
 
                 online_users.append(OnlineUser(**user))

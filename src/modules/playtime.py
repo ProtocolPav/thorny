@@ -10,7 +10,7 @@ v = version["version"]
 
 class Playtime(commands.Cog):
     def __init__(self, client):
-        self.client = client
+        self.bot = client
 
     @commands.slash_command(description="See connected players and how much time they've been on for")
     async def online(self, ctx):
@@ -19,7 +19,7 @@ class Playtime(commands.Cog):
 
         async with httpx.AsyncClient() as client:
             status: httpx.Response = await client.get("http://geode:8000/info/", timeout=None)
-            online_players = await thorny_guild.get_online_players()
+            online_players = await thorny_guild.get_online_players(await self.bot.api.get(ctx.guild.id))
 
         await ctx.respond(embed=uikit.server_status(status=status.json()['status'],
                                                     start_since=status.json()['server_start'],
