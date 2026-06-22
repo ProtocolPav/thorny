@@ -160,7 +160,9 @@ class Quest:
         if isinstance(quest_dict.get('end_time'), str):
             quest_dict['end_time'] = datetime.fromisoformat(quest_dict['end_time'])
 
-        return cls(**quest_dict, objectives=objectives)
+        creator = quest_dict.pop('created_by')
+
+        return cls(**quest_dict, objectives=objectives, created_by=creator["thorny_id"])
 
     @classmethod
     async def build(cls, api: AuthenticatedClient, quest_id: int):
