@@ -64,15 +64,14 @@ class ThornyGuild:
 
     @classmethod
     async def __create_new_guild(cls, api: AuthenticatedClient, guild: discord.Guild):
-        async with api as client:
-            data = GuildIn(guild_id=guild.id, name=guild.name)
+        data = GuildIn(guild_id=guild.id, name=guild.name)
 
-            guild_object = await create_guild_v1_guilds_post.asyncio_detailed(client=client, body=data)
+        guild_object = await create_guild_v1_guilds_post.asyncio_detailed(client=api, body=data)
 
-            if guild_object.status_code == 201:
-                return guild_object
-            else:
-                raise thorny_errors.GuildAlreadyExists
+        if guild_object.status_code == 201:
+            return guild_object
+        else:
+            raise thorny_errors.GuildAlreadyExists
 
 
     @classmethod
@@ -95,6 +94,9 @@ class ThornyGuild:
 
             guild_dict = guild_object.parsed.to_dict()
 
+            guild_dict['features'] = [Feature(**f.to_dict()) for f in guild_object.parsed.features]
+            guild_dict['channels'] = [Channel(**c.to_dict()) for c in guild_object.parsed.channels]
+
             guild_class = cls(**guild_dict, discord_guild=guild)
 
             guild_class.name = guild.name
@@ -105,22 +107,21 @@ class ThornyGuild:
             return guild_class
 
     async def update(self, api: AuthenticatedClient):
-        async with api as client:
-            data = GuildUpdate(
-                name=self.name,
-                active=self.active,
-                currency_name=self.currency_name,
-                currency_emoji=self.currency_emoji,
-                level_up_message=self.level_up_message,
-                join_message=self.join_message,
-                leave_message=self.leave_message,
-                xp_multiplier=self.xp_multiplier
-            )
+        data = GuildUpdate(
+            name=self.name,
+            active=self.active,
+            currency_name=self.currency_name,
+            currency_emoji=self.currency_emoji,
+            level_up_message=self.level_up_message,
+            join_message=self.join_message,
+            leave_message=self.leave_message,
+            xp_multiplier=self.xp_multiplier
+        )
 
-            guild = await partial_update_guild_v1_guilds_me_patch.asyncio_detailed(client=client, body=data)
+        guild = await partial_update_guild_v1_guilds_me_patch.asyncio_detailed(client=api, body=data)
 
-            if guild.status_code != 200:
-                raise thorny_errors.GuildUpdateError
+        if guild.status_code != 200:
+            raise thorny_errors.GuildUpdateError
 
     def has_feature(self, feature: Literal["levels", "playtime", "basic", "beta", "everthorn", "roa"]) -> bool:
         for i in self.features:
