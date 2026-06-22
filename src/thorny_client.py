@@ -2,7 +2,7 @@ from datetime import datetime
 
 import discord
 
-import uikit
+from src import uikit
 from api_client import ManagedAPIClient
 
 

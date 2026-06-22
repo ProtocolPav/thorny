@@ -1,7 +1,5 @@
-import discord
-
 from dataclasses import dataclass
-import thorny_errors
+from src import thorny_errors
 
 import httpx
 

@@ -1,14 +1,10 @@
 from typing import Optional
 
-import discord
-
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-import thorny_errors
+from datetime import date, datetime
+from src import thorny_errors
 
 import httpx
-
-from nexus import ThornyUser
 
 
 @dataclass

@@ -4,9 +4,8 @@ import discord
 from discord.ext import commands, pages
 import httpx
 
-import json
-from uikit import embeds
-import nexus, thorny_errors
+from src.uikit import embeds
+from src import nexus, thorny_errors
 
 
 class Moderation(commands.Cog):

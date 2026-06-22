@@ -4,8 +4,7 @@ from discord.ext import commands, pages
 from discord.utils import basic_autocomplete
 import math
 
-import nexus, thorny_errors
-import uikit
+from src import nexus, thorny_errors, uikit
 
 
 class Leaderboard(commands.Cog):

@@ -1,12 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List, Dict, Union
+from typing import Optional, List
 import uuid
 import httpx
 
-from nexus.quest import Quest
-from nexus.quests.progress_customizations import CustomizationProgress
-from nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, TargetProgressBase
+from src.nexus.quest import Quest
+from src.nexus.quests.progress_customizations import CustomizationProgress
+from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, TargetProgressBase
 
 
 @dataclass

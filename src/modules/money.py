@@ -2,9 +2,8 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-import thorny_errors
-from uikit import embeds
-import nexus
+from src.uikit import embeds
+from src import nexus, thorny_errors
 
 
 class Money(commands.Cog):

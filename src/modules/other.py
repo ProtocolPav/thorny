@@ -2,10 +2,8 @@ import discord
 from discord.ext import commands
 from discord.utils import basic_autocomplete
 
-import uikit
-from datetime import UTC, datetime, timedelta
-
-import nexus, thorny_errors
+from src import nexus, thorny_errors, uikit
+from datetime import UTC, datetime
 
 
 class Other(commands.Cog):

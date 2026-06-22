@@ -6,11 +6,10 @@ UPDATE TO THIS:
 Make everything a function which returns the things needed, and rename the file to generators.py
 """
 from datetime import datetime
-import time
 
 import discord
 from discord import SelectOption, OptionChoice
-import nexus
+from src import nexus
 
 
 def current_month():
