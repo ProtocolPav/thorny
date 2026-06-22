@@ -69,7 +69,7 @@ class Money(commands.Cog):
                               embed=embeds.payment_embed(thorny_user, receivable_user, thorny_guild, amount, reason))
 
             if thorny_guild.get_channel_id('logs'):
-                logs_channel = self.client.get_channel(thorny_guild.get_channel_id('logs'))
+                logs_channel = self.bot.get_channel(thorny_guild.get_channel_id('logs'))
                 await logs_channel.send(embed=embeds.transaction_log(thorny_user, thorny_guild,
                                                                      "Remove Balance", abs(amount),
                                                                      reason, datetime.now()))
