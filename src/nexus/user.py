@@ -6,14 +6,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Optional
 
-import httpx
-from nexuscore_client import AuthenticatedClient
-from nexuscore_client.api.users import (
+from nexuscore import AuthenticatedClient
+from nexuscore.api.users import (
     get_user_v1_guilds_me_users_thorny_id_get, lookup_user_v1_guilds_me_users_lookup_get,
     partial_update_user_v1_guilds_me_users_thorny_id_patch,
     create_user_v1_guilds_me_users_post
 )
-from nexuscore_client.models import UserIn, UserUpdate
+from nexuscore.models import UserIn, UserUpdate
 
 from src import thorny_errors
 

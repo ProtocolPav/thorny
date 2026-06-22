@@ -3,14 +3,12 @@ from typing import Optional
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from nexuscore_client import AuthenticatedClient
-from nexuscore_client.models import ProjectIn, ProjectUpdate, StatusEnum, StatusIn
+from nexuscore import AuthenticatedClient
+from nexuscore.models import ProjectIn, ProjectUpdate, StatusEnum, StatusIn
 
 from src import thorny_errors
 
-import httpx
-
-from nexuscore_client.api.projects import (
+from nexuscore.api.projects import (
     list_projects_v1_guilds_me_projects_get,
     get_project_v1_guilds_me_projects_project_id_get,
     create_project_v1_guilds_me_projects_post,

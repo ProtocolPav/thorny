@@ -1,5 +1,5 @@
 import os, time, httpx
-from nexuscore_client import AuthenticatedClient
+from nexuscore import AuthenticatedClient
 
 TOKEN_URL = "http://nexuscore:8000/api/auth/token"
 CLIENT_ID = os.environ.get("NEXUSCORE_CLIENT_ID")

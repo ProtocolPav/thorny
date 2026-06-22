@@ -3,7 +3,7 @@ from discord import Interaction
 from discord.ui import Item, View, Select, Button
 from datetime import date
 
-from nexuscore_client.models import StatusEnum
+from nexuscore.models import StatusEnum
 
 import src.uikit.modals as modals
 from src.uikit import embeds, options

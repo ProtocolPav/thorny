@@ -4,20 +4,20 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Optional, Literal
 
-from nexuscore_client import AuthenticatedClient
-from nexuscore_client.api.guilds import (
+from nexuscore import AuthenticatedClient
+from nexuscore.api.guilds import (
     get_guild_v1_guilds_me_get,
     partial_update_guild_v1_guilds_me_patch,
     create_guild_v1_guilds_post,
     get_online_members_v1_guilds_me_online_get
 )
-from nexuscore_client.api.leaderboards import (
+from nexuscore.api.leaderboards import (
     get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get,
     get_quests_leaderboard_v1_guilds_me_leaderboard_quests_get,
     get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get,
     get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get
 )
-from nexuscore_client.models import GuildIn, GuildUpdate
+from nexuscore.models import GuildIn, GuildUpdate
 
 from src import thorny_errors
 

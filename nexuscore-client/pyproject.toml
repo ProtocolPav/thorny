@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [tool.uv.build-backend]
-module-name = "nexuscore_client"
+module-name = "nexuscore"
 module-root = ""
 
 [build-system]

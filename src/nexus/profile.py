@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 
-from nexuscore_client import AuthenticatedClient
-from nexuscore_client.models import ProfileUpdate
+from nexuscore import AuthenticatedClient
+from nexuscore.models import ProfileUpdate
 
 from src import thorny_errors
 
-import httpx
-
-from nexuscore_client.api.users import partial_update_profile_v1_guilds_me_users_thorny_id_profile_patch
+from nexuscore.api.users import partial_update_profile_v1_guilds_me_users_thorny_id_profile_patch
 
 
 @dataclass
