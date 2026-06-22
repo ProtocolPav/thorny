@@ -2,7 +2,7 @@ import os
 from datetime import datetime, time
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks
 
 import giphy_client
 import nexus
@@ -13,6 +13,7 @@ import sys
 import httpx
 import modules
 import uikit
+from thorny_client import ThornyBot
 
 vers = json.load(open('version.json', 'r'))
 v = vers["version"]
@@ -23,11 +24,9 @@ api_instance = giphy_client.DefaultApi()
 giphy_token = os.environ.get('GIPHY_TOKEN')
 
 intents = discord.Intents.all()
-thorny = commands.Bot(intents=intents)
-thorny.remove_command('help')
+thorny = ThornyBot(intents=intents)
 
 shutdown_notice_received = False
-
 
 @thorny.event
 async def on_ready():
@@ -39,6 +38,8 @@ async def on_ready():
           f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
     print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
     thorny.add_view(uikit.PersistentProjectAdminButtons())
+
+    await thorny.api.get()
 
 
 @tasks.loop(hours=24.0)
