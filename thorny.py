@@ -13,6 +13,7 @@ import sys
 import httpx
 import modules
 import uikit
+from api_client import ManagedAPIClient
 from thorny_client import ThornyBot
 
 vers = json.load(open('version.json', 'r'))
@@ -23,23 +24,10 @@ TOKEN = os.environ.get('BOT_TOKEN')
 api_instance = giphy_client.DefaultApi()
 giphy_token = os.environ.get('GIPHY_TOKEN')
 
-intents = discord.Intents.all()
-thorny = ThornyBot(intents=intents)
+api_client = ManagedAPIClient()
+thorny = ThornyBot(api=api_client, intents=discord.Intents.all())
 
 shutdown_notice_received = False
-
-@thorny.event
-async def on_ready():
-    print('\033[1;32m' + vers['ascii_thorny'] + '\033[0m')
-    bot_activity = discord.Activity(type=discord.ActivityType.custom,
-                                    name=f"Oooh Yeah :sunglasses:")
-    await thorny.change_presence(activity=bot_activity)
-    print(f"[{datetime.now().replace(microsecond=0)}] [ONLINE] {thorny.user}\n"
-          f"[{datetime.now().replace(microsecond=0)}] [SERVER] Running {v}")
-    print(f"[{datetime.now().replace(microsecond=0)}] [SERVER] I am in {len(thorny.guilds)} Guilds")
-    thorny.add_view(uikit.PersistentProjectAdminButtons())
-
-    await thorny.api.get()
 
 
 @tasks.loop(hours=24.0)
