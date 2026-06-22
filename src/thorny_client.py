@@ -20,8 +20,7 @@ class ThornyBot(discord.Bot):
         print(f"[{datetime.now().replace(microsecond=0)}] Starting up Thorny...")
         super().__init__(*args, **kwargs)
         self.version = __version__
-        self.presence = discord.Activity(type=discord.ActivityType.custom,
-                                         name=f"Oooh Yeah :sunglasses:")
+        self.presence = discord.CustomActivity(name=f"Oooh Yeah 😎")
         self.api = api
 
     async def on_ready(self):
@@ -31,7 +30,7 @@ class ThornyBot(discord.Bot):
 
         self.add_view(uikit.PersistentProjectAdminButtons())
 
-        await self.change_presence(activity=self.presence)
+        await self.change_presence(activity=self.presence, status=discord.Status.online)
 
         await self.api.get()
 
