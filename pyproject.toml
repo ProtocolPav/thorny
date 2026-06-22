@@ -6,7 +6,7 @@ dependencies = [
     "giphy-client==1.0.0",
     "httpx==0.28.1",
     "nexuscore-client",
-    "py-cord==2.7.0rc1",
+    "py-cord==2.8.0",
     "python-dateutil==2.9.0",
 ]
 

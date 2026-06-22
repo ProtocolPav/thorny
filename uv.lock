@@ -518,15 +518,15 @@ wheels = [
 
 [[package]]
 name = "py-cord"
-version = "2.7.0rc1"
+version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ba/b2/83d537c6b97cb7f49b1d92b7423f1823be9f3b3c400d2ba2cedd212252c7/py_cord-2.7.0rc1.tar.gz", hash = "sha256:cca759ebb0537cd3b69cd16e26287e667338a5283411c73ce61fa8f9892a7b40", size = 1102712, upload-time = "2025-08-30T21:19:43.182Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/73/02ad1b5ced7685e2868c25d574edc6b4eb154a214cf4caf36270480fc65c/py_cord-2.8.0.tar.gz", hash = "sha256:57a7efefa80e7f6ef890fbfc054d686782c347c9e4d86fa7c91f7ae5285b353f", size = 1173848, upload-time = "2026-05-18T13:02:09.092Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/2d/d963daa0376aae1ba7917f680802ebae26ef5579a69bafbe5a22360f269a/py_cord-2.7.0rc1-py3-none-any.whl", hash = "sha256:c4c3b930ad3572ebf5827c5f473942a577841d19281bdf5a8383cfee210ec202", size = 1172688, upload-time = "2025-08-30T21:19:41.582Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/52/cd690a9103b3deadc5c047d3823b750a9afd61c35e57373bbd9e5dbd765f/py_cord-2.8.0-py3-none-any.whl", hash = "sha256:24f9180b4df432ddef732e388a905aa7d9cdf8f2f26318f18a193bccb2d7f642", size = 1264552, upload-time = "2026-05-18T13:02:06.959Z" },
 ]
 
 [[package]]
@@ -567,7 +567,7 @@ requires-dist = [
     { name = "giphy-client", specifier = "==1.0.0" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "nexuscore-client", editable = "nexuscore-client" },
-    { name = "py-cord", specifier = "==2.7.0rc1" },
+    { name = "py-cord", specifier = "==2.8.0" },
     { name = "python-dateutil", specifier = "==2.9.0" },
 ]
 
