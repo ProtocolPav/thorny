@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -12,10 +12,11 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    gamertag: Union[Unset, str] = UNSET,
-    whitelist: Union[Unset, str] = UNSET,
-    discord_id: Union[Unset, int] = UNSET,
+    gamertag: str | Unset = UNSET,
+    whitelist: str | Unset = UNSET,
+    discord_id: int | Unset = UNSET,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     params["gamertag"] = gamertag
@@ -36,16 +37,18 @@ def _get_kwargs(
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | UserOut | None:
     if response.status_code == 200:
         response_200 = UserOut.from_dict(response.json())
 
         return response_200
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -53,8 +56,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, UserOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | UserOut]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,26 +69,26 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    gamertag: Union[Unset, str] = UNSET,
-    whitelist: Union[Unset, str] = UNSET,
-    discord_id: Union[Unset, int] = UNSET,
-) -> Response[Union[HTTPValidationError, UserOut]]:
+    gamertag: str | Unset = UNSET,
+    whitelist: str | Unset = UNSET,
+    discord_id: int | Unset = UNSET,
+) -> Response[HTTPValidationError | UserOut]:
     """Lookup User
 
      Looks up a guild member by gamertag, whitelisted gamertag, or Discord ID.
     Exactly one parameter must be provided.
 
     Args:
-        gamertag (Union[Unset, str]):
-        whitelist (Union[Unset, str]):
-        discord_id (Union[Unset, int]):
+        gamertag (str | Unset):
+        whitelist (str | Unset):
+        discord_id (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, UserOut]]
+        Response[HTTPValidationError | UserOut]
     """
 
     kwargs = _get_kwargs(
@@ -104,26 +107,26 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    gamertag: Union[Unset, str] = UNSET,
-    whitelist: Union[Unset, str] = UNSET,
-    discord_id: Union[Unset, int] = UNSET,
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+    gamertag: str | Unset = UNSET,
+    whitelist: str | Unset = UNSET,
+    discord_id: int | Unset = UNSET,
+) -> HTTPValidationError | UserOut | None:
     """Lookup User
 
      Looks up a guild member by gamertag, whitelisted gamertag, or Discord ID.
     Exactly one parameter must be provided.
 
     Args:
-        gamertag (Union[Unset, str]):
-        whitelist (Union[Unset, str]):
-        discord_id (Union[Unset, int]):
+        gamertag (str | Unset):
+        whitelist (str | Unset):
+        discord_id (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, UserOut]
+        HTTPValidationError | UserOut
     """
 
     return sync_detailed(
@@ -137,26 +140,26 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    gamertag: Union[Unset, str] = UNSET,
-    whitelist: Union[Unset, str] = UNSET,
-    discord_id: Union[Unset, int] = UNSET,
-) -> Response[Union[HTTPValidationError, UserOut]]:
+    gamertag: str | Unset = UNSET,
+    whitelist: str | Unset = UNSET,
+    discord_id: int | Unset = UNSET,
+) -> Response[HTTPValidationError | UserOut]:
     """Lookup User
 
      Looks up a guild member by gamertag, whitelisted gamertag, or Discord ID.
     Exactly one parameter must be provided.
 
     Args:
-        gamertag (Union[Unset, str]):
-        whitelist (Union[Unset, str]):
-        discord_id (Union[Unset, int]):
+        gamertag (str | Unset):
+        whitelist (str | Unset):
+        discord_id (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, UserOut]]
+        Response[HTTPValidationError | UserOut]
     """
 
     kwargs = _get_kwargs(
@@ -173,26 +176,26 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    gamertag: Union[Unset, str] = UNSET,
-    whitelist: Union[Unset, str] = UNSET,
-    discord_id: Union[Unset, int] = UNSET,
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+    gamertag: str | Unset = UNSET,
+    whitelist: str | Unset = UNSET,
+    discord_id: int | Unset = UNSET,
+) -> HTTPValidationError | UserOut | None:
     """Lookup User
 
      Looks up a guild member by gamertag, whitelisted gamertag, or Discord ID.
     Exactly one parameter must be provided.
 
     Args:
-        gamertag (Union[Unset, str]):
-        whitelist (Union[Unset, str]):
-        discord_id (Union[Unset, int]):
+        gamertag (str | Unset):
+        whitelist (str | Unset):
+        discord_id (int | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, UserOut]
+        HTTPValidationError | UserOut
     """
 
     return (

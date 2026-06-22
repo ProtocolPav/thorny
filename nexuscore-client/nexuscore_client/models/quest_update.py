@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -19,28 +20,28 @@ T = TypeVar("T", bound="QuestUpdate")
 class QuestUpdate:
     """
     Attributes:
-        start_time (Union[None, Unset, datetime.datetime]):
-        end_time (Union[None, Unset, datetime.datetime]):
-        title (Union[None, Unset, str]):
-        description (Union[None, Unset, str]):
-        tags (Union[None, Unset, list[str]]):
-        quest_type (Union[None, Unset, str]):
-        created_by (Union[None, Unset, int]):
-        objectives (Union[None, Unset, list['ObjectiveUpdate']]):
+        start_time (datetime.datetime | None | Unset):
+        end_time (datetime.datetime | None | Unset):
+        title (None | str | Unset):
+        description (None | str | Unset):
+        tags (list[str] | None | Unset):
+        quest_type (None | str | Unset):
+        created_by (int | None | Unset):
+        objectives (list[ObjectiveUpdate] | None | Unset):
     """
 
-    start_time: Union[None, Unset, datetime.datetime] = UNSET
-    end_time: Union[None, Unset, datetime.datetime] = UNSET
-    title: Union[None, Unset, str] = UNSET
-    description: Union[None, Unset, str] = UNSET
-    tags: Union[None, Unset, list[str]] = UNSET
-    quest_type: Union[None, Unset, str] = UNSET
-    created_by: Union[None, Unset, int] = UNSET
-    objectives: Union[None, Unset, list["ObjectiveUpdate"]] = UNSET
+    start_time: datetime.datetime | None | Unset = UNSET
+    end_time: datetime.datetime | None | Unset = UNSET
+    title: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
+    quest_type: None | str | Unset = UNSET
+    created_by: int | None | Unset = UNSET
+    objectives: list[ObjectiveUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        start_time: Union[None, Unset, str]
+        start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
             start_time = UNSET
         elif isinstance(self.start_time, datetime.datetime):
@@ -48,7 +49,7 @@ class QuestUpdate:
         else:
             start_time = self.start_time
 
-        end_time: Union[None, Unset, str]
+        end_time: None | str | Unset
         if isinstance(self.end_time, Unset):
             end_time = UNSET
         elif isinstance(self.end_time, datetime.datetime):
@@ -56,19 +57,19 @@ class QuestUpdate:
         else:
             end_time = self.end_time
 
-        title: Union[None, Unset, str]
+        title: None | str | Unset
         if isinstance(self.title, Unset):
             title = UNSET
         else:
             title = self.title
 
-        description: Union[None, Unset, str]
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        tags: Union[None, Unset, list[str]]
+        tags: list[str] | None | Unset
         if isinstance(self.tags, Unset):
             tags = UNSET
         elif isinstance(self.tags, list):
@@ -77,19 +78,19 @@ class QuestUpdate:
         else:
             tags = self.tags
 
-        quest_type: Union[None, Unset, str]
+        quest_type: None | str | Unset
         if isinstance(self.quest_type, Unset):
             quest_type = UNSET
         else:
             quest_type = self.quest_type
 
-        created_by: Union[None, Unset, int]
+        created_by: int | None | Unset
         if isinstance(self.created_by, Unset):
             created_by = UNSET
         else:
             created_by = self.created_by
 
-        objectives: Union[None, Unset, list[dict[str, Any]]]
+        objectives: list[dict[str, Any]] | None | Unset
         if isinstance(self.objectives, Unset):
             objectives = UNSET
         elif isinstance(self.objectives, list):
@@ -129,7 +130,7 @@ class QuestUpdate:
 
         d = dict(src_dict)
 
-        def _parse_start_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -137,16 +138,16 @@ class QuestUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0 = isoparse(data)
+                start_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         start_time = _parse_start_time(d.pop("start_time", UNSET))
 
-        def _parse_end_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_end_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -154,34 +155,34 @@ class QuestUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0 = isoparse(data)
+                end_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         end_time = _parse_end_time(d.pop("end_time", UNSET))
 
-        def _parse_title(data: object) -> Union[None, Unset, str]:
+        def _parse_title(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         title = _parse_title(d.pop("title", UNSET))
 
-        def _parse_description(data: object) -> Union[None, Unset, str]:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_tags(data: object) -> Union[None, Unset, list[str]]:
+        def _parse_tags(data: object) -> list[str] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -192,31 +193,31 @@ class QuestUpdate:
                 tags_type_0 = cast(list[str], data)
 
                 return tags_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list[str]], data)
+            return cast(list[str] | None | Unset, data)
 
         tags = _parse_tags(d.pop("tags", UNSET))
 
-        def _parse_quest_type(data: object) -> Union[None, Unset, str]:
+        def _parse_quest_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         quest_type = _parse_quest_type(d.pop("quest_type", UNSET))
 
-        def _parse_created_by(data: object) -> Union[None, Unset, int]:
+        def _parse_created_by(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         created_by = _parse_created_by(d.pop("created_by", UNSET))
 
-        def _parse_objectives(data: object) -> Union[None, Unset, list["ObjectiveUpdate"]]:
+        def _parse_objectives(data: object) -> list[ObjectiveUpdate] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -232,9 +233,9 @@ class QuestUpdate:
                     objectives_type_0.append(objectives_type_0_item)
 
                 return objectives_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list["ObjectiveUpdate"]], data)
+            return cast(list[ObjectiveUpdate] | None | Unset, data)
 
         objectives = _parse_objectives(d.pop("objectives", UNSET))
 

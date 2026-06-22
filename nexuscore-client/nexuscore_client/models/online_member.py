@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 T = TypeVar("T", bound="OnlineMember")
 
@@ -21,7 +22,7 @@ class OnlineMember:
         location (list[int]): The last in-game location of the user
         dimension (str): The last in-game dimension the user was in
         hidden (bool): Whether the user should be hidden on the Live Map
-        xuid (Union[None, str]):
+        xuid (None | str):
     """
 
     thorny_id: int
@@ -32,7 +33,7 @@ class OnlineMember:
     location: list[int]
     dimension: str
     hidden: bool
-    xuid: Union[None, str]
+    xuid: None | str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,7 +57,7 @@ class OnlineMember:
 
         hidden = self.hidden
 
-        xuid: Union[None, str]
+        xuid: None | str
         xuid = self.xuid
 
         field_dict: dict[str, Any] = {}
@@ -84,7 +85,7 @@ class OnlineMember:
 
         user_id = d.pop("user_id")
 
-        session = isoparse(d.pop("session"))
+        session = datetime.datetime.fromisoformat(d.pop("session"))
 
         username = d.pop("username")
 
@@ -105,10 +106,10 @@ class OnlineMember:
 
         hidden = d.pop("hidden")
 
-        def _parse_xuid(data: object) -> Union[None, str]:
+        def _parse_xuid(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         xuid = _parse_xuid(d.pop("xuid"))
 

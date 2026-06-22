@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.quest_progress_out_status import QuestProgressOutStatus
 
@@ -23,20 +24,20 @@ class QuestProgressOut:
         thorny_id (int): The ThornyID of the user
         quest_id (int): The ID of the quest
         accept_time (datetime.datetime): The time that the user accepted this quest
-        start_time (Union[None, datetime.datetime]):
-        end_time (Union[None, datetime.datetime]):
+        start_time (datetime.datetime | None):
+        end_time (datetime.datetime | None):
         status (QuestProgressOutStatus): The status of the quest
-        objectives (list['ObjectiveProgressOut']):
+        objectives (list[ObjectiveProgressOut]):
     """
 
     progress_id: int
     thorny_id: int
     quest_id: int
     accept_time: datetime.datetime
-    start_time: Union[None, datetime.datetime]
-    end_time: Union[None, datetime.datetime]
+    start_time: datetime.datetime | None
+    end_time: datetime.datetime | None
     status: QuestProgressOutStatus
-    objectives: list["ObjectiveProgressOut"]
+    objectives: list[ObjectiveProgressOut]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,13 +49,13 @@ class QuestProgressOut:
 
         accept_time = self.accept_time.isoformat()
 
-        start_time: Union[None, str]
+        start_time: None | str
         if isinstance(self.start_time, datetime.datetime):
             start_time = self.start_time.isoformat()
         else:
             start_time = self.start_time
 
-        end_time: Union[None, str]
+        end_time: None | str
         if isinstance(self.end_time, datetime.datetime):
             end_time = self.end_time.isoformat()
         else:
@@ -95,35 +96,35 @@ class QuestProgressOut:
 
         quest_id = d.pop("quest_id")
 
-        accept_time = isoparse(d.pop("accept_time"))
+        accept_time = datetime.datetime.fromisoformat(d.pop("accept_time"))
 
-        def _parse_start_time(data: object) -> Union[None, datetime.datetime]:
+        def _parse_start_time(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0_type_0 = isoparse(data)
+                start_time_type_0_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.datetime], data)
+            return cast(datetime.datetime | None, data)
 
         start_time = _parse_start_time(d.pop("start_time"))
 
-        def _parse_end_time(data: object) -> Union[None, datetime.datetime]:
+        def _parse_end_time(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0_type_0 = isoparse(data)
+                end_time_type_0_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.datetime], data)
+            return cast(datetime.datetime | None, data)
 
         end_time = _parse_end_time(d.pop("end_time"))
 

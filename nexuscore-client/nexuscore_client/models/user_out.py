@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 if TYPE_CHECKING:
     from ..models.profile_out import ProfileOut
@@ -21,21 +22,21 @@ class UserOut:
         user_id (int): The Discord user ID.
         guild_id (int): The Discord guild ID this user is registered in.
         join_date (datetime.date): The date the ThornyID was created. Usually when a user joins the guild
-        username (Union[None, str]):
-        birthday (Union[None, datetime.date]):
+        username (None | str):
+        birthday (datetime.date | None):
         balance (int): The user's balance on the guild.
         active (bool): If the user is in the guild or not.
-        role (Union[None, str]):
+        role (None | str):
         patron (bool): Whether the user is a patron or not
         level (int): The user's level
         xp (int): The user's xp
         required_xp (int): The xp required to reach the next level
-        last_message (Union[None, datetime.datetime]):
-        gamertag (Union[None, str]):
-        whitelist (Union[None, str]):
-        xuid (Union[None, str]):
-        location (Union[None, list[int]]):
-        dimension (Union[None, str]):
+        last_message (datetime.datetime | None):
+        gamertag (None | str):
+        whitelist (None | str):
+        xuid (None | str):
+        location (list[int] | None):
+        dimension (None | str):
         hidden (bool): Whether the user should be hidden on the Live Map
         profile (ProfileOut):
     """
@@ -44,23 +45,23 @@ class UserOut:
     user_id: int
     guild_id: int
     join_date: datetime.date
-    username: Union[None, str]
-    birthday: Union[None, datetime.date]
+    username: None | str
+    birthday: datetime.date | None
     balance: int
     active: bool
-    role: Union[None, str]
+    role: None | str
     patron: bool
     level: int
     xp: int
     required_xp: int
-    last_message: Union[None, datetime.datetime]
-    gamertag: Union[None, str]
-    whitelist: Union[None, str]
-    xuid: Union[None, str]
-    location: Union[None, list[int]]
-    dimension: Union[None, str]
+    last_message: datetime.datetime | None
+    gamertag: None | str
+    whitelist: None | str
+    xuid: None | str
+    location: list[int] | None
+    dimension: None | str
     hidden: bool
-    profile: "ProfileOut"
+    profile: ProfileOut
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,10 +73,10 @@ class UserOut:
 
         join_date = self.join_date.isoformat()
 
-        username: Union[None, str]
+        username: None | str
         username = self.username
 
-        birthday: Union[None, str]
+        birthday: None | str
         if isinstance(self.birthday, datetime.date):
             birthday = self.birthday.isoformat()
         else:
@@ -85,7 +86,7 @@ class UserOut:
 
         active = self.active
 
-        role: Union[None, str]
+        role: None | str
         role = self.role
 
         patron = self.patron
@@ -96,22 +97,22 @@ class UserOut:
 
         required_xp = self.required_xp
 
-        last_message: Union[None, str]
+        last_message: None | str
         if isinstance(self.last_message, datetime.datetime):
             last_message = self.last_message.isoformat()
         else:
             last_message = self.last_message
 
-        gamertag: Union[None, str]
+        gamertag: None | str
         gamertag = self.gamertag
 
-        whitelist: Union[None, str]
+        whitelist: None | str
         whitelist = self.whitelist
 
-        xuid: Union[None, str]
+        xuid: None | str
         xuid = self.xuid
 
-        location: Union[None, list[int]]
+        location: list[int] | None
         if isinstance(self.location, list):
             location = []
             for location_type_0_item_data in self.location:
@@ -122,7 +123,7 @@ class UserOut:
         else:
             location = self.location
 
-        dimension: Union[None, str]
+        dimension: None | str
         dimension = self.dimension
 
         hidden = self.hidden
@@ -170,27 +171,27 @@ class UserOut:
 
         guild_id = d.pop("guild_id")
 
-        join_date = isoparse(d.pop("join_date")).date()
+        join_date = datetime.date.fromisoformat(d.pop("join_date"))
 
-        def _parse_username(data: object) -> Union[None, str]:
+        def _parse_username(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         username = _parse_username(d.pop("username"))
 
-        def _parse_birthday(data: object) -> Union[None, datetime.date]:
+        def _parse_birthday(data: object) -> datetime.date | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                birthday_type_0 = isoparse(data).date()
+                birthday_type_0 = datetime.date.fromisoformat(data)
 
                 return birthday_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.date], data)
+            return cast(datetime.date | None, data)
 
         birthday = _parse_birthday(d.pop("birthday"))
 
@@ -198,10 +199,10 @@ class UserOut:
 
         active = d.pop("active")
 
-        def _parse_role(data: object) -> Union[None, str]:
+        def _parse_role(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         role = _parse_role(d.pop("role"))
 
@@ -213,43 +214,43 @@ class UserOut:
 
         required_xp = d.pop("required_xp")
 
-        def _parse_last_message(data: object) -> Union[None, datetime.datetime]:
+        def _parse_last_message(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                last_message_type_0 = isoparse(data)
+                last_message_type_0 = datetime.datetime.fromisoformat(data)
 
                 return last_message_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.datetime], data)
+            return cast(datetime.datetime | None, data)
 
         last_message = _parse_last_message(d.pop("last_message"))
 
-        def _parse_gamertag(data: object) -> Union[None, str]:
+        def _parse_gamertag(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         gamertag = _parse_gamertag(d.pop("gamertag"))
 
-        def _parse_whitelist(data: object) -> Union[None, str]:
+        def _parse_whitelist(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         whitelist = _parse_whitelist(d.pop("whitelist"))
 
-        def _parse_xuid(data: object) -> Union[None, str]:
+        def _parse_xuid(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         xuid = _parse_xuid(d.pop("xuid"))
 
-        def _parse_location(data: object) -> Union[None, list[int]]:
+        def _parse_location(data: object) -> list[int] | None:
             if data is None:
                 return data
             try:
@@ -267,16 +268,16 @@ class UserOut:
                     location_type_0.append(location_type_0_item)
 
                 return location_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, list[int]], data)
+            return cast(list[int] | None, data)
 
         location = _parse_location(d.pop("location"))
 
-        def _parse_dimension(data: object) -> Union[None, str]:
+        def _parse_dimension(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         dimension = _parse_dimension(d.pop("dimension"))
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,34 +15,34 @@ T = TypeVar("T", bound="PinUpdate")
 class PinUpdate:
     """
     Attributes:
-        name (Union[None, Unset, str]):
-        description (Union[None, Unset, str]):
-        coordinates (Union[None, Unset, list[int]]):
-        dimension (Union[None, Unset, str]):
-        pin_type (Union[None, Unset, str]):
+        name (None | str | Unset):
+        description (None | str | Unset):
+        coordinates (list[int] | None | Unset):
+        dimension (None | str | Unset):
+        pin_type (None | str | Unset):
     """
 
-    name: Union[None, Unset, str] = UNSET
-    description: Union[None, Unset, str] = UNSET
-    coordinates: Union[None, Unset, list[int]] = UNSET
-    dimension: Union[None, Unset, str] = UNSET
-    pin_type: Union[None, Unset, str] = UNSET
+    name: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    coordinates: list[int] | None | Unset = UNSET
+    dimension: None | str | Unset = UNSET
+    pin_type: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name: Union[None, Unset, str]
+        name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-        description: Union[None, Unset, str]
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        coordinates: Union[None, Unset, list[int]]
+        coordinates: list[int] | None | Unset
         if isinstance(self.coordinates, Unset):
             coordinates = UNSET
         elif isinstance(self.coordinates, list):
@@ -49,13 +51,13 @@ class PinUpdate:
         else:
             coordinates = self.coordinates
 
-        dimension: Union[None, Unset, str]
+        dimension: None | str | Unset
         if isinstance(self.dimension, Unset):
             dimension = UNSET
         else:
             dimension = self.dimension
 
-        pin_type: Union[None, Unset, str]
+        pin_type: None | str | Unset
         if isinstance(self.pin_type, Unset):
             pin_type = UNSET
         else:
@@ -81,25 +83,25 @@ class PinUpdate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_name(data: object) -> Union[None, Unset, str]:
+        def _parse_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         name = _parse_name(d.pop("name", UNSET))
 
-        def _parse_description(data: object) -> Union[None, Unset, str]:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_coordinates(data: object) -> Union[None, Unset, list[int]]:
+        def _parse_coordinates(data: object) -> list[int] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -110,27 +112,27 @@ class PinUpdate:
                 coordinates_type_0 = cast(list[int], data)
 
                 return coordinates_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list[int]], data)
+            return cast(list[int] | None | Unset, data)
 
         coordinates = _parse_coordinates(d.pop("coordinates", UNSET))
 
-        def _parse_dimension(data: object) -> Union[None, Unset, str]:
+        def _parse_dimension(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         dimension = _parse_dimension(d.pop("dimension", UNSET))
 
-        def _parse_pin_type(data: object) -> Union[None, Unset, str]:
+        def _parse_pin_type(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         pin_type = _parse_pin_type(d.pop("pin_type", UNSET))
 

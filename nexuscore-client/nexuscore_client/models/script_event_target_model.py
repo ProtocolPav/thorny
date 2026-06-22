@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, Literal, TypeVar, Union, cast
+from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,13 +18,13 @@ class ScriptEventTargetModel:
         target_type (Literal['scriptevent']): The type of the target. Must be equal to `objective_type`.
         count (int): The number of ID's before this objective is completed Example: 50.
         script_id (str): The script_event ID which will trigger the objective Example: quest:button_1.
-        target_uuid (Union[Unset, str]): The target uuid
+        target_uuid (str | Unset): The target uuid
     """
 
     target_type: Literal["scriptevent"]
     count: int
     script_id: str
-    target_uuid: Union[Unset, str] = UNSET
+    target_uuid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

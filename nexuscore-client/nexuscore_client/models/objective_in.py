@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -23,26 +25,26 @@ class ObjectiveIn:
     """
     Attributes:
         description (str): The description of the objective
-        display (Union[None, str]):
+        display (None | str):
         order_index (int): The order of the objective. Starts at 0.
         objective_type (ObjectiveInObjectiveType): The type of objective: kill, mine or scriptevent
         logic (ObjectiveInLogic): The logic to be applied to the objective targets
-        target_count (Union[None, int]):
-        targets (list[Union['KillTargetModel', 'MineTargetModel', 'ScriptEventTargetModel']]): The targets of the
-            objective. Target types must be equal to `objective_type`
+        target_count (int | None):
+        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]): The targets of the objective. Target
+            types must be equal to `objective_type`
         customizations (Customizations):
-        rewards (list['RewardIn']):
+        rewards (list[RewardIn]):
     """
 
     description: str
-    display: Union[None, str]
+    display: None | str
     order_index: int
     objective_type: ObjectiveInObjectiveType
     logic: ObjectiveInLogic
-    target_count: Union[None, int]
-    targets: list[Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]]
-    customizations: "Customizations"
-    rewards: list["RewardIn"]
+    target_count: int | None
+    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]
+    customizations: Customizations
+    rewards: list[RewardIn]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -51,7 +53,7 @@ class ObjectiveIn:
 
         description = self.description
 
-        display: Union[None, str]
+        display: None | str
         display = self.display
 
         order_index = self.order_index
@@ -60,7 +62,7 @@ class ObjectiveIn:
 
         logic = self.logic.value
 
-        target_count: Union[None, int]
+        target_count: int | None
         target_count = self.target_count
 
         targets = []
@@ -111,10 +113,10 @@ class ObjectiveIn:
         d = dict(src_dict)
         description = d.pop("description")
 
-        def _parse_display(data: object) -> Union[None, str]:
+        def _parse_display(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         display = _parse_display(d.pop("display"))
 
@@ -124,10 +126,10 @@ class ObjectiveIn:
 
         logic = ObjectiveInLogic(d.pop("logic"))
 
-        def _parse_target_count(data: object) -> Union[None, int]:
+        def _parse_target_count(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         target_count = _parse_target_count(d.pop("target_count"))
 
@@ -135,16 +137,14 @@ class ObjectiveIn:
         _targets = d.pop("targets")
         for targets_item_data in _targets:
 
-            def _parse_targets_item(
-                data: object,
-            ) -> Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]:
+            def _parse_targets_item(data: object) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel:
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
                     targets_item_type_0 = MineTargetModel.from_dict(data)
 
                     return targets_item_type_0
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -152,7 +152,7 @@ class ObjectiveIn:
                     targets_item_type_1 = KillTargetModel.from_dict(data)
 
                     return targets_item_type_1
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 if not isinstance(data, dict):
                     raise TypeError()

@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -13,25 +14,30 @@ from ...types import Response
 def _get_kwargs(
     thorny_id: int,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/guilds/me/quests/progress/user/{thorny_id}/active",
+        "url": "/v1/guilds/me/quests/progress/user/{thorny_id}/active".format(
+            thorny_id=quote(str(thorny_id), safe=""),
+        ),
     }
 
     return _kwargs
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | QuestProgressOut | None:
     if response.status_code == 200:
         response_200 = QuestProgressOut.from_dict(response.json())
 
         return response_200
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -39,8 +45,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | QuestProgressOut]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -53,7 +59,7 @@ def sync_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Response[HTTPValidationError | QuestProgressOut]:
     """Get Active Quest Progress
 
      Get User's Active Quest
@@ -68,7 +74,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[HTTPValidationError | QuestProgressOut]
     """
 
     kwargs = _get_kwargs(
@@ -86,7 +92,7 @@ def sync(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+) -> HTTPValidationError | QuestProgressOut | None:
     """Get Active Quest Progress
 
      Get User's Active Quest
@@ -101,7 +107,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        HTTPValidationError | QuestProgressOut
     """
 
     return sync_detailed(
@@ -114,7 +120,7 @@ async def asyncio_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Union[HTTPValidationError, QuestProgressOut]]:
+) -> Response[HTTPValidationError | QuestProgressOut]:
     """Get Active Quest Progress
 
      Get User's Active Quest
@@ -129,7 +135,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, QuestProgressOut]]
+        Response[HTTPValidationError | QuestProgressOut]
     """
 
     kwargs = _get_kwargs(
@@ -145,7 +151,7 @@ async def asyncio(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
-) -> Optional[Union[HTTPValidationError, QuestProgressOut]]:
+) -> HTTPValidationError | QuestProgressOut | None:
     """Get Active Quest Progress
 
      Get User's Active Quest
@@ -160,7 +166,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, QuestProgressOut]
+        HTTPValidationError | QuestProgressOut
     """
 
     return (

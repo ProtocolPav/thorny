@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -16,20 +18,20 @@ T = TypeVar("T", bound="InteractionSummary")
 class InteractionSummary:
     """
     Attributes:
-        blocks_mined (list['InteractionStatistic']):
-        blocks_placed (list['InteractionStatistic']):
-        kills (list['InteractionStatistic']):
-        deaths (list['InteractionStatistic']):
-        uses (list['InteractionStatistic']):
+        blocks_mined (list[InteractionStatistic]):
+        blocks_placed (list[InteractionStatistic]):
+        kills (list[InteractionStatistic]):
+        deaths (list[InteractionStatistic]):
+        uses (list[InteractionStatistic]):
         totals (InteractionTotals):
     """
 
-    blocks_mined: list["InteractionStatistic"]
-    blocks_placed: list["InteractionStatistic"]
-    kills: list["InteractionStatistic"]
-    deaths: list["InteractionStatistic"]
-    uses: list["InteractionStatistic"]
-    totals: "InteractionTotals"
+    blocks_mined: list[InteractionStatistic]
+    blocks_placed: list[InteractionStatistic]
+    kills: list[InteractionStatistic]
+    deaths: list[InteractionStatistic]
+    uses: list[InteractionStatistic]
+    totals: InteractionTotals
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

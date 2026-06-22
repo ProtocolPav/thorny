@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,18 +23,18 @@ T = TypeVar("T", bound="Customizations")
 class Customizations:
     """
     Attributes:
-        mainhand (Union['MainhandCustomization', None, Unset]): Mainhand Customization
-        location (Union['LocationCustomization', None, Unset]): Location Customization
-        timer (Union['TimerCustomization', None, Unset]): Timer Customization
-        maximum_deaths (Union['MaximumDeathsCustomization', None, Unset]): Maximum Deaths Customization
-        natural_block (Union['NaturalBlockCustomization', None, Unset]): Natural Block Customization
+        mainhand (MainhandCustomization | None | Unset): Mainhand Customization
+        location (LocationCustomization | None | Unset): Location Customization
+        timer (None | TimerCustomization | Unset): Timer Customization
+        maximum_deaths (MaximumDeathsCustomization | None | Unset): Maximum Deaths Customization
+        natural_block (NaturalBlockCustomization | None | Unset): Natural Block Customization
     """
 
-    mainhand: Union["MainhandCustomization", None, Unset] = UNSET
-    location: Union["LocationCustomization", None, Unset] = UNSET
-    timer: Union["TimerCustomization", None, Unset] = UNSET
-    maximum_deaths: Union["MaximumDeathsCustomization", None, Unset] = UNSET
-    natural_block: Union["NaturalBlockCustomization", None, Unset] = UNSET
+    mainhand: MainhandCustomization | None | Unset = UNSET
+    location: LocationCustomization | None | Unset = UNSET
+    timer: None | TimerCustomization | Unset = UNSET
+    maximum_deaths: MaximumDeathsCustomization | None | Unset = UNSET
+    natural_block: NaturalBlockCustomization | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -42,7 +44,7 @@ class Customizations:
         from ..models.natural_block_customization import NaturalBlockCustomization
         from ..models.timer_customization import TimerCustomization
 
-        mainhand: Union[None, Unset, dict[str, Any]]
+        mainhand: dict[str, Any] | None | Unset
         if isinstance(self.mainhand, Unset):
             mainhand = UNSET
         elif isinstance(self.mainhand, MainhandCustomization):
@@ -50,7 +52,7 @@ class Customizations:
         else:
             mainhand = self.mainhand
 
-        location: Union[None, Unset, dict[str, Any]]
+        location: dict[str, Any] | None | Unset
         if isinstance(self.location, Unset):
             location = UNSET
         elif isinstance(self.location, LocationCustomization):
@@ -58,7 +60,7 @@ class Customizations:
         else:
             location = self.location
 
-        timer: Union[None, Unset, dict[str, Any]]
+        timer: dict[str, Any] | None | Unset
         if isinstance(self.timer, Unset):
             timer = UNSET
         elif isinstance(self.timer, TimerCustomization):
@@ -66,7 +68,7 @@ class Customizations:
         else:
             timer = self.timer
 
-        maximum_deaths: Union[None, Unset, dict[str, Any]]
+        maximum_deaths: dict[str, Any] | None | Unset
         if isinstance(self.maximum_deaths, Unset):
             maximum_deaths = UNSET
         elif isinstance(self.maximum_deaths, MaximumDeathsCustomization):
@@ -74,7 +76,7 @@ class Customizations:
         else:
             maximum_deaths = self.maximum_deaths
 
-        natural_block: Union[None, Unset, dict[str, Any]]
+        natural_block: dict[str, Any] | None | Unset
         if isinstance(self.natural_block, Unset):
             natural_block = UNSET
         elif isinstance(self.natural_block, NaturalBlockCustomization):
@@ -108,7 +110,7 @@ class Customizations:
 
         d = dict(src_dict)
 
-        def _parse_mainhand(data: object) -> Union["MainhandCustomization", None, Unset]:
+        def _parse_mainhand(data: object) -> MainhandCustomization | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -119,13 +121,13 @@ class Customizations:
                 mainhand_type_0 = MainhandCustomization.from_dict(data)
 
                 return mainhand_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["MainhandCustomization", None, Unset], data)
+            return cast(MainhandCustomization | None | Unset, data)
 
         mainhand = _parse_mainhand(d.pop("mainhand", UNSET))
 
-        def _parse_location(data: object) -> Union["LocationCustomization", None, Unset]:
+        def _parse_location(data: object) -> LocationCustomization | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -136,13 +138,13 @@ class Customizations:
                 location_type_0 = LocationCustomization.from_dict(data)
 
                 return location_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["LocationCustomization", None, Unset], data)
+            return cast(LocationCustomization | None | Unset, data)
 
         location = _parse_location(d.pop("location", UNSET))
 
-        def _parse_timer(data: object) -> Union["TimerCustomization", None, Unset]:
+        def _parse_timer(data: object) -> None | TimerCustomization | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -153,13 +155,13 @@ class Customizations:
                 timer_type_0 = TimerCustomization.from_dict(data)
 
                 return timer_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["TimerCustomization", None, Unset], data)
+            return cast(None | TimerCustomization | Unset, data)
 
         timer = _parse_timer(d.pop("timer", UNSET))
 
-        def _parse_maximum_deaths(data: object) -> Union["MaximumDeathsCustomization", None, Unset]:
+        def _parse_maximum_deaths(data: object) -> MaximumDeathsCustomization | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -170,13 +172,13 @@ class Customizations:
                 maximum_deaths_type_0 = MaximumDeathsCustomization.from_dict(data)
 
                 return maximum_deaths_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["MaximumDeathsCustomization", None, Unset], data)
+            return cast(MaximumDeathsCustomization | None | Unset, data)
 
         maximum_deaths = _parse_maximum_deaths(d.pop("maximum_deaths", UNSET))
 
-        def _parse_natural_block(data: object) -> Union["NaturalBlockCustomization", None, Unset]:
+        def _parse_natural_block(data: object) -> NaturalBlockCustomization | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -187,9 +189,9 @@ class Customizations:
                 natural_block_type_0 = NaturalBlockCustomization.from_dict(data)
 
                 return natural_block_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["NaturalBlockCustomization", None, Unset], data)
+            return cast(NaturalBlockCustomization | None | Unset, data)
 
         natural_block = _parse_natural_block(d.pop("natural_block", UNSET))
 

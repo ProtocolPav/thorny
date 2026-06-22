@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,31 +14,31 @@ class WeeklyPlaytime:
     """
     Attributes:
         week (int): The week of the year this data is about
-        total (Union[None, float]): The total playtime that week in seconds
+        total (float | None): The total playtime that week in seconds
         unique_players (int): How many unique players played that week
         total_sessions (int): The total amount of sessions that week. (A session is when a user connects and
             disconnects)
-        average_playtime_per_session (Union[None, float]): The average playtime per session this week in seconds
+        average_playtime_per_session (float | None): The average playtime per session this week in seconds
     """
 
     week: int
-    total: Union[None, float]
+    total: float | None
     unique_players: int
     total_sessions: int
-    average_playtime_per_session: Union[None, float]
+    average_playtime_per_session: float | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         week = self.week
 
-        total: Union[None, float]
+        total: float | None
         total = self.total
 
         unique_players = self.unique_players
 
         total_sessions = self.total_sessions
 
-        average_playtime_per_session: Union[None, float]
+        average_playtime_per_session: float | None
         average_playtime_per_session = self.average_playtime_per_session
 
         field_dict: dict[str, Any] = {}
@@ -58,10 +60,10 @@ class WeeklyPlaytime:
         d = dict(src_dict)
         week = d.pop("week")
 
-        def _parse_total(data: object) -> Union[None, float]:
+        def _parse_total(data: object) -> float | None:
             if data is None:
                 return data
-            return cast(Union[None, float], data)
+            return cast(float | None, data)
 
         total = _parse_total(d.pop("total"))
 
@@ -69,10 +71,10 @@ class WeeklyPlaytime:
 
         total_sessions = d.pop("total_sessions")
 
-        def _parse_average_playtime_per_session(data: object) -> Union[None, float]:
+        def _parse_average_playtime_per_session(data: object) -> float | None:
             if data is None:
                 return data
-            return cast(Union[None, float], data)
+            return cast(float | None, data)
 
         average_playtime_per_session = _parse_average_playtime_per_session(d.pop("average_playtime_per_session"))
 

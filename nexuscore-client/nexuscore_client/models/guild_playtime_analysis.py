@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,26 +23,26 @@ class GuildPlaytimeAnalysis:
     Attributes:
         total_playtime (float): The total playtime of this guild in seconds
         total_unique_players (int): The total unique players that have played on this guild
-        daily_playtime (list['DailyPlaytime']): Data about the last 7 days of playtime
-        weekly_playtime (list['WeeklyPlaytime']): Data about the last 8 weeks of playtime
-        monthly_playtime (list['MonthlyPlaytime']): Data about the last 12 months of playtime
-        peak_playtime_periods (Union[Unset, None]):
-        peak_active_periods (Union[Unset, None]):
-        daily_playtime_distribution (Union[Unset, None]):
-        anomalies (Union[Unset, None]):
-        predictive_insights (Union[Unset, None]):
+        daily_playtime (list[DailyPlaytime]): Data about the last 7 days of playtime
+        weekly_playtime (list[WeeklyPlaytime]): Data about the last 8 weeks of playtime
+        monthly_playtime (list[MonthlyPlaytime]): Data about the last 12 months of playtime
+        peak_playtime_periods (None | Unset):
+        peak_active_periods (None | Unset):
+        daily_playtime_distribution (None | Unset):
+        anomalies (None | Unset):
+        predictive_insights (None | Unset):
     """
 
     total_playtime: float
     total_unique_players: int
-    daily_playtime: list["DailyPlaytime"]
-    weekly_playtime: list["WeeklyPlaytime"]
-    monthly_playtime: list["MonthlyPlaytime"]
-    peak_playtime_periods: Union[Unset, None] = UNSET
-    peak_active_periods: Union[Unset, None] = UNSET
-    daily_playtime_distribution: Union[Unset, None] = UNSET
-    anomalies: Union[Unset, None] = UNSET
-    predictive_insights: Union[Unset, None] = UNSET
+    daily_playtime: list[DailyPlaytime]
+    weekly_playtime: list[WeeklyPlaytime]
+    monthly_playtime: list[MonthlyPlaytime]
+    peak_playtime_periods: None | Unset = UNSET
+    peak_active_periods: None | Unset = UNSET
+    daily_playtime_distribution: None | Unset = UNSET
+    anomalies: None | Unset = UNSET
+    predictive_insights: None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

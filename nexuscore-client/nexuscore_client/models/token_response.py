@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, Literal, TypeVar, Union, cast
+from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,13 +19,13 @@ class TokenResponse:
         access_token (str): The JWT token
         expires_in (int): The number of seconds until the token expires. Typical lifetime is 60 minutes
         scope (list[Scope]): The scopes granted by the token, could be a subset of requested scopes
-        token_type (Union[Literal['bearer'], Unset]): The token type, always `bearer` Default: 'bearer'.
+        token_type (Literal['bearer'] | Unset): The token type, always `bearer` Default: 'bearer'.
     """
 
     access_token: str
     expires_in: int
     scope: list[Scope]
-    token_type: Union[Literal["bearer"], Unset] = "bearer"
+    token_type: Literal["bearer"] | Unset = "bearer"
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -66,7 +68,7 @@ class TokenResponse:
 
             scope.append(scope_item)
 
-        token_type = cast(Union[Literal["bearer"], Unset], d.pop("token_type", UNSET))
+        token_type = cast(Literal["bearer"] | Unset, d.pop("token_type", UNSET))
         if token_type != "bearer" and not isinstance(token_type, Unset):
             raise ValueError(f"token_type must match const 'bearer', got '{token_type}'")
 

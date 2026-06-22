@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -23,28 +25,28 @@ T = TypeVar("T", bound="ObjectiveUpdate")
 class ObjectiveUpdate:
     """
     Attributes:
-        objective_id (Union[None, Unset, int]):
-        description (Union[None, Unset, str]):
-        display (Union[None, Unset, str]):
-        order_index (Union[None, Unset, int]):
-        objective_type (Union[None, ObjectiveUpdateObjectiveTypeType0, Unset]):
-        logic (Union[None, ObjectiveUpdateLogicType0, Unset]):
-        target_count (Union[None, Unset, int]):
-        targets (Union[None, Unset, list[Union['KillTargetModel', 'MineTargetModel', 'ScriptEventTargetModel']]]):
-        customizations (Union['Customizations', None, Unset]):
-        rewards (Union[None, Unset, list['RewardUpdate']]):
+        objective_id (int | None | Unset):
+        description (None | str | Unset):
+        display (None | str | Unset):
+        order_index (int | None | Unset):
+        objective_type (None | ObjectiveUpdateObjectiveTypeType0 | Unset):
+        logic (None | ObjectiveUpdateLogicType0 | Unset):
+        target_count (int | None | Unset):
+        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset):
+        customizations (Customizations | None | Unset):
+        rewards (list[RewardUpdate] | None | Unset):
     """
 
-    objective_id: Union[None, Unset, int] = UNSET
-    description: Union[None, Unset, str] = UNSET
-    display: Union[None, Unset, str] = UNSET
-    order_index: Union[None, Unset, int] = UNSET
-    objective_type: Union[None, ObjectiveUpdateObjectiveTypeType0, Unset] = UNSET
-    logic: Union[None, ObjectiveUpdateLogicType0, Unset] = UNSET
-    target_count: Union[None, Unset, int] = UNSET
-    targets: Union[None, Unset, list[Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]]] = UNSET
-    customizations: Union["Customizations", None, Unset] = UNSET
-    rewards: Union[None, Unset, list["RewardUpdate"]] = UNSET
+    objective_id: int | None | Unset = UNSET
+    description: None | str | Unset = UNSET
+    display: None | str | Unset = UNSET
+    order_index: int | None | Unset = UNSET
+    objective_type: None | ObjectiveUpdateObjectiveTypeType0 | Unset = UNSET
+    logic: None | ObjectiveUpdateLogicType0 | Unset = UNSET
+    target_count: int | None | Unset = UNSET
+    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset = UNSET
+    customizations: Customizations | None | Unset = UNSET
+    rewards: list[RewardUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,31 +54,31 @@ class ObjectiveUpdate:
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
 
-        objective_id: Union[None, Unset, int]
+        objective_id: int | None | Unset
         if isinstance(self.objective_id, Unset):
             objective_id = UNSET
         else:
             objective_id = self.objective_id
 
-        description: Union[None, Unset, str]
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        display: Union[None, Unset, str]
+        display: None | str | Unset
         if isinstance(self.display, Unset):
             display = UNSET
         else:
             display = self.display
 
-        order_index: Union[None, Unset, int]
+        order_index: int | None | Unset
         if isinstance(self.order_index, Unset):
             order_index = UNSET
         else:
             order_index = self.order_index
 
-        objective_type: Union[None, Unset, str]
+        objective_type: None | str | Unset
         if isinstance(self.objective_type, Unset):
             objective_type = UNSET
         elif isinstance(self.objective_type, ObjectiveUpdateObjectiveTypeType0):
@@ -84,7 +86,7 @@ class ObjectiveUpdate:
         else:
             objective_type = self.objective_type
 
-        logic: Union[None, Unset, str]
+        logic: None | str | Unset
         if isinstance(self.logic, Unset):
             logic = UNSET
         elif isinstance(self.logic, ObjectiveUpdateLogicType0):
@@ -92,13 +94,13 @@ class ObjectiveUpdate:
         else:
             logic = self.logic
 
-        target_count: Union[None, Unset, int]
+        target_count: int | None | Unset
         if isinstance(self.target_count, Unset):
             target_count = UNSET
         else:
             target_count = self.target_count
 
-        targets: Union[None, Unset, list[dict[str, Any]]]
+        targets: list[dict[str, Any]] | None | Unset
         if isinstance(self.targets, Unset):
             targets = UNSET
         elif isinstance(self.targets, list):
@@ -117,7 +119,7 @@ class ObjectiveUpdate:
         else:
             targets = self.targets
 
-        customizations: Union[None, Unset, dict[str, Any]]
+        customizations: dict[str, Any] | None | Unset
         if isinstance(self.customizations, Unset):
             customizations = UNSET
         elif isinstance(self.customizations, Customizations):
@@ -125,7 +127,7 @@ class ObjectiveUpdate:
         else:
             customizations = self.customizations
 
-        rewards: Union[None, Unset, list[dict[str, Any]]]
+        rewards: list[dict[str, Any]] | None | Unset
         if isinstance(self.rewards, Unset):
             rewards = UNSET
         elif isinstance(self.rewards, list):
@@ -173,43 +175,43 @@ class ObjectiveUpdate:
 
         d = dict(src_dict)
 
-        def _parse_objective_id(data: object) -> Union[None, Unset, int]:
+        def _parse_objective_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         objective_id = _parse_objective_id(d.pop("objective_id", UNSET))
 
-        def _parse_description(data: object) -> Union[None, Unset, str]:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_display(data: object) -> Union[None, Unset, str]:
+        def _parse_display(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         display = _parse_display(d.pop("display", UNSET))
 
-        def _parse_order_index(data: object) -> Union[None, Unset, int]:
+        def _parse_order_index(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         order_index = _parse_order_index(d.pop("order_index", UNSET))
 
-        def _parse_objective_type(data: object) -> Union[None, ObjectiveUpdateObjectiveTypeType0, Unset]:
+        def _parse_objective_type(data: object) -> None | ObjectiveUpdateObjectiveTypeType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -220,13 +222,13 @@ class ObjectiveUpdate:
                 objective_type_type_0 = ObjectiveUpdateObjectiveTypeType0(data)
 
                 return objective_type_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, ObjectiveUpdateObjectiveTypeType0, Unset], data)
+            return cast(None | ObjectiveUpdateObjectiveTypeType0 | Unset, data)
 
         objective_type = _parse_objective_type(d.pop("objective_type", UNSET))
 
-        def _parse_logic(data: object) -> Union[None, ObjectiveUpdateLogicType0, Unset]:
+        def _parse_logic(data: object) -> None | ObjectiveUpdateLogicType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -237,24 +239,24 @@ class ObjectiveUpdate:
                 logic_type_0 = ObjectiveUpdateLogicType0(data)
 
                 return logic_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, ObjectiveUpdateLogicType0, Unset], data)
+            return cast(None | ObjectiveUpdateLogicType0 | Unset, data)
 
         logic = _parse_logic(d.pop("logic", UNSET))
 
-        def _parse_target_count(data: object) -> Union[None, Unset, int]:
+        def _parse_target_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         target_count = _parse_target_count(d.pop("target_count", UNSET))
 
         def _parse_targets(
             data: object,
-        ) -> Union[None, Unset, list[Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]]]:
+        ) -> list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -268,14 +270,14 @@ class ObjectiveUpdate:
 
                     def _parse_targets_type_0_item(
                         data: object,
-                    ) -> Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]:
+                    ) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel:
                         try:
                             if not isinstance(data, dict):
                                 raise TypeError()
                             targets_type_0_item_type_0 = MineTargetModel.from_dict(data)
 
                             return targets_type_0_item_type_0
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -283,7 +285,7 @@ class ObjectiveUpdate:
                             targets_type_0_item_type_1 = KillTargetModel.from_dict(data)
 
                             return targets_type_0_item_type_1
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         if not isinstance(data, dict):
                             raise TypeError()
@@ -296,15 +298,13 @@ class ObjectiveUpdate:
                     targets_type_0.append(targets_type_0_item)
 
                 return targets_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(
-                Union[None, Unset, list[Union["KillTargetModel", "MineTargetModel", "ScriptEventTargetModel"]]], data
-            )
+            return cast(list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset, data)
 
         targets = _parse_targets(d.pop("targets", UNSET))
 
-        def _parse_customizations(data: object) -> Union["Customizations", None, Unset]:
+        def _parse_customizations(data: object) -> Customizations | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -315,13 +315,13 @@ class ObjectiveUpdate:
                 customizations_type_0 = Customizations.from_dict(data)
 
                 return customizations_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["Customizations", None, Unset], data)
+            return cast(Customizations | None | Unset, data)
 
         customizations = _parse_customizations(d.pop("customizations", UNSET))
 
-        def _parse_rewards(data: object) -> Union[None, Unset, list["RewardUpdate"]]:
+        def _parse_rewards(data: object) -> list[RewardUpdate] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -337,9 +337,9 @@ class ObjectiveUpdate:
                     rewards_type_0.append(rewards_type_0_item)
 
                 return rewards_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list["RewardUpdate"]], data)
+            return cast(list[RewardUpdate] | None | Unset, data)
 
         rewards = _parse_rewards(d.pop("rewards", UNSET))
 

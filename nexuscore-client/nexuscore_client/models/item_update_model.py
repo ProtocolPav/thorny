@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -11,14 +13,14 @@ T = TypeVar("T", bound="ItemUpdateModel")
 class ItemUpdateModel:
     """
     Attributes:
-        current_uses (Union[None, int]): The current uses of this item Example: 32.
+        current_uses (int | None): The current uses of this item Example: 32.
     """
 
-    current_uses: Union[None, int]
+    current_uses: int | None
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        current_uses: Union[None, int]
+        current_uses: int | None
         current_uses = self.current_uses
 
         field_dict: dict[str, Any] = {}
@@ -35,10 +37,10 @@ class ItemUpdateModel:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_current_uses(data: object) -> Union[None, int]:
+        def _parse_current_uses(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         current_uses = _parse_current_uses(d.pop("current_uses"))
 

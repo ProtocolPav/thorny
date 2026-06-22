@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -12,17 +14,17 @@ class UserIn:
     """
     Attributes:
         user_id (int): The Discord user ID.
-        username (Union[None, str]):
+        username (None | str):
     """
 
     user_id: int
-    username: Union[None, str]
+    username: None | str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         user_id = self.user_id
 
-        username: Union[None, str]
+        username: None | str
         username = self.username
 
         field_dict: dict[str, Any] = {}
@@ -41,10 +43,10 @@ class UserIn:
         d = dict(src_dict)
         user_id = d.pop("user_id")
 
-        def _parse_username(data: object) -> Union[None, str]:
+        def _parse_username(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         username = _parse_username(d.pop("username"))
 

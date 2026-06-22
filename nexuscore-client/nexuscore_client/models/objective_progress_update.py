@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.objective_progress_update_status_type_0 import ObjectiveProgressUpdateStatusType0
 from ..types import UNSET, Unset
@@ -23,23 +24,23 @@ T = TypeVar("T", bound="ObjectiveProgressUpdate")
 class ObjectiveProgressUpdate:
     """
     Attributes:
-        objective_id (Union[None, Unset, int]):
-        start_time (Union[None, Unset, datetime.datetime]):
-        end_time (Union[None, Unset, datetime.datetime]):
-        status (Union[None, ObjectiveProgressUpdateStatusType0, Unset]):
-        target_progress (Union[None, Unset, list[Union['KillTargetProgressModel', 'MineTargetProgressModel',
-            'ScriptEventTargetProgressModel']]]):
-        customization_progress (Union['CustomizationProgress', None, Unset]):
+        objective_id (int | None | Unset):
+        start_time (datetime.datetime | None | Unset):
+        end_time (datetime.datetime | None | Unset):
+        status (None | ObjectiveProgressUpdateStatusType0 | Unset):
+        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None
+            | Unset):
+        customization_progress (CustomizationProgress | None | Unset):
     """
 
-    objective_id: Union[None, Unset, int] = UNSET
-    start_time: Union[None, Unset, datetime.datetime] = UNSET
-    end_time: Union[None, Unset, datetime.datetime] = UNSET
-    status: Union[None, ObjectiveProgressUpdateStatusType0, Unset] = UNSET
-    target_progress: Union[
-        None, Unset, list[Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]]
-    ] = UNSET
-    customization_progress: Union["CustomizationProgress", None, Unset] = UNSET
+    objective_id: int | None | Unset = UNSET
+    start_time: datetime.datetime | None | Unset = UNSET
+    end_time: datetime.datetime | None | Unset = UNSET
+    status: None | ObjectiveProgressUpdateStatusType0 | Unset = UNSET
+    target_progress: (
+        list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset
+    ) = UNSET
+    customization_progress: CustomizationProgress | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,13 +48,13 @@ class ObjectiveProgressUpdate:
         from ..models.kill_target_progress_model import KillTargetProgressModel
         from ..models.mine_target_progress_model import MineTargetProgressModel
 
-        objective_id: Union[None, Unset, int]
+        objective_id: int | None | Unset
         if isinstance(self.objective_id, Unset):
             objective_id = UNSET
         else:
             objective_id = self.objective_id
 
-        start_time: Union[None, Unset, str]
+        start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
             start_time = UNSET
         elif isinstance(self.start_time, datetime.datetime):
@@ -61,7 +62,7 @@ class ObjectiveProgressUpdate:
         else:
             start_time = self.start_time
 
-        end_time: Union[None, Unset, str]
+        end_time: None | str | Unset
         if isinstance(self.end_time, Unset):
             end_time = UNSET
         elif isinstance(self.end_time, datetime.datetime):
@@ -69,7 +70,7 @@ class ObjectiveProgressUpdate:
         else:
             end_time = self.end_time
 
-        status: Union[None, Unset, str]
+        status: None | str | Unset
         if isinstance(self.status, Unset):
             status = UNSET
         elif isinstance(self.status, ObjectiveProgressUpdateStatusType0):
@@ -77,7 +78,7 @@ class ObjectiveProgressUpdate:
         else:
             status = self.status
 
-        target_progress: Union[None, Unset, list[dict[str, Any]]]
+        target_progress: list[dict[str, Any]] | None | Unset
         if isinstance(self.target_progress, Unset):
             target_progress = UNSET
         elif isinstance(self.target_progress, list):
@@ -96,7 +97,7 @@ class ObjectiveProgressUpdate:
         else:
             target_progress = self.target_progress
 
-        customization_progress: Union[None, Unset, dict[str, Any]]
+        customization_progress: dict[str, Any] | None | Unset
         if isinstance(self.customization_progress, Unset):
             customization_progress = UNSET
         elif isinstance(self.customization_progress, CustomizationProgress):
@@ -131,16 +132,16 @@ class ObjectiveProgressUpdate:
 
         d = dict(src_dict)
 
-        def _parse_objective_id(data: object) -> Union[None, Unset, int]:
+        def _parse_objective_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         objective_id = _parse_objective_id(d.pop("objective_id", UNSET))
 
-        def _parse_start_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -148,16 +149,16 @@ class ObjectiveProgressUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0 = isoparse(data)
+                start_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         start_time = _parse_start_time(d.pop("start_time", UNSET))
 
-        def _parse_end_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_end_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -165,16 +166,16 @@ class ObjectiveProgressUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0 = isoparse(data)
+                end_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         end_time = _parse_end_time(d.pop("end_time", UNSET))
 
-        def _parse_status(data: object) -> Union[None, ObjectiveProgressUpdateStatusType0, Unset]:
+        def _parse_status(data: object) -> None | ObjectiveProgressUpdateStatusType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -185,19 +186,15 @@ class ObjectiveProgressUpdate:
                 status_type_0 = ObjectiveProgressUpdateStatusType0(data)
 
                 return status_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, ObjectiveProgressUpdateStatusType0, Unset], data)
+            return cast(None | ObjectiveProgressUpdateStatusType0 | Unset, data)
 
         status = _parse_status(d.pop("status", UNSET))
 
         def _parse_target_progress(
             data: object,
-        ) -> Union[
-            None,
-            Unset,
-            list[Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]],
-        ]:
+        ) -> list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -211,14 +208,14 @@ class ObjectiveProgressUpdate:
 
                     def _parse_target_progress_type_0_item(
                         data: object,
-                    ) -> Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]:
+                    ) -> KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel:
                         try:
                             if not isinstance(data, dict):
                                 raise TypeError()
                             target_progress_type_0_item_type_0 = MineTargetProgressModel.from_dict(data)
 
                             return target_progress_type_0_item_type_0
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -226,7 +223,7 @@ class ObjectiveProgressUpdate:
                             target_progress_type_0_item_type_1 = KillTargetProgressModel.from_dict(data)
 
                             return target_progress_type_0_item_type_1
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         if not isinstance(data, dict):
                             raise TypeError()
@@ -239,20 +236,16 @@ class ObjectiveProgressUpdate:
                     target_progress_type_0.append(target_progress_type_0_item)
 
                 return target_progress_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    None,
-                    Unset,
-                    list[Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]],
-                ],
+                list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset,
                 data,
             )
 
         target_progress = _parse_target_progress(d.pop("target_progress", UNSET))
 
-        def _parse_customization_progress(data: object) -> Union["CustomizationProgress", None, Unset]:
+        def _parse_customization_progress(data: object) -> CustomizationProgress | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -263,9 +256,9 @@ class ObjectiveProgressUpdate:
                 customization_progress_type_0 = CustomizationProgress.from_dict(data)
 
                 return customization_progress_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["CustomizationProgress", None, Unset], data)
+            return cast(CustomizationProgress | None | Unset, data)
 
         customization_progress = _parse_customization_progress(d.pop("customization_progress", UNSET))
 

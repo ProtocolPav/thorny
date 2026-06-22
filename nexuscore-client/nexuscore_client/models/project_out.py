@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.status_enum import StatusEnum
 
@@ -21,13 +22,13 @@ class ProjectOut:
     Attributes:
         project_id (str): The string ID of the project
         name (str): The name of the project
-        thread_id (Union[None, int]):
+        thread_id (int | None):
         coordinates (list[int]): The coordinates of the project
         description (str): A short description of the project
-        completed_on (Union[None, datetime.date]):
-        pin_id (Union[None, int]):
+        completed_on (datetime.date | None):
+        pin_id (int | None):
         dimension (str): The dimension of the project
-        started_on (Union[None, datetime.date]):
+        started_on (datetime.date | None):
         status (StatusEnum):
         status_since (datetime.datetime): When the status was last updated
         owner (UserOut):
@@ -35,16 +36,16 @@ class ProjectOut:
 
     project_id: str
     name: str
-    thread_id: Union[None, int]
+    thread_id: int | None
     coordinates: list[int]
     description: str
-    completed_on: Union[None, datetime.date]
-    pin_id: Union[None, int]
+    completed_on: datetime.date | None
+    pin_id: int | None
     dimension: str
-    started_on: Union[None, datetime.date]
+    started_on: datetime.date | None
     status: StatusEnum
     status_since: datetime.datetime
-    owner: "UserOut"
+    owner: UserOut
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,25 +53,25 @@ class ProjectOut:
 
         name = self.name
 
-        thread_id: Union[None, int]
+        thread_id: int | None
         thread_id = self.thread_id
 
         coordinates = self.coordinates
 
         description = self.description
 
-        completed_on: Union[None, str]
+        completed_on: None | str
         if isinstance(self.completed_on, datetime.date):
             completed_on = self.completed_on.isoformat()
         else:
             completed_on = self.completed_on
 
-        pin_id: Union[None, int]
+        pin_id: int | None
         pin_id = self.pin_id
 
         dimension = self.dimension
 
-        started_on: Union[None, str]
+        started_on: None | str
         if isinstance(self.started_on, datetime.date):
             started_on = self.started_on.isoformat()
         else:
@@ -112,10 +113,10 @@ class ProjectOut:
 
         name = d.pop("name")
 
-        def _parse_thread_id(data: object) -> Union[None, int]:
+        def _parse_thread_id(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         thread_id = _parse_thread_id(d.pop("thread_id"))
 
@@ -123,48 +124,48 @@ class ProjectOut:
 
         description = d.pop("description")
 
-        def _parse_completed_on(data: object) -> Union[None, datetime.date]:
+        def _parse_completed_on(data: object) -> datetime.date | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                completed_on_type_0 = isoparse(data).date()
+                completed_on_type_0 = datetime.date.fromisoformat(data)
 
                 return completed_on_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.date], data)
+            return cast(datetime.date | None, data)
 
         completed_on = _parse_completed_on(d.pop("completed_on"))
 
-        def _parse_pin_id(data: object) -> Union[None, int]:
+        def _parse_pin_id(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         pin_id = _parse_pin_id(d.pop("pin_id"))
 
         dimension = d.pop("dimension")
 
-        def _parse_started_on(data: object) -> Union[None, datetime.date]:
+        def _parse_started_on(data: object) -> datetime.date | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                started_on_type_0 = isoparse(data).date()
+                started_on_type_0 = datetime.date.fromisoformat(data)
 
                 return started_on_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.date], data)
+            return cast(datetime.date | None, data)
 
         started_on = _parse_started_on(d.pop("started_on"))
 
         status = StatusEnum(d.pop("status"))
 
-        status_since = isoparse(d.pop("status_since"))
+        status_since = datetime.datetime.fromisoformat(d.pop("status_since"))
 
         owner = UserOut.from_dict(d.pop("owner"))
 

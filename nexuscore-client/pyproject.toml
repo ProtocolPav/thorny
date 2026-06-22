@@ -1,24 +1,22 @@
-[tool.poetry]
+[project]
 name = "nexuscore-client"
 version = "1.0.0"
 description = "A client library for accessing Nexuscore"
 authors = []
+requires-python = ">=3.11"
 readme = "README.md"
-packages = [
-    {include = "nexuscore_client"},
+dependencies = [
+    "httpx>=0.23.1,<0.29.0",
+    "attrs>=22.2.0",
 ]
-include = ["CHANGELOG.md", "nexuscore_client/py.typed"]
 
-
-[tool.poetry.dependencies]
-python = "^3.9"
-httpx = ">=0.20.0,<0.29.0"
-attrs = ">=22.2.0"
-python-dateutil = "^2.8.0"
+[tool.uv.build-backend]
+module-name = "nexuscore_client"
+module-root = ""
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
 
 [tool.ruff]
 line-length = 120

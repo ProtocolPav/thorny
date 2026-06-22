@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, Literal, TypeVar, Union, cast
+from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -16,13 +18,13 @@ class MineTargetModel:
         target_type (Literal['mine']): The type of the target. Must be equal to `objective_type`.
         count (int): The number of blocks to be mined Example: 50.
         block (str): The block to be mined Example: minecraft:dirt.
-        target_uuid (Union[Unset, str]): The target uuid
+        target_uuid (str | Unset): The target uuid
     """
 
     target_type: Literal["mine"]
     count: int
     block: str
-    target_uuid: Union[Unset, str] = UNSET
+    target_uuid: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

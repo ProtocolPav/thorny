@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.interaction_out_type import InteractionOutType
 
@@ -20,7 +21,7 @@ class InteractionOut:
         type_ (InteractionOutType): The type of interaction
         coordinates (list[int]): The coordinates of the interaction
         reference (str): The reference of the interaction
-        mainhand (Union[None, str]):
+        mainhand (None | str):
         time (datetime.datetime): The time of the interaction
         dimension (str): The dimension of the interaction
     """
@@ -30,7 +31,7 @@ class InteractionOut:
     type_: InteractionOutType
     coordinates: list[int]
     reference: str
-    mainhand: Union[None, str]
+    mainhand: None | str
     time: datetime.datetime
     dimension: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -50,7 +51,7 @@ class InteractionOut:
 
         reference = self.reference
 
-        mainhand: Union[None, str]
+        mainhand: None | str
         mainhand = self.mainhand
 
         time = self.time.isoformat()
@@ -96,14 +97,14 @@ class InteractionOut:
 
         reference = d.pop("reference")
 
-        def _parse_mainhand(data: object) -> Union[None, str]:
+        def _parse_mainhand(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         mainhand = _parse_mainhand(d.pop("mainhand"))
 
-        time = isoparse(d.pop("time"))
+        time = datetime.datetime.fromisoformat(d.pop("time"))
 
         dimension = d.pop("dimension")
 

@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -20,12 +21,13 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": f"/v1/guilds/me/users/{thorny_id}",
+        "url": "/v1/guilds/me/users/{thorny_id}".format(
+            thorny_id=quote(str(thorny_id), safe=""),
+        ),
     }
 
-    _body = body.to_dict()
+    _kwargs["json"] = body.to_dict()
 
-    _kwargs["json"] = _body
     headers["Content-Type"] = "application/json"
 
     _kwargs["headers"] = headers
@@ -33,16 +35,18 @@ def _get_kwargs(
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | UserOut | None:
     if response.status_code == 200:
         response_200 = UserOut.from_dict(response.json())
 
         return response_200
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -50,8 +54,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, UserOut]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | UserOut]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -65,7 +69,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UserUpdate,
-) -> Response[Union[HTTPValidationError, UserOut]]:
+) -> Response[HTTPValidationError | UserOut]:
     """Partial Update User
 
      This updates a user. All fields are optional, meaning you may
@@ -82,7 +86,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, UserOut]]
+        Response[HTTPValidationError | UserOut]
     """
 
     kwargs = _get_kwargs(
@@ -102,7 +106,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UserUpdate,
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+) -> HTTPValidationError | UserOut | None:
     """Partial Update User
 
      This updates a user. All fields are optional, meaning you may
@@ -119,7 +123,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, UserOut]
+        HTTPValidationError | UserOut
     """
 
     return sync_detailed(
@@ -134,7 +138,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UserUpdate,
-) -> Response[Union[HTTPValidationError, UserOut]]:
+) -> Response[HTTPValidationError | UserOut]:
     """Partial Update User
 
      This updates a user. All fields are optional, meaning you may
@@ -151,7 +155,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, UserOut]]
+        Response[HTTPValidationError | UserOut]
     """
 
     kwargs = _get_kwargs(
@@ -169,7 +173,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UserUpdate,
-) -> Optional[Union[HTTPValidationError, UserOut]]:
+) -> HTTPValidationError | UserOut | None:
     """Partial Update User
 
      This updates a user. All fields are optional, meaning you may
@@ -186,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, UserOut]
+        HTTPValidationError | UserOut
     """
 
     return (

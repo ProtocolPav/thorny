@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, Literal, TypeVar, Union, cast
+from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,13 +16,13 @@ class ScriptEventTargetProgressModel:
     """
     Attributes:
         target_type (Literal['scriptevent']): The type of the target. Must be equal to `objective_type`.
-        target_uuid (Union[Unset, str]): The target uuid
-        count (Union[Unset, int]): The number of Script ID's logged so far Default: 0. Example: 50.
+        target_uuid (str | Unset): The target uuid
+        count (int | Unset): The number of Script ID's logged so far Default: 0. Example: 50.
     """
 
     target_type: Literal["scriptevent"]
-    target_uuid: Union[Unset, str] = UNSET
-    count: Union[Unset, int] = 0
+    target_uuid: str | Unset = UNSET
+    count: int | Unset = 0
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

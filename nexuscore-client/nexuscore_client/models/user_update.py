@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -15,50 +16,50 @@ T = TypeVar("T", bound="UserUpdate")
 class UserUpdate:
     """
     Attributes:
-        username (Union[None, Unset, str]):
-        birthday (Union[None, Unset, datetime.date]):
-        balance (Union[None, Unset, int]):
-        active (Union[None, Unset, bool]):
-        role (Union[None, Unset, str]):
-        patron (Union[None, Unset, bool]):
-        level (Union[None, Unset, int]):
-        xp (Union[None, Unset, int]):
-        required_xp (Union[None, Unset, int]):
-        last_message (Union[None, Unset, datetime.datetime]):
-        gamertag (Union[None, Unset, str]):
-        whitelist (Union[None, Unset, str]):
-        location (Union[None, Unset, list[int]]):
-        dimension (Union[None, Unset, str]):
-        hidden (Union[None, Unset, bool]):
-        xuid (Union[None, Unset, str]):
+        username (None | str | Unset):
+        birthday (datetime.date | None | Unset):
+        balance (int | None | Unset):
+        active (bool | None | Unset):
+        role (None | str | Unset):
+        patron (bool | None | Unset):
+        level (int | None | Unset):
+        xp (int | None | Unset):
+        required_xp (int | None | Unset):
+        last_message (datetime.datetime | None | Unset):
+        gamertag (None | str | Unset):
+        whitelist (None | str | Unset):
+        location (list[int] | None | Unset):
+        dimension (None | str | Unset):
+        hidden (bool | None | Unset):
+        xuid (None | str | Unset):
     """
 
-    username: Union[None, Unset, str] = UNSET
-    birthday: Union[None, Unset, datetime.date] = UNSET
-    balance: Union[None, Unset, int] = UNSET
-    active: Union[None, Unset, bool] = UNSET
-    role: Union[None, Unset, str] = UNSET
-    patron: Union[None, Unset, bool] = UNSET
-    level: Union[None, Unset, int] = UNSET
-    xp: Union[None, Unset, int] = UNSET
-    required_xp: Union[None, Unset, int] = UNSET
-    last_message: Union[None, Unset, datetime.datetime] = UNSET
-    gamertag: Union[None, Unset, str] = UNSET
-    whitelist: Union[None, Unset, str] = UNSET
-    location: Union[None, Unset, list[int]] = UNSET
-    dimension: Union[None, Unset, str] = UNSET
-    hidden: Union[None, Unset, bool] = UNSET
-    xuid: Union[None, Unset, str] = UNSET
+    username: None | str | Unset = UNSET
+    birthday: datetime.date | None | Unset = UNSET
+    balance: int | None | Unset = UNSET
+    active: bool | None | Unset = UNSET
+    role: None | str | Unset = UNSET
+    patron: bool | None | Unset = UNSET
+    level: int | None | Unset = UNSET
+    xp: int | None | Unset = UNSET
+    required_xp: int | None | Unset = UNSET
+    last_message: datetime.datetime | None | Unset = UNSET
+    gamertag: None | str | Unset = UNSET
+    whitelist: None | str | Unset = UNSET
+    location: list[int] | None | Unset = UNSET
+    dimension: None | str | Unset = UNSET
+    hidden: bool | None | Unset = UNSET
+    xuid: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        username: Union[None, Unset, str]
+        username: None | str | Unset
         if isinstance(self.username, Unset):
             username = UNSET
         else:
             username = self.username
 
-        birthday: Union[None, Unset, str]
+        birthday: None | str | Unset
         if isinstance(self.birthday, Unset):
             birthday = UNSET
         elif isinstance(self.birthday, datetime.date):
@@ -66,49 +67,49 @@ class UserUpdate:
         else:
             birthday = self.birthday
 
-        balance: Union[None, Unset, int]
+        balance: int | None | Unset
         if isinstance(self.balance, Unset):
             balance = UNSET
         else:
             balance = self.balance
 
-        active: Union[None, Unset, bool]
+        active: bool | None | Unset
         if isinstance(self.active, Unset):
             active = UNSET
         else:
             active = self.active
 
-        role: Union[None, Unset, str]
+        role: None | str | Unset
         if isinstance(self.role, Unset):
             role = UNSET
         else:
             role = self.role
 
-        patron: Union[None, Unset, bool]
+        patron: bool | None | Unset
         if isinstance(self.patron, Unset):
             patron = UNSET
         else:
             patron = self.patron
 
-        level: Union[None, Unset, int]
+        level: int | None | Unset
         if isinstance(self.level, Unset):
             level = UNSET
         else:
             level = self.level
 
-        xp: Union[None, Unset, int]
+        xp: int | None | Unset
         if isinstance(self.xp, Unset):
             xp = UNSET
         else:
             xp = self.xp
 
-        required_xp: Union[None, Unset, int]
+        required_xp: int | None | Unset
         if isinstance(self.required_xp, Unset):
             required_xp = UNSET
         else:
             required_xp = self.required_xp
 
-        last_message: Union[None, Unset, str]
+        last_message: None | str | Unset
         if isinstance(self.last_message, Unset):
             last_message = UNSET
         elif isinstance(self.last_message, datetime.datetime):
@@ -116,19 +117,19 @@ class UserUpdate:
         else:
             last_message = self.last_message
 
-        gamertag: Union[None, Unset, str]
+        gamertag: None | str | Unset
         if isinstance(self.gamertag, Unset):
             gamertag = UNSET
         else:
             gamertag = self.gamertag
 
-        whitelist: Union[None, Unset, str]
+        whitelist: None | str | Unset
         if isinstance(self.whitelist, Unset):
             whitelist = UNSET
         else:
             whitelist = self.whitelist
 
-        location: Union[None, Unset, list[int]]
+        location: list[int] | None | Unset
         if isinstance(self.location, Unset):
             location = UNSET
         elif isinstance(self.location, list):
@@ -141,19 +142,19 @@ class UserUpdate:
         else:
             location = self.location
 
-        dimension: Union[None, Unset, str]
+        dimension: None | str | Unset
         if isinstance(self.dimension, Unset):
             dimension = UNSET
         else:
             dimension = self.dimension
 
-        hidden: Union[None, Unset, bool]
+        hidden: bool | None | Unset
         if isinstance(self.hidden, Unset):
             hidden = UNSET
         else:
             hidden = self.hidden
 
-        xuid: Union[None, Unset, str]
+        xuid: None | str | Unset
         if isinstance(self.xuid, Unset):
             xuid = UNSET
         else:
@@ -201,16 +202,16 @@ class UserUpdate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_username(data: object) -> Union[None, Unset, str]:
+        def _parse_username(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         username = _parse_username(d.pop("username", UNSET))
 
-        def _parse_birthday(data: object) -> Union[None, Unset, datetime.date]:
+        def _parse_birthday(data: object) -> datetime.date | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -218,79 +219,79 @@ class UserUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                birthday_type_0 = isoparse(data).date()
+                birthday_type_0 = datetime.date.fromisoformat(data)
 
                 return birthday_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.date], data)
+            return cast(datetime.date | None | Unset, data)
 
         birthday = _parse_birthday(d.pop("birthday", UNSET))
 
-        def _parse_balance(data: object) -> Union[None, Unset, int]:
+        def _parse_balance(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         balance = _parse_balance(d.pop("balance", UNSET))
 
-        def _parse_active(data: object) -> Union[None, Unset, bool]:
+        def _parse_active(data: object) -> bool | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, bool], data)
+            return cast(bool | None | Unset, data)
 
         active = _parse_active(d.pop("active", UNSET))
 
-        def _parse_role(data: object) -> Union[None, Unset, str]:
+        def _parse_role(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         role = _parse_role(d.pop("role", UNSET))
 
-        def _parse_patron(data: object) -> Union[None, Unset, bool]:
+        def _parse_patron(data: object) -> bool | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, bool], data)
+            return cast(bool | None | Unset, data)
 
         patron = _parse_patron(d.pop("patron", UNSET))
 
-        def _parse_level(data: object) -> Union[None, Unset, int]:
+        def _parse_level(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         level = _parse_level(d.pop("level", UNSET))
 
-        def _parse_xp(data: object) -> Union[None, Unset, int]:
+        def _parse_xp(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         xp = _parse_xp(d.pop("xp", UNSET))
 
-        def _parse_required_xp(data: object) -> Union[None, Unset, int]:
+        def _parse_required_xp(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         required_xp = _parse_required_xp(d.pop("required_xp", UNSET))
 
-        def _parse_last_message(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_last_message(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -298,34 +299,34 @@ class UserUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                last_message_type_0 = isoparse(data)
+                last_message_type_0 = datetime.datetime.fromisoformat(data)
 
                 return last_message_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         last_message = _parse_last_message(d.pop("last_message", UNSET))
 
-        def _parse_gamertag(data: object) -> Union[None, Unset, str]:
+        def _parse_gamertag(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         gamertag = _parse_gamertag(d.pop("gamertag", UNSET))
 
-        def _parse_whitelist(data: object) -> Union[None, Unset, str]:
+        def _parse_whitelist(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         whitelist = _parse_whitelist(d.pop("whitelist", UNSET))
 
-        def _parse_location(data: object) -> Union[None, Unset, list[int]]:
+        def _parse_location(data: object) -> list[int] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -345,36 +346,36 @@ class UserUpdate:
                     location_type_0.append(location_type_0_item)
 
                 return location_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list[int]], data)
+            return cast(list[int] | None | Unset, data)
 
         location = _parse_location(d.pop("location", UNSET))
 
-        def _parse_dimension(data: object) -> Union[None, Unset, str]:
+        def _parse_dimension(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         dimension = _parse_dimension(d.pop("dimension", UNSET))
 
-        def _parse_hidden(data: object) -> Union[None, Unset, bool]:
+        def _parse_hidden(data: object) -> bool | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, bool], data)
+            return cast(bool | None | Unset, data)
 
         hidden = _parse_hidden(d.pop("hidden", UNSET))
 
-        def _parse_xuid(data: object) -> Union[None, Unset, str]:
+        def _parse_xuid(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         xuid = _parse_xuid(d.pop("xuid", UNSET))
 

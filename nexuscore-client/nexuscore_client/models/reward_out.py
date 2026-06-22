@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -21,22 +23,20 @@ class RewardOut:
     """
     Attributes:
         reward_id (int): The ID of this reward
-        balance (Union[None, int]):
-        item (Union[None, str]):
-        count (Union[None, int]):
-        display_name (Union[None, str]):
-        item_metadata (list[Union['DamageModel', 'EnchantmentModel', 'LoreModel', 'NameModel', 'PotionModel',
-            'RandomEnchantmentModel']]): The metadata for the item reward, to add extra customization
+        balance (int | None):
+        item (None | str):
+        count (int | None):
+        display_name (None | str):
+        item_metadata (list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel |
+            RandomEnchantmentModel]): The metadata for the item reward, to add extra customization
     """
 
     reward_id: int
-    balance: Union[None, int]
-    item: Union[None, str]
-    count: Union[None, int]
-    display_name: Union[None, str]
-    item_metadata: list[
-        Union["DamageModel", "EnchantmentModel", "LoreModel", "NameModel", "PotionModel", "RandomEnchantmentModel"]
-    ]
+    balance: int | None
+    item: None | str
+    count: int | None
+    display_name: None | str
+    item_metadata: list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -48,16 +48,16 @@ class RewardOut:
 
         reward_id = self.reward_id
 
-        balance: Union[None, int]
+        balance: int | None
         balance = self.balance
 
-        item: Union[None, str]
+        item: None | str
         item = self.item
 
-        count: Union[None, int]
+        count: int | None
         count = self.count
 
-        display_name: Union[None, str]
+        display_name: None | str
         display_name = self.display_name
 
         item_metadata = []
@@ -105,31 +105,31 @@ class RewardOut:
         d = dict(src_dict)
         reward_id = d.pop("reward_id")
 
-        def _parse_balance(data: object) -> Union[None, int]:
+        def _parse_balance(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         balance = _parse_balance(d.pop("balance"))
 
-        def _parse_item(data: object) -> Union[None, str]:
+        def _parse_item(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         item = _parse_item(d.pop("item"))
 
-        def _parse_count(data: object) -> Union[None, int]:
+        def _parse_count(data: object) -> int | None:
             if data is None:
                 return data
-            return cast(Union[None, int], data)
+            return cast(int | None, data)
 
         count = _parse_count(d.pop("count"))
 
-        def _parse_display_name(data: object) -> Union[None, str]:
+        def _parse_display_name(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         display_name = _parse_display_name(d.pop("display_name"))
 
@@ -139,16 +139,14 @@ class RewardOut:
 
             def _parse_item_metadata_item(
                 data: object,
-            ) -> Union[
-                "DamageModel", "EnchantmentModel", "LoreModel", "NameModel", "PotionModel", "RandomEnchantmentModel"
-            ]:
+            ) -> DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel:
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
                     item_metadata_item_type_0 = EnchantmentModel.from_dict(data)
 
                     return item_metadata_item_type_0
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -156,7 +154,7 @@ class RewardOut:
                     item_metadata_item_type_1 = RandomEnchantmentModel.from_dict(data)
 
                     return item_metadata_item_type_1
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -164,7 +162,7 @@ class RewardOut:
                     item_metadata_item_type_2 = PotionModel.from_dict(data)
 
                     return item_metadata_item_type_2
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -172,7 +170,7 @@ class RewardOut:
                     item_metadata_item_type_3 = NameModel.from_dict(data)
 
                     return item_metadata_item_type_3
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -180,7 +178,7 @@ class RewardOut:
                     item_metadata_item_type_4 = LoreModel.from_dict(data)
 
                     return item_metadata_item_type_4
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 if not isinstance(data, dict):
                     raise TypeError()

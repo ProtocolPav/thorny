@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 if TYPE_CHECKING:
     from ..models.objective_out import ObjectiveOut
@@ -26,7 +27,7 @@ class QuestOut:
         tags (list[str]): A list of tags describing this quest
         quest_type (str): The quest type
         created_by (UserOut):
-        objectives (list['ObjectiveOut']):
+        objectives (list[ObjectiveOut]):
     """
 
     quest_id: int
@@ -36,8 +37,8 @@ class QuestOut:
     description: str
     tags: list[str]
     quest_type: str
-    created_by: "UserOut"
-    objectives: list["ObjectiveOut"]
+    created_by: UserOut
+    objectives: list[ObjectiveOut]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -88,9 +89,9 @@ class QuestOut:
         d = dict(src_dict)
         quest_id = d.pop("quest_id")
 
-        start_time = isoparse(d.pop("start_time"))
+        start_time = datetime.datetime.fromisoformat(d.pop("start_time"))
 
-        end_time = isoparse(d.pop("end_time"))
+        end_time = datetime.datetime.fromisoformat(d.pop("end_time"))
 
         title = d.pop("title")
 

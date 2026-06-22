@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.status_enum import StatusEnum
 
@@ -44,7 +45,7 @@ class StatusOut:
         d = dict(src_dict)
         status = StatusEnum(d.pop("status"))
 
-        since = isoparse(d.pop("since"))
+        since = datetime.datetime.fromisoformat(d.pop("since"))
 
         status_out = cls(
             status=status,

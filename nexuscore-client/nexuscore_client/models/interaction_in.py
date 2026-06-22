@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,7 +19,7 @@ class InteractionIn:
         type_ (InteractionInType): The type of interaction
         coordinates (list[int]): The coordinates of the interaction
         reference (str): The reference of the interaction
-        mainhand (Union[None, str]):
+        mainhand (None | str):
         dimension (str): The dimension of the interaction
     """
 
@@ -25,7 +27,7 @@ class InteractionIn:
     type_: InteractionInType
     coordinates: list[int]
     reference: str
-    mainhand: Union[None, str]
+    mainhand: None | str
     dimension: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -42,7 +44,7 @@ class InteractionIn:
 
         reference = self.reference
 
-        mainhand: Union[None, str]
+        mainhand: None | str
         mainhand = self.mainhand
 
         dimension = self.dimension
@@ -82,10 +84,10 @@ class InteractionIn:
 
         reference = d.pop("reference")
 
-        def _parse_mainhand(data: object) -> Union[None, str]:
+        def _parse_mainhand(data: object) -> None | str:
             if data is None:
                 return data
-            return cast(Union[None, str], data)
+            return cast(None | str, data)
 
         mainhand = _parse_mainhand(d.pop("mainhand"))
 

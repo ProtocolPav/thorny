@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 if TYPE_CHECKING:
     from ..models.user_out import UserOut
@@ -26,7 +27,7 @@ class SessionOut:
     start: datetime.datetime
     end: datetime.datetime
     duration: float
-    user: "UserOut"
+    user: UserOut
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,9 +57,9 @@ class SessionOut:
         from ..models.user_out import UserOut
 
         d = dict(src_dict)
-        start = isoparse(d.pop("start"))
+        start = datetime.datetime.fromisoformat(d.pop("start"))
 
-        end = isoparse(d.pop("end"))
+        end = datetime.datetime.fromisoformat(d.pop("end"))
 
         duration = d.pop("duration")
 

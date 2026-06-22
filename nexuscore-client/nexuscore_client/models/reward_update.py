@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -22,27 +24,25 @@ T = TypeVar("T", bound="RewardUpdate")
 class RewardUpdate:
     """
     Attributes:
-        reward_id (Union[None, Unset, int]):
-        balance (Union[None, Unset, int]):
-        item (Union[None, Unset, str]):
-        count (Union[None, Unset, int]):
-        display_name (Union[None, Unset, str]):
-        item_metadata (Union[None, Unset, list[Union['DamageModel', 'EnchantmentModel', 'LoreModel', 'NameModel',
-            'PotionModel', 'RandomEnchantmentModel']]]):
+        reward_id (int | None | Unset):
+        balance (int | None | Unset):
+        item (None | str | Unset):
+        count (int | None | Unset):
+        display_name (None | str | Unset):
+        item_metadata (list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel |
+            RandomEnchantmentModel] | None | Unset):
     """
 
-    reward_id: Union[None, Unset, int] = UNSET
-    balance: Union[None, Unset, int] = UNSET
-    item: Union[None, Unset, str] = UNSET
-    count: Union[None, Unset, int] = UNSET
-    display_name: Union[None, Unset, str] = UNSET
-    item_metadata: Union[
-        None,
-        Unset,
-        list[
-            Union["DamageModel", "EnchantmentModel", "LoreModel", "NameModel", "PotionModel", "RandomEnchantmentModel"]
-        ],
-    ] = UNSET
+    reward_id: int | None | Unset = UNSET
+    balance: int | None | Unset = UNSET
+    item: None | str | Unset = UNSET
+    count: int | None | Unset = UNSET
+    display_name: None | str | Unset = UNSET
+    item_metadata: (
+        list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel]
+        | None
+        | Unset
+    ) = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,37 +52,37 @@ class RewardUpdate:
         from ..models.potion_model import PotionModel
         from ..models.random_enchantment_model import RandomEnchantmentModel
 
-        reward_id: Union[None, Unset, int]
+        reward_id: int | None | Unset
         if isinstance(self.reward_id, Unset):
             reward_id = UNSET
         else:
             reward_id = self.reward_id
 
-        balance: Union[None, Unset, int]
+        balance: int | None | Unset
         if isinstance(self.balance, Unset):
             balance = UNSET
         else:
             balance = self.balance
 
-        item: Union[None, Unset, str]
+        item: None | str | Unset
         if isinstance(self.item, Unset):
             item = UNSET
         else:
             item = self.item
 
-        count: Union[None, Unset, int]
+        count: int | None | Unset
         if isinstance(self.count, Unset):
             count = UNSET
         else:
             count = self.count
 
-        display_name: Union[None, Unset, str]
+        display_name: None | str | Unset
         if isinstance(self.display_name, Unset):
             display_name = UNSET
         else:
             display_name = self.display_name
 
-        item_metadata: Union[None, Unset, list[dict[str, Any]]]
+        item_metadata: list[dict[str, Any]] | None | Unset
         if isinstance(self.item_metadata, Unset):
             item_metadata = UNSET
         elif isinstance(self.item_metadata, list):
@@ -136,62 +136,58 @@ class RewardUpdate:
 
         d = dict(src_dict)
 
-        def _parse_reward_id(data: object) -> Union[None, Unset, int]:
+        def _parse_reward_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         reward_id = _parse_reward_id(d.pop("reward_id", UNSET))
 
-        def _parse_balance(data: object) -> Union[None, Unset, int]:
+        def _parse_balance(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         balance = _parse_balance(d.pop("balance", UNSET))
 
-        def _parse_item(data: object) -> Union[None, Unset, str]:
+        def _parse_item(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         item = _parse_item(d.pop("item", UNSET))
 
-        def _parse_count(data: object) -> Union[None, Unset, int]:
+        def _parse_count(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         count = _parse_count(d.pop("count", UNSET))
 
-        def _parse_display_name(data: object) -> Union[None, Unset, str]:
+        def _parse_display_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         display_name = _parse_display_name(d.pop("display_name", UNSET))
 
         def _parse_item_metadata(
             data: object,
-        ) -> Union[
-            None,
-            Unset,
-            list[
-                Union[
-                    "DamageModel", "EnchantmentModel", "LoreModel", "NameModel", "PotionModel", "RandomEnchantmentModel"
-                ]
-            ],
-        ]:
+        ) -> (
+            list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel]
+            | None
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -205,21 +201,14 @@ class RewardUpdate:
 
                     def _parse_item_metadata_type_0_item(
                         data: object,
-                    ) -> Union[
-                        "DamageModel",
-                        "EnchantmentModel",
-                        "LoreModel",
-                        "NameModel",
-                        "PotionModel",
-                        "RandomEnchantmentModel",
-                    ]:
+                    ) -> DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel:
                         try:
                             if not isinstance(data, dict):
                                 raise TypeError()
                             item_metadata_type_0_item_type_0 = EnchantmentModel.from_dict(data)
 
                             return item_metadata_type_0_item_type_0
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -227,7 +216,7 @@ class RewardUpdate:
                             item_metadata_type_0_item_type_1 = RandomEnchantmentModel.from_dict(data)
 
                             return item_metadata_type_0_item_type_1
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -235,7 +224,7 @@ class RewardUpdate:
                             item_metadata_type_0_item_type_2 = PotionModel.from_dict(data)
 
                             return item_metadata_type_0_item_type_2
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -243,7 +232,7 @@ class RewardUpdate:
                             item_metadata_type_0_item_type_3 = NameModel.from_dict(data)
 
                             return item_metadata_type_0_item_type_3
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         try:
                             if not isinstance(data, dict):
@@ -251,7 +240,7 @@ class RewardUpdate:
                             item_metadata_type_0_item_type_4 = LoreModel.from_dict(data)
 
                             return item_metadata_type_0_item_type_4
-                        except:  # noqa: E722
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             pass
                         if not isinstance(data, dict):
                             raise TypeError()
@@ -264,23 +253,12 @@ class RewardUpdate:
                     item_metadata_type_0.append(item_metadata_type_0_item)
 
                 return item_metadata_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                Union[
-                    None,
-                    Unset,
-                    list[
-                        Union[
-                            "DamageModel",
-                            "EnchantmentModel",
-                            "LoreModel",
-                            "NameModel",
-                            "PotionModel",
-                            "RandomEnchantmentModel",
-                        ]
-                    ],
-                ],
+                list[DamageModel | EnchantmentModel | LoreModel | NameModel | PotionModel | RandomEnchantmentModel]
+                | None
+                | Unset,
                 data,
             )
 

@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.objective_progress_out_status import ObjectiveProgressOutStatus
 
@@ -24,21 +25,21 @@ class ObjectiveProgressOut:
     Attributes:
         progress_id (int): The quest progress ID
         objective_id (int): The objective ID
-        start_time (Union[None, datetime.datetime]):
-        end_time (Union[None, datetime.datetime]):
+        start_time (datetime.datetime | None):
+        end_time (datetime.datetime | None):
         status (ObjectiveProgressOutStatus): The status of this objective
-        target_progress (list[Union['KillTargetProgressModel', 'MineTargetProgressModel',
-            'ScriptEventTargetProgressModel']]): List of each objective target's progress
+        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel]): List
+            of each objective target's progress
         customization_progress (CustomizationProgress):
     """
 
     progress_id: int
     objective_id: int
-    start_time: Union[None, datetime.datetime]
-    end_time: Union[None, datetime.datetime]
+    start_time: datetime.datetime | None
+    end_time: datetime.datetime | None
     status: ObjectiveProgressOutStatus
-    target_progress: list[Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]]
-    customization_progress: "CustomizationProgress"
+    target_progress: list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel]
+    customization_progress: CustomizationProgress
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,13 +50,13 @@ class ObjectiveProgressOut:
 
         objective_id = self.objective_id
 
-        start_time: Union[None, str]
+        start_time: None | str
         if isinstance(self.start_time, datetime.datetime):
             start_time = self.start_time.isoformat()
         else:
             start_time = self.start_time
 
-        end_time: Union[None, str]
+        end_time: None | str
         if isinstance(self.end_time, datetime.datetime):
             end_time = self.end_time.isoformat()
         else:
@@ -105,33 +106,33 @@ class ObjectiveProgressOut:
 
         objective_id = d.pop("objective_id")
 
-        def _parse_start_time(data: object) -> Union[None, datetime.datetime]:
+        def _parse_start_time(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0 = isoparse(data)
+                start_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.datetime], data)
+            return cast(datetime.datetime | None, data)
 
         start_time = _parse_start_time(d.pop("start_time"))
 
-        def _parse_end_time(data: object) -> Union[None, datetime.datetime]:
+        def _parse_end_time(data: object) -> datetime.datetime | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0 = isoparse(data)
+                end_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, datetime.datetime], data)
+            return cast(datetime.datetime | None, data)
 
         end_time = _parse_end_time(d.pop("end_time"))
 
@@ -143,14 +144,14 @@ class ObjectiveProgressOut:
 
             def _parse_target_progress_item(
                 data: object,
-            ) -> Union["KillTargetProgressModel", "MineTargetProgressModel", "ScriptEventTargetProgressModel"]:
+            ) -> KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel:
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
                     target_progress_item_type_0 = MineTargetProgressModel.from_dict(data)
 
                     return target_progress_item_type_0
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 try:
                     if not isinstance(data, dict):
@@ -158,7 +159,7 @@ class ObjectiveProgressOut:
                     target_progress_item_type_1 = KillTargetProgressModel.from_dict(data)
 
                     return target_progress_item_type_1
-                except:  # noqa: E722
+                except (TypeError, ValueError, AttributeError, KeyError):
                     pass
                 if not isinstance(data, dict):
                     raise TypeError()

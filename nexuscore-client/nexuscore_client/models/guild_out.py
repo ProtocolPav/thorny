@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -25,8 +27,8 @@ class GuildOut:
         leave_message (str): Message sent when a user leaves
         xp_multiplier (float): XP multiplier for all guild members
         active (bool): Whether Thorny is in this guild
-        channels (list['ChannelOut']):
-        features (list['FeatureOut']):
+        channels (list[ChannelOut]):
+        features (list[FeatureOut]):
     """
 
     guild_id: int
@@ -38,8 +40,8 @@ class GuildOut:
     leave_message: str
     xp_multiplier: float
     active: bool
-    channels: list["ChannelOut"]
-    features: list["FeatureOut"]
+    channels: list[ChannelOut]
+    features: list[FeatureOut]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

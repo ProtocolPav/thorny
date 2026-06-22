@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.connection_out_type import ConnectionOutType
 from ..types import UNSET, Unset
@@ -20,14 +21,14 @@ class ConnectionOut:
         type_ (ConnectionOutType): The type of connection
         thorny_id (int): The ThornyID of the user
         time (datetime.datetime): The time of the connection
-        ignored (Union[Unset, bool]): Whether the connection is ignored in metrics Default: False.
+        ignored (bool | Unset): Whether the connection is ignored in metrics Default: False.
     """
 
     connection_id: int
     type_: ConnectionOutType
     thorny_id: int
     time: datetime.datetime
-    ignored: Union[Unset, bool] = False
+    ignored: bool | Unset = False
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -65,7 +66,7 @@ class ConnectionOut:
 
         thorny_id = d.pop("thorny_id")
 
-        time = isoparse(d.pop("time"))
+        time = datetime.datetime.fromisoformat(d.pop("time"))
 
         ignored = d.pop("ignored", UNSET)
 

@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,30 +15,30 @@ T = TypeVar("T", bound="WorldUpdate")
 class WorldUpdate:
     """
     Attributes:
-        overworld_border (Union[None, Unset, float]):
-        nether_border (Union[None, Unset, float]):
-        end_border (Union[None, Unset, float]):
+        overworld_border (float | None | Unset):
+        nether_border (float | None | Unset):
+        end_border (float | None | Unset):
     """
 
-    overworld_border: Union[None, Unset, float] = UNSET
-    nether_border: Union[None, Unset, float] = UNSET
-    end_border: Union[None, Unset, float] = UNSET
+    overworld_border: float | None | Unset = UNSET
+    nether_border: float | None | Unset = UNSET
+    end_border: float | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        overworld_border: Union[None, Unset, float]
+        overworld_border: float | None | Unset
         if isinstance(self.overworld_border, Unset):
             overworld_border = UNSET
         else:
             overworld_border = self.overworld_border
 
-        nether_border: Union[None, Unset, float]
+        nether_border: float | None | Unset
         if isinstance(self.nether_border, Unset):
             nether_border = UNSET
         else:
             nether_border = self.nether_border
 
-        end_border: Union[None, Unset, float]
+        end_border: float | None | Unset
         if isinstance(self.end_border, Unset):
             end_border = UNSET
         else:
@@ -58,30 +60,30 @@ class WorldUpdate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_overworld_border(data: object) -> Union[None, Unset, float]:
+        def _parse_overworld_border(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, float], data)
+            return cast(float | None | Unset, data)
 
         overworld_border = _parse_overworld_border(d.pop("overworld_border", UNSET))
 
-        def _parse_nether_border(data: object) -> Union[None, Unset, float]:
+        def _parse_nether_border(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, float], data)
+            return cast(float | None | Unset, data)
 
         nether_border = _parse_nether_border(d.pop("nether_border", UNSET))
 
-        def _parse_end_border(data: object) -> Union[None, Unset, float]:
+        def _parse_end_border(data: object) -> float | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, float], data)
+            return cast(float | None | Unset, data)
 
         end_border = _parse_end_border(d.pop("end_border", UNSET))
 

@@ -3,13 +3,17 @@ name = "thorny-core"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "asyncpg==0.30.0",
     "giphy-client==1.0.0",
     "httpx==0.28.1",
+    "nexuscore-client",
     "py-cord==2.7.0rc1",
     "python-dateutil==2.9.0",
+]
+
+[tool.uv.workspace]
+members = [
     "nexuscore-client",
 ]
 
 [tool.uv.sources]
-nexuscore-client = { path = "nexuscore-client" }
+nexuscore-client = { workspace = true }

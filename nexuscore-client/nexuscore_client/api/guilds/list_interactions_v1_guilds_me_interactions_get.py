@@ -1,6 +1,6 @@
 import datetime
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -16,22 +16,21 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    coordinates: Union[None, Unset, list[int]] = UNSET,
-    coordinates_end: Union[None, Unset, list[int]] = UNSET,
-    thorny_ids: Union[None, Unset, list[int]] = UNSET,
-    interaction_types: Union[
-        None, Unset, list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]
-    ] = UNSET,
-    references: Union[None, Unset, list[str]] = UNSET,
-    dimensions: Union[None, Unset, list[str]] = UNSET,
-    time_start: Union[None, Unset, datetime.datetime] = UNSET,
-    time_end: Union[None, Unset, datetime.datetime] = UNSET,
-    page: Union[None, Unset, int] = 1,
-    page_size: Union[None, Unset, int] = 100,
+    coordinates: list[int] | None | Unset = UNSET,
+    coordinates_end: list[int] | None | Unset = UNSET,
+    thorny_ids: list[int] | None | Unset = UNSET,
+    interaction_types: list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset = UNSET,
+    references: list[str] | None | Unset = UNSET,
+    dimensions: list[str] | None | Unset = UNSET,
+    time_start: datetime.datetime | None | Unset = UNSET,
+    time_end: datetime.datetime | None | Unset = UNSET,
+    page: int | None | Unset = 1,
+    page_size: int | None | Unset = 100,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
-    json_coordinates: Union[None, Unset, list[int]]
+    json_coordinates: list[int] | None | Unset
     if isinstance(coordinates, Unset):
         json_coordinates = UNSET
     elif isinstance(coordinates, list):
@@ -41,7 +40,7 @@ def _get_kwargs(
         json_coordinates = coordinates
     params["coordinates"] = json_coordinates
 
-    json_coordinates_end: Union[None, Unset, list[int]]
+    json_coordinates_end: list[int] | None | Unset
     if isinstance(coordinates_end, Unset):
         json_coordinates_end = UNSET
     elif isinstance(coordinates_end, list):
@@ -51,7 +50,7 @@ def _get_kwargs(
         json_coordinates_end = coordinates_end
     params["coordinates_end"] = json_coordinates_end
 
-    json_thorny_ids: Union[None, Unset, list[int]]
+    json_thorny_ids: list[int] | None | Unset
     if isinstance(thorny_ids, Unset):
         json_thorny_ids = UNSET
     elif isinstance(thorny_ids, list):
@@ -61,7 +60,7 @@ def _get_kwargs(
         json_thorny_ids = thorny_ids
     params["thorny_ids"] = json_thorny_ids
 
-    json_interaction_types: Union[None, Unset, list[str]]
+    json_interaction_types: list[str] | None | Unset
     if isinstance(interaction_types, Unset):
         json_interaction_types = UNSET
     elif isinstance(interaction_types, list):
@@ -74,7 +73,7 @@ def _get_kwargs(
         json_interaction_types = interaction_types
     params["interaction_types"] = json_interaction_types
 
-    json_references: Union[None, Unset, list[str]]
+    json_references: list[str] | None | Unset
     if isinstance(references, Unset):
         json_references = UNSET
     elif isinstance(references, list):
@@ -84,7 +83,7 @@ def _get_kwargs(
         json_references = references
     params["references"] = json_references
 
-    json_dimensions: Union[None, Unset, list[str]]
+    json_dimensions: list[str] | None | Unset
     if isinstance(dimensions, Unset):
         json_dimensions = UNSET
     elif isinstance(dimensions, list):
@@ -94,7 +93,7 @@ def _get_kwargs(
         json_dimensions = dimensions
     params["dimensions"] = json_dimensions
 
-    json_time_start: Union[None, Unset, str]
+    json_time_start: None | str | Unset
     if isinstance(time_start, Unset):
         json_time_start = UNSET
     elif isinstance(time_start, datetime.datetime):
@@ -103,7 +102,7 @@ def _get_kwargs(
         json_time_start = time_start
     params["time_start"] = json_time_start
 
-    json_time_end: Union[None, Unset, str]
+    json_time_end: None | str | Unset
     if isinstance(time_end, Unset):
         json_time_end = UNSET
     elif isinstance(time_end, datetime.datetime):
@@ -112,14 +111,14 @@ def _get_kwargs(
         json_time_end = time_end
     params["time_end"] = json_time_end
 
-    json_page: Union[None, Unset, int]
+    json_page: int | None | Unset
     if isinstance(page, Unset):
         json_page = UNSET
     else:
         json_page = page
     params["page"] = json_page
 
-    json_page_size: Union[None, Unset, int]
+    json_page_size: int | None | Unset
     if isinstance(page_size, Unset):
         json_page_size = UNSET
     else:
@@ -138,8 +137,8 @@ def _get_kwargs(
 
 
 def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[Union[HTTPValidationError, list["InteractionOut"]]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | list[InteractionOut] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -149,10 +148,12 @@ def _parse_response(
             response_200.append(response_200_item)
 
         return response_200
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -160,8 +161,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[Union[HTTPValidationError, list["InteractionOut"]]]:
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | list[InteractionOut]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -173,45 +174,42 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    coordinates: Union[None, Unset, list[int]] = UNSET,
-    coordinates_end: Union[None, Unset, list[int]] = UNSET,
-    thorny_ids: Union[None, Unset, list[int]] = UNSET,
-    interaction_types: Union[
-        None, Unset, list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]
-    ] = UNSET,
-    references: Union[None, Unset, list[str]] = UNSET,
-    dimensions: Union[None, Unset, list[str]] = UNSET,
-    time_start: Union[None, Unset, datetime.datetime] = UNSET,
-    time_end: Union[None, Unset, datetime.datetime] = UNSET,
-    page: Union[None, Unset, int] = 1,
-    page_size: Union[None, Unset, int] = 100,
-) -> Response[Union[HTTPValidationError, list["InteractionOut"]]]:
+    coordinates: list[int] | None | Unset = UNSET,
+    coordinates_end: list[int] | None | Unset = UNSET,
+    thorny_ids: list[int] | None | Unset = UNSET,
+    interaction_types: list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset = UNSET,
+    references: list[str] | None | Unset = UNSET,
+    dimensions: list[str] | None | Unset = UNSET,
+    time_start: datetime.datetime | None | Unset = UNSET,
+    time_end: datetime.datetime | None | Unset = UNSET,
+    page: int | None | Unset = 1,
+    page_size: int | None | Unset = 100,
+) -> Response[HTTPValidationError | list[InteractionOut]]:
     """List Interactions
 
      Filter interactions by various criteria.
 
     Args:
-        coordinates (Union[None, Unset, list[int]]): The coordinates where it happened
-        coordinates_end (Union[None, Unset, list[int]]): Optional End coordinates
-        thorny_ids (Union[None, Unset, list[int]]): The thorny IDs to filter by
-        interaction_types (Union[None, Unset,
-            list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]]): The
-            interaction types to filter by
-        references (Union[None, Unset, list[str]]): The references to filter by
-        dimensions (Union[None, Unset, list[str]]): The dimensions to filter by
-        time_start (Union[None, Unset, datetime.datetime]): The start time of the interaction
-            events
-        time_end (Union[None, Unset, datetime.datetime]): The end time of the interaction events
-        page (Union[None, Unset, int]): The page number of the results. Defaults to 1 Default: 1.
-        page_size (Union[None, Unset, int]): The number of results per page. Defaults to 100
-            Default: 100.
+        coordinates (list[int] | None | Unset): The coordinates where it happened
+        coordinates_end (list[int] | None | Unset): Optional End coordinates
+        thorny_ids (list[int] | None | Unset): The thorny IDs to filter by
+        interaction_types
+            (list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset):
+            The interaction types to filter by
+        references (list[str] | None | Unset): The references to filter by
+        dimensions (list[str] | None | Unset): The dimensions to filter by
+        time_start (datetime.datetime | None | Unset): The start time of the interaction events
+        time_end (datetime.datetime | None | Unset): The end time of the interaction events
+        page (int | None | Unset): The page number of the results. Defaults to 1 Default: 1.
+        page_size (int | None | Unset): The number of results per page. Defaults to 100 Default:
+            100.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, list['InteractionOut']]]
+        Response[HTTPValidationError | list[InteractionOut]]
     """
 
     kwargs = _get_kwargs(
@@ -237,45 +235,42 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    coordinates: Union[None, Unset, list[int]] = UNSET,
-    coordinates_end: Union[None, Unset, list[int]] = UNSET,
-    thorny_ids: Union[None, Unset, list[int]] = UNSET,
-    interaction_types: Union[
-        None, Unset, list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]
-    ] = UNSET,
-    references: Union[None, Unset, list[str]] = UNSET,
-    dimensions: Union[None, Unset, list[str]] = UNSET,
-    time_start: Union[None, Unset, datetime.datetime] = UNSET,
-    time_end: Union[None, Unset, datetime.datetime] = UNSET,
-    page: Union[None, Unset, int] = 1,
-    page_size: Union[None, Unset, int] = 100,
-) -> Optional[Union[HTTPValidationError, list["InteractionOut"]]]:
+    coordinates: list[int] | None | Unset = UNSET,
+    coordinates_end: list[int] | None | Unset = UNSET,
+    thorny_ids: list[int] | None | Unset = UNSET,
+    interaction_types: list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset = UNSET,
+    references: list[str] | None | Unset = UNSET,
+    dimensions: list[str] | None | Unset = UNSET,
+    time_start: datetime.datetime | None | Unset = UNSET,
+    time_end: datetime.datetime | None | Unset = UNSET,
+    page: int | None | Unset = 1,
+    page_size: int | None | Unset = 100,
+) -> HTTPValidationError | list[InteractionOut] | None:
     """List Interactions
 
      Filter interactions by various criteria.
 
     Args:
-        coordinates (Union[None, Unset, list[int]]): The coordinates where it happened
-        coordinates_end (Union[None, Unset, list[int]]): Optional End coordinates
-        thorny_ids (Union[None, Unset, list[int]]): The thorny IDs to filter by
-        interaction_types (Union[None, Unset,
-            list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]]): The
-            interaction types to filter by
-        references (Union[None, Unset, list[str]]): The references to filter by
-        dimensions (Union[None, Unset, list[str]]): The dimensions to filter by
-        time_start (Union[None, Unset, datetime.datetime]): The start time of the interaction
-            events
-        time_end (Union[None, Unset, datetime.datetime]): The end time of the interaction events
-        page (Union[None, Unset, int]): The page number of the results. Defaults to 1 Default: 1.
-        page_size (Union[None, Unset, int]): The number of results per page. Defaults to 100
-            Default: 100.
+        coordinates (list[int] | None | Unset): The coordinates where it happened
+        coordinates_end (list[int] | None | Unset): Optional End coordinates
+        thorny_ids (list[int] | None | Unset): The thorny IDs to filter by
+        interaction_types
+            (list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset):
+            The interaction types to filter by
+        references (list[str] | None | Unset): The references to filter by
+        dimensions (list[str] | None | Unset): The dimensions to filter by
+        time_start (datetime.datetime | None | Unset): The start time of the interaction events
+        time_end (datetime.datetime | None | Unset): The end time of the interaction events
+        page (int | None | Unset): The page number of the results. Defaults to 1 Default: 1.
+        page_size (int | None | Unset): The number of results per page. Defaults to 100 Default:
+            100.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, list['InteractionOut']]
+        HTTPValidationError | list[InteractionOut]
     """
 
     return sync_detailed(
@@ -296,45 +291,42 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    coordinates: Union[None, Unset, list[int]] = UNSET,
-    coordinates_end: Union[None, Unset, list[int]] = UNSET,
-    thorny_ids: Union[None, Unset, list[int]] = UNSET,
-    interaction_types: Union[
-        None, Unset, list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]
-    ] = UNSET,
-    references: Union[None, Unset, list[str]] = UNSET,
-    dimensions: Union[None, Unset, list[str]] = UNSET,
-    time_start: Union[None, Unset, datetime.datetime] = UNSET,
-    time_end: Union[None, Unset, datetime.datetime] = UNSET,
-    page: Union[None, Unset, int] = 1,
-    page_size: Union[None, Unset, int] = 100,
-) -> Response[Union[HTTPValidationError, list["InteractionOut"]]]:
+    coordinates: list[int] | None | Unset = UNSET,
+    coordinates_end: list[int] | None | Unset = UNSET,
+    thorny_ids: list[int] | None | Unset = UNSET,
+    interaction_types: list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset = UNSET,
+    references: list[str] | None | Unset = UNSET,
+    dimensions: list[str] | None | Unset = UNSET,
+    time_start: datetime.datetime | None | Unset = UNSET,
+    time_end: datetime.datetime | None | Unset = UNSET,
+    page: int | None | Unset = 1,
+    page_size: int | None | Unset = 100,
+) -> Response[HTTPValidationError | list[InteractionOut]]:
     """List Interactions
 
      Filter interactions by various criteria.
 
     Args:
-        coordinates (Union[None, Unset, list[int]]): The coordinates where it happened
-        coordinates_end (Union[None, Unset, list[int]]): Optional End coordinates
-        thorny_ids (Union[None, Unset, list[int]]): The thorny IDs to filter by
-        interaction_types (Union[None, Unset,
-            list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]]): The
-            interaction types to filter by
-        references (Union[None, Unset, list[str]]): The references to filter by
-        dimensions (Union[None, Unset, list[str]]): The dimensions to filter by
-        time_start (Union[None, Unset, datetime.datetime]): The start time of the interaction
-            events
-        time_end (Union[None, Unset, datetime.datetime]): The end time of the interaction events
-        page (Union[None, Unset, int]): The page number of the results. Defaults to 1 Default: 1.
-        page_size (Union[None, Unset, int]): The number of results per page. Defaults to 100
-            Default: 100.
+        coordinates (list[int] | None | Unset): The coordinates where it happened
+        coordinates_end (list[int] | None | Unset): Optional End coordinates
+        thorny_ids (list[int] | None | Unset): The thorny IDs to filter by
+        interaction_types
+            (list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset):
+            The interaction types to filter by
+        references (list[str] | None | Unset): The references to filter by
+        dimensions (list[str] | None | Unset): The dimensions to filter by
+        time_start (datetime.datetime | None | Unset): The start time of the interaction events
+        time_end (datetime.datetime | None | Unset): The end time of the interaction events
+        page (int | None | Unset): The page number of the results. Defaults to 1 Default: 1.
+        page_size (int | None | Unset): The number of results per page. Defaults to 100 Default:
+            100.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Union[HTTPValidationError, list['InteractionOut']]]
+        Response[HTTPValidationError | list[InteractionOut]]
     """
 
     kwargs = _get_kwargs(
@@ -358,45 +350,42 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    coordinates: Union[None, Unset, list[int]] = UNSET,
-    coordinates_end: Union[None, Unset, list[int]] = UNSET,
-    thorny_ids: Union[None, Unset, list[int]] = UNSET,
-    interaction_types: Union[
-        None, Unset, list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]
-    ] = UNSET,
-    references: Union[None, Unset, list[str]] = UNSET,
-    dimensions: Union[None, Unset, list[str]] = UNSET,
-    time_start: Union[None, Unset, datetime.datetime] = UNSET,
-    time_end: Union[None, Unset, datetime.datetime] = UNSET,
-    page: Union[None, Unset, int] = 1,
-    page_size: Union[None, Unset, int] = 100,
-) -> Optional[Union[HTTPValidationError, list["InteractionOut"]]]:
+    coordinates: list[int] | None | Unset = UNSET,
+    coordinates_end: list[int] | None | Unset = UNSET,
+    thorny_ids: list[int] | None | Unset = UNSET,
+    interaction_types: list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset = UNSET,
+    references: list[str] | None | Unset = UNSET,
+    dimensions: list[str] | None | Unset = UNSET,
+    time_start: datetime.datetime | None | Unset = UNSET,
+    time_end: datetime.datetime | None | Unset = UNSET,
+    page: int | None | Unset = 1,
+    page_size: int | None | Unset = 100,
+) -> HTTPValidationError | list[InteractionOut] | None:
     """List Interactions
 
      Filter interactions by various criteria.
 
     Args:
-        coordinates (Union[None, Unset, list[int]]): The coordinates where it happened
-        coordinates_end (Union[None, Unset, list[int]]): Optional End coordinates
-        thorny_ids (Union[None, Unset, list[int]]): The thorny IDs to filter by
-        interaction_types (Union[None, Unset,
-            list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item]]): The
-            interaction types to filter by
-        references (Union[None, Unset, list[str]]): The references to filter by
-        dimensions (Union[None, Unset, list[str]]): The dimensions to filter by
-        time_start (Union[None, Unset, datetime.datetime]): The start time of the interaction
-            events
-        time_end (Union[None, Unset, datetime.datetime]): The end time of the interaction events
-        page (Union[None, Unset, int]): The page number of the results. Defaults to 1 Default: 1.
-        page_size (Union[None, Unset, int]): The number of results per page. Defaults to 100
-            Default: 100.
+        coordinates (list[int] | None | Unset): The coordinates where it happened
+        coordinates_end (list[int] | None | Unset): Optional End coordinates
+        thorny_ids (list[int] | None | Unset): The thorny IDs to filter by
+        interaction_types
+            (list[ListInteractionsV1GuildsMeInteractionsGetInteractionTypesType0Item] | None | Unset):
+            The interaction types to filter by
+        references (list[str] | None | Unset): The references to filter by
+        dimensions (list[str] | None | Unset): The dimensions to filter by
+        time_start (datetime.datetime | None | Unset): The start time of the interaction events
+        time_end (datetime.datetime | None | Unset): The end time of the interaction events
+        page (int | None | Unset): The page number of the results. Defaults to 1 Default: 1.
+        page_size (int | None | Unset): The number of results per page. Defaults to 100 Default:
+            100.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Union[HTTPValidationError, list['InteractionOut']]
+        HTTPValidationError | list[InteractionOut]
     """
 
     return (

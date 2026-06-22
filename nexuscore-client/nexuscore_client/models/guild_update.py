@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,24 +15,24 @@ T = TypeVar("T", bound="GuildUpdate")
 class GuildUpdate:
     """
     Attributes:
-        name (Union[Unset, str]): The name of the guild
-        currency_name (Union[Unset, str]): The guild's currency name (plural)
-        currency_emoji (Union[Unset, str]): The emoji of the guild's currency
-        level_up_message (Union[Unset, str]): Message sent when a user levels up
-        join_message (Union[Unset, str]): Message sent when a user joins
-        leave_message (Union[Unset, str]): Message sent when a user leaves
-        xp_multiplier (Union[Unset, float]): XP multiplier for all guild members
-        active (Union[Unset, bool]): Whether Thorny is in this guild
+        name (str | Unset): The name of the guild
+        currency_name (str | Unset): The guild's currency name (plural)
+        currency_emoji (str | Unset): The emoji of the guild's currency
+        level_up_message (str | Unset): Message sent when a user levels up
+        join_message (str | Unset): Message sent when a user joins
+        leave_message (str | Unset): Message sent when a user leaves
+        xp_multiplier (float | Unset): XP multiplier for all guild members
+        active (bool | Unset): Whether Thorny is in this guild
     """
 
-    name: Union[Unset, str] = UNSET
-    currency_name: Union[Unset, str] = UNSET
-    currency_emoji: Union[Unset, str] = UNSET
-    level_up_message: Union[Unset, str] = UNSET
-    join_message: Union[Unset, str] = UNSET
-    leave_message: Union[Unset, str] = UNSET
-    xp_multiplier: Union[Unset, float] = UNSET
-    active: Union[Unset, bool] = UNSET
+    name: str | Unset = UNSET
+    currency_name: str | Unset = UNSET
+    currency_emoji: str | Unset = UNSET
+    level_up_message: str | Unset = UNSET
+    join_message: str | Unset = UNSET
+    leave_message: str | Unset = UNSET
+    xp_multiplier: float | Unset = UNSET
+    active: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

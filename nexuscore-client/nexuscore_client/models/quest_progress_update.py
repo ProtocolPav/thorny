@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.quest_progress_update_status_type_0 import QuestProgressUpdateStatusType0
 from ..types import UNSET, Unset
@@ -20,20 +21,20 @@ T = TypeVar("T", bound="QuestProgressUpdate")
 class QuestProgressUpdate:
     """
     Attributes:
-        start_time (Union[None, Unset, datetime.datetime]):
-        end_time (Union[None, Unset, datetime.datetime]):
-        status (Union[None, QuestProgressUpdateStatusType0, Unset]):
-        objectives (Union[None, Unset, list['ObjectiveProgressUpdate']]):
+        start_time (datetime.datetime | None | Unset):
+        end_time (datetime.datetime | None | Unset):
+        status (None | QuestProgressUpdateStatusType0 | Unset):
+        objectives (list[ObjectiveProgressUpdate] | None | Unset):
     """
 
-    start_time: Union[None, Unset, datetime.datetime] = UNSET
-    end_time: Union[None, Unset, datetime.datetime] = UNSET
-    status: Union[None, QuestProgressUpdateStatusType0, Unset] = UNSET
-    objectives: Union[None, Unset, list["ObjectiveProgressUpdate"]] = UNSET
+    start_time: datetime.datetime | None | Unset = UNSET
+    end_time: datetime.datetime | None | Unset = UNSET
+    status: None | QuestProgressUpdateStatusType0 | Unset = UNSET
+    objectives: list[ObjectiveProgressUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        start_time: Union[None, Unset, str]
+        start_time: None | str | Unset
         if isinstance(self.start_time, Unset):
             start_time = UNSET
         elif isinstance(self.start_time, datetime.datetime):
@@ -41,7 +42,7 @@ class QuestProgressUpdate:
         else:
             start_time = self.start_time
 
-        end_time: Union[None, Unset, str]
+        end_time: None | str | Unset
         if isinstance(self.end_time, Unset):
             end_time = UNSET
         elif isinstance(self.end_time, datetime.datetime):
@@ -49,7 +50,7 @@ class QuestProgressUpdate:
         else:
             end_time = self.end_time
 
-        status: Union[None, Unset, str]
+        status: None | str | Unset
         if isinstance(self.status, Unset):
             status = UNSET
         elif isinstance(self.status, QuestProgressUpdateStatusType0):
@@ -57,7 +58,7 @@ class QuestProgressUpdate:
         else:
             status = self.status
 
-        objectives: Union[None, Unset, list[dict[str, Any]]]
+        objectives: list[dict[str, Any]] | None | Unset
         if isinstance(self.objectives, Unset):
             objectives = UNSET
         elif isinstance(self.objectives, list):
@@ -89,7 +90,7 @@ class QuestProgressUpdate:
 
         d = dict(src_dict)
 
-        def _parse_start_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_start_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -97,16 +98,16 @@ class QuestProgressUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0_type_0 = isoparse(data)
+                start_time_type_0_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         start_time = _parse_start_time(d.pop("start_time", UNSET))
 
-        def _parse_end_time(data: object) -> Union[None, Unset, datetime.datetime]:
+        def _parse_end_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -114,16 +115,16 @@ class QuestProgressUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0_type_0 = isoparse(data)
+                end_time_type_0_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.datetime], data)
+            return cast(datetime.datetime | None | Unset, data)
 
         end_time = _parse_end_time(d.pop("end_time", UNSET))
 
-        def _parse_status(data: object) -> Union[None, QuestProgressUpdateStatusType0, Unset]:
+        def _parse_status(data: object) -> None | QuestProgressUpdateStatusType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -134,13 +135,13 @@ class QuestProgressUpdate:
                 status_type_0 = QuestProgressUpdateStatusType0(data)
 
                 return status_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, QuestProgressUpdateStatusType0, Unset], data)
+            return cast(None | QuestProgressUpdateStatusType0 | Unset, data)
 
         status = _parse_status(d.pop("status", UNSET))
 
-        def _parse_objectives(data: object) -> Union[None, Unset, list["ObjectiveProgressUpdate"]]:
+        def _parse_objectives(data: object) -> list[ObjectiveProgressUpdate] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -156,9 +157,9 @@ class QuestProgressUpdate:
                     objectives_type_0.append(objectives_type_0_item)
 
                 return objectives_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list["ObjectiveProgressUpdate"]], data)
+            return cast(list[ObjectiveProgressUpdate] | None | Unset, data)
 
         objectives = _parse_objectives(d.pop("objectives", UNSET))
 

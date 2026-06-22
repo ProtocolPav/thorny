@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -15,40 +16,40 @@ T = TypeVar("T", bound="ProjectUpdate")
 class ProjectUpdate:
     """
     Attributes:
-        name (Union[None, Unset, str]):
-        thread_id (Union[None, Unset, int]):
-        coordinates (Union[None, Unset, list[int]]):
-        description (Union[None, Unset, str]):
-        completed_on (Union[None, Unset, datetime.date]):
-        pin_id (Union[None, Unset, int]):
-        dimension (Union[None, Unset, str]):
-        owner_id (Union[None, Unset, int]):
+        name (None | str | Unset):
+        thread_id (int | None | Unset):
+        coordinates (list[int] | None | Unset):
+        description (None | str | Unset):
+        completed_on (datetime.date | None | Unset):
+        pin_id (int | None | Unset):
+        dimension (None | str | Unset):
+        owner_id (int | None | Unset):
     """
 
-    name: Union[None, Unset, str] = UNSET
-    thread_id: Union[None, Unset, int] = UNSET
-    coordinates: Union[None, Unset, list[int]] = UNSET
-    description: Union[None, Unset, str] = UNSET
-    completed_on: Union[None, Unset, datetime.date] = UNSET
-    pin_id: Union[None, Unset, int] = UNSET
-    dimension: Union[None, Unset, str] = UNSET
-    owner_id: Union[None, Unset, int] = UNSET
+    name: None | str | Unset = UNSET
+    thread_id: int | None | Unset = UNSET
+    coordinates: list[int] | None | Unset = UNSET
+    description: None | str | Unset = UNSET
+    completed_on: datetime.date | None | Unset = UNSET
+    pin_id: int | None | Unset = UNSET
+    dimension: None | str | Unset = UNSET
+    owner_id: int | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name: Union[None, Unset, str]
+        name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-        thread_id: Union[None, Unset, int]
+        thread_id: int | None | Unset
         if isinstance(self.thread_id, Unset):
             thread_id = UNSET
         else:
             thread_id = self.thread_id
 
-        coordinates: Union[None, Unset, list[int]]
+        coordinates: list[int] | None | Unset
         if isinstance(self.coordinates, Unset):
             coordinates = UNSET
         elif isinstance(self.coordinates, list):
@@ -57,13 +58,13 @@ class ProjectUpdate:
         else:
             coordinates = self.coordinates
 
-        description: Union[None, Unset, str]
+        description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        completed_on: Union[None, Unset, str]
+        completed_on: None | str | Unset
         if isinstance(self.completed_on, Unset):
             completed_on = UNSET
         elif isinstance(self.completed_on, datetime.date):
@@ -71,19 +72,19 @@ class ProjectUpdate:
         else:
             completed_on = self.completed_on
 
-        pin_id: Union[None, Unset, int]
+        pin_id: int | None | Unset
         if isinstance(self.pin_id, Unset):
             pin_id = UNSET
         else:
             pin_id = self.pin_id
 
-        dimension: Union[None, Unset, str]
+        dimension: None | str | Unset
         if isinstance(self.dimension, Unset):
             dimension = UNSET
         else:
             dimension = self.dimension
 
-        owner_id: Union[None, Unset, int]
+        owner_id: int | None | Unset
         if isinstance(self.owner_id, Unset):
             owner_id = UNSET
         else:
@@ -115,25 +116,25 @@ class ProjectUpdate:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_name(data: object) -> Union[None, Unset, str]:
+        def _parse_name(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         name = _parse_name(d.pop("name", UNSET))
 
-        def _parse_thread_id(data: object) -> Union[None, Unset, int]:
+        def _parse_thread_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         thread_id = _parse_thread_id(d.pop("thread_id", UNSET))
 
-        def _parse_coordinates(data: object) -> Union[None, Unset, list[int]]:
+        def _parse_coordinates(data: object) -> list[int] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -144,22 +145,22 @@ class ProjectUpdate:
                 coordinates_type_0 = cast(list[int], data)
 
                 return coordinates_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, list[int]], data)
+            return cast(list[int] | None | Unset, data)
 
         coordinates = _parse_coordinates(d.pop("coordinates", UNSET))
 
-        def _parse_description(data: object) -> Union[None, Unset, str]:
+        def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_completed_on(data: object) -> Union[None, Unset, datetime.date]:
+        def _parse_completed_on(data: object) -> datetime.date | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -167,39 +168,39 @@ class ProjectUpdate:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                completed_on_type_0 = isoparse(data).date()
+                completed_on_type_0 = datetime.date.fromisoformat(data)
 
                 return completed_on_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union[None, Unset, datetime.date], data)
+            return cast(datetime.date | None | Unset, data)
 
         completed_on = _parse_completed_on(d.pop("completed_on", UNSET))
 
-        def _parse_pin_id(data: object) -> Union[None, Unset, int]:
+        def _parse_pin_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         pin_id = _parse_pin_id(d.pop("pin_id", UNSET))
 
-        def _parse_dimension(data: object) -> Union[None, Unset, str]:
+        def _parse_dimension(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, str], data)
+            return cast(None | str | Unset, data)
 
         dimension = _parse_dimension(d.pop("dimension", UNSET))
 
-        def _parse_owner_id(data: object) -> Union[None, Unset, int]:
+        def _parse_owner_id(data: object) -> int | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(Union[None, Unset, int], data)
+            return cast(int | None | Unset, data)
 
         owner_id = _parse_owner_id(d.pop("owner_id", UNSET))
 

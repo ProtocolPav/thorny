@@ -1,5 +1,6 @@
 from http import HTTPStatus
-from typing import Any, Optional, Union
+from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -12,30 +13,30 @@ from ...types import Response
 def _get_kwargs(
     thorny_id: int,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/guilds/me/users/{thorny_id}/playtime",
+        "url": "/v1/guilds/me/users/{thorny_id}/playtime".format(
+            thorny_id=quote(str(thorny_id), safe=""),
+        ),
     }
 
     return _kwargs
 
 
-def _parse_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Optional[HTTPValidationError]:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HTTPValidationError | None:
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
         return response_422
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 
 
-def _build_response(
-    *, client: Union[AuthenticatedClient, Client], response: httpx.Response
-) -> Response[HTTPValidationError]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -47,7 +48,7 @@ def _build_response(
 def sync_detailed(
     thorny_id: int,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
 ) -> Response[HTTPValidationError]:
     """Get User Playtime
 
@@ -78,8 +79,8 @@ def sync_detailed(
 def sync(
     thorny_id: int,
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[HTTPValidationError]:
+    client: AuthenticatedClient | Client,
+) -> HTTPValidationError | None:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!
@@ -104,7 +105,7 @@ def sync(
 async def asyncio_detailed(
     thorny_id: int,
     *,
-    client: Union[AuthenticatedClient, Client],
+    client: AuthenticatedClient | Client,
 ) -> Response[HTTPValidationError]:
     """Get User Playtime
 
@@ -133,8 +134,8 @@ async def asyncio_detailed(
 async def asyncio(
     thorny_id: int,
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[HTTPValidationError]:
+    client: AuthenticatedClient | Client,
+) -> HTTPValidationError | None:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!

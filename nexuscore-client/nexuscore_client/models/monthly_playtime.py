@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 T = TypeVar("T", bound="MonthlyPlaytime")
 
@@ -14,19 +15,19 @@ class MonthlyPlaytime:
     """
     Attributes:
         month (datetime.date): The month this data is about. Always the first day of that month
-        total (Union[None, float]): The total playtime that month in seconds
+        total (float | None): The total playtime that month in seconds
         unique_players (int): How many unique players played that month
     """
 
     month: datetime.date
-    total: Union[None, float]
+    total: float | None
     unique_players: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         month = self.month.isoformat()
 
-        total: Union[None, float]
+        total: float | None
         total = self.total
 
         unique_players = self.unique_players
@@ -46,12 +47,12 @@ class MonthlyPlaytime:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        month = isoparse(d.pop("month")).date()
+        month = datetime.date.fromisoformat(d.pop("month"))
 
-        def _parse_total(data: object) -> Union[None, float]:
+        def _parse_total(data: object) -> float | None:
             if data is None:
                 return data
-            return cast(Union[None, float], data)
+            return cast(float | None, data)
 
         total = _parse_total(d.pop("total"))
 

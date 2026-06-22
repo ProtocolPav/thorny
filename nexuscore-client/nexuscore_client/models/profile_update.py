@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -13,38 +15,38 @@ T = TypeVar("T", bound="ProfileUpdate")
 class ProfileUpdate:
     """
     Attributes:
-        slogan (Union[Unset, str]): The slogan of the profile
-        aboutme (Union[Unset, str]): The aboutme of the profile
-        lore (Union[Unset, str]): The lore of the profile
-        character_name (Union[Unset, str]): The character name of the profile
-        character_age (Union[Unset, int]): The character age of the profile
-        character_race (Union[Unset, str]): The character race of the profile
-        character_role (Union[Unset, str]): The character role of the profile
-        character_origin (Union[Unset, str]): The character origin of the profile
-        character_beliefs (Union[Unset, str]): The character beliefs of the profile
-        agility (Union[Unset, int]): The character agility of the profile
-        valor (Union[Unset, int]): The character valor of the profile
-        strength (Union[Unset, int]): The character strength of the profile
-        charisma (Union[Unset, int]): The character charisma of the profile
-        creativity (Union[Unset, int]): The character creativity of the profile
-        ingenuity (Union[Unset, int]): The character ingeniu of the profile
+        slogan (str | Unset): The slogan of the profile
+        aboutme (str | Unset): The aboutme of the profile
+        lore (str | Unset): The lore of the profile
+        character_name (str | Unset): The character name of the profile
+        character_age (int | Unset): The character age of the profile
+        character_race (str | Unset): The character race of the profile
+        character_role (str | Unset): The character role of the profile
+        character_origin (str | Unset): The character origin of the profile
+        character_beliefs (str | Unset): The character beliefs of the profile
+        agility (int | Unset): The character agility of the profile
+        valor (int | Unset): The character valor of the profile
+        strength (int | Unset): The character strength of the profile
+        charisma (int | Unset): The character charisma of the profile
+        creativity (int | Unset): The character creativity of the profile
+        ingenuity (int | Unset): The character ingeniu of the profile
     """
 
-    slogan: Union[Unset, str] = UNSET
-    aboutme: Union[Unset, str] = UNSET
-    lore: Union[Unset, str] = UNSET
-    character_name: Union[Unset, str] = UNSET
-    character_age: Union[Unset, int] = UNSET
-    character_race: Union[Unset, str] = UNSET
-    character_role: Union[Unset, str] = UNSET
-    character_origin: Union[Unset, str] = UNSET
-    character_beliefs: Union[Unset, str] = UNSET
-    agility: Union[Unset, int] = UNSET
-    valor: Union[Unset, int] = UNSET
-    strength: Union[Unset, int] = UNSET
-    charisma: Union[Unset, int] = UNSET
-    creativity: Union[Unset, int] = UNSET
-    ingenuity: Union[Unset, int] = UNSET
+    slogan: str | Unset = UNSET
+    aboutme: str | Unset = UNSET
+    lore: str | Unset = UNSET
+    character_name: str | Unset = UNSET
+    character_age: int | Unset = UNSET
+    character_race: str | Unset = UNSET
+    character_role: str | Unset = UNSET
+    character_origin: str | Unset = UNSET
+    character_beliefs: str | Unset = UNSET
+    agility: int | Unset = UNSET
+    valor: int | Unset = UNSET
+    strength: int | Unset = UNSET
+    charisma: int | Unset = UNSET
+    creativity: int | Unset = UNSET
+    ingenuity: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

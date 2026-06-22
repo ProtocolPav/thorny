@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -17,16 +19,16 @@ T = TypeVar("T", bound="CustomizationProgress")
 class CustomizationProgress:
     """
     Attributes:
-        maximum_deaths (Union['DeathCustomizationProgress', None, Unset]): Death count tracking
+        maximum_deaths (DeathCustomizationProgress | None | Unset): Death count tracking
     """
 
-    maximum_deaths: Union["DeathCustomizationProgress", None, Unset] = UNSET
+    maximum_deaths: DeathCustomizationProgress | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.death_customization_progress import DeathCustomizationProgress
 
-        maximum_deaths: Union[None, Unset, dict[str, Any]]
+        maximum_deaths: dict[str, Any] | None | Unset
         if isinstance(self.maximum_deaths, Unset):
             maximum_deaths = UNSET
         elif isinstance(self.maximum_deaths, DeathCustomizationProgress):
@@ -48,7 +50,7 @@ class CustomizationProgress:
 
         d = dict(src_dict)
 
-        def _parse_maximum_deaths(data: object) -> Union["DeathCustomizationProgress", None, Unset]:
+        def _parse_maximum_deaths(data: object) -> DeathCustomizationProgress | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -59,9 +61,9 @@ class CustomizationProgress:
                 maximum_deaths_type_0 = DeathCustomizationProgress.from_dict(data)
 
                 return maximum_deaths_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Union["DeathCustomizationProgress", None, Unset], data)
+            return cast(DeathCustomizationProgress | None | Unset, data)
 
         maximum_deaths = _parse_maximum_deaths(d.pop("maximum_deaths", UNSET))
 
