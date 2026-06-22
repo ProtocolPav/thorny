@@ -1,34 +1,44 @@
-import os
-import time
-import httpx
-from nexuscore_client import AuthenticatedClient, Client
+import os, time, httpx
+from nexuscore_client import AuthenticatedClient
 
 TOKEN_URL = "http://nexuscore:8000/api/auth/token"
 CLIENT_ID = os.environ.get("NEXUSCORE_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("NEXUSCORE_CLIENT_SECRET")
 
+class _ScopedToken:
+    """Holds a cached token + client for a single guild scope."""
+    def __init__(self):
+        self.expires_at: float = 0
+        self.client: AuthenticatedClient | None = None
+
 class ManagedAPIClient:
     def __init__(self):
-        self._token: str | None = None
-        self._expires_at: float = 0
-        self._client: AuthenticatedClient | None = None
+        self._scopes: dict[int | None, _ScopedToken] = {}
+        # None key = master-scoped (no guild_id)
 
-    async def _refresh(self):
-        async with httpx.AsyncClient() as http:
-            resp = await http.post(TOKEN_URL, data={
-                "grant_type": "client_credentials",
+    async def _refresh(self, guild_id: int | None) -> _ScopedToken:
+        data = {"grant_type": "client_credentials",
                 "client_id": CLIENT_ID,
-                "client_secret": CLIENT_SECRET,
-            })
-            data = resp.json()
-            self._token = data["access_token"]
-            self._expires_at = time.time() + data.get("expires_in", 3600)
-            self._client = AuthenticatedClient(
-                base_url="http://nexuscore:8000/api",
-                token=self._token
-            )
+                "client_secret": CLIENT_SECRET}
+        if guild_id is not None:
+            data["guild_id"] = str(guild_id)
 
-    async def get(self) -> AuthenticatedClient:
-        if time.time() >= self._expires_at - 30:  # refresh 30s before expiry
-            await self._refresh()
-        return self._client
+        async with httpx.AsyncClient() as http:
+            resp = await http.post(TOKEN_URL, data=data)
+            resp.raise_for_status()
+            payload = resp.json()
+
+        scoped = _ScopedToken()
+        scoped.expires_at = time.time() + payload.get("expires_in", 3600)
+        scoped.client = AuthenticatedClient(
+            base_url="http://nexuscore:8000/api",
+            token=payload["access_token"]
+        )
+        self._scopes[guild_id] = scoped
+        return scoped
+
+    async def get(self, guild_id: int | None = None) -> AuthenticatedClient:
+        scoped = self._scopes.get(guild_id)
+        if scoped is None or time.time() >= scoped.expires_at - 30:
+            scoped = await self._refresh(guild_id)
+        return scoped.client
