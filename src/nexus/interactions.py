@@ -1,12 +1,7 @@
-import random
-
-import discord
-
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from typing import Optional
 
-import httpx
+from nexuscore import AuthenticatedClient
+from nexuscore.api.users import get_user_interactions_v_1_guilds_me_users_thorny_id_interactions_get
 
 
 @dataclass
@@ -31,27 +26,25 @@ class Interactions:
     totals: dict
 
     @classmethod
-    async def build(cls, thorny_id: int):
-        async with httpx.AsyncClient() as client:
-            interactions = await client.get(f"http://nexuscore:8000/api/v0.2/users/{thorny_id}/interactions",
-                                            timeout=None)
+    async def build(cls, api: AuthenticatedClient, thorny_id: int):
+        interactions = await get_user_interactions_v_1_guilds_me_users_thorny_id_interactions_get.asyncio_detailed(thorny_id, client=api)
 
-            if interactions.status_code != 200:
-                return cls(blocks_mined=[],
-                           blocks_placed=[],
-                           kills=[],
-                           deaths=[],
-                           totals={'mine': 0, 'kill': 0, 'place': 0, 'die': 0, 'use': 0})
+        if interactions.status_code != 200:
+            return cls(blocks_mined=[],
+                       blocks_placed=[],
+                       kills=[],
+                       deaths=[],
+                       totals={'mine': 0, 'kill': 0, 'place': 0, 'die': 0, 'use': 0})
 
-            interaction_dict = interactions.json()
+        interaction_dict = interactions.parsed.to_dict()
 
-            placed = [Interaction.build(i) for i in interaction_dict['blocks_placed']]
-            mined = [Interaction.build(i) for i in interaction_dict['blocks_mined']]
-            kills = [Interaction.build(i) for i in interaction_dict['kills']]
-            deaths = [Interaction.build(i) for i in interaction_dict['deaths']]
+        placed = [Interaction.build(i) for i in interaction_dict['blocks_placed']]
+        mined = [Interaction.build(i) for i in interaction_dict['blocks_mined']]
+        kills = [Interaction.build(i) for i in interaction_dict['kills']]
+        deaths = [Interaction.build(i) for i in interaction_dict['deaths']]
 
-            return cls(blocks_mined=mined,
-                       blocks_placed=placed,
-                       kills=kills,
-                       deaths=deaths,
-                       totals=interaction_dict['totals'])
+        return cls(blocks_mined=mined,
+                   blocks_placed=placed,
+                   kills=kills,
+                   deaths=deaths,
+                   totals=interaction_dict['totals'])
