@@ -12,7 +12,7 @@ v = version_json["version"]
 
 class Profile(commands.Cog):
     def __init__(self, client):
-        self.client: discord.Client = client
+        self.bot: discord.Client = client
 
     @commands.slash_command(description="See your or a user's profile")
     async def profile(self, ctx: discord.ApplicationContext,
