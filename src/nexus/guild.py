@@ -13,7 +13,7 @@ from nexuscore_client.api.guilds import (
 )
 from nexuscore_client.api.leaderboards import (
     get_playtime_leaderboard_v1_guilds_me_leaderboard_playtime_month_get,
-    get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get,
+    get_quests_leaderboard_v1_guilds_me_leaderboard_quests_get,
     get_currency_leaderboard_v1_guilds_me_leaderboard_currency_get,
     get_levels_leaderboard_v1_guilds_me_leaderboard_levels_get
 )
@@ -156,7 +156,7 @@ class ThornyGuild:
 
     @staticmethod
     async def get_quests_leaderboard(api: AuthenticatedClient) -> list[dict]:
-        lb = await get_quests_leaderboard_v1_guilds_me_leaderboard_quests_router_get.asyncio(client=api)
+        lb = await get_quests_leaderboard_v1_guilds_me_leaderboard_quests_get.asyncio(client=api)
 
         return lb.to_dict()['leaderboard']
 
