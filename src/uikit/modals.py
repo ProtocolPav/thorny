@@ -41,8 +41,7 @@ class ProfileEditMain(Modal):
             await self.profile_owner.update(await interaction.client.api.get(interaction.guild.id))
         else:
             self.profile_owner.profile.__setattr__(self.section, self.children[0].value)
-            print(self.profile_owner.profile)
-            await self.profile_owner.profile.update()
+            await self.profile_owner.profile.update(await interaction.client.api.get(interaction.guild.id))
 
         self.edit_embed.add_field(name=f"You set **{self.label}** to:",
                                   value=self.children[0].value,
@@ -86,10 +85,10 @@ class ProfileEditLore(Modal):
     async def callback(self, interaction: discord.Interaction):
         if "Character Skills" in self.label or "Age" in self.label:
             self.profile_owner.profile.__setattr__(self.section, int(self.children[0].value))
-            await self.profile_owner.profile.update()
+            await self.profile_owner.profile.update(await interaction.client.api.get(interaction.guild.id))
         else:
             self.profile_owner.profile.__setattr__(self.section, self.children[0].value)
-            await self.profile_owner.profile.update()
+            await self.profile_owner.profile.update(await interaction.client.api.get(interaction.guild.id))
 
         self.edit_embed.add_field(name=f"You set **{self.label}** to:",
                                   value=self.children[0].value,
