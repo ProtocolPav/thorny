@@ -1,0 +1,15 @@
+[project]
+name = "thorny-core"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg==0.30.0",
+    "giphy-client==1.0.0",
+    "httpx==0.28.1",
+    "py-cord==2.7.0rc1",
+    "python-dateutil==2.9.0",
+    "nexuscore-client",
+]
+
+[tool.uv.sources]
+nexuscore-client = { path = "nexuscore-client" }
