@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "nexuscore-client",
-    "thorny-core",
+    "thorny",
 ]
 
 [[package]]
@@ -891,7 +891,7 @@ wheels = [
 ]
 
 [[package]]
-name = "thorny-core"
+name = "thorny"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
