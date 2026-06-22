@@ -5,10 +5,7 @@ import discord
 from discord.ext import tasks
 
 import giphy_client
-import thorny_errors
-import traceback
 import json
-import sys
 import httpx
 from src import modules, nexus, uikit
 from api_client import ManagedAPIClient
@@ -59,31 +56,6 @@ async def day_counter():
                                       f"**Day {days_since_start.days + 1}** has dawned upon us.")
 
     # Rework this days counter to send a daily report perhaps? Playtime, etc?
-
-
-@thorny.event
-async def on_application_command_error(context: discord.ApplicationContext, exception: thorny_errors.ThornyError):
-    print(f"Ignoring exception in command {context.command}:", file=sys.stderr)
-    traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
-
-    command = context.command
-    if command and command.has_error_handler():
-        return
-
-    cog = context.cog
-    if cog and cog.has_error_handler():
-        return
-
-    try:
-        await context.respond(embed=exception.return_embed(), ephemeral=True)
-
-    except discord.NotFound:
-        error = thorny_errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
-        await context.respond(embed=error.return_embed())
-
-    except AttributeError:
-        error = thorny_errors.UnexpectedError2(str(exception.with_traceback(exception.__traceback__)))
-        await context.respond(embed=error.return_embed())
 
 
 @thorny.listen()
