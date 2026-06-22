@@ -6,11 +6,11 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="WeeklyPlaytime")
+T = TypeVar("T", bound="GuildWeeklyPlaytime")
 
 
 @_attrs_define
-class WeeklyPlaytime:
+class GuildWeeklyPlaytime:
     """
     Attributes:
         week (int): The week of the year this data is about
@@ -78,7 +78,7 @@ class WeeklyPlaytime:
 
         average_playtime_per_session = _parse_average_playtime_per_session(d.pop("average_playtime_per_session"))
 
-        weekly_playtime = cls(
+        guild_weekly_playtime = cls(
             week=week,
             total=total,
             unique_players=unique_players,
@@ -86,8 +86,8 @@ class WeeklyPlaytime:
             average_playtime_per_session=average_playtime_per_session,
         )
 
-        weekly_playtime.additional_properties = d
-        return weekly_playtime
+        guild_weekly_playtime.additional_properties = d
+        return guild_weekly_playtime
 
     @property
     def additional_keys(self) -> list[str]:

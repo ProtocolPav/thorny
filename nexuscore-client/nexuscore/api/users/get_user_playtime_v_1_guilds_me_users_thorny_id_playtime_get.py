@@ -7,6 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.playtime_summary import PlaytimeSummary
 from ...types import Response
 
 
@@ -24,7 +25,14 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HTTPValidationError | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> HTTPValidationError | PlaytimeSummary | None:
+    if response.status_code == 200:
+        response_200 = PlaytimeSummary.from_dict(response.json())
+
+        return response_200
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 
@@ -36,7 +44,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[HTTPValidationError]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[HTTPValidationError | PlaytimeSummary]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -49,7 +59,7 @@ def sync_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[HTTPValidationError]:
+) -> Response[HTTPValidationError | PlaytimeSummary]:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!
@@ -62,7 +72,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError]
+        Response[HTTPValidationError | PlaytimeSummary]
     """
 
     kwargs = _get_kwargs(
@@ -80,7 +90,7 @@ def sync(
     thorny_id: int,
     *,
     client: AuthenticatedClient | Client,
-) -> HTTPValidationError | None:
+) -> HTTPValidationError | PlaytimeSummary | None:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!
@@ -93,7 +103,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError
+        HTTPValidationError | PlaytimeSummary
     """
 
     return sync_detailed(
@@ -106,7 +116,7 @@ async def asyncio_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[HTTPValidationError]:
+) -> Response[HTTPValidationError | PlaytimeSummary]:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!
@@ -119,7 +129,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError]
+        Response[HTTPValidationError | PlaytimeSummary]
     """
 
     kwargs = _get_kwargs(
@@ -135,7 +145,7 @@ async def asyncio(
     thorny_id: int,
     *,
     client: AuthenticatedClient | Client,
-) -> HTTPValidationError | None:
+) -> HTTPValidationError | PlaytimeSummary | None:
     """Get User Playtime
 
      This returns the user's playtime. Note that all playtime is in seconds!
@@ -148,7 +158,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError
+        HTTPValidationError | PlaytimeSummary
     """
 
     return (

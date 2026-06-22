@@ -9,9 +9,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.daily_playtime import DailyPlaytime
-    from ..models.monthly_playtime import MonthlyPlaytime
-    from ..models.weekly_playtime import WeeklyPlaytime
+    from ..models.guild_daily_playtime import GuildDailyPlaytime
+    from ..models.guild_monthly_playtime import GuildMonthlyPlaytime
+    from ..models.guild_weekly_playtime import GuildWeeklyPlaytime
 
 
 T = TypeVar("T", bound="GuildPlaytimeAnalysis")
@@ -23,9 +23,9 @@ class GuildPlaytimeAnalysis:
     Attributes:
         total_playtime (float): The total playtime of this guild in seconds
         total_unique_players (int): The total unique players that have played on this guild
-        daily_playtime (list[DailyPlaytime]): Data about the last 7 days of playtime
-        weekly_playtime (list[WeeklyPlaytime]): Data about the last 8 weeks of playtime
-        monthly_playtime (list[MonthlyPlaytime]): Data about the last 12 months of playtime
+        daily_playtime (list[GuildDailyPlaytime]): Data about the last 7 days of playtime
+        weekly_playtime (list[GuildWeeklyPlaytime]): Data about the last 8 weeks of playtime
+        monthly_playtime (list[GuildMonthlyPlaytime]): Data about the last 12 months of playtime
         peak_playtime_periods (None | Unset):
         peak_active_periods (None | Unset):
         daily_playtime_distribution (None | Unset):
@@ -35,9 +35,9 @@ class GuildPlaytimeAnalysis:
 
     total_playtime: float
     total_unique_players: int
-    daily_playtime: list[DailyPlaytime]
-    weekly_playtime: list[WeeklyPlaytime]
-    monthly_playtime: list[MonthlyPlaytime]
+    daily_playtime: list[GuildDailyPlaytime]
+    weekly_playtime: list[GuildWeeklyPlaytime]
+    monthly_playtime: list[GuildMonthlyPlaytime]
     peak_playtime_periods: None | Unset = UNSET
     peak_active_periods: None | Unset = UNSET
     daily_playtime_distribution: None | Unset = UNSET
@@ -101,9 +101,9 @@ class GuildPlaytimeAnalysis:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.daily_playtime import DailyPlaytime
-        from ..models.monthly_playtime import MonthlyPlaytime
-        from ..models.weekly_playtime import WeeklyPlaytime
+        from ..models.guild_daily_playtime import GuildDailyPlaytime
+        from ..models.guild_monthly_playtime import GuildMonthlyPlaytime
+        from ..models.guild_weekly_playtime import GuildWeeklyPlaytime
 
         d = dict(src_dict)
         total_playtime = d.pop("total_playtime")
@@ -113,21 +113,21 @@ class GuildPlaytimeAnalysis:
         daily_playtime = []
         _daily_playtime = d.pop("daily_playtime")
         for daily_playtime_item_data in _daily_playtime:
-            daily_playtime_item = DailyPlaytime.from_dict(daily_playtime_item_data)
+            daily_playtime_item = GuildDailyPlaytime.from_dict(daily_playtime_item_data)
 
             daily_playtime.append(daily_playtime_item)
 
         weekly_playtime = []
         _weekly_playtime = d.pop("weekly_playtime")
         for weekly_playtime_item_data in _weekly_playtime:
-            weekly_playtime_item = WeeklyPlaytime.from_dict(weekly_playtime_item_data)
+            weekly_playtime_item = GuildWeeklyPlaytime.from_dict(weekly_playtime_item_data)
 
             weekly_playtime.append(weekly_playtime_item)
 
         monthly_playtime = []
         _monthly_playtime = d.pop("monthly_playtime")
         for monthly_playtime_item_data in _monthly_playtime:
-            monthly_playtime_item = MonthlyPlaytime.from_dict(monthly_playtime_item_data)
+            monthly_playtime_item = GuildMonthlyPlaytime.from_dict(monthly_playtime_item_data)
 
             monthly_playtime.append(monthly_playtime_item)
 

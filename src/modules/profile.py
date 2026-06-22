@@ -28,7 +28,7 @@ class Profile(commands.Cog):
             user = ctx.author
         thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(user.guild.id), user)
 
-        pages = [await uikit.profile_main_embed(thorny_user, thorny_guild),
+        pages = [await uikit.profile_main_embed(await self.bot.api.get(user.guild.id), thorny_user, thorny_guild),
                  await uikit.profile_lore_embed(thorny_user),
                  await uikit.profile_stats_embed(await self.bot.api.get(user.guild.id), thorny_user)
                  ]

@@ -2,37 +2,43 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="MonthlyPlaytime")
+T = TypeVar("T", bound="GuildMonthlyPlaytime")
 
 
 @_attrs_define
-class MonthlyPlaytime:
+class GuildMonthlyPlaytime:
     """
     Attributes:
-        month (datetime.date): Total playtime in seconds Example: 2024-05-01.
-        playtime (float): The month's playtime in seconds Example: 332.89.
+        month (datetime.date): The month this data is about. Always the first day of that month
+        total (float | None): The total playtime that month in seconds
+        unique_players (int): How many unique players played that month
     """
 
     month: datetime.date
-    playtime: float
+    total: float | None
+    unique_players: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         month = self.month.isoformat()
 
-        playtime = self.playtime
+        total: float | None
+        total = self.total
+
+        unique_players = self.unique_players
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "month": month,
-                "playtime": playtime,
+                "total": total,
+                "unique_players": unique_players,
             }
         )
 
@@ -43,15 +49,23 @@ class MonthlyPlaytime:
         d = dict(src_dict)
         month = datetime.date.fromisoformat(d.pop("month"))
 
-        playtime = d.pop("playtime")
+        def _parse_total(data: object) -> float | None:
+            if data is None:
+                return data
+            return cast(float | None, data)
 
-        monthly_playtime = cls(
+        total = _parse_total(d.pop("total"))
+
+        unique_players = d.pop("unique_players")
+
+        guild_monthly_playtime = cls(
             month=month,
-            playtime=playtime,
+            total=total,
+            unique_players=unique_players,
         )
 
-        monthly_playtime.additional_properties = d
-        return monthly_playtime
+        guild_monthly_playtime.additional_properties = d
+        return guild_monthly_playtime
 
     @property
     def additional_keys(self) -> list[str]:

@@ -38,7 +38,7 @@ def ping_embed(client: discord.Bot, bot_started_on: datetime):
     return embed
 
 
-async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
+async def profile_main_embed(api: AuthenticatedClient, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
 
     main_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                     color=thorny_user.discord_member.color)
@@ -63,7 +63,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
                                     f"**Joined on:** {utils.datetime_to_string(thorny_user.join_date)}"
                               )
 
-    playtime = await thorny_user.playtime.build(thorny_user.thorny_id)
+    playtime = await thorny_user.playtime.build(api, thorny_user.thorny_id)
 
     second_month = (datetime.now() - relativedelta.relativedelta(months=1)).strftime('%B')
     third_month = (datetime.now() - relativedelta.relativedelta(months=2)).strftime('%B')
