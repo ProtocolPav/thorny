@@ -1,11 +1,21 @@
 FROM python:3.13-alpine
 
-COPY . /thorny_core/
+# Copy uv binary from official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN pip install -r /thorny_core/requirements.txt
+# Copy dependency files first (layer caching — only re-resolves if these change)
+COPY pyproject.toml uv.lock /thorny/
+COPY nexuscore-client /thorny/nexuscore-client
 
-ENV PYTHONPATH="${PYTHONPATH}:/thorny_core/"
+# Install dependencies
+RUN uv sync --frozen --no-dev --project /thorny
 
-WORKDIR /thorny_core
+# Copy the rest of the source
+COPY . /thorny/
 
-CMD ["python", "-u", "thorny.py"]
+ENV PYTHONPATH="${PYTHONPATH}:/thorny/"
+ENV UV_LINK_MODE=copy
+
+WORKDIR /thorny/src
+
+CMD ["uv", "run", "--project", "/thorny", "python", "-u", "thorny.py"]
