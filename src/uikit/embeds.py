@@ -11,11 +11,12 @@ import random
 
 from dateutil import relativedelta
 
-import nexus, utils
-from nexus.guild import OnlineUser
-from nexus.quest_progress import QuestProgress
+from nexuscore import AuthenticatedClient
+from src import nexus, utils
+from src.nexus.guild import OnlineUser
+from src.nexus.quest_progress import QuestProgress
 
-version_json = json.load(open('./version.json', 'r'))
+version_json = json.load(open('../version.json', 'r'))
 v = version_json["version"]
 api_instance = giphy_client.DefaultApi()
 giphy_token = os.environ.get('GIPHY_TOKEN')
@@ -37,7 +38,7 @@ def ping_embed(client: discord.Bot, bot_started_on: datetime):
     return embed
 
 
-async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
+async def profile_main_embed(api: AuthenticatedClient, thorny_user: nexus.ThornyUser, thorny_guild: nexus.ThornyGuild) -> discord.Embed:
 
     main_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                     color=thorny_user.discord_member.color)
@@ -49,7 +50,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
     if thorny_user.birthday:
         today = datetime.now(UTC)
         age = today.year - thorny_user.birthday.year - (
-                    (today.month, today.day) < (thorny_user.birthday.month, thorny_user.birthday.day))
+                (today.month, today.day) < (thorny_user.birthday.month, thorny_user.birthday.day))
     else:
         age = 0
 
@@ -62,7 +63,7 @@ async def profile_main_embed(thorny_user: nexus.ThornyUser, thorny_guild: nexus.
                                     f"**Joined on:** {utils.datetime_to_string(thorny_user.join_date)}"
                               )
 
-    playtime = await thorny_user.playtime.build(thorny_user.thorny_id)
+    playtime = await thorny_user.playtime.build(api, thorny_user.thorny_id)
 
     second_month = (datetime.now() - relativedelta.relativedelta(months=1)).strftime('%B')
     third_month = (datetime.now() - relativedelta.relativedelta(months=2)).strftime('%B')
@@ -118,7 +119,7 @@ async def profile_lore_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     return lore_page_embed
 
 
-async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
+async def profile_stats_embed(api: AuthenticatedClient, thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed = discord.Embed(title=f"{thorny_user.profile.slogan}",
                                      color=thorny_user.discord_member.color,
                                      description="*Stats shown are from March 7th 2024 onwards*")
@@ -126,7 +127,7 @@ async def profile_stats_embed(thorny_user: nexus.ThornyUser) -> discord.Embed:
     stats_page_embed.set_author(name=thorny_user.discord_member,
                                 icon_url=thorny_user.discord_member.display_avatar.url)
 
-    interactions = await thorny_user.interactions.build(thorny_user.thorny_id)
+    interactions = await thorny_user.interactions.build(api, thorny_user.thorny_id)
 
     blocks_mined = []
     for block in interactions.blocks_mined:
@@ -556,31 +557,56 @@ def _build_progress_bar(current_index: int, total: int) -> str:
 def _build_target_lines(objective: nexus.quest.Objective,
                         user_objective: 'nexus.quest_progress.ObjectiveProgress') -> str:
     """
-    Builds per-target progress lines by matching target_uuid between the
-    quest blueprint (objective.targets) and the user's progress
-    (user_objective.target_progress).
+    Renders multi-target progress based on objective logic:
 
-    Each line looks like:
-        Mine **32** / **64** Oak Log  ✅   (if done)
-        Kill **3** / **10** Creeper         (if in progress)
+      AND → Mine 1 Diamond Ore, 2 Gold Ore, and 3 Iron Ore
+      OR → Kill 6 Cows, 7 Sheep, or 8 Chicken
+      OR + count → Any 1 of: Kill Cow, Sheep, or Chicken
+      sequential → Mine 30 Stone, then 30 Oak Logs, then 30 Tuff (in order)
+
+    Completed targets are crossed out: ~~Kill 10 Cow~~
     """
-    # Build a uuid → progress count lookup
     progress_map: dict[str, int] = {
         tp.target_uuid: tp.count
         for tp in user_objective.target_progress
     }
 
-    lines = []
-    for target in objective.targets:
+    logic = (objective.logic or 'and').lower()
+    target_count = objective.target_count  # set on "Any X of" OR objectives
+    action = objective.objective_type.capitalize()
+
+    def fmt_target(target) -> str:
         current = progress_map.get(target.target_uuid, 0)
         required = target.count
-        name = target.display_name() or objective.objective_type.capitalize()
+        remaining = max(required - current, 0)
+        name = target.display_name() or action
         done = current >= required
-        check = ' ✅' if done else ''
-        action = objective.objective_type.capitalize()
-        lines.append(f"{action} **{current}** / **{required}** {name}{check}")
+        text = f"{action} **{remaining}** more {name}" if remaining != required else f"{action} **{required}** {name}"
+        return f"~~{text}~~" if done else text
 
-    return '\n'.join(lines) if lines else '*No targets defined*'
+    parts = [fmt_target(t) for t in objective.targets]
+
+    if not parts:
+        return '*No targets defined*'
+
+    if logic == 'sequential':
+        return ' → then '.join(parts)
+
+    if logic == 'or':
+        if target_count is not None:
+            # "Any X of" variant
+            joined = ', '.join(parts)
+            return f"**Any {target_count} of:** {joined}"
+        else:
+            # plain OR — join with commas, last separator is ", or"
+            if len(parts) == 1:
+                return parts[0]
+            return ', '.join(parts[:-1]) + ', or ' + parts[-1]
+
+    # AND (default)
+    if len(parts) == 1:
+        return parts[0]
+    return ', '.join(parts[:-1]) + ', and ' + parts[-1]
 
 
 # ─────────────────────────────────────────────────────────────
@@ -642,17 +668,9 @@ def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Me
         inline=False
     )
 
-    # List every objective with its description
-    objectives_text_lines = []
-    for i, obj in enumerate(sorted(quest.objectives, key=lambda x: x.order_index), start=1):
-        display = obj.display or obj.objective_type.capitalize()
-        objectives_text_lines.append(f"**{i}.** {display}")
-        if obj.description:
-            objectives_text_lines.append(f"-# {obj.description}")
-
     embed.add_field(
-        name=f'🎯 Objectives  ({len(quest.objectives)})',
-        value='\n'.join(objectives_text_lines) if objectives_text_lines else '*None*',
+        name=f'🎯 Objectives',
+        value=f'This quest has {len(quest.objectives)} objectives',
         inline=False
     )
 
@@ -696,7 +714,6 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
             continue
 
         # ── Meta ──────────────────────────────────────────────────
-        display_title = objective.display or objective.objective_type.capitalize()
         tags = [x.capitalize() for x in quest.tags]
         emoji, quest_type_label = _quest_type_meta(quest.quest_type)
 
@@ -715,9 +732,6 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
         elif user_quest.end_time:
             expiry_ts = int(user_quest.end_time.timestamp())
 
-        # ── Target lines (multi-target support) ───────────────────
-        target_lines = _build_target_lines(objective, user_objective)
-
         # ── Extra requirements ────────────────────────────────────
         requirements = objective.get_objective_requirement_string()
 
@@ -735,8 +749,8 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
         )
 
         embed.add_field(
-            name=f'🎯 Objective: {display_title}',
-            value=target_lines,
+            name='🎯 Objective',
+            value=objective.display or _build_target_lines(objective, user_objective),
             inline=False
         )
 
