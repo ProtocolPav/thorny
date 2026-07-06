@@ -569,6 +569,9 @@ def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Me
         case 'side':
             emoji = '🏄'
             quest_type = 'Side Quest'
+        case 'weekly':
+            emoji = '😄'
+            quest_type = 'Weekly Quest'
         case 'story':
             emoji = '🔖'
             quest_type = 'Story Quest'
@@ -678,6 +681,9 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
             case 'story':
                 emoji = '🔖'
                 quest_type_label = 'Story Quest'
+            case 'weekly':
+                emoji = '😄'
+                quest_type_label = 'Weekly Quest'
             case _:
                 emoji = '⏲️'
                 quest_type_label = 'Minor Quest'
