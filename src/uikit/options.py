@@ -143,6 +143,9 @@ async def available_quests(quests: list):
             case 'story':
                 emoji = '🔖'
                 quest_type = 'Story Quest'
+            case 'weekly':
+                emoji = '😄'
+                quest_type = 'Weekly Quest'
             case _:
                 emoji = '⏲️'
                 quest_type = 'Minor Quest'
