@@ -74,9 +74,8 @@ class ThornyUser:
     @classmethod
     async def __create_new_user(cls, api: AuthenticatedClient, member: discord.Member):
         user_id = member.id
-        guild_id = member.guild.id
 
-        data = {'guild_id': guild_id, 'user_id': user_id, 'username': member.name}
+        data = {'user_id': user_id, 'username': member.name}
 
         user = await create_user_v1_guilds_me_users_post.asyncio_detailed(client=api, body=UserIn(**data))
 
