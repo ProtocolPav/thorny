@@ -42,7 +42,7 @@ class Money(commands.Cog):
         reason = f"{ctx.user.mention} edited {thorny_user.discord_member.mention}'s balance"
 
         if thorny_guild.get_channel_id('logs'):
-            logs_channel = self.client.get_channel(thorny_guild.get_channel_id('logs'))
+            logs_channel = self.bot.get_channel(thorny_guild.get_channel_id('logs'))
             await logs_channel.send(embed=embeds.transaction_log(thorny_user, thorny_guild,
                                                                  transaction_type, abs(amount),
                                                                  reason, datetime.now()))
