@@ -72,23 +72,27 @@ class Objective:
 
     def get_objective_requirement_string(self) -> Optional[str]:
         reqs = []
+        fail_reasons = []
         cust = self.customizations
 
         # 1. Natural Block
         if cust.natural_block and self.objective_type == 'mine':
-            reqs.append(f'- The blocks must be **naturally generated**')
+            reqs.append(f'- Natural blocks only')
 
         # 2. Mainhand
         if cust.mainhand:
             item_name = cust.mainhand.item.split(':')[1].replace('_',
                                                                  ' ').title() if ':' in cust.mainhand.item else cust.mainhand.item
-            reqs.append(f'- With **{item_name}**')
+            reqs.append(f'- Using **{item_name}**')
 
         # 3. Location
         if cust.location:
             x, y, z = cust.location.coordinates
-            reqs.append(f'- Near **{x}, {y}, {z}** '
-                        f'(Radius: {cust.location.horizontal_radius})')
+            h, v = cust.location.horizontal_radius, cust.location.vertical_radius
+
+            coords = f'{x}, {y}, {z}' if v > 0 else f'{x}, {z}'
+            radius = f'Radius: **{h}**, Height: **{v}**' if v > 0 else f'Radius: **{h}**'
+            reqs.append(f'- Near **{coords}** ({radius})')
 
         # 4. Timer
         if cust.timer:
@@ -96,21 +100,17 @@ class Objective:
             hours, minutes = divmod(minutes, 60)
             time_str = f"{hours}h {minutes}m {seconds}s".replace("0h ", "").replace(" 0m", "")
             reqs.append(f'- Time Limit: **{time_str}**')
+            if cust.timer.fail:
+                fail_reasons.append(f'Exceeding time limit')
 
         # 5. Deaths
         if cust.maximum_deaths:
-            reqs.append(f'- Max Deaths: **{cust.maximum_deaths.deaths}**')
+            reqs.append(f'- Die no more than **{cust.maximum_deaths.deaths}** times')
+            if cust.maximum_deaths.fail:
+                fail_reasons.append(f'Exceeding death limit')
 
-        # 6. Failure Conditions
-        fail_reasons = []
-        if cust.timer and cust.timer.fail:
-            fail_reasons.append("time runs out")
-        if cust.maximum_deaths and cust.maximum_deaths.fail:
-            fail_reasons.append("death limit reached")
-
-        if fail_reasons:
-            reasons_str = " or ".join(fail_reasons)
-            reqs.append(f'- *Failing this objective ({reasons_str}) will fail the entire quest*')
+        if len(fail_reasons) > 0:
+            reqs.append(f'- Failing these will fail the entire quest: {", ".join(fail_reasons)}')
 
         return "\n".join(reqs) if reqs else None
 
