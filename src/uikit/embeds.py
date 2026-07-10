@@ -554,60 +554,66 @@ def _build_progress_bar(current_index: int, total: int) -> str:
     return ''.join(squares)
 
 
-def _build_target_lines(objective: nexus.quest.Objective,
-                        user_objective: 'nexus.quest_progress.ObjectiveProgress') -> str:
-    """
-    Renders multi-target progress based on objective logic:
+def _build_sentence(verb: str, parts: list, conjunction: str) -> str:
+    if len(parts) == 1:
+        return f"**{verb}** {parts[0]}"
+    init = ', '.join(parts[:-1])
+    last = parts[-1]
+    return f"**{verb}** {init}, *{conjunction}* {last}"
 
-      AND → Mine 1 Diamond Ore, 2 Gold Ore, and 3 Iron Ore
-      OR → Kill 6 Cows, 7 Sheep, or 8 Chicken
-      OR + count → Any 1 of: Kill Cow, Sheep, or Chicken
-      sequential → Mine 30 Stone, then 30 Oak Logs, then 30 Tuff (in order)
 
-    Completed targets are crossed out: ~~Kill 10 Cow~~
-    """
-    progress_map: dict[str, int] = {
-        tp.target_uuid: tp.count
-        for tp in user_objective.target_progress
-    }
+def _build_target_lines(objective: 'nexus.quest.Objective',
+                        user_objective: 'nexus.quest_progress.ObjectiveProgress' = None) -> str:
+    display = getattr(objective, 'display', None)
+    if display:
+        return f"**{display}**"
+
+    verb = objective.objective_type.capitalize()
+    targets = objective.targets
+
+    if not targets:
+        return f"**{verb}**..."
+
+    progress_map = {}
+    if user_objective is not None:
+        progress_map = {tp.target_uuid: tp.count for tp in user_objective.target_progress}
 
     logic = (objective.logic or 'and').lower()
-    target_count = objective.target_count  # set on "Any X of" OR objectives
-    action = objective.objective_type.capitalize()
+    target_count = objective.target_count
 
-    def fmt_target(target) -> str:
-        current = progress_map.get(target.target_uuid, 0)
-        required = target.count
-        remaining = max(required - current, 0)
-        name = target.display_name() or action
-        done = current >= required
-        text = f"{action} **{remaining}** more {name}" if remaining != required else f"{action} **{required}** {name}"
-        return f"~~{text}~~" if done else text
+    def fmt_part(t) -> str:
+        name = t.display_name() or verb
+        required = t.count
+        current = progress_map.get(t.target_uuid, 0)
 
-    parts = [fmt_target(t) for t in objective.targets]
+        if current >= required:
+            return f"~~**{required}** {name}~~"
 
-    if not parts:
-        return '*No targets defined*'
+        remaining = required - current
+        return f"**{remaining}** {name}"
 
+    # Shared pool: OR with a single cap overriding individual counts
+    if logic == 'or' and target_count is not None:
+        completed = sum(1 for t in targets if progress_map.get(t.target_uuid, 0) >= t.count)
+        names = '/'.join(
+            f"~~`{t.display_name() or verb}`~~" if progress_map.get(t.target_uuid, 0) >= t.count
+            else f"`{t.display_name() or verb}`"
+            for t in targets
+        )
+        header = f"**{verb}** *any* **{target_count}** *of* {names}"
+        if completed >= target_count:
+            return f"{header} ✅"
+        if completed > 0:
+            return f"{header} *({completed}/{target_count} done)*"
+        return header
+
+    target_parts = [fmt_part(t) for t in targets]
+
+    if logic == 'and':
+        return _build_sentence(verb, target_parts, 'and')
     if logic == 'sequential':
-        return ' → then '.join(parts)
-
-    if logic == 'or':
-        if target_count is not None:
-            # "Any X of" variant
-            joined = ', '.join(parts)
-            return f"**Any {target_count} of:** {joined}"
-        else:
-            # plain OR — join with commas, last separator is ", or"
-            if len(parts) == 1:
-                return parts[0]
-            return ', '.join(parts[:-1]) + ', or ' + parts[-1]
-
-    # AND (default)
-    if len(parts) == 1:
-        return parts[0]
-    return ', '.join(parts[:-1]) + ', and ' + parts[-1]
-
+        return _build_sentence(verb, target_parts, 'then') + ' *(in order)*'
+    return _build_sentence(verb, target_parts, 'or')
 
 # ─────────────────────────────────────────────────────────────
 # Public quest embeds
