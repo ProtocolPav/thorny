@@ -77,8 +77,9 @@ class Other(commands.Cog):
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
-            await ctx.respond(embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
+            await ctx.respond(components=uikit.quests_overview(quests, thorny_guild.currency_emoji),
                               view=view,
+                              use_components_v2=True,
                               ephemeral=False)
 
 
