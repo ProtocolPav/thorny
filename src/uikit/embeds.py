@@ -619,42 +619,52 @@ def _build_target_lines(objective: 'nexus.quest.Objective',
 # Public quest embeds
 # ─────────────────────────────────────────────────────────────
 
-def quests_overview(quests: list[nexus.Quest], money_symbol: str):
-    embed = discord.Embed(
-        colour=0xC9A0DC,
-        title='✨ Everthorn Quests',
-        description=(
-            "🔥 **Quests** are a fun distraction from the Minecraft grind\n"
-            "📅 New quests are released **weekly**\n"
-            "⏲️ Each quest is only available for a **limited time**\n"
-            f"{money_symbol} Nugs & other **rewards** are up for grabs!"
+def quests_overview(quests: list[nexus.Quest], money_symbol: str) -> list[discord.ui.Component]:
+    """
+    Returns a list of Discord Components v2 components representing the Quest Overview.
+    Each quest is shown as a full-width image (from the Everthorn image API) inside
+    a Container. Pass the result directly to ctx.respond(components=..., use_components_v2=True).
+    """
+    components: list[discord.ui.Component] = []
+
+    # ── Header container ──────────────────────────────────────
+    header_container = discord.ui.Container(
+        discord.ui.TextDisplay(
+            content=(
+                "# ✨ Everthorn Quests\n"
+                "🔥 **Quests** are a fun distraction from the Minecraft grind\n"
+                "📅 New quests are released **weekly**\n"
+                "⏲️ Each quest is only available for a **limited time**\n"
+                f"{money_symbol} Nugs & other **rewards** are up for grabs!"
+            )
         )
     )
+    components.append(header_container)
 
+    if not quests:
+        empty_container = discord.ui.Container(
+            discord.ui.TextDisplay(
+                content="### No quests available right now\nQuests are refreshed every week — check back soon!"
+            )
+        )
+        components.append(empty_container)
+        return components
+
+    # ── One image per quest ───────────────────────────────────
     for quest in quests:
-        emoji, quest_type = _quest_type_meta(quest.quest_type)
-        times = quest.end_time - datetime.now(UTC)
-        tags = [x.capitalize() for x in quest.tags]
+        image_url = f"https://everthorn.net/api/image/quest/overview?questId={quest.quest_id}"
 
-        embed.add_field(
-            name=f"{emoji}  {quest.title}",
-            value=(
-                f"> `{'` | `'.join(tags)}`\n"
-                f"> \n"
-                f"> 💎 **Rewards:** {quest.get_reward_string(money_symbol)}\n"
-                f"-# ﹂ {quest_type} · Expires <t:{int(time.time() + times.total_seconds())}:R>"
-            ),
-            inline=False
+        quest_container = discord.ui.Container(
+            discord.ui.MediaGallery(
+                discord.ui.MediaGalleryItem(
+                    media=discord.UnfurledMediaItem(url=image_url),
+                    description=quest.title
+                )
+            )
         )
+        components.append(quest_container)
 
-    if len(quests) == 0:
-        embed.add_field(
-            name='No quests available right now',
-            value='Quests are refreshed every week — check back soon!',
-            inline=False
-        )
-
-    return embed
+    return components
 
 
 def view_quest(quest: nexus.Quest, money_symbol: str, creator_member: discord.Member):
