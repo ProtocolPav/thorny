@@ -10,6 +10,7 @@ import giphy_client
 import random
 
 from dateutil import relativedelta
+from discord import MediaGalleryItem
 
 from nexuscore import AuthenticatedClient
 from src import nexus, utils
@@ -656,8 +657,8 @@ def quests_overview(quests: list[nexus.Quest], money_symbol: str) -> list[discor
 
         quest_container = discord.ui.Container(
             discord.ui.MediaGallery(
-                discord.ui.MediaGalleryItem(
-                    media=discord.UnfurledMediaItem(url=image_url),
+                MediaGalleryItem(
+                    url=image_url,
                     description=quest.title
                 )
             )
