@@ -619,13 +619,13 @@ def _build_target_lines(objective: 'nexus.quest.Objective',
 # Public quest embeds
 # ─────────────────────────────────────────────────────────────
 
-def quests_overview(quests: list[nexus.Quest], money_symbol: str) -> list[discord.ui.Component]:
+def quests_overview(quests: list[nexus.Quest], money_symbol: str) -> list[discord.ui.Container]:
     """
     Returns a list of Discord Components v2 components representing the Quest Overview.
     Each quest is shown as a full-width image (from the Everthorn image API) inside
     a Container. Pass the result directly to ctx.respond(components=..., use_components_v2=True).
     """
-    components: list[discord.ui.Component] = []
+    components: list[discord.ui.Container] = []
 
     # ── Header container ──────────────────────────────────────
     header_container = discord.ui.Container(
