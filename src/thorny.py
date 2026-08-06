@@ -11,6 +11,7 @@ from api_client import ManagedAPIClient
 from thorny_client import ThornyBot
 
 TOKEN = os.environ.get('BOT_TOKEN')
+UPTIME_KUMA_URL = os.environ.get('UPTIME_KUMA_URL')
 
 api_instance = giphy_client.DefaultApi()
 giphy_token = os.environ.get('GIPHY_TOKEN')
@@ -18,7 +19,25 @@ giphy_token = os.environ.get('GIPHY_TOKEN')
 api_client = ManagedAPIClient()
 thorny = ThornyBot(api=api_client, intents=discord.Intents.all())
 
+http_client = httpx.AsyncClient(timeout=10.0)
+
 shutdown_notice_received = False
+
+
+@tasks.loop(seconds=60)
+async def uptime_ping():
+    try:
+        await http_client.get(
+            UPTIME_KUMA_URL,
+            params={"status": "up", "msg": "OK", "ping": str(round(thorny.latency * 1000))},
+        )
+    except httpx.HTTPError:
+        pass  # let Kuma flag it down after missed retries instead of crashing the loop
+
+
+@uptime_ping.before_loop
+async def before_uptime_ping():
+    await thorny.wait_until_ready()
 
 
 @tasks.loop(hours=24.0)
@@ -159,6 +178,7 @@ thorny.add_cog(modules.Other(thorny))
 # Start Tasks
 birthday_checker.start()
 day_counter.start()
+uptime_ping.start()
 
 
 if __name__ == "__main__":

@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/thorny_core.iml" filepath="$PROJECT_DIR$/.idea/thorny_core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/nexuscore-client.iml" filepath="$PROJECT_DIR$/.idea/nexuscore-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/thorny.iml" filepath="$PROJECT_DIR$/.idea/thorny.iml" />
     </modules>
   </component>
 </project>
