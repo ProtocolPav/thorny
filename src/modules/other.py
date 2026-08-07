@@ -5,6 +5,8 @@ from discord.utils import basic_autocomplete
 from src import nexus, thorny_errors, uikit
 from datetime import UTC, datetime
 
+from uikit.designer_views import QuestPanel
+
 
 class Other(commands.Cog):
     def __init__(self, client):
@@ -71,16 +73,10 @@ class Other(commands.Cog):
                 await ctx.respond(embed=uikit.quest_progress(quest_info, thorny_user.quest, thorny_guild.currency_emoji),
                                   view=view,
                                   ephemeral=True)
-
         else:
             quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id), thorny_user.thorny_id)
-
-            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
-            await view.update_view()
-            await ctx.respond(components=uikit.quests_overview(quests, thorny_guild.currency_emoji),
-                              view=view,
-                              use_components_v2=True,
-                              ephemeral=False)
+            view = QuestPanel(ctx, thorny_guild, thorny_user, quests)
+            await ctx.respond(view=view, ephemeral=False)
 
 
     @commands.slash_command(description="Get a link to the world map")
