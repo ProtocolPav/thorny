@@ -74,9 +74,14 @@ class Other(commands.Cog):
                                   view=view,
                                   ephemeral=True)
         else:
-            quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id), thorny_user.thorny_id)
-            view = QuestPanel(ctx, thorny_guild, thorny_user, quests)
-            await ctx.respond(view=view, ephemeral=False)
+            quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id),
+                                                                    thorny_user.thorny_id)
+
+            view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
+            await view.update_view()
+            await ctx.respond(embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
+                              view=view,
+                              ephemeral=False)
 
 
     @commands.slash_command(description="Get a link to the world map")
