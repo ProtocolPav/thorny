@@ -16,6 +16,8 @@ class Scope(str, Enum):
     GUILDS_PROJECTSWRITE = "guilds.projects:write"
     GUILDS_QUESTSREAD = "guilds.quests:read"
     GUILDS_QUESTSWRITE = "guilds.quests:write"
+    GUILDS_WIKIREAD = "guilds.wiki:read"
+    GUILDS_WIKIWRITE = "guilds.wiki:write"
     SERVERREAD = "server:read"
 
     def __str__(self) -> str:

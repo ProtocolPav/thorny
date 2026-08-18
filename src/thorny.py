@@ -29,7 +29,7 @@ async def uptime_ping():
     try:
         await http_client.get(
             UPTIME_KUMA_URL,
-            params={"status": "up", "msg": "OK", "ping": str(round(thorny.latency * 1000))},
+            params={"status": "up", "msg": "OK", "ping": str(round(min(thorny.latency, 999999) * 1000))},
         )
     except httpx.HTTPError:
         pass  # let Kuma flag it down after missed retries instead of crashing the loop
