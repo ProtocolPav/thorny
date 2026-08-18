@@ -1,0 +1,105 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+if TYPE_CHECKING:
+    from ..models.content_in_data_item import ContentInDataItem
+
+
+T = TypeVar("T", bound="ContentIn")
+
+
+@_attrs_define
+class ContentIn:
+    """
+    Attributes:
+        edited_by (int): The ThornyID of the user who edited this content
+        editor_type (None | str):
+        change_note (str): A note describing what changed in this version
+        data (list[ContentInDataItem]): The full React editor document as an opaque JSON object
+    """
+
+    edited_by: int
+    editor_type: None | str
+    change_note: str
+    data: list[ContentInDataItem]
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        edited_by = self.edited_by
+
+        editor_type: None | str
+        editor_type = self.editor_type
+
+        change_note = self.change_note
+
+        data = []
+        for data_item_data in self.data:
+            data_item = data_item_data.to_dict()
+            data.append(data_item)
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "edited_by": edited_by,
+                "editor_type": editor_type,
+                "change_note": change_note,
+                "data": data,
+            }
+        )
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.content_in_data_item import ContentInDataItem
+
+        d = dict(src_dict)
+        edited_by = d.pop("edited_by")
+
+        def _parse_editor_type(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        editor_type = _parse_editor_type(d.pop("editor_type"))
+
+        change_note = d.pop("change_note")
+
+        data = []
+        _data = d.pop("data")
+        for data_item_data in _data:
+            data_item = ContentInDataItem.from_dict(data_item_data)
+
+            data.append(data_item)
+
+        content_in = cls(
+            edited_by=edited_by,
+            editor_type=editor_type,
+            change_note=change_note,
+            data=data,
+        )
+
+        content_in.additional_properties = d
+        return content_in
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

@@ -1,41 +1,37 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.relay_model import RelayModel
+from ...models.quest_statistics_out import QuestStatisticsOut
 from ...types import Response
 
 
 def _get_kwargs(
-    *,
-    body: RelayModel,
+    quest_id: int,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v1/relay",
+        "method": "get",
+        "url": "/v1/guilds/me/quests/{quest_id}/statistics".format(
+            quest_id=quote(str(quest_id), safe=""),
+        ),
     }
 
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | RelayModel | None:
-    if response.status_code == 201:
-        response_201 = RelayModel.from_dict(response.json())
+) -> HTTPValidationError | QuestStatisticsOut | None:
+    if response.status_code == 200:
+        response_200 = QuestStatisticsOut.from_dict(response.json())
 
-        return response_201
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -50,7 +46,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | RelayModel]:
+) -> Response[HTTPValidationError | QuestStatisticsOut]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -60,29 +56,31 @@ def _build_response(
 
 
 def sync_detailed(
+    quest_id: int,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> Response[HTTPValidationError | RelayModel]:
-    """Server Relay
+    client: AuthenticatedClient,
+) -> Response[HTTPValidationError | QuestStatisticsOut]:
+    """Get Quest Statistics
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Get Quest Statistics
+
+    Returns aggregated statistics for a specific quest, including funnel data,
+    completion timing, per-objective drop-off analysis, and daily activity.
+    Useful for quest admins to analyse difficulty, engagement, and player behaviour.
 
     Args:
-        body (RelayModel):
+        quest_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RelayModel]
+        Response[HTTPValidationError | QuestStatisticsOut]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        quest_id=quest_id,
     )
 
     response = client.get_httpx_client().request(
@@ -93,57 +91,61 @@ def sync_detailed(
 
 
 def sync(
+    quest_id: int,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> HTTPValidationError | RelayModel | None:
-    """Server Relay
+    client: AuthenticatedClient,
+) -> HTTPValidationError | QuestStatisticsOut | None:
+    """Get Quest Statistics
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Get Quest Statistics
+
+    Returns aggregated statistics for a specific quest, including funnel data,
+    completion timing, per-objective drop-off analysis, and daily activity.
+    Useful for quest admins to analyse difficulty, engagement, and player behaviour.
 
     Args:
-        body (RelayModel):
+        quest_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RelayModel
+        HTTPValidationError | QuestStatisticsOut
     """
 
     return sync_detailed(
+        quest_id=quest_id,
         client=client,
-        body=body,
     ).parsed
 
 
 async def asyncio_detailed(
+    quest_id: int,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> Response[HTTPValidationError | RelayModel]:
-    """Server Relay
+    client: AuthenticatedClient,
+) -> Response[HTTPValidationError | QuestStatisticsOut]:
+    """Get Quest Statistics
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Get Quest Statistics
+
+    Returns aggregated statistics for a specific quest, including funnel data,
+    completion timing, per-objective drop-off analysis, and daily activity.
+    Useful for quest admins to analyse difficulty, engagement, and player behaviour.
 
     Args:
-        body (RelayModel):
+        quest_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RelayModel]
+        Response[HTTPValidationError | QuestStatisticsOut]
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        quest_id=quest_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -152,30 +154,32 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    quest_id: int,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> HTTPValidationError | RelayModel | None:
-    """Server Relay
+    client: AuthenticatedClient,
+) -> HTTPValidationError | QuestStatisticsOut | None:
+    """Get Quest Statistics
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Get Quest Statistics
+
+    Returns aggregated statistics for a specific quest, including funnel data,
+    completion timing, per-objective drop-off analysis, and daily activity.
+    Useful for quest admins to analyse difficulty, engagement, and player behaviour.
 
     Args:
-        body (RelayModel):
+        quest_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RelayModel
+        HTTPValidationError | QuestStatisticsOut
     """
 
     return (
         await asyncio_detailed(
+            quest_id=quest_id,
             client=client,
-            body=body,
         )
     ).parsed

@@ -1,24 +1,29 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.relay_model import RelayModel
+from ...models.page_out import PageOut
+from ...models.page_update import PageUpdate
 from ...types import Response
 
 
 def _get_kwargs(
+    slug: str,
     *,
-    body: RelayModel,
+    body: PageUpdate,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/v1/relay",
+        "method": "patch",
+        "url": "/v1/guilds/me/wiki/{slug}".format(
+            slug=quote(str(slug), safe=""),
+        ),
     }
 
     _kwargs["json"] = body.to_dict()
@@ -31,11 +36,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | RelayModel | None:
-    if response.status_code == 201:
-        response_201 = RelayModel.from_dict(response.json())
+) -> HTTPValidationError | PageOut | None:
+    if response.status_code == 200:
+        response_200 = PageOut.from_dict(response.json())
 
-        return response_201
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -50,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | RelayModel]:
+) -> Response[HTTPValidationError | PageOut]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -60,28 +65,29 @@ def _build_response(
 
 
 def sync_detailed(
+    slug: str,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> Response[HTTPValidationError | RelayModel]:
-    """Server Relay
+    client: AuthenticatedClient,
+    body: PageUpdate,
+) -> Response[HTTPValidationError | PageOut]:
+    """Partial Update Wiki Page
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Returns a wiki page
 
     Args:
-        body (RelayModel):
+        slug (str):
+        body (PageUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RelayModel]
+        Response[HTTPValidationError | PageOut]
     """
 
     kwargs = _get_kwargs(
+        slug=slug,
         body=body,
     )
 
@@ -93,56 +99,58 @@ def sync_detailed(
 
 
 def sync(
+    slug: str,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> HTTPValidationError | RelayModel | None:
-    """Server Relay
+    client: AuthenticatedClient,
+    body: PageUpdate,
+) -> HTTPValidationError | PageOut | None:
+    """Partial Update Wiki Page
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Returns a wiki page
 
     Args:
-        body (RelayModel):
+        slug (str):
+        body (PageUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RelayModel
+        HTTPValidationError | PageOut
     """
 
     return sync_detailed(
+        slug=slug,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
+    slug: str,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> Response[HTTPValidationError | RelayModel]:
-    """Server Relay
+    client: AuthenticatedClient,
+    body: PageUpdate,
+) -> Response[HTTPValidationError | PageOut]:
+    """Partial Update Wiki Page
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Returns a wiki page
 
     Args:
-        body (RelayModel):
+        slug (str):
+        body (PageUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | RelayModel]
+        Response[HTTPValidationError | PageOut]
     """
 
     kwargs = _get_kwargs(
+        slug=slug,
         body=body,
     )
 
@@ -152,29 +160,30 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    slug: str,
     *,
-    client: AuthenticatedClient | Client,
-    body: RelayModel,
-) -> HTTPValidationError | RelayModel | None:
-    """Server Relay
+    client: AuthenticatedClient,
+    body: PageUpdate,
+) -> HTTPValidationError | PageOut | None:
+    """Partial Update Wiki Page
 
-     Relays a message to the discord server via a webhook.
-    Essentially acts as a wrapper, instead of calling a HTTP to the
-    webhook, just send a POST to here.
+     Returns a wiki page
 
     Args:
-        body (RelayModel):
+        slug (str):
+        body (PageUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | RelayModel
+        HTTPValidationError | PageOut
     """
 
     return (
         await asyncio_detailed(
+            slug=slug,
             client=client,
             body=body,
         )

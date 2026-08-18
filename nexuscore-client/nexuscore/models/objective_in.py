@@ -8,6 +8,7 @@ from attrs import field as _attrs_field
 
 from ..models.objective_in_logic import ObjectiveInLogic
 from ..models.objective_in_objective_type import ObjectiveInObjectiveType
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.customizations import Customizations
@@ -25,26 +26,26 @@ class ObjectiveIn:
     """
     Attributes:
         description (str): The description of the objective
-        display (None | str):
         order_index (int): The order of the objective. Starts at 0.
         objective_type (ObjectiveInObjectiveType): The type of objective: kill, mine or scriptevent
         logic (ObjectiveInLogic): The logic to be applied to the objective targets
-        target_count (int | None):
         targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]): The targets of the objective. Target
             types must be equal to `objective_type`
         customizations (Customizations):
         rewards (list[RewardIn]):
+        display (None | str | Unset):
+        target_count (int | None | Unset):
     """
 
     description: str
-    display: None | str
     order_index: int
     objective_type: ObjectiveInObjectiveType
     logic: ObjectiveInLogic
-    target_count: int | None
     targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]
     customizations: Customizations
     rewards: list[RewardIn]
+    display: None | str | Unset = UNSET
+    target_count: int | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,17 +54,11 @@ class ObjectiveIn:
 
         description = self.description
 
-        display: None | str
-        display = self.display
-
         order_index = self.order_index
 
         objective_type = self.objective_type.value
 
         logic = self.logic.value
-
-        target_count: int | None
-        target_count = self.target_count
 
         targets = []
         for targets_item_data in self.targets:
@@ -84,21 +79,35 @@ class ObjectiveIn:
             rewards_item = rewards_item_data.to_dict()
             rewards.append(rewards_item)
 
+        display: None | str | Unset
+        if isinstance(self.display, Unset):
+            display = UNSET
+        else:
+            display = self.display
+
+        target_count: int | None | Unset
+        if isinstance(self.target_count, Unset):
+            target_count = UNSET
+        else:
+            target_count = self.target_count
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "description": description,
-                "display": display,
                 "order_index": order_index,
                 "objective_type": objective_type,
                 "logic": logic,
-                "target_count": target_count,
                 "targets": targets,
                 "customizations": customizations,
                 "rewards": rewards,
             }
         )
+        if display is not UNSET:
+            field_dict["display"] = display
+        if target_count is not UNSET:
+            field_dict["target_count"] = target_count
 
         return field_dict
 
@@ -113,25 +122,11 @@ class ObjectiveIn:
         d = dict(src_dict)
         description = d.pop("description")
 
-        def _parse_display(data: object) -> None | str:
-            if data is None:
-                return data
-            return cast(None | str, data)
-
-        display = _parse_display(d.pop("display"))
-
         order_index = d.pop("order_index")
 
         objective_type = ObjectiveInObjectiveType(d.pop("objective_type"))
 
         logic = ObjectiveInLogic(d.pop("logic"))
-
-        def _parse_target_count(data: object) -> int | None:
-            if data is None:
-                return data
-            return cast(int | None, data)
-
-        target_count = _parse_target_count(d.pop("target_count"))
 
         targets = []
         _targets = d.pop("targets")
@@ -173,16 +168,34 @@ class ObjectiveIn:
 
             rewards.append(rewards_item)
 
+        def _parse_display(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        display = _parse_display(d.pop("display", UNSET))
+
+        def _parse_target_count(data: object) -> int | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(int | None | Unset, data)
+
+        target_count = _parse_target_count(d.pop("target_count", UNSET))
+
         objective_in = cls(
             description=description,
-            display=display,
             order_index=order_index,
             objective_type=objective_type,
             logic=logic,
-            target_count=target_count,
             targets=targets,
             customizations=customizations,
             rewards=rewards,
+            display=display,
+            target_count=target_count,
         )
 
         objective_in.additional_properties = d

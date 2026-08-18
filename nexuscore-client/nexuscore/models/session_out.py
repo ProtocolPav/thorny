@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -19,22 +19,27 @@ class SessionOut:
     """
     Attributes:
         start (datetime.datetime): The time the user connected
-        end (datetime.datetime): The time the user disconnected
-        duration (float): The duration of the session in seconds
+        end (datetime.datetime | None):
+        duration (float | None):
         user (UserOut):
     """
 
     start: datetime.datetime
-    end: datetime.datetime
-    duration: float
+    end: datetime.datetime | None
+    duration: float | None
     user: UserOut
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         start = self.start.isoformat()
 
-        end = self.end.isoformat()
+        end: None | str
+        if isinstance(self.end, datetime.datetime):
+            end = self.end.isoformat()
+        else:
+            end = self.end
 
+        duration: float | None
         duration = self.duration
 
         user = self.user.to_dict()
@@ -59,9 +64,27 @@ class SessionOut:
         d = dict(src_dict)
         start = datetime.datetime.fromisoformat(d.pop("start"))
 
-        end = datetime.datetime.fromisoformat(d.pop("end"))
+        def _parse_end(data: object) -> datetime.datetime | None:
+            if data is None:
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                end_type_0 = datetime.datetime.fromisoformat(data)
 
-        duration = d.pop("duration")
+                return end_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None, data)
+
+        end = _parse_end(d.pop("end"))
+
+        def _parse_duration(data: object) -> float | None:
+            if data is None:
+                return data
+            return cast(float | None, data)
+
+        duration = _parse_duration(d.pop("duration"))
 
         user = UserOut.from_dict(d.pop("user"))
 
