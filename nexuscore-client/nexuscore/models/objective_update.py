@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ..models.mine_target_model import MineTargetModel
     from ..models.reward_update import RewardUpdate
     from ..models.script_event_target_model import ScriptEventTargetModel
+    from ..models.visit_target_model import VisitTargetModel
 
 
 T = TypeVar("T", bound="ObjectiveUpdate")
@@ -32,7 +33,7 @@ class ObjectiveUpdate:
         objective_type (None | ObjectiveUpdateObjectiveTypeType0 | Unset):
         logic (None | ObjectiveUpdateLogicType0 | Unset):
         target_count (int | None | Unset):
-        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset):
+        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset):
         customizations (Customizations | None | Unset):
         rewards (list[RewardUpdate] | None | Unset):
     """
@@ -44,7 +45,7 @@ class ObjectiveUpdate:
     objective_type: None | ObjectiveUpdateObjectiveTypeType0 | Unset = UNSET
     logic: None | ObjectiveUpdateLogicType0 | Unset = UNSET
     target_count: int | None | Unset = UNSET
-    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset = UNSET
+    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset = UNSET
     customizations: Customizations | None | Unset = UNSET
     rewards: list[RewardUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -53,6 +54,7 @@ class ObjectiveUpdate:
         from ..models.customizations import Customizations
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
+        from ..models.script_event_target_model import ScriptEventTargetModel
 
         objective_id: int | None | Unset
         if isinstance(self.objective_id, Unset):
@@ -110,6 +112,8 @@ class ObjectiveUpdate:
                 if isinstance(targets_type_0_item_data, MineTargetModel):
                     targets_type_0_item = targets_type_0_item_data.to_dict()
                 elif isinstance(targets_type_0_item_data, KillTargetModel):
+                    targets_type_0_item = targets_type_0_item_data.to_dict()
+                elif isinstance(targets_type_0_item_data, ScriptEventTargetModel):
                     targets_type_0_item = targets_type_0_item_data.to_dict()
                 else:
                     targets_type_0_item = targets_type_0_item_data.to_dict()
@@ -172,6 +176,7 @@ class ObjectiveUpdate:
         from ..models.mine_target_model import MineTargetModel
         from ..models.reward_update import RewardUpdate
         from ..models.script_event_target_model import ScriptEventTargetModel
+        from ..models.visit_target_model import VisitTargetModel
 
         d = dict(src_dict)
 
@@ -256,7 +261,7 @@ class ObjectiveUpdate:
 
         def _parse_targets(
             data: object,
-        ) -> list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset:
+        ) -> list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -270,7 +275,7 @@ class ObjectiveUpdate:
 
                     def _parse_targets_type_0_item(
                         data: object,
-                    ) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel:
+                    ) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel:
                         try:
                             if not isinstance(data, dict):
                                 raise TypeError()
@@ -287,11 +292,19 @@ class ObjectiveUpdate:
                             return targets_type_0_item_type_1
                         except (TypeError, ValueError, AttributeError, KeyError):
                             pass
+                        try:
+                            if not isinstance(data, dict):
+                                raise TypeError()
+                            targets_type_0_item_type_2 = ScriptEventTargetModel.from_dict(data)
+
+                            return targets_type_0_item_type_2
+                        except (TypeError, ValueError, AttributeError, KeyError):
+                            pass
                         if not isinstance(data, dict):
                             raise TypeError()
-                        targets_type_0_item_type_2 = ScriptEventTargetModel.from_dict(data)
+                        targets_type_0_item_type_3 = VisitTargetModel.from_dict(data)
 
-                        return targets_type_0_item_type_2
+                        return targets_type_0_item_type_3
 
                     targets_type_0_item = _parse_targets_type_0_item(targets_type_0_item_data)
 
@@ -300,7 +313,9 @@ class ObjectiveUpdate:
                 return targets_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(list[KillTargetModel | MineTargetModel | ScriptEventTargetModel] | None | Unset, data)
+            return cast(
+                list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset, data
+            )
 
         targets = _parse_targets(d.pop("targets", UNSET))
 

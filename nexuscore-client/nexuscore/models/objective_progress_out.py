@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from ..models.kill_target_progress_model import KillTargetProgressModel
     from ..models.mine_target_progress_model import MineTargetProgressModel
     from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
+    from ..models.visit_target_progress_model import VisitTargetProgressModel
 
 
 T = TypeVar("T", bound="ObjectiveProgressOut")
@@ -28,8 +29,8 @@ class ObjectiveProgressOut:
         start_time (datetime.datetime | None):
         end_time (datetime.datetime | None):
         status (ObjectiveProgressOutStatus): The status of this objective
-        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel]): List
-            of each objective target's progress
+        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel |
+            VisitTargetProgressModel]): List of each objective target's progress
         customization_progress (CustomizationProgress):
     """
 
@@ -38,13 +39,16 @@ class ObjectiveProgressOut:
     start_time: datetime.datetime | None
     end_time: datetime.datetime | None
     status: ObjectiveProgressOutStatus
-    target_progress: list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel]
+    target_progress: list[
+        KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel | VisitTargetProgressModel
+    ]
     customization_progress: CustomizationProgress
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.kill_target_progress_model import KillTargetProgressModel
         from ..models.mine_target_progress_model import MineTargetProgressModel
+        from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
 
         progress_id = self.progress_id
 
@@ -70,6 +74,8 @@ class ObjectiveProgressOut:
             if isinstance(target_progress_item_data, MineTargetProgressModel):
                 target_progress_item = target_progress_item_data.to_dict()
             elif isinstance(target_progress_item_data, KillTargetProgressModel):
+                target_progress_item = target_progress_item_data.to_dict()
+            elif isinstance(target_progress_item_data, ScriptEventTargetProgressModel):
                 target_progress_item = target_progress_item_data.to_dict()
             else:
                 target_progress_item = target_progress_item_data.to_dict()
@@ -100,6 +106,7 @@ class ObjectiveProgressOut:
         from ..models.kill_target_progress_model import KillTargetProgressModel
         from ..models.mine_target_progress_model import MineTargetProgressModel
         from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
+        from ..models.visit_target_progress_model import VisitTargetProgressModel
 
         d = dict(src_dict)
         progress_id = d.pop("progress_id")
@@ -144,7 +151,12 @@ class ObjectiveProgressOut:
 
             def _parse_target_progress_item(
                 data: object,
-            ) -> KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel:
+            ) -> (
+                KillTargetProgressModel
+                | MineTargetProgressModel
+                | ScriptEventTargetProgressModel
+                | VisitTargetProgressModel
+            ):
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
@@ -161,11 +173,19 @@ class ObjectiveProgressOut:
                     return target_progress_item_type_1
                 except (TypeError, ValueError, AttributeError, KeyError):
                     pass
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    target_progress_item_type_2 = ScriptEventTargetProgressModel.from_dict(data)
+
+                    return target_progress_item_type_2
+                except (TypeError, ValueError, AttributeError, KeyError):
+                    pass
                 if not isinstance(data, dict):
                     raise TypeError()
-                target_progress_item_type_2 = ScriptEventTargetProgressModel.from_dict(data)
+                target_progress_item_type_3 = VisitTargetProgressModel.from_dict(data)
 
-                return target_progress_item_type_2
+                return target_progress_item_type_3
 
             target_progress_item = _parse_target_progress_item(target_progress_item_data)
 
