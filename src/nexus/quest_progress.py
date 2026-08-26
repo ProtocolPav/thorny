@@ -3,12 +3,11 @@ from datetime import datetime
 from typing import Optional, List
 import uuid
 
-from nexus.quests.progress_targets import VisitTargetProgress
 from nexuscore import AuthenticatedClient
 from nexuscore.models import QuestProgressIn
 from src.nexus.quest import Quest
 from src.nexus.quests.progress_customizations import CustomizationProgress
-from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, TargetProgressBase
+from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, VisitTargetProgress, TargetProgressBase
 
 from nexuscore.api.quests import (
     get_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_get,
