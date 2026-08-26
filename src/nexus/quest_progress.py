@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 import uuid
 
+from nexus.quests.progress_targets import VisitTargetProgress
 from nexuscore import AuthenticatedClient
 from nexuscore.models import QuestProgressIn
 from src.nexus.quest import Quest
@@ -50,6 +51,8 @@ class ObjectiveProgress:
             return KillTargetProgress(**base_kwargs)
         elif t_type == 'scriptevent':
             return ScriptEventTargetProgress(**base_kwargs)
+        elif t_type == 'visit':
+            return VisitTargetProgress(**base_kwargs)
         else:
             return TargetProgressBase(**base_kwargs)
 
