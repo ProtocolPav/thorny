@@ -11,7 +11,7 @@ from ..models.objective_in_objective_type import ObjectiveInObjectiveType
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customizations import Customizations
+    from ..models.customizations_in import CustomizationsIn
     from ..models.kill_target_model import KillTargetModel
     from ..models.mine_target_model import MineTargetModel
     from ..models.reward_in import RewardIn
@@ -32,7 +32,7 @@ class ObjectiveIn:
         logic (ObjectiveInLogic): The logic to be applied to the objective targets
         targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]): The targets of
             the objective. Target types must be equal to `objective_type`
-        customizations (Customizations):
+        customizations (CustomizationsIn):
         rewards (list[RewardIn]):
         display (None | str | Unset):
         target_count (int | None | Unset):
@@ -43,7 +43,7 @@ class ObjectiveIn:
     objective_type: ObjectiveInObjectiveType
     logic: ObjectiveInLogic
     targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]
-    customizations: Customizations
+    customizations: CustomizationsIn
     rewards: list[RewardIn]
     display: None | str | Unset = UNSET
     target_count: int | None | Unset = UNSET
@@ -117,7 +117,7 @@ class ObjectiveIn:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customizations import Customizations
+        from ..models.customizations_in import CustomizationsIn
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
         from ..models.reward_in import RewardIn
@@ -174,7 +174,7 @@ class ObjectiveIn:
 
             targets.append(targets_item)
 
-        customizations = Customizations.from_dict(d.pop("customizations"))
+        customizations = CustomizationsIn.from_dict(d.pop("customizations"))
 
         rewards = []
         _rewards = d.pop("rewards")

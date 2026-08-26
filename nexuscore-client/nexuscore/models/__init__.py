@@ -13,7 +13,8 @@ from .content_in_data_item import ContentInDataItem
 from .content_out import ContentOut
 from .content_out_data_item import ContentOutDataItem
 from .customization_progress import CustomizationProgress
-from .customizations import Customizations
+from .customizations_in import CustomizationsIn
+from .customizations_out import CustomizationsOut
 from .daily_activity_entry import DailyActivityEntry
 from .daily_playtime import DailyPlaytime
 from .damage_model import DamageModel
@@ -139,7 +140,8 @@ __all__ = (
     "ContentOut",
     "ContentOutDataItem",
     "CustomizationProgress",
-    "Customizations",
+    "CustomizationsIn",
+    "CustomizationsOut",
     "DailyActivityEntry",
     "DailyPlaytime",
     "DamageModel",

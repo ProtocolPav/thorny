@@ -11,7 +11,7 @@ from ..models.objective_update_objective_type_type_0 import ObjectiveUpdateObjec
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customizations import Customizations
+    from ..models.customizations_in import CustomizationsIn
     from ..models.kill_target_model import KillTargetModel
     from ..models.mine_target_model import MineTargetModel
     from ..models.reward_update import RewardUpdate
@@ -34,7 +34,7 @@ class ObjectiveUpdate:
         logic (None | ObjectiveUpdateLogicType0 | Unset):
         target_count (int | None | Unset):
         targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset):
-        customizations (Customizations | None | Unset):
+        customizations (CustomizationsIn | None | Unset):
         rewards (list[RewardUpdate] | None | Unset):
     """
 
@@ -46,12 +46,12 @@ class ObjectiveUpdate:
     logic: None | ObjectiveUpdateLogicType0 | Unset = UNSET
     target_count: int | None | Unset = UNSET
     targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel] | None | Unset = UNSET
-    customizations: Customizations | None | Unset = UNSET
+    customizations: CustomizationsIn | None | Unset = UNSET
     rewards: list[RewardUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.customizations import Customizations
+        from ..models.customizations_in import CustomizationsIn
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
         from ..models.script_event_target_model import ScriptEventTargetModel
@@ -126,7 +126,7 @@ class ObjectiveUpdate:
         customizations: dict[str, Any] | None | Unset
         if isinstance(self.customizations, Unset):
             customizations = UNSET
-        elif isinstance(self.customizations, Customizations):
+        elif isinstance(self.customizations, CustomizationsIn):
             customizations = self.customizations.to_dict()
         else:
             customizations = self.customizations
@@ -171,7 +171,7 @@ class ObjectiveUpdate:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customizations import Customizations
+        from ..models.customizations_in import CustomizationsIn
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
         from ..models.reward_update import RewardUpdate
@@ -319,7 +319,7 @@ class ObjectiveUpdate:
 
         targets = _parse_targets(d.pop("targets", UNSET))
 
-        def _parse_customizations(data: object) -> Customizations | None | Unset:
+        def _parse_customizations(data: object) -> CustomizationsIn | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -327,12 +327,12 @@ class ObjectiveUpdate:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                customizations_type_0 = Customizations.from_dict(data)
+                customizations_type_0 = CustomizationsIn.from_dict(data)
 
                 return customizations_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(Customizations | None | Unset, data)
+            return cast(CustomizationsIn | None | Unset, data)
 
         customizations = _parse_customizations(d.pop("customizations", UNSET))
 

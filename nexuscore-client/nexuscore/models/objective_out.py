@@ -11,7 +11,7 @@ from ..models.objective_out_objective_type import ObjectiveOutObjectiveType
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.customizations import Customizations
+    from ..models.customizations_out import CustomizationsOut
     from ..models.kill_target_model import KillTargetModel
     from ..models.mine_target_model import MineTargetModel
     from ..models.reward_out import RewardOut
@@ -33,8 +33,8 @@ class ObjectiveOut:
         logic (ObjectiveOutLogic): The logic to be applied to the objective targets
         targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]): The targets of
             the objective. Target types must be equal to `objective_type`
-        customizations (Customizations):
         rewards (list[RewardOut]):
+        customizations (CustomizationsOut):
         display (None | str | Unset):
         target_count (int | None | Unset):
     """
@@ -45,8 +45,8 @@ class ObjectiveOut:
     objective_type: ObjectiveOutObjectiveType
     logic: ObjectiveOutLogic
     targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]
-    customizations: Customizations
     rewards: list[RewardOut]
+    customizations: CustomizationsOut
     display: None | str | Unset = UNSET
     target_count: int | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -80,12 +80,12 @@ class ObjectiveOut:
 
             targets.append(targets_item)
 
-        customizations = self.customizations.to_dict()
-
         rewards = []
         for rewards_item_data in self.rewards:
             rewards_item = rewards_item_data.to_dict()
             rewards.append(rewards_item)
+
+        customizations = self.customizations.to_dict()
 
         display: None | str | Unset
         if isinstance(self.display, Unset):
@@ -109,8 +109,8 @@ class ObjectiveOut:
                 "objective_type": objective_type,
                 "logic": logic,
                 "targets": targets,
-                "customizations": customizations,
                 "rewards": rewards,
+                "customizations": customizations,
             }
         )
         if display is not UNSET:
@@ -122,7 +122,7 @@ class ObjectiveOut:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.customizations import Customizations
+        from ..models.customizations_out import CustomizationsOut
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
         from ..models.reward_out import RewardOut
@@ -181,14 +181,14 @@ class ObjectiveOut:
 
             targets.append(targets_item)
 
-        customizations = Customizations.from_dict(d.pop("customizations"))
-
         rewards = []
         _rewards = d.pop("rewards")
         for rewards_item_data in _rewards:
             rewards_item = RewardOut.from_dict(rewards_item_data)
 
             rewards.append(rewards_item)
+
+        customizations = CustomizationsOut.from_dict(d.pop("customizations"))
 
         def _parse_display(data: object) -> None | str | Unset:
             if data is None:
@@ -215,8 +215,8 @@ class ObjectiveOut:
             objective_type=objective_type,
             logic=logic,
             targets=targets,
-            customizations=customizations,
             rewards=rewards,
+            customizations=customizations,
             display=display,
             target_count=target_count,
         )
