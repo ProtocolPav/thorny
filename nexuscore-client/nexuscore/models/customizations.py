@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from ..models.maximum_deaths_customization import MaximumDeathsCustomization
     from ..models.natural_block_customization import NaturalBlockCustomization
     from ..models.timer_customization import TimerCustomization
+    from ..models.waypoint_customization import WaypointCustomization
 
 
 T = TypeVar("T", bound="Customizations")
@@ -28,6 +29,7 @@ class Customizations:
         timer (None | TimerCustomization | Unset): Timer Customization
         maximum_deaths (MaximumDeathsCustomization | None | Unset): Maximum Deaths Customization
         natural_block (NaturalBlockCustomization | None | Unset): Natural Block Customization
+        waypoint (None | Unset | WaypointCustomization): Waypoint Customization
     """
 
     mainhand: MainhandCustomization | None | Unset = UNSET
@@ -35,6 +37,7 @@ class Customizations:
     timer: None | TimerCustomization | Unset = UNSET
     maximum_deaths: MaximumDeathsCustomization | None | Unset = UNSET
     natural_block: NaturalBlockCustomization | None | Unset = UNSET
+    waypoint: None | Unset | WaypointCustomization = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,6 +46,7 @@ class Customizations:
         from ..models.maximum_deaths_customization import MaximumDeathsCustomization
         from ..models.natural_block_customization import NaturalBlockCustomization
         from ..models.timer_customization import TimerCustomization
+        from ..models.waypoint_customization import WaypointCustomization
 
         mainhand: dict[str, Any] | None | Unset
         if isinstance(self.mainhand, Unset):
@@ -84,6 +88,14 @@ class Customizations:
         else:
             natural_block = self.natural_block
 
+        waypoint: dict[str, Any] | None | Unset
+        if isinstance(self.waypoint, Unset):
+            waypoint = UNSET
+        elif isinstance(self.waypoint, WaypointCustomization):
+            waypoint = self.waypoint.to_dict()
+        else:
+            waypoint = self.waypoint
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -97,6 +109,8 @@ class Customizations:
             field_dict["maximum_deaths"] = maximum_deaths
         if natural_block is not UNSET:
             field_dict["natural_block"] = natural_block
+        if waypoint is not UNSET:
+            field_dict["waypoint"] = waypoint
 
         return field_dict
 
@@ -107,6 +121,7 @@ class Customizations:
         from ..models.maximum_deaths_customization import MaximumDeathsCustomization
         from ..models.natural_block_customization import NaturalBlockCustomization
         from ..models.timer_customization import TimerCustomization
+        from ..models.waypoint_customization import WaypointCustomization
 
         d = dict(src_dict)
 
@@ -195,12 +210,30 @@ class Customizations:
 
         natural_block = _parse_natural_block(d.pop("natural_block", UNSET))
 
+        def _parse_waypoint(data: object) -> None | Unset | WaypointCustomization:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                waypoint_type_0 = WaypointCustomization.from_dict(data)
+
+                return waypoint_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | Unset | WaypointCustomization, data)
+
+        waypoint = _parse_waypoint(d.pop("waypoint", UNSET))
+
         customizations = cls(
             mainhand=mainhand,
             location=location,
             timer=timer,
             maximum_deaths=maximum_deaths,
             natural_block=natural_block,
+            waypoint=waypoint,
         )
 
         customizations.additional_properties = d

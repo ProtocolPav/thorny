@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ..models.mine_target_model import MineTargetModel
     from ..models.reward_in import RewardIn
     from ..models.script_event_target_model import ScriptEventTargetModel
+    from ..models.visit_target_model import VisitTargetModel
 
 
 T = TypeVar("T", bound="ObjectiveIn")
@@ -27,10 +28,10 @@ class ObjectiveIn:
     Attributes:
         description (str): The description of the objective
         order_index (int): The order of the objective. Starts at 0.
-        objective_type (ObjectiveInObjectiveType): The type of objective: kill, mine or scriptevent
+        objective_type (ObjectiveInObjectiveType): The type of objective
         logic (ObjectiveInLogic): The logic to be applied to the objective targets
-        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]): The targets of the objective. Target
-            types must be equal to `objective_type`
+        targets (list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]): The targets of
+            the objective. Target types must be equal to `objective_type`
         customizations (Customizations):
         rewards (list[RewardIn]):
         display (None | str | Unset):
@@ -41,7 +42,7 @@ class ObjectiveIn:
     order_index: int
     objective_type: ObjectiveInObjectiveType
     logic: ObjectiveInLogic
-    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel]
+    targets: list[KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel]
     customizations: Customizations
     rewards: list[RewardIn]
     display: None | str | Unset = UNSET
@@ -51,6 +52,7 @@ class ObjectiveIn:
     def to_dict(self) -> dict[str, Any]:
         from ..models.kill_target_model import KillTargetModel
         from ..models.mine_target_model import MineTargetModel
+        from ..models.script_event_target_model import ScriptEventTargetModel
 
         description = self.description
 
@@ -66,6 +68,8 @@ class ObjectiveIn:
             if isinstance(targets_item_data, MineTargetModel):
                 targets_item = targets_item_data.to_dict()
             elif isinstance(targets_item_data, KillTargetModel):
+                targets_item = targets_item_data.to_dict()
+            elif isinstance(targets_item_data, ScriptEventTargetModel):
                 targets_item = targets_item_data.to_dict()
             else:
                 targets_item = targets_item_data.to_dict()
@@ -118,6 +122,7 @@ class ObjectiveIn:
         from ..models.mine_target_model import MineTargetModel
         from ..models.reward_in import RewardIn
         from ..models.script_event_target_model import ScriptEventTargetModel
+        from ..models.visit_target_model import VisitTargetModel
 
         d = dict(src_dict)
         description = d.pop("description")
@@ -132,7 +137,9 @@ class ObjectiveIn:
         _targets = d.pop("targets")
         for targets_item_data in _targets:
 
-            def _parse_targets_item(data: object) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel:
+            def _parse_targets_item(
+                data: object,
+            ) -> KillTargetModel | MineTargetModel | ScriptEventTargetModel | VisitTargetModel:
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()
@@ -149,11 +156,19 @@ class ObjectiveIn:
                     return targets_item_type_1
                 except (TypeError, ValueError, AttributeError, KeyError):
                     pass
+                try:
+                    if not isinstance(data, dict):
+                        raise TypeError()
+                    targets_item_type_2 = ScriptEventTargetModel.from_dict(data)
+
+                    return targets_item_type_2
+                except (TypeError, ValueError, AttributeError, KeyError):
+                    pass
                 if not isinstance(data, dict):
                     raise TypeError()
-                targets_item_type_2 = ScriptEventTargetModel.from_dict(data)
+                targets_item_type_3 = VisitTargetModel.from_dict(data)
 
-                return targets_item_type_2
+                return targets_item_type_3
 
             targets_item = _parse_targets_item(targets_item_data)
 

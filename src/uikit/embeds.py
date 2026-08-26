@@ -569,7 +569,12 @@ def _build_target_lines(objective: 'nexus.quest.Objective',
     if display:
         return f"**{display}**"
 
-    verb = objective.objective_type.capitalize()
+    match objective.objective_type:
+        case "kill": verb = 'Kill'
+        case 'mine': verb = 'Mine'
+        case 'visit': verb = 'Locate'
+        case _: verb = 'Complete'
+
     targets = objective.targets
 
     if not targets:

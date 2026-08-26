@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Union
 
+from nexuscore.models import VisitTargetModel
+
 
 @dataclass
 class TargetBase:
@@ -41,5 +43,10 @@ class ScriptEventTarget(TargetBase):
     def display_name(self):
         return self.script_id
 
+@dataclass
+class VisitTarget(TargetBase, VisitTargetModel):
+    def display_name(self):
+        return self.helper_text
 
-TargetType = Union[MineTarget, KillTarget, ScriptEventTarget]
+
+TargetType = Union[MineTarget, KillTarget, ScriptEventTarget, VisitTarget]

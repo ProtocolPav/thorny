@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from nexuscore.models import VisitTargetProgressModel
+
 
 @dataclass
 class TargetProgressBase:
@@ -20,4 +22,8 @@ class KillTargetProgress(TargetProgressBase):
 
 @dataclass
 class ScriptEventTargetProgress(TargetProgressBase):
+    pass
+
+@dataclass
+class VisitTargetProgress(TargetProgressBase, VisitTargetProgressModel):
     pass

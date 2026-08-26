@@ -13,6 +13,7 @@ T = TypeVar("T", bound="ProfileOut")
 class ProfileOut:
     """
     Attributes:
+        thorny_id (int): The ThornyID of the profile
         slogan (str): The slogan of the profile
         aboutme (str): The aboutme of the profile
         lore (str): The lore of the profile
@@ -30,6 +31,7 @@ class ProfileOut:
         ingenuity (int): The character ingeniu of the profile
     """
 
+    thorny_id: int
     slogan: str
     aboutme: str
     lore: str
@@ -48,6 +50,8 @@ class ProfileOut:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        thorny_id = self.thorny_id
+
         slogan = self.slogan
 
         aboutme = self.aboutme
@@ -82,6 +86,7 @@ class ProfileOut:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "thorny_id": thorny_id,
                 "slogan": slogan,
                 "aboutme": aboutme,
                 "lore": lore,
@@ -105,6 +110,8 @@ class ProfileOut:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        thorny_id = d.pop("thorny_id")
+
         slogan = d.pop("slogan")
 
         aboutme = d.pop("aboutme")
@@ -136,6 +143,7 @@ class ProfileOut:
         ingenuity = d.pop("ingenuity")
 
         profile_out = cls(
+            thorny_id=thorny_id,
             slogan=slogan,
             aboutme=aboutme,
             lore=lore,

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from nexuscore.models import WaypointCustomization
+
 
 @dataclass
 class MainhandCustomization:
@@ -33,6 +35,7 @@ class Customizations:
     timer: Optional[TimerCustomization] = None
     maximum_deaths: Optional[MaximumDeathsCustomization] = None
     natural_block: Optional[NaturalBlockCustomization] = None
+    waypoint: Optional[WaypointCustomization] = None
 
     @classmethod
     def build(cls, data: dict):
@@ -69,10 +72,15 @@ class Customizations:
             # It might be an empty dict {} or None in JSON
             natural_block = NaturalBlockCustomization()
 
+        waypoint = None
+        if data.get('waypoint'):
+            waypoint = WaypointCustomization(**data['waypoint'])
+
         return cls(
             mainhand=mainhand,
             location=location,
             timer=timer,
             maximum_deaths=max_deaths,
-            natural_block=natural_block
+            natural_block=natural_block,
+            waypoint=waypoint
         )
