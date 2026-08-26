@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ..models.kill_target_progress_model import KillTargetProgressModel
     from ..models.mine_target_progress_model import MineTargetProgressModel
     from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
+    from ..models.visit_target_progress_model import VisitTargetProgressModel
 
 
 T = TypeVar("T", bound="ObjectiveProgressUpdate")
@@ -28,8 +29,8 @@ class ObjectiveProgressUpdate:
         start_time (datetime.datetime | None | Unset):
         end_time (datetime.datetime | None | Unset):
         status (None | ObjectiveProgressUpdateStatusType0 | Unset):
-        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None
-            | Unset):
+        target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel |
+            VisitTargetProgressModel] | None | Unset):
         customization_progress (CustomizationProgress | None | Unset):
     """
 
@@ -38,7 +39,14 @@ class ObjectiveProgressUpdate:
     end_time: datetime.datetime | None | Unset = UNSET
     status: None | ObjectiveProgressUpdateStatusType0 | Unset = UNSET
     target_progress: (
-        list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset
+        list[
+            KillTargetProgressModel
+            | MineTargetProgressModel
+            | ScriptEventTargetProgressModel
+            | VisitTargetProgressModel
+        ]
+        | None
+        | Unset
     ) = UNSET
     customization_progress: CustomizationProgress | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -47,6 +55,7 @@ class ObjectiveProgressUpdate:
         from ..models.customization_progress import CustomizationProgress
         from ..models.kill_target_progress_model import KillTargetProgressModel
         from ..models.mine_target_progress_model import MineTargetProgressModel
+        from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
 
         objective_id: int | None | Unset
         if isinstance(self.objective_id, Unset):
@@ -89,6 +98,8 @@ class ObjectiveProgressUpdate:
                     target_progress_type_0_item = target_progress_type_0_item_data.to_dict()
                 elif isinstance(target_progress_type_0_item_data, KillTargetProgressModel):
                     target_progress_type_0_item = target_progress_type_0_item_data.to_dict()
+                elif isinstance(target_progress_type_0_item_data, ScriptEventTargetProgressModel):
+                    target_progress_type_0_item = target_progress_type_0_item_data.to_dict()
                 else:
                     target_progress_type_0_item = target_progress_type_0_item_data.to_dict()
 
@@ -129,6 +140,7 @@ class ObjectiveProgressUpdate:
         from ..models.kill_target_progress_model import KillTargetProgressModel
         from ..models.mine_target_progress_model import MineTargetProgressModel
         from ..models.script_event_target_progress_model import ScriptEventTargetProgressModel
+        from ..models.visit_target_progress_model import VisitTargetProgressModel
 
         d = dict(src_dict)
 
@@ -194,7 +206,16 @@ class ObjectiveProgressUpdate:
 
         def _parse_target_progress(
             data: object,
-        ) -> list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset:
+        ) -> (
+            list[
+                KillTargetProgressModel
+                | MineTargetProgressModel
+                | ScriptEventTargetProgressModel
+                | VisitTargetProgressModel
+            ]
+            | None
+            | Unset
+        ):
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -208,7 +229,12 @@ class ObjectiveProgressUpdate:
 
                     def _parse_target_progress_type_0_item(
                         data: object,
-                    ) -> KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel:
+                    ) -> (
+                        KillTargetProgressModel
+                        | MineTargetProgressModel
+                        | ScriptEventTargetProgressModel
+                        | VisitTargetProgressModel
+                    ):
                         try:
                             if not isinstance(data, dict):
                                 raise TypeError()
@@ -225,11 +251,19 @@ class ObjectiveProgressUpdate:
                             return target_progress_type_0_item_type_1
                         except (TypeError, ValueError, AttributeError, KeyError):
                             pass
+                        try:
+                            if not isinstance(data, dict):
+                                raise TypeError()
+                            target_progress_type_0_item_type_2 = ScriptEventTargetProgressModel.from_dict(data)
+
+                            return target_progress_type_0_item_type_2
+                        except (TypeError, ValueError, AttributeError, KeyError):
+                            pass
                         if not isinstance(data, dict):
                             raise TypeError()
-                        target_progress_type_0_item_type_2 = ScriptEventTargetProgressModel.from_dict(data)
+                        target_progress_type_0_item_type_3 = VisitTargetProgressModel.from_dict(data)
 
-                        return target_progress_type_0_item_type_2
+                        return target_progress_type_0_item_type_3
 
                     target_progress_type_0_item = _parse_target_progress_type_0_item(target_progress_type_0_item_data)
 
@@ -239,7 +273,14 @@ class ObjectiveProgressUpdate:
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(
-                list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel] | None | Unset,
+                list[
+                    KillTargetProgressModel
+                    | MineTargetProgressModel
+                    | ScriptEventTargetProgressModel
+                    | VisitTargetProgressModel
+                ]
+                | None
+                | Unset,
                 data,
             )
 

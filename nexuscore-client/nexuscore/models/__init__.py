@@ -117,6 +117,11 @@ from .user_out import UserOut
 from .user_update import UserUpdate
 from .validation_error import ValidationError
 from .validation_error_context import ValidationErrorContext
+from .visit_target_model import VisitTargetModel
+from .visit_target_progress_model import VisitTargetProgressModel
+from .waypoint import Waypoint
+from .waypoint_customization import WaypointCustomization
+from .waypoint_waypoint_type import WaypointWaypointType
 from .world_out import WorldOut
 from .world_update import WorldUpdate
 
@@ -236,6 +241,11 @@ __all__ = (
     "UserUpdate",
     "ValidationError",
     "ValidationErrorContext",
+    "VisitTargetModel",
+    "VisitTargetProgressModel",
+    "Waypoint",
+    "WaypointCustomization",
+    "WaypointWaypointType",
     "WorldOut",
     "WorldUpdate",
 )
