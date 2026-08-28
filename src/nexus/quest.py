@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
+from nexus.quests.objective_targets import VisitTarget
 from nexuscore import AuthenticatedClient
 from nexuscore.api.quests import get_quest_v1_guilds_me_quests_quest_id_get
 from src.nexus.quests.objective_customizations import Customizations
@@ -66,6 +67,9 @@ class Objective:
         elif t_type == 'scriptevent':
             return ScriptEventTarget(
                 **{k: v for k, v in t_data.items() if k in ScriptEventTarget.__annotations__ or k in TargetBase.__annotations__})
+        elif t_type == 'visit':
+            return VisitTarget(
+                **{k: v for k, v in t_data.items() if k in VisitTarget.__annotations__ or k in TargetBase.__annotations__})
         else:
             # Fallback for unknown types
             return TargetBase(**{k: v for k, v in t_data.items() if k in TargetBase.__annotations__})
