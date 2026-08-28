@@ -3,11 +3,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from nexus.quests.objective_targets import VisitTarget
 from nexuscore import AuthenticatedClient
 from nexuscore.api.quests import get_quest_v1_guilds_me_quests_quest_id_get
 from src.nexus.quests.objective_customizations import Customizations
-from src.nexus.quests.objective_targets import KillTarget, MineTarget, ScriptEventTarget, TargetBase
+from src.nexus.quests.objective_targets import KillTarget, MineTarget, ScriptEventTarget, TargetBase, VisitTarget
 
 
 @dataclass
