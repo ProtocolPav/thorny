@@ -17,11 +17,11 @@ if TYPE_CHECKING:
     from ..models.waypoint_customization import WaypointCustomization
 
 
-T = TypeVar("T", bound="CustomizationsOut")
+T = TypeVar("T", bound="Customizations")
 
 
 @_attrs_define
-class CustomizationsOut:
+class Customizations:
     """
     Attributes:
         mainhand (MainhandCustomization | None | Unset): Mainhand Customization
@@ -227,7 +227,7 @@ class CustomizationsOut:
 
         waypoint = _parse_waypoint(d.pop("waypoint", UNSET))
 
-        customizations_out = cls(
+        customizations = cls(
             mainhand=mainhand,
             location=location,
             timer=timer,
@@ -236,8 +236,8 @@ class CustomizationsOut:
             waypoint=waypoint,
         )
 
-        customizations_out.additional_properties = d
-        return customizations_out
+        customizations.additional_properties = d
+        return customizations
 
     @property
     def additional_keys(self) -> list[str]:
