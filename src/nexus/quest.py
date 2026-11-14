@@ -58,17 +58,13 @@ class Objective:
             t_data['target_uuid'] = str(uuid.uuid4())
 
         if t_type == 'mine':
-            return MineTarget(
-                **{k: v for k, v in t_data.items() if k in MineTarget.__annotations__ or k in TargetBase.__annotations__})
+            return MineTarget.from_dict(t_data)
         elif t_type == 'kill':
-            return KillTarget(
-                **{k: v for k, v in t_data.items() if k in KillTarget.__annotations__ or k in TargetBase.__annotations__})
+            return KillTarget.from_dict(t_data)
         elif t_type == 'scriptevent':
-            return ScriptEventTarget(
-                **{k: v for k, v in t_data.items() if k in ScriptEventTarget.__annotations__ or k in TargetBase.__annotations__})
+            return ScriptEventTarget.from_dict(t_data)
         elif t_type == 'visit':
-            return VisitTarget(
-                **{k: v for k, v in t_data.items() if k in VisitTarget.__annotations__ or k in TargetBase.__annotations__})
+            return VisitTarget.from_dict(t_data)
         else:
             # Fallback for unknown types
             return TargetBase(**{k: v for k, v in t_data.items() if k in TargetBase.__annotations__})
