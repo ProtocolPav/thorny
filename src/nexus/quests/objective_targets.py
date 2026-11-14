@@ -1,7 +1,12 @@
 from dataclasses import dataclass
 from typing import Union
 
-from nexuscore.models import VisitTargetModel
+from nexuscore.models import (
+    KillTargetModel,
+    MineTargetModel,
+    ScriptEventTargetModel,
+    VisitTargetModel,
+)
 
 
 @dataclass
@@ -20,31 +25,22 @@ class TargetBase:
         pass
 
 
-@dataclass
-class MineTarget(TargetBase):
-    block: str
-
+class MineTarget(MineTargetModel, TargetBase):
     def display_name(self):
         return self.format_minecraft_id(self.block)
 
 
-@dataclass
-class KillTarget(TargetBase):
-    entity: str
-
+class KillTarget(KillTargetModel, TargetBase):
     def display_name(self):
         return self.format_minecraft_id(self.entity)
 
 
-@dataclass
-class ScriptEventTarget(TargetBase):
-    script_id: str
-
+class ScriptEventTarget(ScriptEventTargetModel, TargetBase):
     def display_name(self):
         return self.script_id
 
-@dataclass
-class VisitTarget(TargetBase, VisitTargetModel):
+
+class VisitTarget(VisitTargetModel, TargetBase):
     def display_name(self):
         return self.helper_text
 
