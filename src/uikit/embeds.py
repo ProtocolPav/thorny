@@ -4,7 +4,7 @@ from typing import Optional
 import discord
 import json
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import time
 import giphy_client
 import random
@@ -841,9 +841,16 @@ def daily_quest(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: str
 
     embed.add_field(name='📊 Status', value=status, inline=False)
 
+    # Dailies can overlap, so the next one arrives at the next UTC midnight, not when this one ends
+    if user_quest.status in ('completed', 'failed', 'abandoned'):
+        next_daily = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        timing = f"Next daily quest <t:{int(next_daily.timestamp())}:R>"
+    else:
+        timing = f"Ends <t:{int(quest.end_time.timestamp())}:R>"
+
     embed.add_field(
         name='',
-        value=f"-# 📅 Daily Quest · New quest <t:{int(quest.end_time.timestamp())}:R>",
+        value=f"-# 📅 Daily Quest · {timing}",
         inline=False
     )
 
