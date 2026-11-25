@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.quest_in_quest_type import QuestInQuestType
+
 if TYPE_CHECKING:
     from ..models.objective_in import ObjectiveIn
 
@@ -23,7 +25,8 @@ class QuestIn:
         title (str): The quest title
         description (str): The quest description
         tags (list[str]): A list of tags describing this quest
-        quest_type (str): The quest type
+        quest_type (QuestInQuestType): The quest type. `daily` quests are generated automatically and cannot be created
+            directly.
         created_by (int): The Thorny ID that created this quest
         objectives (list[ObjectiveIn]):
     """
@@ -33,7 +36,7 @@ class QuestIn:
     title: str
     description: str
     tags: list[str]
-    quest_type: str
+    quest_type: QuestInQuestType
     created_by: int
     objectives: list[ObjectiveIn]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -49,7 +52,7 @@ class QuestIn:
 
         tags = self.tags
 
-        quest_type = self.quest_type
+        quest_type = self.quest_type.value
 
         created_by = self.created_by
 
@@ -90,7 +93,7 @@ class QuestIn:
 
         tags = cast(list[str], d.pop("tags"))
 
-        quest_type = d.pop("quest_type")
+        quest_type = QuestInQuestType(d.pop("quest_type"))
 
         created_by = d.pop("created_by")
 

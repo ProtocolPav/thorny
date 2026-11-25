@@ -65,7 +65,7 @@ class Other(commands.Cog):
             quest_info = await nexus.Quest.build(await self.bot.api.get(ctx.guild.id), thorny_user.quest.quest_id)
 
             if quest_info.end_time < datetime.now(UTC):
-                await thorny_user.quest.fail(await self.bot.api.get(ctx.guild.id))
+                await thorny_user.quest.abandon(await self.bot.api.get(ctx.guild.id))
                 await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
             else:
                 view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)

@@ -8,18 +8,32 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.quest_progress_out import QuestProgressOut
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     thorny_id: int,
+    *,
+    quest_type: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
+
+    params: dict[str, Any] = {}
+
+    json_quest_type: None | str | Unset
+    if isinstance(quest_type, Unset):
+        json_quest_type = UNSET
+    else:
+        json_quest_type = quest_type
+    params["quest_type"] = json_quest_type
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/v1/guilds/me/quests/progress/user/{thorny_id}/active".format(
             thorny_id=quote(str(thorny_id), safe=""),
         ),
+        "params": params,
     }
 
     return _kwargs
@@ -59,15 +73,20 @@ def sync_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
+    quest_type: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | QuestProgressOut]:
     """Get Active Quest Progress
 
      Get User's Active Quest
 
     Returns the user's currently active quest.
+    By default this is their regular (accepted) quest. Use `?quest_type=daily`
+    to get their active daily quest instead.
 
     Args:
         thorny_id (int):
+        quest_type (None | str | Unset): The quest type to look for, e.g. `daily`. When omitted,
+            daily quests are excluded and the user's regular quest is used.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -79,6 +98,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         thorny_id=thorny_id,
+        quest_type=quest_type,
     )
 
     response = client.get_httpx_client().request(
@@ -92,15 +112,20 @@ def sync(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
+    quest_type: None | str | Unset = UNSET,
 ) -> HTTPValidationError | QuestProgressOut | None:
     """Get Active Quest Progress
 
      Get User's Active Quest
 
     Returns the user's currently active quest.
+    By default this is their regular (accepted) quest. Use `?quest_type=daily`
+    to get their active daily quest instead.
 
     Args:
         thorny_id (int):
+        quest_type (None | str | Unset): The quest type to look for, e.g. `daily`. When omitted,
+            daily quests are excluded and the user's regular quest is used.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -113,6 +138,7 @@ def sync(
     return sync_detailed(
         thorny_id=thorny_id,
         client=client,
+        quest_type=quest_type,
     ).parsed
 
 
@@ -120,15 +146,20 @@ async def asyncio_detailed(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
+    quest_type: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | QuestProgressOut]:
     """Get Active Quest Progress
 
      Get User's Active Quest
 
     Returns the user's currently active quest.
+    By default this is their regular (accepted) quest. Use `?quest_type=daily`
+    to get their active daily quest instead.
 
     Args:
         thorny_id (int):
+        quest_type (None | str | Unset): The quest type to look for, e.g. `daily`. When omitted,
+            daily quests are excluded and the user's regular quest is used.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -140,6 +171,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         thorny_id=thorny_id,
+        quest_type=quest_type,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -151,15 +183,20 @@ async def asyncio(
     thorny_id: int,
     *,
     client: AuthenticatedClient,
+    quest_type: None | str | Unset = UNSET,
 ) -> HTTPValidationError | QuestProgressOut | None:
     """Get Active Quest Progress
 
      Get User's Active Quest
 
     Returns the user's currently active quest.
+    By default this is their regular (accepted) quest. Use `?quest_type=daily`
+    to get their active daily quest instead.
 
     Args:
         thorny_id (int):
+        quest_type (None | str | Unset): The quest type to look for, e.g. `daily`. When omitted,
+            daily quests are excluded and the user's regular quest is used.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,5 +210,6 @@ async def asyncio(
         await asyncio_detailed(
             thorny_id=thorny_id,
             client=client,
+            quest_type=quest_type,
         )
     ).parsed

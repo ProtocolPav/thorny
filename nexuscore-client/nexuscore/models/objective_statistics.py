@@ -20,9 +20,13 @@ class ObjectiveStatistics:
         description (str): The objective description
         players_reached (int): Number of players who started this objective
         players_completed (int): Number of players who completed this objective
-        players_failed (int): Number of players who failed this objective
+        players_failed (int): Number of players who genuinely failed this objective
+        players_abandoned (int): Number of players who dropped the quest, or whose quest expired, while on this
+            objective
         completion_rate (float): players_completed / players_reached. 0 if none reached.
-        drop_rate (float): players_failed / players_reached. 0 if none reached.
+        failure_rate (float): players_failed / players_reached. 0 if none reached.
+        abandon_rate (float): players_abandoned / players_reached. 0 if none reached.
+        drop_rate (float): (players_failed + players_abandoned) / players_reached. 0 if none reached.
         avg_time_seconds (int | None | Unset): Average time in seconds spent on this objective (start_time to end_time),
             across completions
         median_time_seconds (int | None | Unset): Median time in seconds spent on this objective, across completions
@@ -34,7 +38,10 @@ class ObjectiveStatistics:
     players_reached: int
     players_completed: int
     players_failed: int
+    players_abandoned: int
     completion_rate: float
+    failure_rate: float
+    abandon_rate: float
     drop_rate: float
     avg_time_seconds: int | None | Unset = UNSET
     median_time_seconds: int | None | Unset = UNSET
@@ -53,7 +60,13 @@ class ObjectiveStatistics:
 
         players_failed = self.players_failed
 
+        players_abandoned = self.players_abandoned
+
         completion_rate = self.completion_rate
+
+        failure_rate = self.failure_rate
+
+        abandon_rate = self.abandon_rate
 
         drop_rate = self.drop_rate
 
@@ -79,7 +92,10 @@ class ObjectiveStatistics:
                 "players_reached": players_reached,
                 "players_completed": players_completed,
                 "players_failed": players_failed,
+                "players_abandoned": players_abandoned,
                 "completion_rate": completion_rate,
+                "failure_rate": failure_rate,
+                "abandon_rate": abandon_rate,
                 "drop_rate": drop_rate,
             }
         )
@@ -105,7 +121,13 @@ class ObjectiveStatistics:
 
         players_failed = d.pop("players_failed")
 
+        players_abandoned = d.pop("players_abandoned")
+
         completion_rate = d.pop("completion_rate")
+
+        failure_rate = d.pop("failure_rate")
+
+        abandon_rate = d.pop("abandon_rate")
 
         drop_rate = d.pop("drop_rate")
 
@@ -134,7 +156,10 @@ class ObjectiveStatistics:
             players_reached=players_reached,
             players_completed=players_completed,
             players_failed=players_failed,
+            players_abandoned=players_abandoned,
             completion_rate=completion_rate,
+            failure_rate=failure_rate,
+            abandon_rate=abandon_rate,
             drop_rate=drop_rate,
             avg_time_seconds=avg_time_seconds,
             median_time_seconds=median_time_seconds,

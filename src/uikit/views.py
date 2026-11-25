@@ -505,7 +505,7 @@ class FailQuest(View):
                        style=discord.ButtonStyle.red)
     async def drop_callback(self, button: Button, interaction: discord.Interaction):
         if interaction.user == self.thorny_user.discord_member:
-            await self.thorny_user.quest.fail(await interaction.client.api.get(interaction.guild.id))
+            await self.thorny_user.quest.abandon(await interaction.client.api.get(interaction.guild.id))
 
             await interaction.response.edit_message(view=None,
                                                     embed=None,

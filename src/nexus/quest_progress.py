@@ -14,7 +14,7 @@ from nexuscore.api.quests import (
     create_quest_progress_v1_guilds_me_quests_progress_post,
     list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get,
     list_quests_v1_guilds_me_quests_get,
-    fail_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete
+    abandon_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete
 )
 
 
@@ -163,9 +163,9 @@ class QuestProgress:
 
         return available_quests
 
-    async def fail(self, api: AuthenticatedClient):
-        """API call to manually fail the current quest"""
-        await fail_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete.asyncio_detailed(self.thorny_id, client=api)
+    async def abandon(self, api: AuthenticatedClient):
+        """API call to abandon (drop) the current quest"""
+        await abandon_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete.asyncio_detailed(self.thorny_id, client=api)
 
     def get_objective_progress(self, objective_id: int) -> Optional[ObjectiveProgress]:
         """Helper to find specific objective progress by ID"""
