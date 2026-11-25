@@ -5,7 +5,7 @@ import uuid
 
 from nexuscore import AuthenticatedClient
 from nexuscore.models import QuestProgressIn
-from src.nexus.quest import Quest
+from src.nexus.quest import DAILY_QUEST_TYPE, Quest
 from src.nexus.quests.progress_customizations import CustomizationProgress
 from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, VisitTargetProgress, TargetProgressBase
 
@@ -134,8 +134,11 @@ class QuestProgress:
         # Fetch quests the user has already taken/completed
         unavailable_resp = await list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get.asyncio_detailed(thorny_id, client=api)
 
-        # Fetch all currently active quests from the system
-        all_quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(client=api, active=True)
+        # Fetch all currently active quests from the system.
+        # Daily quests are excluded: they are auto-accepted and shown by /quests daily instead
+        all_quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(
+            client=api, active=True, exclude_quest_types=[DAILY_QUEST_TYPE]
+        )
 
         # Handle potential empty/error responses gracefully
         if unavailable_resp.status_code == 200:
