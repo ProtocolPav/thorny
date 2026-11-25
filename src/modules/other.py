@@ -74,12 +74,18 @@ class Other(commands.Cog):
                                   view=view,
                                   ephemeral=True)
         else:
-            quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id),
-                                                                    thorny_user.thorny_id)
+            api = await self.bot.api.get(ctx.guild.id)
+            quests = await nexus.QuestProgress.get_available_quests(api, thorny_user.thorny_id)
+            expired_quest = await nexus.QuestProgress.get_recently_expired_quest(api, thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
-            await ctx.respond(embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
+            expired_note = (f"-# Your last quest, **{expired_quest.title}**, expired "
+                            f"<t:{int(expired_quest.end_time.timestamp())}:R> before you finished it."
+                            if expired_quest else None)
+
+            await ctx.respond(content=expired_note,
+                              embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
                               view=view,
                               ephemeral=False)
 

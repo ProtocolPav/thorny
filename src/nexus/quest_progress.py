@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Optional, List
 import uuid
 
@@ -165,6 +165,43 @@ class QuestProgress:
                 available_quests.append(quest_obj)
 
         return available_quests
+
+    @classmethod
+    async def get_recently_expired_quest(cls, api: AuthenticatedClient, thorny_id: int,
+                                         within_days: int = 7) -> Optional[Quest]:
+        """
+        Returns the user's most recent regular (non-daily) quest if it expired before they
+        finished it, within the last `within_days` days. Nexuscore abandons expired quests
+        automatically, so this is how Thorny can still tell the player their quest expired.
+        """
+        progress_resp = await list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get.asyncio_detailed(thorny_id, client=api)
+        if progress_resp.status_code != 200 or not progress_resp.parsed:
+            return None
+
+        # Recent regular quests, newest first; daily quests expire every day so they're skipped
+        quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(
+            client=api, exclude_quest_types=[DAILY_QUEST_TYPE], page_size=50
+        )
+        if quests_resp.status_code != 200:
+            return None
+
+        regular_quests = {q['quest_id']: q for q in (q.to_dict() for q in quests_resp.parsed)}
+
+        progress = [p.to_dict() for p in progress_resp.parsed]
+        latest = max((p for p in progress if p['quest_id'] in regular_quests),
+                     key=lambda p: p['accept_time'], default=None)
+
+        if not latest or latest['status'] != 'abandoned' or not latest.get('end_time'):
+            return None
+
+        quest = Quest.build_with_data(regular_quests[latest['quest_id']])
+        abandoned_at = datetime.fromisoformat(latest['end_time'])
+
+        # Abandoned at or after the quest ended means it expired, rather than being dropped
+        expired = quest.end_time is not None and abandoned_at >= quest.end_time
+        recent = datetime.now(UTC) - quest.end_time <= timedelta(days=within_days) if expired else False
+
+        return quest if expired and recent else None
 
     async def abandon(self, api: AuthenticatedClient):
         """API call to abandon (drop) the current quest"""
