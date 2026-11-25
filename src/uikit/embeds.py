@@ -535,6 +535,8 @@ def _quest_type_meta(quest_type: str) -> tuple[str, str]:
             return '🔖', 'Story Quest'
         case 'weekly':
             return '😄', 'Weekly Quest'
+        case 'daily':
+            return '📅', 'Daily Quest'
         case _:
             return '⏲️', 'Minor Quest'
 
@@ -800,6 +802,52 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
         return embed
 
     return None
+
+
+def daily_quest(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: str) -> discord.Embed:
+    """Today's daily quest with the user's progress on it."""
+    objective = sorted(quest.objectives, key=lambda x: x.order_index)[0]
+    user_objective = user_quest.get_objective_progress(objective.objective_id)
+
+    match user_quest.status:
+        case 'completed':
+            status = '✅ **Completed!** Come back tomorrow for a new daily quest.'
+        case 'failed':
+            status = "❌ **Failed.** Try again tomorrow's daily quest!"
+        case 'abandoned':
+            status = '🏳️ **Abandoned.** A new daily quest is coming tomorrow.'
+        case _:
+            status = '🟨 **In progress.** Your progress updates as you play on the server.'
+
+    embed = discord.Embed(
+        colour=0xF4C430,
+        title=f'📅 {quest.title}',
+        description=f"```{quest.description}```"
+    )
+
+    embed.add_field(
+        name='🎯 Objective',
+        value=objective.display or _build_target_lines(objective, user_objective),
+        inline=False
+    )
+
+    requirements = objective.get_objective_requirement_string()
+    if requirements:
+        embed.add_field(name='📋 Extra Requirements', value=requirements, inline=False)
+
+    rewards = [r.get_reward_display(money_symbol) for r in objective.rewards]
+    if rewards:
+        embed.add_field(name='💎 Rewards', value=', '.join(rewards), inline=False)
+
+    embed.add_field(name='📊 Status', value=status, inline=False)
+
+    embed.add_field(
+        name='',
+        value=f"-# 📅 Daily Quest · New quest <t:{int(quest.end_time.timestamp())}:R>",
+        inline=False
+    )
+
+    return embed
 
 
 def quest_fail_warn(quest: nexus.Quest):

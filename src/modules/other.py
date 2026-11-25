@@ -90,6 +90,28 @@ class Other(commands.Cog):
                               ephemeral=False)
 
 
+    @quests.command(description="View today's daily quest and your progress on it")
+    async def daily(self, ctx: discord.ApplicationContext):
+        await ctx.defer(ephemeral=True)
+
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
+
+        # Daily quests are always available, so viewing it also accepts it
+        api = await self.bot.api.get(ctx.guild.id)
+        daily_progress = await nexus.QuestProgress.accept_daily(api, thorny_user.thorny_id)
+
+        if daily_progress is None:
+            await ctx.respond("There's no daily quest today. Check back tomorrow!", ephemeral=True)
+            return
+
+        quest_info = await nexus.Quest.build(api, daily_progress.quest_id)
+
+        await ctx.respond(embed=uikit.daily_quest(quest_info, daily_progress, thorny_guild.currency_emoji),
+                          ephemeral=True)
+
     @commands.slash_command(description="Get a link to the world map")
     async def map(self, ctx: discord.ApplicationContext):
         await ctx.respond(content="https://everthorn.net/map")

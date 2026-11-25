@@ -10,6 +10,7 @@ from src.nexus.quests.progress_customizations import CustomizationProgress
 from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, VisitTargetProgress, TargetProgressBase
 
 from nexuscore.api.quests import (
+    accept_daily_quest_v1_guilds_me_quests_progress_user_thorny_id_daily_post,
     get_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_get,
     create_quest_progress_v1_guilds_me_quests_progress_post,
     list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get,
@@ -93,14 +94,31 @@ class QuestProgress:
 
     @classmethod
     async def build_active(cls, api: AuthenticatedClient, thorny_id: int) -> Optional["QuestProgress"]:
-        """Fetches the currently active quest for a user"""
+        """Fetches the user's currently active regular quest. Daily quests are excluded by Nexuscore."""
         resp = await get_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_get.asyncio_detailed(thorny_id, client=api)
 
         if resp.status_code == 404:
             return None
 
-        data = resp.parsed.to_dict()
+        return cls._from_dict(resp.parsed.to_dict())
 
+    @classmethod
+    async def accept_daily(cls, api: AuthenticatedClient, thorny_id: int) -> Optional["QuestProgress"]:
+        """
+        Accepts today's daily quest for the user and returns their progress on it.
+        Daily quests are always available, so this is safe to call every time: if the user
+        already accepted it, their existing progress is returned, whatever its status.
+        Returns None if the guild has no daily quest today.
+        """
+        resp = await accept_daily_quest_v1_guilds_me_quests_progress_user_thorny_id_daily_post.asyncio_detailed(thorny_id, client=api)
+
+        if resp.status_code != 200:
+            return None
+
+        return cls._from_dict(resp.parsed.to_dict())
+
+    @classmethod
+    def _from_dict(cls, data: dict) -> "QuestProgress":
         # Parse Objectives
         objectives_data = data.pop('objectives', [])
         objectives = [ObjectiveProgress.build(obj) for obj in objectives_data]
