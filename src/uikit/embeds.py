@@ -4,7 +4,7 @@ from typing import Optional
 import discord
 import json
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import time
 import giphy_client
 import random
@@ -535,6 +535,8 @@ def _quest_type_meta(quest_type: str) -> tuple[str, str]:
             return '🔖', 'Story Quest'
         case 'weekly':
             return '😄', 'Weekly Quest'
+        case 'daily':
+            return '📅', 'Daily Quest'
         case _:
             return '⏲️', 'Minor Quest'
 
@@ -800,6 +802,87 @@ def quest_progress(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: 
         return embed
 
     return None
+
+
+def daily_quest(quest: nexus.Quest, user_quest: QuestProgress, money_symbol: str) -> discord.Embed:
+    """
+    The user's daily quest with their progress on it.
+
+    Dailies normally have one objective, but admins can edit them to have several.
+    Then the current objective is shown (the active one, otherwise the last one the
+    user reached), along with its position and a progress bar.
+    """
+    objectives = sorted(quest.objectives, key=lambda x: x.order_index)
+    total = len(objectives)
+
+    def progress_for(o: 'nexus.quest.Objective'):
+        return user_quest.get_objective_progress(o.objective_id)
+
+    objective = next((o for o in objectives if (p := progress_for(o)) and p.status == 'active'), None)
+    if objective is None:
+        reached = [o for o in objectives if (p := progress_for(o)) and p.status != 'pending']
+        objective = reached[-1] if reached else objectives[0]
+
+    index = objectives.index(objective)
+    user_objective = progress_for(objective)
+    multiple = total > 1
+
+    match user_quest.status:
+        case 'completed':
+            status = '✅ **Completed!** Come back tomorrow for a new daily quest.'
+        case 'failed':
+            status = "❌ **Failed.** Try again tomorrow's daily quest!"
+        case 'abandoned':
+            status = '🏳️ **Abandoned.** A new daily quest is coming tomorrow.'
+        case _:
+            status = '🟨 **In progress.** Your progress updates as you play on the server.'
+
+    embed = discord.Embed(
+        colour=0xF4C430,
+        title=f'📅 {quest.title}',
+        description=f"```{quest.description}```"
+    )
+
+    task = objective.display or _build_target_lines(objective, user_objective)
+    if multiple and objective.description:
+        task = f"*{objective.description}*\n{task}"
+
+    embed.add_field(
+        name=f'🎯 Objective {index + 1}/{total}' if multiple else '🎯 Objective',
+        value=task,
+        inline=False
+    )
+
+    requirements = objective.get_objective_requirement_string()
+    if requirements:
+        embed.add_field(name='📋 Extra Requirements', value=requirements, inline=False)
+
+    rewards = [r.get_reward_display(money_symbol) for r in objective.rewards]
+    if rewards:
+        embed.add_field(name='💎 Objective Rewards' if multiple else '💎 Rewards', value=', '.join(rewards), inline=False)
+
+    if multiple:
+        # A completed quest shows every objective as done
+        bar_index = total if user_quest.status == 'completed' else index
+        embed.add_field(name=f'🎛️ Quest Progress  {min(bar_index + 1, total)}/{total}',
+                        value=_build_progress_bar(bar_index, total), inline=False)
+
+    embed.add_field(name='📊 Status', value=status, inline=False)
+
+    # Dailies can overlap, so the next one arrives at the next UTC midnight, not when this one ends
+    if user_quest.status in ('completed', 'failed', 'abandoned'):
+        next_daily = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        timing = f"Next daily quest <t:{int(next_daily.timestamp())}:R>"
+    else:
+        timing = f"Ends <t:{int(quest.end_time.timestamp())}:R>"
+
+    embed.add_field(
+        name='',
+        value=f"-# 📅 Daily Quest · {timing}",
+        inline=False
+    )
+
+    return embed
 
 
 def quest_fail_warn(quest: nexus.Quest):

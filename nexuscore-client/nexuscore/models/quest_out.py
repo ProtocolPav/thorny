@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.objective_out import ObjectiveOut
     from ..models.user_out import UserOut
@@ -28,6 +30,8 @@ class QuestOut:
         quest_type (str): The quest type
         created_by (UserOut):
         objectives (list[ObjectiveOut]):
+        last_edited_at (datetime.datetime | None | Unset): When the quest was last edited by an admin. `null` if it
+            never was.
     """
 
     quest_id: int
@@ -39,6 +43,7 @@ class QuestOut:
     quest_type: str
     created_by: UserOut
     objectives: list[ObjectiveOut]
+    last_edited_at: datetime.datetime | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,6 +68,14 @@ class QuestOut:
             objectives_item = objectives_item_data.to_dict()
             objectives.append(objectives_item)
 
+        last_edited_at: None | str | Unset
+        if isinstance(self.last_edited_at, Unset):
+            last_edited_at = UNSET
+        elif isinstance(self.last_edited_at, datetime.datetime):
+            last_edited_at = self.last_edited_at.isoformat()
+        else:
+            last_edited_at = self.last_edited_at
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -78,6 +91,8 @@ class QuestOut:
                 "objectives": objectives,
             }
         )
+        if last_edited_at is not UNSET:
+            field_dict["last_edited_at"] = last_edited_at
 
         return field_dict
 
@@ -110,6 +125,23 @@ class QuestOut:
 
             objectives.append(objectives_item)
 
+        def _parse_last_edited_at(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                last_edited_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return last_edited_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        last_edited_at = _parse_last_edited_at(d.pop("last_edited_at", UNSET))
+
         quest_out = cls(
             quest_id=quest_id,
             start_time=start_time,
@@ -120,6 +152,7 @@ class QuestOut:
             quest_type=quest_type,
             created_by=created_by,
             objectives=objectives,
+            last_edited_at=last_edited_at,
         )
 
         quest_out.additional_properties = d

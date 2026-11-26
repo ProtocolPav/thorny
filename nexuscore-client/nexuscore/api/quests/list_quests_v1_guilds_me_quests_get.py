@@ -15,6 +15,7 @@ def _get_kwargs(
     *,
     creator_thorny_ids: list[int] | None | Unset = UNSET,
     quest_types: list[str] | None | Unset = UNSET,
+    exclude_quest_types: list[str] | None | Unset = UNSET,
     time_start: datetime.datetime | None | Unset = UNSET,
     time_end: datetime.datetime | None | Unset = UNSET,
     active: bool | None | Unset = UNSET,
@@ -45,6 +46,16 @@ def _get_kwargs(
     else:
         json_quest_types = quest_types
     params["quest_types"] = json_quest_types
+
+    json_exclude_quest_types: list[str] | None | Unset
+    if isinstance(exclude_quest_types, Unset):
+        json_exclude_quest_types = UNSET
+    elif isinstance(exclude_quest_types, list):
+        json_exclude_quest_types = exclude_quest_types
+
+    else:
+        json_exclude_quest_types = exclude_quest_types
+    params["exclude_quest_types"] = json_exclude_quest_types
 
     json_time_start: None | str | Unset
     if isinstance(time_start, Unset):
@@ -150,6 +161,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     creator_thorny_ids: list[int] | None | Unset = UNSET,
     quest_types: list[str] | None | Unset = UNSET,
+    exclude_quest_types: list[str] | None | Unset = UNSET,
     time_start: datetime.datetime | None | Unset = UNSET,
     time_end: datetime.datetime | None | Unset = UNSET,
     active: bool | None | Unset = UNSET,
@@ -165,6 +177,7 @@ def sync_detailed(
     Args:
         creator_thorny_ids (list[int] | None | Unset): Filter by creator Thorny IDs
         quest_types (list[str] | None | Unset): Filter by quest type
+        exclude_quest_types (list[str] | None | Unset): Exclude these quest types, e.g. `daily`
         time_start (datetime.datetime | None | Unset): The start time to filter by
         time_end (datetime.datetime | None | Unset): The end time to filter by
         active (bool | None | Unset): Filter by active quests_router
@@ -184,6 +197,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         creator_thorny_ids=creator_thorny_ids,
         quest_types=quest_types,
+        exclude_quest_types=exclude_quest_types,
         time_start=time_start,
         time_end=time_end,
         active=active,
@@ -205,6 +219,7 @@ def sync(
     client: AuthenticatedClient,
     creator_thorny_ids: list[int] | None | Unset = UNSET,
     quest_types: list[str] | None | Unset = UNSET,
+    exclude_quest_types: list[str] | None | Unset = UNSET,
     time_start: datetime.datetime | None | Unset = UNSET,
     time_end: datetime.datetime | None | Unset = UNSET,
     active: bool | None | Unset = UNSET,
@@ -220,6 +235,7 @@ def sync(
     Args:
         creator_thorny_ids (list[int] | None | Unset): Filter by creator Thorny IDs
         quest_types (list[str] | None | Unset): Filter by quest type
+        exclude_quest_types (list[str] | None | Unset): Exclude these quest types, e.g. `daily`
         time_start (datetime.datetime | None | Unset): The start time to filter by
         time_end (datetime.datetime | None | Unset): The end time to filter by
         active (bool | None | Unset): Filter by active quests_router
@@ -240,6 +256,7 @@ def sync(
         client=client,
         creator_thorny_ids=creator_thorny_ids,
         quest_types=quest_types,
+        exclude_quest_types=exclude_quest_types,
         time_start=time_start,
         time_end=time_end,
         active=active,
@@ -255,6 +272,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     creator_thorny_ids: list[int] | None | Unset = UNSET,
     quest_types: list[str] | None | Unset = UNSET,
+    exclude_quest_types: list[str] | None | Unset = UNSET,
     time_start: datetime.datetime | None | Unset = UNSET,
     time_end: datetime.datetime | None | Unset = UNSET,
     active: bool | None | Unset = UNSET,
@@ -270,6 +288,7 @@ async def asyncio_detailed(
     Args:
         creator_thorny_ids (list[int] | None | Unset): Filter by creator Thorny IDs
         quest_types (list[str] | None | Unset): Filter by quest type
+        exclude_quest_types (list[str] | None | Unset): Exclude these quest types, e.g. `daily`
         time_start (datetime.datetime | None | Unset): The start time to filter by
         time_end (datetime.datetime | None | Unset): The end time to filter by
         active (bool | None | Unset): Filter by active quests_router
@@ -289,6 +308,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         creator_thorny_ids=creator_thorny_ids,
         quest_types=quest_types,
+        exclude_quest_types=exclude_quest_types,
         time_start=time_start,
         time_end=time_end,
         active=active,
@@ -308,6 +328,7 @@ async def asyncio(
     client: AuthenticatedClient,
     creator_thorny_ids: list[int] | None | Unset = UNSET,
     quest_types: list[str] | None | Unset = UNSET,
+    exclude_quest_types: list[str] | None | Unset = UNSET,
     time_start: datetime.datetime | None | Unset = UNSET,
     time_end: datetime.datetime | None | Unset = UNSET,
     active: bool | None | Unset = UNSET,
@@ -323,6 +344,7 @@ async def asyncio(
     Args:
         creator_thorny_ids (list[int] | None | Unset): Filter by creator Thorny IDs
         quest_types (list[str] | None | Unset): Filter by quest type
+        exclude_quest_types (list[str] | None | Unset): Exclude these quest types, e.g. `daily`
         time_start (datetime.datetime | None | Unset): The start time to filter by
         time_end (datetime.datetime | None | Unset): The end time to filter by
         active (bool | None | Unset): Filter by active quests_router
@@ -344,6 +366,7 @@ async def asyncio(
             client=client,
             creator_thorny_ids=creator_thorny_ids,
             quest_types=quest_types,
+            exclude_quest_types=exclude_quest_types,
             time_start=time_start,
             time_end=time_end,
             active=active,

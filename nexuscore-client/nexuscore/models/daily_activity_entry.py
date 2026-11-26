@@ -18,12 +18,14 @@ class DailyActivityEntry:
         accepts (int): Number of quest accepts on this date
         completions (int): Number of quest completions on this date
         failures (int): Number of quest failures on this date
+        abandonments (int): Number of quests abandoned or expired on this date
     """
 
     date: datetime.date
     accepts: int
     completions: int
     failures: int
+    abandonments: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,6 +37,8 @@ class DailyActivityEntry:
 
         failures = self.failures
 
+        abandonments = self.abandonments
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -43,6 +47,7 @@ class DailyActivityEntry:
                 "accepts": accepts,
                 "completions": completions,
                 "failures": failures,
+                "abandonments": abandonments,
             }
         )
 
@@ -59,11 +64,14 @@ class DailyActivityEntry:
 
         failures = d.pop("failures")
 
+        abandonments = d.pop("abandonments")
+
         daily_activity_entry = cls(
             date=date,
             accepts=accepts,
             completions=completions,
             failures=failures,
+            abandonments=abandonments,
         )
 
         daily_activity_entry.additional_properties = d

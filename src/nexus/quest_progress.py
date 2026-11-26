@@ -1,20 +1,21 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Optional, List
 import uuid
 
 from nexuscore import AuthenticatedClient
 from nexuscore.models import QuestProgressIn
-from src.nexus.quest import Quest
+from src.nexus.quest import DAILY_QUEST_TYPE, Quest
 from src.nexus.quests.progress_customizations import CustomizationProgress
 from src.nexus.quests.progress_targets import KillTargetProgress, MineTargetProgress, ScriptEventTargetProgress, VisitTargetProgress, TargetProgressBase
 
 from nexuscore.api.quests import (
+    accept_daily_quest_v1_guilds_me_quests_progress_user_thorny_id_daily_post,
     get_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_get,
     create_quest_progress_v1_guilds_me_quests_progress_post,
     list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get,
     list_quests_v1_guilds_me_quests_get,
-    fail_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete
+    abandon_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete
 )
 
 
@@ -93,14 +94,31 @@ class QuestProgress:
 
     @classmethod
     async def build_active(cls, api: AuthenticatedClient, thorny_id: int) -> Optional["QuestProgress"]:
-        """Fetches the currently active quest for a user"""
+        """Fetches the user's currently active regular quest. Daily quests are excluded by Nexuscore."""
         resp = await get_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_get.asyncio_detailed(thorny_id, client=api)
 
         if resp.status_code == 404:
             return None
 
-        data = resp.parsed.to_dict()
+        return cls._from_dict(resp.parsed.to_dict())
 
+    @classmethod
+    async def accept_daily(cls, api: AuthenticatedClient, thorny_id: int) -> Optional["QuestProgress"]:
+        """
+        Accepts today's daily quest for the user and returns their progress on it.
+        Daily quests are always available, so this is safe to call every time: if the user
+        already accepted it, their existing progress is returned, whatever its status.
+        Returns None if the guild has no daily quest today.
+        """
+        resp = await accept_daily_quest_v1_guilds_me_quests_progress_user_thorny_id_daily_post.asyncio_detailed(thorny_id, client=api)
+
+        if resp.status_code != 200:
+            return None
+
+        return cls._from_dict(resp.parsed.to_dict())
+
+    @classmethod
+    def _from_dict(cls, data: dict) -> "QuestProgress":
         # Parse Objectives
         objectives_data = data.pop('objectives', [])
         objectives = [ObjectiveProgress.build(obj) for obj in objectives_data]
@@ -134,8 +152,11 @@ class QuestProgress:
         # Fetch quests the user has already taken/completed
         unavailable_resp = await list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get.asyncio_detailed(thorny_id, client=api)
 
-        # Fetch all currently active quests from the system
-        all_quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(client=api, active=True)
+        # Fetch all currently active quests from the system.
+        # Daily quests are excluded: they are auto-accepted and shown by /quests daily instead
+        all_quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(
+            client=api, active=True, exclude_quest_types=[DAILY_QUEST_TYPE]
+        )
 
         # Handle potential empty/error responses gracefully
         if unavailable_resp.status_code == 200:
@@ -163,9 +184,46 @@ class QuestProgress:
 
         return available_quests
 
-    async def fail(self, api: AuthenticatedClient):
-        """API call to manually fail the current quest"""
-        await fail_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete.asyncio_detailed(self.thorny_id, client=api)
+    @classmethod
+    async def get_recently_expired_quest(cls, api: AuthenticatedClient, thorny_id: int,
+                                         within_days: int = 7) -> Optional[Quest]:
+        """
+        Returns the user's most recent regular (non-daily) quest if it expired before they
+        finished it, within the last `within_days` days. Nexuscore abandons expired quests
+        automatically, so this is how Thorny can still tell the player their quest expired.
+        """
+        progress_resp = await list_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_get.asyncio_detailed(thorny_id, client=api)
+        if progress_resp.status_code != 200 or not progress_resp.parsed:
+            return None
+
+        # Recent regular quests, newest first; daily quests expire every day so they're skipped
+        quests_resp = await list_quests_v1_guilds_me_quests_get.asyncio_detailed(
+            client=api, exclude_quest_types=[DAILY_QUEST_TYPE], page_size=50
+        )
+        if quests_resp.status_code != 200:
+            return None
+
+        regular_quests = {q['quest_id']: q for q in (q.to_dict() for q in quests_resp.parsed)}
+
+        progress = [p.to_dict() for p in progress_resp.parsed]
+        latest = max((p for p in progress if p['quest_id'] in regular_quests),
+                     key=lambda p: p['accept_time'], default=None)
+
+        if not latest or latest['status'] != 'abandoned' or not latest.get('end_time'):
+            return None
+
+        quest = Quest.build_with_data(regular_quests[latest['quest_id']])
+        abandoned_at = datetime.fromisoformat(latest['end_time'])
+
+        # Abandoned at or after the quest ended means it expired, rather than being dropped
+        expired = quest.end_time is not None and abandoned_at >= quest.end_time
+        recent = datetime.now(UTC) - quest.end_time <= timedelta(days=within_days) if expired else False
+
+        return quest if expired and recent else None
+
+    async def abandon(self, api: AuthenticatedClient):
+        """API call to abandon (drop) the current quest"""
+        await abandon_active_quest_progress_v1_guilds_me_quests_progress_user_thorny_id_active_delete.asyncio_detailed(self.thorny_id, client=api)
 
     def get_objective_progress(self, objective_id: int) -> Optional[ObjectiveProgress]:
         """Helper to find specific objective progress by ID"""

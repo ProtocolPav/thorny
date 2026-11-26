@@ -28,7 +28,9 @@ class ObjectiveProgressOut:
         objective_id (int): The objective ID
         start_time (datetime.datetime | None):
         end_time (datetime.datetime | None):
-        status (ObjectiveProgressOutStatus): The status of this objective
+        status (ObjectiveProgressOutStatus): The status of this objective.
+            - `failed`: the player genuinely failed this objective
+            - `abandoned`: the player dropped the quest, or it expired, while on this objective
         target_progress (list[KillTargetProgressModel | MineTargetProgressModel | ScriptEventTargetProgressModel |
             VisitTargetProgressModel]): List of each objective target's progress
         customization_progress (CustomizationProgress):
