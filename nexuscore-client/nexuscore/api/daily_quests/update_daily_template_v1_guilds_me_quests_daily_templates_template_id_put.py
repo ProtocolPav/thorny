@@ -1,35 +1,46 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.daily_template_out import DailyTemplateOut
+from ...models.daily_template_update import DailyTemplateUpdate
 from ...models.http_validation_error import HTTPValidationError
 from ...types import Response
 
 
 def _get_kwargs(
-    thorny_id: int,
+    template_id: int,
+    *,
+    body: DailyTemplateUpdate,
 ) -> dict[str, Any]:
+    headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
-        "method": "delete",
-        "url": "/v1/guilds/me/quests/progress/user/{thorny_id}/active".format(
-            thorny_id=quote(str(thorny_id), safe=""),
+        "method": "put",
+        "url": "/v1/guilds/me/quests/daily/templates/{template_id}".format(
+            template_id=quote(str(template_id), safe=""),
         ),
     }
 
+    _kwargs["json"] = body.to_dict()
+
+    headers["Content-Type"] = "application/json"
+
+    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | HTTPValidationError | None:
-    if response.status_code == 204:
-        response_204 = cast(Any, None)
-        return response_204
+) -> DailyTemplateOut | HTTPValidationError | None:
+    if response.status_code == 200:
+        response_200 = DailyTemplateOut.from_dict(response.json())
+
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -44,7 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | HTTPValidationError]:
+) -> Response[DailyTemplateOut | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -54,29 +65,32 @@ def _build_response(
 
 
 def sync_detailed(
-    thorny_id: int,
+    template_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Any | HTTPValidationError]:
-    r"""Fail Active Quest Progress
+    body: DailyTemplateUpdate,
+) -> Response[DailyTemplateOut | HTTPValidationError]:
+    """Update Daily Template
 
-     Fail User's Active Quest
+     Update Daily Template
 
-    This marks the active quest and all of its objectives as \"failed\".
+    Changes only affect daily quests generated afterwards.
 
     Args:
-        thorny_id (int):
+        template_id (int):
+        body (DailyTemplateUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | HTTPValidationError]
+        Response[DailyTemplateOut | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        thorny_id=thorny_id,
+        template_id=template_id,
+        body=body,
     )
 
     response = client.get_httpx_client().request(
@@ -87,57 +101,63 @@ def sync_detailed(
 
 
 def sync(
-    thorny_id: int,
+    template_id: int,
     *,
     client: AuthenticatedClient,
-) -> Any | HTTPValidationError | None:
-    r"""Fail Active Quest Progress
+    body: DailyTemplateUpdate,
+) -> DailyTemplateOut | HTTPValidationError | None:
+    """Update Daily Template
 
-     Fail User's Active Quest
+     Update Daily Template
 
-    This marks the active quest and all of its objectives as \"failed\".
+    Changes only affect daily quests generated afterwards.
 
     Args:
-        thorny_id (int):
+        template_id (int):
+        body (DailyTemplateUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | HTTPValidationError
+        DailyTemplateOut | HTTPValidationError
     """
 
     return sync_detailed(
-        thorny_id=thorny_id,
+        template_id=template_id,
         client=client,
+        body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    thorny_id: int,
+    template_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[Any | HTTPValidationError]:
-    r"""Fail Active Quest Progress
+    body: DailyTemplateUpdate,
+) -> Response[DailyTemplateOut | HTTPValidationError]:
+    """Update Daily Template
 
-     Fail User's Active Quest
+     Update Daily Template
 
-    This marks the active quest and all of its objectives as \"failed\".
+    Changes only affect daily quests generated afterwards.
 
     Args:
-        thorny_id (int):
+        template_id (int):
+        body (DailyTemplateUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | HTTPValidationError]
+        Response[DailyTemplateOut | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
-        thorny_id=thorny_id,
+        template_id=template_id,
+        body=body,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -146,30 +166,33 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    thorny_id: int,
+    template_id: int,
     *,
     client: AuthenticatedClient,
-) -> Any | HTTPValidationError | None:
-    r"""Fail Active Quest Progress
+    body: DailyTemplateUpdate,
+) -> DailyTemplateOut | HTTPValidationError | None:
+    """Update Daily Template
 
-     Fail User's Active Quest
+     Update Daily Template
 
-    This marks the active quest and all of its objectives as \"failed\".
+    Changes only affect daily quests generated afterwards.
 
     Args:
-        thorny_id (int):
+        template_id (int):
+        body (DailyTemplateUpdate):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | HTTPValidationError
+        DailyTemplateOut | HTTPValidationError
     """
 
     return (
         await asyncio_detailed(
-            thorny_id=thorny_id,
+            template_id=template_id,
             client=client,
+            body=body,
         )
     ).parsed

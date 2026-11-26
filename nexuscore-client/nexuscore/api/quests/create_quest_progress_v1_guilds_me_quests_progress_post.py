@@ -72,6 +72,8 @@ def sync_detailed(
     Adds a new quest to a user, tracking their progress.
     Automatically sets the quest progress to \"active\".
 
+    Quests can only be accepted while they are running, and daily quests only once per user.
+
     Args:
         body (QuestProgressIn):
 
@@ -106,6 +108,8 @@ def sync(
     Adds a new quest to a user, tracking their progress.
     Automatically sets the quest progress to \"active\".
 
+    Quests can only be accepted while they are running, and daily quests only once per user.
+
     Args:
         body (QuestProgressIn):
 
@@ -134,6 +138,8 @@ async def asyncio_detailed(
 
     Adds a new quest to a user, tracking their progress.
     Automatically sets the quest progress to \"active\".
+
+    Quests can only be accepted while they are running, and daily quests only once per user.
 
     Args:
         body (QuestProgressIn):
@@ -166,6 +172,8 @@ async def asyncio(
 
     Adds a new quest to a user, tracking their progress.
     Automatically sets the quest progress to \"active\".
+
+    Quests can only be accepted while they are running, and daily quests only once per user.
 
     Args:
         body (QuestProgressIn):

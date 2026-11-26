@@ -65,7 +65,7 @@ class Other(commands.Cog):
             quest_info = await nexus.Quest.build(await self.bot.api.get(ctx.guild.id), thorny_user.quest.quest_id)
 
             if quest_info.end_time < datetime.now(UTC):
-                await thorny_user.quest.fail(await self.bot.api.get(ctx.guild.id))
+                await thorny_user.quest.abandon(await self.bot.api.get(ctx.guild.id))
                 await ctx.respond(f"Your previously accepted quest, **{quest_info.title}** has expired. You can run `/quests view` again and accept a new quest!")
             else:
                 view = uikit.CurrentQuestPanel(ctx, thorny_guild, thorny_user, quest_info)
@@ -74,15 +74,43 @@ class Other(commands.Cog):
                                   view=view,
                                   ephemeral=True)
         else:
-            quests = await nexus.QuestProgress.get_available_quests(await self.bot.api.get(ctx.guild.id),
-                                                                    thorny_user.thorny_id)
+            api = await self.bot.api.get(ctx.guild.id)
+            quests = await nexus.QuestProgress.get_available_quests(api, thorny_user.thorny_id)
+            expired_quest = await nexus.QuestProgress.get_recently_expired_quest(api, thorny_user.thorny_id)
 
             view = uikit.QuestPanel(ctx, thorny_guild, thorny_user, quests)
             await view.update_view()
-            await ctx.respond(embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
+            expired_note = (f"-# Your last quest, **{expired_quest.title}**, expired "
+                            f"<t:{int(expired_quest.end_time.timestamp())}:R> before you finished it."
+                            if expired_quest else None)
+
+            await ctx.respond(content=expired_note,
+                              embed=uikit.quests_overview(quests, thorny_guild.currency_emoji),
                               view=view,
                               ephemeral=False)
 
+
+    @quests.command(description="View today's daily quest and your progress on it")
+    async def daily(self, ctx: discord.ApplicationContext):
+        await ctx.defer(ephemeral=True)
+
+        thorny_guild = await nexus.ThornyGuild.build(await self.bot.api.get(ctx.guild.id), ctx.guild)
+        if not thorny_guild.has_feature('everthorn'): raise thorny_errors.AccessDenied('everthorn')
+
+        thorny_user = await nexus.ThornyUser.build(await self.bot.api.get(ctx.guild.id), ctx.user)
+
+        # Daily quests are always available, so viewing it also accepts it
+        api = await self.bot.api.get(ctx.guild.id)
+        daily_progress = await nexus.QuestProgress.accept_daily(api, thorny_user.thorny_id)
+
+        if daily_progress is None:
+            await ctx.respond("There's no daily quest today. Check back tomorrow!", ephemeral=True)
+            return
+
+        quest_info = await nexus.Quest.build(api, daily_progress.quest_id)
+
+        await ctx.respond(embed=uikit.daily_quest(quest_info, daily_progress, thorny_guild.currency_emoji),
+                          ephemeral=True)
 
     @commands.slash_command(description="Get a link to the world map")
     async def map(self, ctx: discord.ApplicationContext):

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.quest_update_quest_type_type_0 import QuestUpdateQuestTypeType0
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ class QuestUpdate:
         title (None | str | Unset):
         description (None | str | Unset):
         tags (list[str] | None | Unset):
-        quest_type (None | str | Unset):
+        quest_type (None | QuestUpdateQuestTypeType0 | Unset):
         created_by (int | None | Unset):
         objectives (list[ObjectiveUpdate] | None | Unset):
     """
@@ -35,7 +36,7 @@ class QuestUpdate:
     title: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     tags: list[str] | None | Unset = UNSET
-    quest_type: None | str | Unset = UNSET
+    quest_type: None | QuestUpdateQuestTypeType0 | Unset = UNSET
     created_by: int | None | Unset = UNSET
     objectives: list[ObjectiveUpdate] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -81,6 +82,8 @@ class QuestUpdate:
         quest_type: None | str | Unset
         if isinstance(self.quest_type, Unset):
             quest_type = UNSET
+        elif isinstance(self.quest_type, QuestUpdateQuestTypeType0):
+            quest_type = self.quest_type.value
         else:
             quest_type = self.quest_type
 
@@ -199,12 +202,20 @@ class QuestUpdate:
 
         tags = _parse_tags(d.pop("tags", UNSET))
 
-        def _parse_quest_type(data: object) -> None | str | Unset:
+        def _parse_quest_type(data: object) -> None | QuestUpdateQuestTypeType0 | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                quest_type_type_0 = QuestUpdateQuestTypeType0(data)
+
+                return quest_type_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | QuestUpdateQuestTypeType0 | Unset, data)
 
         quest_type = _parse_quest_type(d.pop("quest_type", UNSET))
 

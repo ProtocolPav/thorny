@@ -28,7 +28,8 @@ class QuestStatisticsOut:
         total_pending (int): Players who accepted but never started the quest
         total_started (int): Players who actively began working on objectives
         total_completed (int): Players who completed the quest
-        total_failed (int): Players who failed the quest
+        total_failed (int): Players who genuinely failed the quest
+        total_abandoned (int): Players who dropped the quest, or whose quest expired unfinished
         completion_rate (float): total_completed / total_accepts. 0 if no accepts.
         started_rate (float): total_started / total_accepts. Indicates whether players bounce before starting.
         unique_players (int): Number of distinct players who accepted the quest
@@ -36,7 +37,8 @@ class QuestStatisticsOut:
         objectives (list[ObjectiveStatistics]): Per-objective statistics, sorted by order_index, for funnel/waterfall
             charts
         completion_time_histogram (list[QuestCompletionBucket]): Bucketed completion times for histogram display
-        daily_activity (list[DailyActivityEntry]): Daily accepts, completions, and failures for time-series line charts
+        daily_activity (list[DailyActivityEntry]): Daily accepts, completions, failures and abandonments for time-series
+            line charts
         avg_completion_time_seconds (int | None | Unset): Average time in seconds to complete the quest
         median_completion_time_seconds (int | None | Unset): Median time in seconds to complete the quest
         fastest_completion_seconds (int | None | Unset): Fastest recorded completion time in seconds
@@ -51,6 +53,7 @@ class QuestStatisticsOut:
     total_started: int
     total_completed: int
     total_failed: int
+    total_abandoned: int
     completion_rate: float
     started_rate: float
     unique_players: int
@@ -80,6 +83,8 @@ class QuestStatisticsOut:
         total_completed = self.total_completed
 
         total_failed = self.total_failed
+
+        total_abandoned = self.total_abandoned
 
         completion_rate = self.completion_rate
 
@@ -140,6 +145,7 @@ class QuestStatisticsOut:
                 "total_started": total_started,
                 "total_completed": total_completed,
                 "total_failed": total_failed,
+                "total_abandoned": total_abandoned,
                 "completion_rate": completion_rate,
                 "started_rate": started_rate,
                 "unique_players": unique_players,
@@ -182,6 +188,8 @@ class QuestStatisticsOut:
         total_completed = d.pop("total_completed")
 
         total_failed = d.pop("total_failed")
+
+        total_abandoned = d.pop("total_abandoned")
 
         completion_rate = d.pop("completion_rate")
 
@@ -259,6 +267,7 @@ class QuestStatisticsOut:
             total_started=total_started,
             total_completed=total_completed,
             total_failed=total_failed,
+            total_abandoned=total_abandoned,
             completion_rate=completion_rate,
             started_rate=started_rate,
             unique_players=unique_players,

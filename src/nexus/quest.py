@@ -8,6 +8,8 @@ from nexuscore.api.quests import get_quest_v1_guilds_me_quests_quest_id_get
 from src.nexus.quests.objective_customizations import Customizations
 from src.nexus.quests.objective_targets import KillTarget, MineTarget, ScriptEventTarget, TargetBase, VisitTarget
 
+DAILY_QUEST_TYPE = "daily"
+
 
 @dataclass
 class Reward:
@@ -161,7 +163,10 @@ class Quest:
 
         creator = quest_dict.pop('created_by')
 
-        return cls(**quest_dict, objectives=objectives, created_by=creator["thorny_id"])
+        # Ignore fields Thorny doesn't use, so new API fields don't break it
+        known = {k: v for k, v in quest_dict.items() if k in cls.__annotations__}
+
+        return cls(**known, objectives=objectives, created_by=creator["thorny_id"])
 
     @classmethod
     async def build(cls, api: AuthenticatedClient, quest_id: int):

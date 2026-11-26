@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class QuestProgressOutStatus(str, Enum):
+    ABANDONED = "abandoned"
     ACTIVE = "active"
     COMPLETED = "completed"
     FAILED = "failed"

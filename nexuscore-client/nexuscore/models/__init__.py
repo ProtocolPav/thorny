@@ -12,10 +12,22 @@ from .content_in import ContentIn
 from .content_in_data_item import ContentInDataItem
 from .content_out import ContentOut
 from .content_out_data_item import ContentOutDataItem
+from .customization_options import CustomizationOptions
 from .customization_progress import CustomizationProgress
 from .customizations import Customizations
 from .daily_activity_entry import DailyActivityEntry
 from .daily_playtime import DailyPlaytime
+from .daily_quest_in import DailyQuestIn
+from .daily_quest_out import DailyQuestOut
+from .daily_template_in import DailyTemplateIn
+from .daily_template_in_logic import DailyTemplateInLogic
+from .daily_template_in_objective_type import DailyTemplateInObjectiveType
+from .daily_template_out import DailyTemplateOut
+from .daily_template_out_logic import DailyTemplateOutLogic
+from .daily_template_out_objective_type import DailyTemplateOutObjectiveType
+from .daily_template_update import DailyTemplateUpdate
+from .daily_template_update_logic_type_0 import DailyTemplateUpdateLogicType0
+from .daily_template_update_objective_type_type_0 import DailyTemplateUpdateObjectiveTypeType0
 from .damage_model import DamageModel
 from .death_customization_progress import DeathCustomizationProgress
 from .enchantment_model import EnchantmentModel
@@ -39,6 +51,7 @@ from .item_create_model import ItemCreateModel
 from .item_model import ItemModel
 from .item_update_model import ItemUpdateModel
 from .kill_target_model import KillTargetModel
+from .kill_target_option import KillTargetOption
 from .kill_target_progress_model import KillTargetProgressModel
 from .leaderboard_entry import LeaderboardEntry
 from .leaderboard_model import LeaderboardModel
@@ -48,14 +61,19 @@ from .list_interactions_v1_guilds_me_interactions_get_interaction_types_type_0_i
 from .list_wiki_pages_v1_guilds_me_wiki_get_sort_by_type_0 import ListWikiPagesV1GuildsMeWikiGetSortByType0
 from .list_wiki_pages_v1_guilds_me_wiki_get_sort_order_type_0 import ListWikiPagesV1GuildsMeWikiGetSortOrderType0
 from .location_customization import LocationCustomization
+from .location_option import LocationOption
 from .lore_model import LoreModel
 from .mainhand_customization import MainhandCustomization
+from .mainhand_option import MainhandOption
 from .maximum_deaths_customization import MaximumDeathsCustomization
+from .maximum_deaths_option import MaximumDeathsOption
 from .mine_target_model import MineTargetModel
+from .mine_target_option import MineTargetOption
 from .mine_target_progress_model import MineTargetProgressModel
 from .monthly_playtime import MonthlyPlaytime
 from .name_model import NameModel
 from .natural_block_customization import NaturalBlockCustomization
+from .natural_block_option import NaturalBlockOption
 from .objective_in import ObjectiveIn
 from .objective_in_logic import ObjectiveInLogic
 from .objective_in_objective_type import ObjectiveInObjectiveType
@@ -89,6 +107,7 @@ from .project_out import ProjectOut
 from .project_update import ProjectUpdate
 from .quest_completion_bucket import QuestCompletionBucket
 from .quest_in import QuestIn
+from .quest_in_quest_type import QuestInQuestType
 from .quest_out import QuestOut
 from .quest_progress_in import QuestProgressIn
 from .quest_progress_out import QuestProgressOut
@@ -97,20 +116,25 @@ from .quest_progress_update import QuestProgressUpdate
 from .quest_progress_update_status_type_0 import QuestProgressUpdateStatusType0
 from .quest_statistics_out import QuestStatisticsOut
 from .quest_update import QuestUpdate
+from .quest_update_quest_type_type_0 import QuestUpdateQuestTypeType0
+from .random_count import RandomCount
 from .random_enchantment_model import RandomEnchantmentModel
 from .relay_model import RelayModel
 from .relay_model_type import RelayModelType
 from .reward_in import RewardIn
+from .reward_option import RewardOption
 from .reward_out import RewardOut
 from .reward_update import RewardUpdate
 from .scope import Scope
 from .script_event_target_model import ScriptEventTargetModel
+from .script_event_target_option import ScriptEventTargetOption
 from .script_event_target_progress_model import ScriptEventTargetProgressModel
 from .session_out import SessionOut
 from .status_enum import StatusEnum
 from .status_in import StatusIn
 from .status_out import StatusOut
 from .timer_customization import TimerCustomization
+from .timer_option import TimerOption
 from .token_response import TokenResponse
 from .user_in import UserIn
 from .user_out import UserOut
@@ -118,6 +142,7 @@ from .user_update import UserUpdate
 from .validation_error import ValidationError
 from .validation_error_context import ValidationErrorContext
 from .visit_target_model import VisitTargetModel
+from .visit_target_option import VisitTargetOption
 from .visit_target_progress_model import VisitTargetProgressModel
 from .waypoint import Waypoint
 from .waypoint_customization import WaypointCustomization
@@ -138,10 +163,22 @@ __all__ = (
     "ContentInDataItem",
     "ContentOut",
     "ContentOutDataItem",
+    "CustomizationOptions",
     "CustomizationProgress",
     "Customizations",
     "DailyActivityEntry",
     "DailyPlaytime",
+    "DailyQuestIn",
+    "DailyQuestOut",
+    "DailyTemplateIn",
+    "DailyTemplateInLogic",
+    "DailyTemplateInObjectiveType",
+    "DailyTemplateOut",
+    "DailyTemplateOutLogic",
+    "DailyTemplateOutObjectiveType",
+    "DailyTemplateUpdate",
+    "DailyTemplateUpdateLogicType0",
+    "DailyTemplateUpdateObjectiveTypeType0",
     "DamageModel",
     "DeathCustomizationProgress",
     "EnchantmentModel",
@@ -165,6 +202,7 @@ __all__ = (
     "ItemModel",
     "ItemUpdateModel",
     "KillTargetModel",
+    "KillTargetOption",
     "KillTargetProgressModel",
     "LeaderboardEntry",
     "LeaderboardModel",
@@ -172,14 +210,19 @@ __all__ = (
     "ListWikiPagesV1GuildsMeWikiGetSortByType0",
     "ListWikiPagesV1GuildsMeWikiGetSortOrderType0",
     "LocationCustomization",
+    "LocationOption",
     "LoreModel",
     "MainhandCustomization",
+    "MainhandOption",
     "MaximumDeathsCustomization",
+    "MaximumDeathsOption",
     "MineTargetModel",
+    "MineTargetOption",
     "MineTargetProgressModel",
     "MonthlyPlaytime",
     "NameModel",
     "NaturalBlockCustomization",
+    "NaturalBlockOption",
     "ObjectiveIn",
     "ObjectiveInLogic",
     "ObjectiveInObjectiveType",
@@ -213,6 +256,7 @@ __all__ = (
     "ProjectUpdate",
     "QuestCompletionBucket",
     "QuestIn",
+    "QuestInQuestType",
     "QuestOut",
     "QuestProgressIn",
     "QuestProgressOut",
@@ -221,20 +265,25 @@ __all__ = (
     "QuestProgressUpdateStatusType0",
     "QuestStatisticsOut",
     "QuestUpdate",
+    "QuestUpdateQuestTypeType0",
+    "RandomCount",
     "RandomEnchantmentModel",
     "RelayModel",
     "RelayModelType",
     "RewardIn",
+    "RewardOption",
     "RewardOut",
     "RewardUpdate",
     "Scope",
     "ScriptEventTargetModel",
+    "ScriptEventTargetOption",
     "ScriptEventTargetProgressModel",
     "SessionOut",
     "StatusEnum",
     "StatusIn",
     "StatusOut",
     "TimerCustomization",
+    "TimerOption",
     "TokenResponse",
     "UserIn",
     "UserOut",
@@ -242,6 +291,7 @@ __all__ = (
     "ValidationError",
     "ValidationErrorContext",
     "VisitTargetModel",
+    "VisitTargetOption",
     "VisitTargetProgressModel",
     "Waypoint",
     "WaypointCustomization",

@@ -26,7 +26,9 @@ class QuestProgressOut:
         accept_time (datetime.datetime): The time that the user accepted this quest
         start_time (datetime.datetime | None):
         end_time (datetime.datetime | None):
-        status (QuestProgressOutStatus): The status of the quest
+        status (QuestProgressOutStatus): The status of the quest.
+            - `failed`: the player genuinely failed (e.g. died, ran out of time)
+            - `abandoned`: the player chose to drop the quest, or the quest expired while unfinished
         objectives (list[ObjectiveProgressOut]):
     """
 
